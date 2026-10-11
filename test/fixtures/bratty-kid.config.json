@@ -1,0 +1,24 @@
+{
+  "name": "bratty-kid",
+  "chars": 1504,
+  "config": {
+    "preset": "bratty-kid",
+    "axes": {
+      "formality": 1,
+      "verbosity": 3,
+      "profanity": 1,
+      "playfulness": 5,
+      "critique": 3,
+      "flattery": 1,
+      "warmth": 3,
+      "conviction": 2,
+      "care": 1,
+      "compliance": 1,
+      "refusal": 3,
+      "bravado": 3
+    },
+    "speech_level": "auto",
+    "persona": null,
+    "safeword": "진심으로 부탁할게"
+  }
+}

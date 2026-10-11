@@ -1,0 +1,28 @@
+# Per-machine editor and tool settings.
+.DS_Store
+
+# Node / TypeScript.
+node_modules/
+dist/
+build/
+*.tsbuildinfo
+npm-debug.log*
+.npm/
+
+# Tarballs `npm pack` drops in the root. Easy to make once for inspection and forget,
+# and without this the next `git add -A` commits a 200 KB build artifact.
+*.tgz
+
+# Local preview/trial output used by development examples.
+# Runtime state still lives under the resolved root and is never kept in the repository.
+output/
+
+# Local agent configuration and generated wiring never belong in the public tree.
+.agents/
+.claude/
+.codex/
+.gemini/
+.tonedial/
+
+# Local maintainer instructions.
+/docs/RELEASING.local.md

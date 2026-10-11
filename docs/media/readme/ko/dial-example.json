@@ -1,0 +1,36 @@
+{
+  "format": 1,
+  "kind": "synthetic-rendered-dial-frame",
+  "recipe": "node scripts/dial-frame.ts ko 80",
+  "language": "ko",
+  "columns": 80,
+  "terminalRows": 24,
+  "preset": "tough-love",
+  "selectedAxis": "warmth",
+  "previewLevel": 4,
+  "committed": false,
+  "nativeClientRun": false,
+  "personalStateRead": false,
+  "font": "browser-installed monospace and CJK fallback",
+  "fontRedistributed": false,
+  "renderer": "state-free ANSI serialized as natural text runs at SVG column positions with bold and fixed palette; visual font fallback varies",
+  "frameSha256": "f6f084edb7c86827d75ede3a601a3e133b30c92689bf76be6cb3176fe9d62c6a",
+  "imageSha256": "4b059531a6b504c1d97046212a49443c34e9f235dcc8b26748405003b9f077bb",
+  "inputs": {
+    "scripts/dial-frame.ts": "297de2a29a475a4b114e5035c151f563934a5e1e2270fa617cb52ee70446da0c",
+    "src/ui/dial.ts": "89be03aa196219d24ce36b286287f1cd586e58b6417eff433f82c1c3fd70f98c",
+    "src/ui/gauge.ts": "7b4a8d69780103421c1ec691746be8defae8d1489768367e8b9e0f909f9eca1a",
+    "src/ui/prompt.ts": "9e7e02e17aea1158203b9e584d90aba5213902b0c246fe281d91f3290231b50d",
+    "src/ui/style.ts": "2dc560ebc69677d391ec8ab39817c3a89545d6b8b603c080a7f6d09a75450a8e",
+    "src/ui/width.ts": "eb1013f8511ccfc8b9eca78e3d74433cfcf30096b7faf71ba118a5cd42163acd",
+    "src/core/i18n.ts": "4156fccff056319c67b07e61564a755bbea6ae83a65fcaa319c7daa577e06940",
+    "src/core/anchors.ts": "61f90129757a60fd7bc81d1710815bf609998422dad533b3714fb9f3620704d9",
+    "src/core/presets.ts": "bac39b3ca78bba03c0b62047f1bd31be856224762d6be327ec8df1e0bbfcf2c7",
+    "scripts/dial-svg.ts": "beb832ac4344563ba3aac1b722774a0258daa628cf1623123e525a70f295159c"
+  },
+  "svgRecipe": [
+    "scripts/dial-svg.ts",
+    "ko",
+    "80"
+  ]
+}

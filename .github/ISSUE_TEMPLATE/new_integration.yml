@@ -1,0 +1,67 @@
+name: New agent integration
+description: Ask for, or propose, support for another coding agent or supported host surface.
+labels: [integration]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Open this before writing code.** Most of the work is finding out what the host
+        actually does, and the answers below are the work. [Native host checklist](https://github.com/awesometic/tonedial/blob/main/CONTRIBUTING.md#new-native-hosts)
+        lists the files a route touches once these are settled.
+
+        A route ships when it is implemented *and* honest about what was observed.
+        "Configured" and "the hook ran" are different claims.
+  - type: input
+    id: host
+    attributes:
+      label: Which agent
+      description: The product name, and the surface — CLI, desktop, IDE extension. They are separate.
+    validations: { required: true }
+  - type: input
+    id: version
+    attributes:
+      label: Host version and reference
+      description: Give the host version and link its hook, skill or context documentation when available.
+    validations: { required: true }
+  - type: textarea
+    id: hooks
+    attributes:
+      label: Where it reads hooks from
+      description: >
+        The path at a project root and the path in the user's home. Both, because ToneDial
+        writes to either scope. Link the host's documentation if it has any.
+    validations: { required: true }
+  - type: textarea
+    id: event
+    attributes:
+      label: Session-start event and matcher grammar
+      description: >
+        What the event is called, and whether one entry may carry an alternation
+        (`startup|resume|clear`) or needs one entry per source. If the host's own reference
+        is ambiguous, say so — that ambiguity is why Gemini gets one entry per source.
+    validations: { required: true }
+  - type: dropdown
+    id: envelope
+    attributes:
+      label: Output envelope
+      description: How the host expects the hook's output.
+      options:
+        - Plain stdout
+        - JSON with the text in a field
+        - Not documented / unknown
+    validations: { required: true }
+  - type: dropdown
+    id: trust
+    attributes:
+      label: Does the host require the user to trust a hook before running it?
+      options: ["Yes", "No", "Unknown"]
+    validations: { required: true }
+  - type: textarea
+    id: observed
+    attributes:
+      label: What you have actually observed
+      description: >
+        Optional, and the most valuable field here. Did you see the hook fire? Did the
+        artifact reach the model? Say what you ran, and separate configuration, activation,
+        delivered context and model behavior. "Nothing yet" is a fine answer; a plan or
+        reader check alone does not prove activation.

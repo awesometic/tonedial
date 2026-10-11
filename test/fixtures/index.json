@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "fixtures": [
+    "all-1",
+    "all-3",
+    "all-5",
+    "bratty-kid",
+    "caring-brother",
+    "eager-sycophant",
+    "persona-leak-a",
+    "persona-leak-b",
+    "terse-operator",
+    "tough-love"
+  ]
+}

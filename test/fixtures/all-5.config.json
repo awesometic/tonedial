@@ -1,0 +1,24 @@
+{
+  "name": "all-5",
+  "chars": 1662,
+  "config": {
+    "preset": null,
+    "axes": {
+      "formality": 5,
+      "verbosity": 5,
+      "profanity": 5,
+      "playfulness": 5,
+      "critique": 5,
+      "flattery": 5,
+      "warmth": 5,
+      "conviction": 5,
+      "care": 5,
+      "compliance": 5,
+      "refusal": 5,
+      "bravado": 5
+    },
+    "speech_level": "auto",
+    "persona": null,
+    "safeword": "진심으로 부탁할게"
+  }
+}

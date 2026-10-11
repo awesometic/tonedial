@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Contributing a measurement
+    url: https://github.com/awesometic/tonedial/blob/main/docs/TESTING.md#model-measurements
+    about: The whole path from a fork to a merged result, with no issue needed first.

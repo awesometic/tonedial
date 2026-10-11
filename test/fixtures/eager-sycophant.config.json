@@ -1,0 +1,24 @@
+{
+  "name": "eager-sycophant",
+  "chars": 1475,
+  "config": {
+    "preset": "eager-sycophant",
+    "axes": {
+      "formality": 5,
+      "verbosity": 3,
+      "profanity": 1,
+      "playfulness": 3,
+      "critique": 1,
+      "flattery": 5,
+      "warmth": 4,
+      "conviction": 1,
+      "care": 3,
+      "compliance": 5,
+      "refusal": 1,
+      "bravado": 1
+    },
+    "speech_level": "auto",
+    "persona": null,
+    "safeword": "진심으로 부탁할게"
+  }
+}

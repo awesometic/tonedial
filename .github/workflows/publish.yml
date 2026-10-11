@@ -1,0 +1,59 @@
+name: Publish
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tonedial-npm-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.repository == 'awesometic/tonedial' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+
+      - run: npm ci
+
+      - name: Run the complete release checks
+        run: |
+          npm test
+          npm pack --dry-run
+          node scripts/check-release.mjs
+
+      - name: Verify the npm credential
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          test -n "$NODE_AUTH_TOKEN"
+          npm whoami --registry=https://registry.npmjs.org
+
+      # NPM_TOKEN authenticates npm. The id-token permission is only for provenance.
+      - name: Publish the package
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --ignore-scripts --provenance --access public
+
+      - name: Verify the published metadata
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: >-
+          npm view "tonedial@$(node -p 'JSON.parse(require("node:fs").readFileSync("package.json", "utf8")).version')" version
+          dist.integrity dist.tarball --json

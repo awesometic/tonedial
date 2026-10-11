@@ -1,0 +1,54 @@
+name: Bundled preset proposal
+description: Propose a bundled preset or explain a user-facing preset gap.
+labels: [preset]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### Bundled preset proposal
+
+        A bundled preset should serve a distinct user-facing purpose. Explain who it is for,
+        what it should feel like, and how it differs from the current presets.
+
+        **If you just want this tone for yourself, you do not need us:**
+
+        ```
+        tonedial set warmth=5 critique=2
+        tonedial save "My Preset"
+        tonedial export my-preset > my-preset.json
+        ```
+
+        That is the supported way to create a personal preset, with no code change required.
+        Use this form for a bundled preset proposal.
+  - type: textarea
+    id: person
+    attributes:
+      label: Who is this for
+      description: >
+        The user-facing reason. Not "it fills a gap in axis coverage" — an empty cell in a
+        coverage table is explicitly not a reason here.
+    validations: { required: true }
+  - type: textarea
+    id: axes
+    attributes:
+      label: The axis values
+      description: >
+        List 3–7 non-default axis values and explain how they create the intended behavior.
+        This keeps a bundled preset focused; it does not limit personal presets.
+      render: yaml
+    validations: { required: true }
+  - type: textarea
+    id: distinct
+    attributes:
+      label: Why current presets do not cover it
+      description: >
+        Name the closest current preset and say what a person would notice was wrong about using it.
+    validations: { required: true }
+  - type: input
+    id: safeword
+    attributes:
+      label: Optional initial safeword suggestion
+      description: >
+        A setup suggestion only, not a value stored in the preset. It should be something a
+        person would actually say to this character — which is also something they might say
+        by accident, and that is the trade the short scope pays for.

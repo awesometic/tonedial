@@ -1,0 +1,108 @@
+name: Bug report
+description: Something ToneDial does that it should not, or does not do that it should.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Share the smallest reproduction with private values removed.
+        Do not attach `config.json`, `TONE.md`, authentication files, tokens, persona notes, or safewords.
+        Redact private paths, usernames, and account details from commands, output, and screenshots.
+        In JSON, keep keys, value types, and nesting; use the same dummy replacement for every occurrence of a private value.
+
+        If the compiled context is correct and reaches the agent but it ignores an axis, see **Compliance and delivery** below.
+        A hook that does not run or context that never arrives is a delivery problem worth reporting.
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: >
+        List the commands or actions in order, including scope flags.
+        Use dummy values for any settings needed to reproduce the problem.
+      render: shell
+    validations: { required: true }
+  - type: textarea
+    id: what
+    attributes:
+      label: Actual result
+      description: Paste the relevant redacted output, including JSON when available, or describe the visible failure if there was no output.
+      render: text
+    validations: { required: true }
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected instead
+    validations: { required: true }
+  - type: dropdown
+    id: layer
+    attributes:
+      label: Affected layer
+      description: Configuration and reader checks do not prove host activation or delivered context; model adherence needs a matched measurement.
+      options:
+        - Generated configuration or artifact
+        - Host trust or hook activation
+        - Delivered context
+        - Model behavior or adherence
+        - Multiple layers or unknown
+    validations: { required: true }
+  - type: textarea
+    id: doctor
+    attributes:
+      label: Scoped diagnostics, or why unavailable
+      description: >
+        Run `tonedial doctor --json` for global connections (`--global` is explicit).
+        For a project, run `tonedial doctor --here --json` there or use `--project <path>`.
+        Paste only redacted output with its JSON structure preserved.
+        If the command cannot run, explain why and include its redacted error instead.
+        Do not add `--fix` while collecting this report: it changes state after approval.
+        Configuration and reader checks do not prove native host activation.
+      render: json
+    validations: { required: true }
+  - type: input
+    id: scope
+    attributes:
+      label: Scope and root overrides
+      description: >
+        Global (the default), `--here`, or `--project <redacted path>`?
+        Say whether `TONEDIAL_HOME` or `TONEDIAL_AGENT_HOME` is set, without posting either value.
+        The first changes the state root; the second overrides the connection destination.
+    validations: { required: true }
+  - type: textarea
+    id: version
+    attributes:
+      label: Versions and environment
+      description: >
+        Include `tonedial --version`, `node --version`, and OS/version.
+        If a coding host is involved, name its CLI, desktop, or IDE surface and version.
+        For terminal UI issues, include terminal name/version and columns × rows.
+      placeholder: |
+        ToneDial:
+        Node:
+        OS:
+        Host/surface and version (if involved):
+        Terminal/version and size (terminal UI only):
+    validations: { required: true }
+  - type: dropdown
+    id: install
+    attributes:
+      label: How it was installed
+      options: [npm -g, curl script, from a clone, not sure]
+    validations: { required: true }
+  - type: textarea
+    id: regression
+    attributes:
+      label: Regression and last working version
+      description: >
+        Did this work before? Give the last working ToneDial and affected host version if known,
+        and note what changed before the failure. "First use" or "not sure" is useful too.
+  - type: markdown
+    attributes:
+      value: |
+        ### Compliance and delivery
+
+        An agent that ignores an axis in correctly compiled and delivered context is a **measurement**.
+        Anchor compliance depends on the model at run time and is not guaranteed. If that is
+        what you are seeing, use the [measurement guide](https://github.com/awesometic/tonedial/blob/main/docs/TESTING.md#model-measurements).
+
+        Incorrect compiled output, a missing or stale configuration, a failed reader, or a hook that does not activate is a bug or delivery/integration problem.
+        Report the affected scope and what you observed in the host; `doctor` cannot certify that a host loaded the context.

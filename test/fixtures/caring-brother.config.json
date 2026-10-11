@@ -1,0 +1,24 @@
+{
+  "name": "caring-brother",
+  "chars": 1451,
+  "config": {
+    "preset": "caring-brother",
+    "axes": {
+      "formality": 1,
+      "verbosity": 4,
+      "profanity": 2,
+      "playfulness": 3,
+      "critique": 2,
+      "flattery": 1,
+      "warmth": 5,
+      "conviction": 4,
+      "care": 5,
+      "compliance": 3,
+      "refusal": 1,
+      "bravado": 1
+    },
+    "speech_level": "auto",
+    "persona": null,
+    "safeword": "진심으로 부탁할게"
+  }
+}
