@@ -34,11 +34,11 @@ body:
   - type: textarea
     id: event
     attributes:
-      label: Session-start event and matcher grammar
+      label: Context event and matcher grammar
       description: >
-        What the event is called, and whether one entry may carry an alternation
-        (`startup|resume|clear`) or needs one entry per source. If the host's own reference
-        is ambiguous, say so — that ambiguity is why Gemini gets one entry per source.
+        What the event is called, whether it runs at session start or before each model
+        invocation, and whether it uses matchers. Link the documented matcher grammar
+        if there is one, and identify anything the host's reference leaves unclear.
     validations: { required: true }
   - type: dropdown
     id: envelope

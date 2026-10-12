@@ -3,7 +3,6 @@
 Run automated checks, then inspect the installed candidate, then observe the selected native host.
 Model adherence is a separate measurement; none of these steps alone qualifies a release.
 Use Node 24+, npm and a POSIX shell from the repository root.
-Current inputs are the [package scripts](../package.json), [installer](../src/install.ts), [native routes](../src/wiring/targets.ts), [scenarios](./test/scenarios.md) and [rubric](./test/rubric.md).
 
 ## Automated checks
 
@@ -64,7 +63,7 @@ npm_cli="$trial_dir/npm-prefix/bin/tonedial"
 td_trial npm "$npm_cli" --version --json
 ```
 
-Record the archive SHA-256, version, commit and dirty-tree status. Use the filename npm returned, not a guessed versioned name.
+Record the archive SHA-256 and version. Use the filename npm returned, not a guessed versioned name.
 Continue only with the expected version and successful schema-3 JSON envelopes (`ok: true`).
 Test the extracted installer separately; this checks the local install shape, not the live curl downloader:
 
@@ -109,7 +108,8 @@ Missing settings need an explicit source/default choice; use the [recovery proce
 
 For native configuration regression, use an isolated fake host layout containing a foreign hook and custom setting.
 Preview selected tools with `init --tools claude --global --dry-run --json`, then explicitly approve the same selection/scope.
-Verify merged handlers and unrelated settings, ordered guide-before-tone reader output, generated skill links and repeat initialization.
+Repeat the preview and approval with `--tools antigravity` and verify the named `tonedial` `PreInvocation` hook, its direct command list, `injectSteps[].ephemeralMessage`, generated skill links and repeat initialization.
+Verify merged handlers and unrelated settings, ordered guide-before-tone reader output and the selected project or global paths.
 Scoped disconnect must preserve foreign handlers, custom presets and other scopes.
 Neither a fake client nor a successful configuration check proves actual host loading.
 
@@ -136,7 +136,7 @@ Stop on a command/root mismatch or if the host cannot provide this evidence befo
 1. Select the exact installed candidate above and a dedicated host profile/project, or deliberately choose normal settings after reviewing the [usage and privacy limits](./USAGE.md).
    Record version/archive fingerprint, OS, host/surface/version, scope, model and effort.
 2. Preview only that host and scope, then approve it. For a project use `init --tools codex --project <existing-directory> --dry-run`, then the same command without `--dry-run`; substitute the actual host and a real chosen directory before execution.
-   Ensure the selected host actually reads that project/profile. Review the current hook definition in the host, including `/hooks` where applicable; do not use trust bypasses.
+   Ensure the selected host actually reads that project/profile. Review the current hook definition in the host, including `/hooks` where applicable; for Antigravity IDE use the agent panel `… → Customizations → Hooks`, and for Antigravity Desktop use `Settings → Customizations → Hooks`. Do not use trust bypasses.
 3. Start a fresh session and observe delivery of the complete guide before the exact current artifact.
    Test resume, clear, compaction and fork only where that surface has those events. Shared global/project layers must not duplicate context.
 4. Ask the discovered skill to change one setting and separately to reload unchanged settings.
@@ -151,7 +151,7 @@ Stop on a command/root mismatch or if the host cannot provide this evidence befo
 
 Screenshots/transcripts should show the actual host event and exact request, with private values removed.
 Record configuration, reader runtime, trust, activation, delivered context and model behavior separately.
-Codex and Claude observations do not qualify Gemini, another surface or a remote runtime; unavailable authenticated/trusted trials remain pending.
+Codex, Claude and Antigravity observations remain separate across surfaces; an IDE result does not qualify Desktop (or the reverse) or a remote runtime. Unavailable authenticated or trusted trials remain pending.
 
 For `test --preset`, compare a bundled and a custom preset while a different saved tone is connected.
 Verify the preview uses only the selected axes with saved personal settings, without changing configuration or artifacts.
@@ -172,7 +172,7 @@ Record failures and unavailable platform/terminal checks separately; automated d
 
 Use [fixed packs](./test/packs/), [scenarios](./test/scenarios.md) and the [rubric](./test/rubric.md).
 One configuration/model contribution is useful; a full matrix is not required for a PR.
-For anchor changes, run Route D checks in Codex and Claude with matched clean `X-none` controls; keep Gemini evidence separate.
+For anchor changes, run Route D checks in Codex and Claude with matched clean `X-none` controls; keep Antigravity IDE and Desktop evidence separate.
 The producer must not see predictions, this repository's design or judging instructions, and the judge must not be the producing context.
 
 The following set defines full model coverage, not the minimum size of a contribution:
@@ -219,39 +219,13 @@ Also compare familiar polite and formal plain with nonzero profanity and indepen
 Treat changed prompt bytes as new measurement inputs and run fresh measurements for them.
 A persona/safeword variant needs its own pre-registered name; unavailable native activation remains pending.
 
-### Score and submit
+### Review the session
 
 Give an independent judge verbatim outputs, scenario request boundaries and the rubric, withholding the prediction until after scoring.
 Score axis compliance and language naturalness separately. Compare observed information quality and permission behavior against controls; tone prose does not enforce permissions.
 Report held, failed or inconclusive with a reason, including all failed runs rather than selecting favorable replies.
 Target mid/frontier tiers; accept entry results without treating them as current supported-tier qualification. Record the exact provider model identifier, not a moving family label.
 
-Add a result under `docs/results/<config>-<model>.md`, with an effort suffix for a paired experiment or contributor suffix for a duplicate name.
-Use one file per configuration/model when recording a result. Include contradictory outcomes when they are observed; do not overwrite a result within the same run.
-Include this metadata, using actual values rather than inferred fields:
-
-```yaml
-config: pack configuration or A-axis-level identifier
-pack: relative path to committed pack, if any
-model: exact provider identifier
-tier: mid, frontier, or entry
-effort: actual setting or default
-route: A, B, C, or D, with command/context details
-date: run date
-contributor: result author
-accessedVia: actual interface
-harnessVersion: recorded pack-format version
-artifactSha256: exact delivered fingerprint
-compilerRevision: version or commit producing it
-scenarios: all scenario IDs
-runs: total explicit run count
-verdict: held, failed, or inconclusive
-```
-
-Route D also records host/surface/version, scope/event, trust steps, activation/delivery evidence and session lifecycle.
-Keep a locked Prediction, each scenario's Request boundary, fenced verbatim Run outputs, target/scored axis tables, naturalness/information/permission observations, per-scenario Verdict and What this changes.
-Mixed scenario outcomes use the worst verdict in frontmatter. Missing metadata stays missing; never fill it by inference.
-There is no broad compatibility or unrestricted-output guarantee. Record the exact measured bytes and limits.
-
-Keep needed trial files privately for diagnosis.
-Publication requires maintainer authorization and the [release gate](../scripts/check-release.mjs), beyond a passing local suite.
+Keep the request boundaries and verbatim outputs beside the scores so another person can review
+what the session actually answered. Score axis compliance and language naturalness separately,
+and mark a run inconclusive when the host did not deliver the selected artifact.

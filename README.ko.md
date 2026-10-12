@@ -10,7 +10,7 @@
 
 > [!NOTE]
 > 아직 출시하지 않은 `0.1.0` 후보 버전입니다. npm과 curl 배포 채널은 아직 열리지 않았습니다.
-> Codex, Claude Code, Gemini CLI 설정 기능은 구현됐지만 실제 호스트 활성화, 스킬 발견, 하루 사용 검증은 아직 마치지 않았습니다.
+> Codex, Claude Code, Antigravity IDE·데스크톱 설정 기능은 구현됐지만 실제 호스트 활성화, 스킬 발견, 하루 사용 검증은 아직 마치지 않았습니다.
 
 <img src="https://raw.githubusercontent.com/awesometic/tonedial/main/docs/media/readme/ko/dial.svg" alt="ToneDial 인라인 미리보기: 열두 축의 현재 값과 기본값, 선택한 warmth 설명, 대기 중인 변경과 적용·취소·도움말 키" width="760">
 

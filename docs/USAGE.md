@@ -110,7 +110,7 @@ Read-only inspection preserves their bytes; malformed values require diagnosis o
 ## Connecting an agent
 
 Installation alone creates no state, hook, skill or shell setup.
-Select `codex`, `claude`, `gemini`, a comma-separated list, or `none` for state-only setup:
+Select `codex`, `claude`, `antigravity`, a comma-separated list, or `none` for state-only setup:
 
 ```bash
 tonedial init --tools none --global --auto --json
@@ -140,18 +140,34 @@ tonedial doctor --here
 tonedial eject --here
 ```
 
+For Antigravity IDE/Desktop globally, preview and then apply the connection:
+
+```bash
+tonedial init --tools antigravity --global --dry-run --json
+tonedial init --tools antigravity --global
+```
+
+For the current project, preview and then apply the project connection:
+
+```bash
+tonedial init --tools antigravity --here --dry-run --json
+tonedial init --tools antigravity --here
+```
+
 `init`, `wire`, `doctor`, `unwire` and `eject` default to global wiring.
 `--global` names it explicitly, `--here` selects the current project, and `--project <dir>` selects another directory; the three cannot be combined and `--project .` equals `--here`.
 Use the same scope when inspecting, repairing or removing a connection.
 Scope changes wiring destinations, never the shared dial or preset library.
 `use <slug> --project <dir>` is a separate `.tonedial/TONE.md` export, not wiring; `test --project` selects its conversation folder.
 
-Setup merges owned `SessionStart` entries into `.codex/hooks.json`, `.claude/settings.json` or `.gemini/settings.json`, preserving unrelated handlers.
-Supported hook display fields identify ToneDial and describe loading the saved response tone; existing document descriptions are preserved.
-Codex and Claude use one matcher; Gemini owns a three-entry set for startup, resume and clear.
-Native selection adds `reader.mjs`, the shared skill source and host skill links.
+Setup merges owned native hook entries into the selected host's supported hook file, preserving unrelated handlers.
+Codex and Claude use a `SessionStart` entry in `.codex/hooks.json` or `.claude/settings.json`.
+Antigravity IDE/Desktop uses one named `tonedial` hook with a direct `PreInvocation` command list in `.agents/hooks.json` for a project or `~/.gemini/config/hooks.json` globally.
+Its hook emits `injectSteps[].ephemeralMessage`; the shared skill is linked at `.agents/skills/tonedial` for a project or `~/.gemini/config/skills/tonedial` globally.
+In Antigravity IDE, review the hook in the agent panel `… → Customizations → Hooks`; in Antigravity Desktop, use `Settings → Customizations → Hooks`.
+`~/.gemini/antigravity-ide/` and `~/.gemini/antigravity/` hold app data and are not hook locations.
 `init --commands` also installs Claude's optional `/tone` command and requires `claude` in the selection.
-Antigravity routes remain refused; local setup does not configure remote or cloud runtimes.
+Local setup does not configure remote or cloud runtimes.
 
 Setup and native changes are previewed and approved; `--verbose` shows the diff and `--dry-run` writes nothing.
 `--auto` approves the plan but never chooses tools by detection.
@@ -162,8 +178,29 @@ Scoped `unwire <tool>` or `eject` keeps shared state, presets, the installed CLI
 
 Configuration, a runnable reader, host trust, hook activation, delivered context and model adherence are separate observations.
 `doctor` checks configuration and controlled reader health, not native activation; activation remains unverified.
+Its human report always names the selected global or project scope and directory, including without `--verbose`.
+Registered connections outside that scope are grouped by scope and directory, with agents sharing a file status on one line.
+A missing-file status means some or all registered connection files could not be found; it does not mean no connection was ever registered.
+Those entries are presence checks only, and `--fix` leaves them alone.
+For each group with missing files, run the displayed read-only `doctor` command to keep using the connections,
+or run `eject` if they are no longer needed; neither command runs automatically.
+The optional `eject` command disconnects every agent in that displayed scope, including any with files still present;
+use `unwire <tool>` with the same scope to disconnect only one agent.
+The same status-and-guidance layout covers Claude, Codex and connected Antigravity IDE/Desktop routes.
+Unimplemented targets do not appear as connections or hook observations.
+`hookSettings` in JSON carries each tool's `state` (`enabled`, `disabled`, `unknown`), `basis`, and inspected `path`.
+Claude is enabled in its registered settings file when `disableAllHooks` is absent or false, and disabled there when true; invalid values remain unknown.
+For Antigravity, `tonedial.enabled` omitted or set to `true` means enabled in the registered file;
+`false` means disabled, and any other value type is unknown. This file-level observation does not
+resolve other settings, administrator policy, workspace trust or session options.
+Actual host activation remains unverified; use the IDE or Desktop Hooks screen to confirm it.
+Claude and Codex both use a SessionStart hook for automatic delivery, without adding a TONE.md import to their home instruction files.
+Antigravity uses a named `tonedial` `PreInvocation` hook for automatic delivery, without adding a TONE.md import to a home instruction file.
+These observations never change settings or certify session execution.
 Codex trust evidence may be disabled or unknown, and a saved approval hash does not establish current trust.
 In Codex, open `/hooks`, select `SessionStart`, then ToneDial; review the command and enable the hook.
+In Antigravity IDE, open the agent panel `… → Customizations → Hooks`; in Antigravity Desktop, open `Settings → Customizations → Hooks`.
+Confirm the `tonedial` hook is enabled in the selected host. Its project and global hook files are `.agents/hooks.json` and `~/.gemini/config/hooks.json`; the app data directories are not hook locations.
 ToneDial never grants trust.
 Shared skill discovery can expose the skill to a provider without installing its automatic hook.
 Use [TESTING.md](./TESTING.md) for qualification and the [release gate](../scripts/check-release.mjs) for release checks.
@@ -184,7 +221,7 @@ A settings-only question reports state without reading the pair.
 Existing open conversations keep their context until they reload; new conversations depend on their configured delivery route.
 A successful save and a later failed read are reported separately.
 Skill discovery remains unverified; `TONE.md` carries a CLI fallback instruction.
-Generated skill and optional `/tone` flows require CLI JSON schema 3; a CLI with an older schema requires a user-operated update.
+Generated skill and optional `/tone` flows require CLI JSON schema 3; a CLI with another schema requires a user-operated update.
 
 Package updates do not refresh installed generated skill sources.
 Refresh with the actual existing tool selection and scope, without adding a new route:

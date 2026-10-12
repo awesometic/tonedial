@@ -10,7 +10,7 @@ Your preset library stays in one place while connections can be global or projec
 
 > [!NOTE]
 > This is an unreleased `0.1.0` candidate. npm and curl release channels are not live.
-> Codex, Claude Code and Gemini CLI configuration is implemented; actual host activation, skill discovery and one-day acceptance remain unverified.
+> Codex, Claude Code and Antigravity IDE/Desktop configuration is implemented; actual host activation, skill discovery and one-day acceptance remain unverified.
 
 <img src="https://raw.githubusercontent.com/awesometic/tonedial/main/docs/media/readme/en/dial.png" alt="ToneDial inline preview: twelve axes, current and default levels, selected warmth hints, pending changes and apply/discard/help keys" width="760">
 
