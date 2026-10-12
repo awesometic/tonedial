@@ -23,7 +23,7 @@
     "src/ui/prompt.ts": "9e7e02e17aea1158203b9e584d90aba5213902b0c246fe281d91f3290231b50d",
     "src/ui/style.ts": "2dc560ebc69677d391ec8ab39817c3a89545d6b8b603c080a7f6d09a75450a8e",
     "src/ui/width.ts": "eb1013f8511ccfc8b9eca78e3d74433cfcf30096b7faf71ba118a5cd42163acd",
-    "src/core/i18n.ts": "4156fccff056319c67b07e61564a755bbea6ae83a65fcaa319c7daa577e06940",
+    "src/core/i18n.ts": "c3483dfa0468d2b042b6780a24c89ee86f378571b8eb0a957404780fa723afc3",
     "src/core/anchors.ts": "61f90129757a60fd7bc81d1710815bf609998422dad533b3714fb9f3620704d9",
     "src/core/presets.ts": "bac39b3ca78bba03c0b62047f1bd31be856224762d6be327ec8df1e0bbfcf2c7"
   }

@@ -17,13 +17,13 @@ import { upsert } from "../../src/wiring/region.ts";
 import { palette } from "../../src/ui/style.ts";
 
 export type LegacyRoute = {
-  tool: AgentTool;
+  tool: Exclude<AgentTool, "antigravity">;
   root: string;
   scope?: "global" | "project";
 };
 
 export type LegacySkillRoute = {
-  tools: readonly AgentTool[];
+  tools: readonly Exclude<AgentTool, "antigravity">[];
   root: string;
   scope?: "global" | "project";
 };
@@ -56,7 +56,7 @@ function selectedAgent(
 }
 
 /** Current native setup never emits this format; the retained fingerprint owner defines it. */
-export function legacyDelivery(tool: AgentTool, before: string | null, where: WiredAt, path: string, t: Messages): string {
+export function legacyDelivery(tool: LegacyRoute["tool"], before: string | null, where: WiredAt, path: string, t: Messages): string {
   return tool === "codex"
     ? withHook(before, hookCommand(where.toneAbsolute, where.home), path, t)
     : upsert(before ?? "", `@${where.tonePath}`);

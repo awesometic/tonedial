@@ -298,12 +298,14 @@ export type Messages = {
     applicationHealth: (healthy: boolean) => string;
     connectionHealth: (attention: boolean) => string;
     healthy: string;
-    /** A label on its own line; the destination follows, unfolded, so it stays copyable. */
-    inspecting: string;
+    scopeGlobal: string;
     /** Registrations outside the scope being inspected. Reported, never repaired. */
     wiredElsewhere: string;
     destinationGone: string;
     destinationUnwired: string;
+    destinationPresent: string;
+    inspectScope: string;
+    disconnectScope: string;
     /** Which destination this report is about, and whether it reaches other projects. */
     scope: string;
     toLookAt: (count: number) => string;
@@ -335,19 +337,23 @@ export type Messages = {
     skillNotSeeded: string;
     imported: string;
     /** The hook is written and the artifact it reads is there. */
-    hookPresent: string;
-    nativeConfigured: string;
-    nativeConfiguredCompact: string;
-    nativeMissing: (path: string) => string;
+    hookPresent: (event: "SessionStart" | "PreInvocation") => string;
+    nativeConfigured: (event: "SessionStart" | "PreInvocation") => string;
+    nativeConfiguredCompact: (event: "SessionStart" | "PreInvocation") => string;
+    hookSettingState: Record<"enabled" | "disabled" | "unknown", string>;
+    hookSettingScope: string;
+    hookNotConnected: string;
+    hookNeedsInspection: string;
+    hookGuidance: Record<"claude" | "codex" | "antigravity", string>;
+    nativeMissing: (path: string, event: "SessionStart" | "PreInvocation") => string;
     nativeStale: string;
     nativeForeign: string;
-    nativeInherited: (path: string) => string;
-    nativeInheritedCompact: (path: string) => string;
+    nativeInherited: (path: string, event: "SessionStart" | "PreInvocation") => string;
+    nativeInheritedCompact: (path: string, event: "SessionStart" | "PreInvocation") => string;
     legacyRepairWithheld: string;
     nativeRuntimeUnusable: (path: string) => string;
     /** Read from the host's own record. It can prove a hook will not run, never that one did. */
     codexHookDisabled: string;
-    codexHookDisabledCompact: string;
     /**
      * Two claims, and the second one drops once it stops being true.
      *
@@ -479,7 +485,6 @@ export type Messages = {
     ownershipConflict: (path: string) => string;
     stateOverlap: (path: string) => string;
     stateInstructionOverlap: (path: string) => string;
-    reservedTarget: (id: string, blocker: "project-path" | "protocol") => string;
     contextLayout: (kind: "fresh" | "current" | "legacy" | "conflict", path: string, doctorCommand?: string) => string;
     /** The config is there and could not be read back. Never carries the file's own bytes. */
     unreadableConfigFile: (path: string) => string;
@@ -764,10 +769,13 @@ const enMessages: Messages = {
     applicationHealth: (healthy) => `Application: ${healthy ? "healthy" : "needs attention"}`,
     connectionHealth: (attention) => `Connection files: ${attention ? "attention needed" : "no issues in selected scope"}`,
     healthy: "No problems found",
-    inspecting: "Inspecting",
-    wiredElsewhere: "Connected elsewhere",
-    destinationGone: "destination unavailable",
-    destinationUnwired: "connected file missing",
+    scopeGlobal: "Inspection scope: global",
+    wiredElsewhere: "Registered connections outside this inspection scope",
+    destinationGone: "registered directory not found or inaccessible",
+    destinationUnwired: "some or all registered connection files were not found",
+    destinationPresent: "registered connection files found",
+    inspectScope: "To keep using these connections, inspect this scope:",
+    disconnectScope: "If no longer needed, disconnect all agents in this scope:",
     scope: "Inspection scope: project",
     toLookAt: (count) => `${count} need attention · --fix repairs what it can`,
     needsAPerson: "manual review required · see details above",
@@ -826,18 +834,30 @@ const enMessages: Messages = {
     skillNotLinked: "not linked",
     skillNotSeeded: "skill bundle missing",
     imported: "import connected",
-    hookPresent: "SessionStart hook · configured to read tone.md each session",
-    nativeConfigured: "SessionStart hook · configured to read AGENTS.md, then TONE.md",
-    nativeConfiguredCompact: "SessionStart · AGENTS.md → TONE.md",
-    nativeMissing: (path) => `No ToneDial SessionStart hook · ${path}`,
+    hookPresent: (event) => `${event} hook · configured to read tone.md each session`,
+    nativeConfigured: (event) => `${event} hook · configured to read AGENTS.md, then TONE.md`,
+    nativeConfiguredCompact: (event) => `${event} · AGENTS.md → TONE.md`,
+    hookSettingState: {
+      enabled: "Hook enabled in the registered settings file",
+      disabled: "Hook disabled in the registered settings file",
+      unknown: "Hook enablement unknown in the registered settings file",
+    },
+    hookSettingScope: "Hook status is read from the inspected settings file only; host overrides and session delivery are unverified.",
+    hookNotConnected: "No managed ToneDial hook to inspect. To connect, run init with this agent selected in the same scope.",
+    hookNeedsInspection: "Resolve the reported hook settings or program issue before checking enablement in the app.",
+    hookGuidance: {
+      claude: "/hooks → SessionStart: check the ToneDial command and its settings source. If hooks are off, set disableAllHooks to false in the effective settings; also check workspace trust and managed policy.",
+      codex: "/hooks → SessionStart → ToneDial: review the command and enable the hook. If asked, review and trust the project first.",
+      antigravity: "Antigravity IDE agent panel … → Customizations → Hooks, or Desktop Settings → Customizations → Hooks: check the ToneDial PreInvocation command and enable it if it is off.",
+    },
+    nativeMissing: (path, event) => `No ToneDial ${event} hook · ${path}`,
     nativeStale: "ToneDial hook uses an older reader or runtime configuration.",
     nativeForeign: "Settings changed outside ToneDial. Preserve the file and review it before repair.",
-    nativeInherited: (path) => `Using the global hook · ${path} · no project hook needed`,
-    nativeInheritedCompact: (path) => `Global SessionStart hook\n${path}`,
+    nativeInherited: (path, event) => `Using the global ${event} hook · ${path} · no project hook needed`,
+    nativeInheritedCompact: (path, event) => `Global ${event} hook\n${path}`,
     legacyRepairWithheld: "This connection method is no longer set up. Reconnect with init for hook delivery.",
     nativeRuntimeUnusable: (path) => `Hook program is unusable: ${path}`,
     codexHookDisabled: "Codex setting: hook disabled. Enable it in /hooks → SessionStart → ToneDial.",
-    codexHookDisabledCompact: "Hook switched off in Codex",
     nativeActivationUnverified: (trustKnown) => trustKnown
       ? "app activation unverified"
       : "app activation and hook trust unverified",
@@ -1026,7 +1046,7 @@ const enMessages: Messages = {
     seedConflict: (path) =>
       `Cannot verify this bundled file's ownership or type:\n${path}\n` +
       "Nothing was changed. Preserve the file and choose a dedicated TONEDIAL_HOME for new setup.",
-    toolsRequired: "Choose agents with --tools codex,claude,gemini.\n" +
+    toolsRequired: "Choose agents with --tools codex,claude,antigravity.\n" +
       "For state-only setup, run init --tools none.\n" +
       "--auto approves your selection only; choose agents explicitly.",
     toolsSelection: "Use a non-empty comma-separated agent list. Only init accepts none, on its own.",
@@ -1038,11 +1058,6 @@ const enMessages: Messages = {
     editNotApplied: (path, reason) => `Edit not applied: ${reason}\nEdited copy preserved at:\n${path}`,
     stateOverlap: (path) => `Project export overlaps shared ToneDial state:\n${path}\nNothing was written. Choose a separate state directory or project.`,
     stateInstructionOverlap: (path) => `ToneDial state overlaps an agent instruction root:\n${path}\nNothing was written. Choose a dedicated state directory before running init.`,
-    reservedTarget: (id, blocker) => `Not a target ToneDial can connect yet: ${id}\n${
-      blocker === "project-path"
-        ? "Its project-hook path is not settled."
-        : "Its invocation event and output format are unverified."
-    }\nNothing was written. Connecting it requires a separately verified contract.`,
     legacyConsumers: (destinations) => `Other or unrecorded connections still read tone.md:\n${destinations.join("\n")}\nNothing was written. Unwire each scope before retrying init, then reconnect after the transition.`,
     contextLayout: (kind, path, doctorCommand = "tonedial doctor --json") => kind === "fresh"
       ? `ToneDial has not been initialized:\n${path}\nRun tonedial init --tools none before changing settings.`
@@ -1399,10 +1414,13 @@ const koMessages: Messages = {
     applicationHealth: (healthy) => `앱 상태: ${healthy ? "정상" : "점검 필요"}`,
     connectionHealth: (attention) => `연결 파일: ${attention ? "점검 필요" : "선택한 범위에서 문제 없음"}`,
     healthy: "문제 없음",
-    inspecting: "검사 중",
-    wiredElsewhere: "다른 위치의 연결",
-    destinationGone: "대상 경로에 접근할 수 없음",
-    destinationUnwired: "연결된 파일이 없음",
+    scopeGlobal: "검사 범위: 전역",
+    wiredElsewhere: "이번 검사 범위 밖에 등록된 연결",
+    destinationGone: "등록된 디렉토리를 찾을 수 없거나 접근할 수 없음",
+    destinationUnwired: "등록된 연결 파일 중 일부 또는 전부를 찾을 수 없음",
+    destinationPresent: "등록된 연결 파일이 있음",
+    inspectScope: "계속 사용하려면 이 범위를 검사하세요:",
+    disconnectScope: "더 이상 필요 없으면 이 범위의 모든 에이전트 연결을 해제하세요:",
     scope: "검사 범위: 프로젝트",
     toLookAt: (count) => `확인 필요 ${count}건 · 가능한 항목은 --fix로 복구`,
     needsAPerson: "직접 확인 필요 · 위 세부 내용을 확인해 주세요",
@@ -1461,18 +1479,30 @@ const koMessages: Messages = {
     skillNotLinked: "연결되지 않음",
     skillNotSeeded: "스킬 기본 파일 없음",
     imported: "import 연결됨",
-    hookPresent: "SessionStart 훅 · 세션마다 tone.md를 읽도록 설정됨",
-    nativeConfigured: "SessionStart 훅 · AGENTS.md 다음 TONE.md를 읽도록 설정됨",
-    nativeConfiguredCompact: "SessionStart · AGENTS.md → TONE.md",
-    nativeMissing: (path) => `ToneDial SessionStart 훅 없음 · ${path}`,
+    hookPresent: (event) => `${event} 훅 · 매 세션 tone.md를 읽도록 설정됨`,
+    nativeConfigured: (event) => `${event} 훅 · AGENTS.md 다음 TONE.md를 읽도록 설정됨`,
+    nativeConfiguredCompact: (event) => `${event} · AGENTS.md → TONE.md`,
+    hookSettingState: {
+      enabled: "등록된 설정 파일에서 훅이 켜져 있음",
+      disabled: "등록된 설정 파일에서 훅이 꺼져 있음",
+      unknown: "등록된 설정 파일에서 훅 활성화 여부를 확인할 수 없음",
+    },
+    hookSettingScope: "훅 상태는 검사한 설정 파일만 읽어 표시합니다. 앱의 설정 덮어쓰기와 세션 전달 여부는 확인하지 않습니다.",
+    hookNotConnected: "검사할 ToneDial 관리 훅이 없습니다. 연결하려면 같은 범위에서 init을 실행하고 이 에이전트를 선택해 주세요.",
+    hookNeedsInspection: "위에 나온 훅 설정이나 실행 프로그램 문제를 먼저 확인한 뒤 앱에서 활성화 여부를 확인해 주세요.",
+    hookGuidance: {
+      claude: "/hooks → SessionStart에서 ToneDial 실행 명령과 설정 출처를 확인해 주세요. 훅이 꺼져 있으면 적용 중인 설정의 disableAllHooks를 false로 바꾸세요. 프로젝트 신뢰와 관리자 정책도 확인해 주세요.",
+      codex: "/hooks → SessionStart → ToneDial에서 실행 명령을 확인하고 훅을 켜세요. 프로젝트 신뢰를 요청하면 먼저 내용을 확인하고 승인해 주세요.",
+      antigravity: "Antigravity IDE 에이전트 패널 … → Customizations → Hooks 또는 데스크톱 Settings → Customizations → Hooks에서 ToneDial PreInvocation 명령을 확인하고 꺼져 있으면 켜세요.",
+    },
+    nativeMissing: (path, event) => `ToneDial ${event} 훅 없음 · ${path}`,
     nativeStale: "ToneDial 훅이 이전 전달 스크립트나 런타임 설정을 사용합니다.",
     nativeForeign: "ToneDial 밖에서 설정이 바뀌었습니다. 파일을 보존하고 복구 전에 확인해 주세요.",
-    nativeInherited: (path) => `전역 훅 사용 · ${path} · 프로젝트 훅은 필요 없음`,
-    nativeInheritedCompact: (path) => `전역 SessionStart 훅\n${path}`,
+    nativeInherited: (path, event) => `전역 ${event} 훅 사용 · ${path} · 프로젝트 훅은 필요 없음`,
+    nativeInheritedCompact: (path, event) => `전역 ${event} 훅\n${path}`,
     legacyRepairWithheld: "더는 이 방식으로 연결하지 않습니다. init으로 다시 연결하면 훅으로 전달합니다.",
     nativeRuntimeUnusable: (path) => `훅 실행 프로그램을 사용할 수 없습니다: ${path}`,
     codexHookDisabled: "Codex 설정: 훅 꺼짐. /hooks → SessionStart → ToneDial에서 켜세요.",
-    codexHookDisabledCompact: "Codex에서 훅이 꺼져 있음",
     nativeActivationUnverified: (trustKnown) => trustKnown
       ? "앱 활성화 확인 안 됨"
       : "앱 활성화와 훅 신뢰 확인 안 됨",
@@ -1661,7 +1691,7 @@ const koMessages: Messages = {
     seedConflict: (path) =>
       `ToneDial이 관리하는 일반 파일인지 확인하지 못했습니다:\n${path}\n` +
       "아무것도 바꾸지 않았습니다. 파일을 보존하고 새 설정에는 별도 TONEDIAL_HOME 디렉터리를 지정해 주세요.",
-    toolsRequired: "--tools codex,claude,gemini로 에이전트를 선택해 주세요.\n" +
+    toolsRequired: "--tools codex,claude,antigravity로 에이전트를 선택해 주세요.\n" +
       "상태만 준비하려면 init --tools none을 쓰세요.\n" +
       "--auto는 선택한 변경만 승인합니다. 에이전트는 직접 골라 주세요.",
     toolsSelection: "에이전트 이름을 쉼표로 구분해 입력해 주세요. none은 init에서만 단독으로 쓸 수 있습니다.",
@@ -1673,11 +1703,6 @@ const koMessages: Messages = {
     editNotApplied: (path, reason) => `편집 내용 적용 실패: ${reason}\n편집한 사본 보존 위치:\n${path}`,
     stateOverlap: (path) => `프로젝트 내보내기 경로가 ToneDial 상태 디렉터리와 겹칩니다:\n${path}\n아무것도 쓰지 않았습니다. 별도 상태 디렉터리나 다른 프로젝트를 선택해 주세요.`,
     stateInstructionOverlap: (path) => `ToneDial 상태 디렉터리가 에이전트 지침 경로와 겹칩니다:\n${path}\n아무것도 쓰지 않았습니다. 전용 상태 디렉터리를 선택한 뒤 init을 실행해 주세요.`,
-    reservedTarget: (id, blocker) => `아직 연결할 수 없는 대상입니다: ${id}\n${
-      blocker === "project-path"
-        ? "프로젝트 훅을 읽는 경로가 정해지지 않았습니다."
-        : "호출 이벤트와 출력 형식을 아직 확인하지 못했습니다."
-    }\n아무것도 쓰지 않았습니다. 이 대상을 연결하려면 별도로 검증된 연결 규격이 필요합니다.`,
     legacyConsumers: (destinations) => `다른 연결이나 기록되지 않은 연결이 아직 tone.md를 읽습니다:\n${destinations.join("\n")}\n아무것도 쓰지 않았습니다. 각 범위에서 먼저 unwire한 뒤 init을 다시 실행하세요. 전환이 끝나면 다시 연결해 주세요.`,
     contextLayout: (kind, path, doctorCommand = "tonedial doctor --json") => kind === "fresh"
       ? `ToneDial 초기 설정이 필요합니다:\n${path}\n설정을 바꾸기 전에 tonedial init --tools none을 실행해 주세요.`

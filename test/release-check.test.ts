@@ -243,10 +243,10 @@ test("local release instructions stay ignored and cannot enter the public tree o
   assert.match(history.stderr, /history [0-9a-f]+: private path docs\/RELEASING\.local\.md/);
 });
 
-test("deleted provider wiring in the initial commit still blocks release", () => {
+test("deleted Antigravity wiring in the initial commit still blocks release", () => {
   const root = fixture();
-  mkdirSync(join(root, ".gemini"));
-  writeFileSync(join(root, ".gemini", "settings.json"), "{}\n");
+  mkdirSync(join(root, ".gemini", "config"), { recursive: true });
+  writeFileSync(join(root, ".gemini", "config", "hooks.json"), "{}\n");
   commit(root, "initial public draft with local wiring");
   rmSync(join(root, ".gemini"), { recursive: true });
   commit(root, "remove local wiring");
@@ -254,7 +254,7 @@ test("deleted provider wiring in the initial commit still blocks release", () =>
   assert.equal(check(root, "--tree").code, 0);
   const result = check(root);
   assert.notEqual(result.code, 0);
-  assert.match(result.stderr, /history [0-9a-f]+: private path \.gemini\/settings\.json/);
+  assert.match(result.stderr, /history [0-9a-f]+: private path \.gemini\/config\/hooks\.json/);
 });
 
 test("a deleted symlink remains a release blocker", () => {

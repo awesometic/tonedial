@@ -7,7 +7,7 @@ import { tmpdir } from "node:os";
 import { run } from "../src/cli.ts";
 import { runDoctor } from "../src/commands/doctor.ts";
 import { isConfigV2, parseConfig, serializeConfig } from "../src/core/config.ts";
-import { LEGACY_CONTEXT_ARTIFACT_FILENAME, projectTonePath, readerPath, resolveAgentPaths, resolvePaths } from "../src/core/paths.ts";
+import { AGENT_TOOLS, LEGACY_CONTEXT_ARTIFACT_FILENAME, projectTonePath, readerPath, resolveAgentPaths, resolvePaths } from "../src/core/paths.ts";
 import { seedFiles, seedRecord } from "../src/core/seeds.ts";
 import { acquireOperation, beginJournal, readJournal } from "../src/core/operations.ts";
 import { catalogue } from "../src/core/i18n.ts";
@@ -69,19 +69,13 @@ for (const shape of ["equal", "ancestor", "alias"] as const) {
   });
 }
 
-test("a reserved target is refused with its blocker before creating files", async () => {
-  // Pinned on a reserved name rather than on whichever tool is next on the roadmap: the
-  // obligation is that an unavailable target stops before any write, and pinning it on a tool
-  // means rewriting this test the day that tool ships.
-  for (const [tool, blocker] of [
-    ["antigravity-cli", "project-path"],
-    ["antigravity-desktop", "protocol"],
-  ] as const) {
+test("unsupported tools are refused before creating files", async () => {
+  for (const tool of ["other-agent", "unknown-agent"] as const) {
     const result = await invoke(["init", "--here", "--tools", tool, "--auto", "--json"]);
     assert.notEqual(result.code, 0, result.out);
     const error = JSON.parse(result.out).error as string;
-    assert.equal(error, catalogue("en").cli.errors.reservedTarget(tool, blocker), tool);
-    assert.doesNotMatch(error, /Choose from/, "a claimed name is not reported as a misspelling");
+    assert.equal(error, catalogue("en").cli.wiring.unknownTool(tool, AGENT_TOOLS), tool);
+    assert.match(error, /Available:/);
     assert.deepEqual(readdirSync(scratch), [], tool);
   }
 });
@@ -236,7 +230,7 @@ test("native setup refuses before touching an existing unowned tone command", as
 
 test("legacy selected agents share one approved skill and disconnect only their own consumers", async () => {
   const project = join(scratch, "project");
-  const tools = ["codex", "claude", "gemini"] as const;
+  const tools = ["codex", "claude"] as const;
   const fixture = await createLegacyFixture({
     env,
     cwd: project,
@@ -250,14 +244,13 @@ test("legacy selected agents share one approved skill and disconnect only their 
   assert.equal(realpathSync(shared), realpathSync(source));
   assert.equal(realpathSync(claude), realpathSync(source));
   assert.equal(readFileSync(join(claude, "SKILL.md"), "utf8"), readFileSync(join(source, "SKILL.md"), "utf8"));
-  assert.equal(existsSync(join(project, ".gemini", "skills")), false);
   const config = parseConfig(readFileSync(paths.config, "utf8"));
   assert.ok(isConfigV2(config));
   const resources = Object.values(config.wiring.resources).filter((resource) => resource.kind === "skill");
   assert.equal(resources.length, 2);
-  assert.equal(resources.find((resource) => resource.path === shared)!.consumers.length, 3);
+  assert.equal(resources.find((resource) => resource.path === shared)!.consumers.length, 2);
 
-  for (const tool of ["claude", "gemini", "codex"] as const) {
+  for (const tool of ["claude", "codex"] as const) {
     const removed = await invoke(["unwire", "--here", tool, "--auto", "--json"]);
     assert.equal(removed.code, 0, removed.out + removed.err);
     assert.equal(existsSync(shared), tool !== "codex", "shared delivery lasts through the final consumer");

@@ -357,7 +357,7 @@ function readManaged(raw: unknown, field: string, t: Messages): ManagedResource[
   // ownership. A retained legacy record is left exactly as found: it round-trips untouched, and
   // adding a field to it would rewrite provenance this tool only ever reads.
   if (source.matchers !== undefined) {
-    if (!Array.isArray(source.matchers) || source.matchers.length === 0 ||
+    if (!Array.isArray(source.matchers) || (source.matchers.length === 0 && managed.event !== "PreInvocation") ||
         new Set(source.matchers).size !== source.matchers.length ||
         source.matchers.some((matcher) => typeof matcher !== "string" || matcher === "" || matcher.includes("\0"))) {
       invalidValue(`${field}.matchers`, t);
@@ -456,8 +456,11 @@ function readWiringV2(raw: unknown, t: Messages): WiringV2 {
         }
         managedByRegistration[id] = readManaged(metadata, `wiring.resources.${key}.managedByRegistration.${id}`, t);
         const managed = managedByRegistration[id]!;
-        if (kind !== "hook" || managed.version !== 2 || managed.event !== "SessionStart"
-          || !managed.matchers?.length || !managed.command || managed.command.includes("\0") || !managed.handlerSha256
+        const validEvent = registration.target === "antigravity"
+          ? managed.event === "PreInvocation" && managed.matchers?.length === 0
+          : managed.event === "SessionStart" && !!managed.matchers?.length;
+        if (kind !== "hook" || managed.version !== 2 || !validEvent
+          || !managed.command || managed.command.includes("\0") || !managed.handlerSha256
           || !managed.runtime || !isAbsolute(managed.runtime) || managed.runtime.includes("\0")) {
           invalidValue(`wiring.resources.${key}.managedByRegistration.${id}`, t);
         }

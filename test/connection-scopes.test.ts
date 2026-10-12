@@ -56,9 +56,9 @@ test("connection defaults preview the global destination and explicit scopes mut
   const hereHook = join(project, ".codex", "hooks.json");
   const hereBytes = readFileSync(hereHook, "utf8");
   const named = join(project, "named");
-  const setupNamed = await invoke(["init", "--project", "named", "--tools", "gemini", "--auto"]);
+  const setupNamed = await invoke(["init", "--project", "named", "--tools", "antigravity", "--auto"]);
   assert.equal(setupNamed.code, 0, JSON.stringify(setupNamed.value));
-  const namedHook = join(named, ".gemini", "settings.json");
+  const namedHook = join(named, ".agents", "hooks.json");
   const namedBytes = readFileSync(namedHook, "utf8");
   assert.equal(setupNamed.value.agentRoot, named);
   assert.equal(readFileSync(globalHook, "utf8"), globalBytes);
@@ -71,9 +71,9 @@ test("connection defaults preview the global destination and explicit scopes mut
   assert.ok(isConfigV2(config));
   assert.deepEqual(Object.values(config.wiring.registrations).map(({ target, scope, destination }) =>
     ({ target, scope, destination })).sort((a, b) => a.target.localeCompare(b.target)), [
+    { target: "antigravity", scope: "project", destination: realpathSync(named) },
     { target: "claude", scope: "global", destination: realpathSync(home) },
     { target: "codex", scope: "project", destination: realpathSync(project) },
-    { target: "gemini", scope: "project", destination: realpathSync(named) },
   ]);
 
   assert.equal((await invoke(["unwire", "claude", "--global", "--auto"])).code, 0);

@@ -99,16 +99,23 @@ type NativeIntegration = {
   configuration: "configured" | "missing" | "stale" | "foreign";
   runtime: NativeRuntimeHealth;
   reader: NativeReaderHealth;
-  /**
-   * Whether the host has been told to trust this hook, where the host records that.
-   *
-   * Only Codex does, so every other tool reads `unknown`. It sits beside `activation` rather
-   * than inside it because they answer different questions: this one can prove a hook will not
-   * run, and neither can prove one did.
-   */
+  /** Codex's separate trust record; an enabled setting does not prove trust or delivery. */
   trust: CodexTrust;
   activation: "unverified";
 };
+
+type HookSetting = {
+  tool: AgentTool;
+  state: "enabled" | "disabled" | "unknown";
+  basis: "registered-file" | "codex-record" | "unverified";
+  path: string | null;
+};
+
+type HookEvent = "SessionStart" | "PreInvocation";
+
+function hookEvent(tool: AgentTool): HookEvent {
+  return tool === "antigravity" ? "PreInvocation" : "SessionStart";
+}
 
 type NativeRoute = {
   tool: AgentTool;
@@ -122,6 +129,7 @@ type NativeRoute = {
 
 type NativeDiagnosis = {
   integration: NativeIntegration;
+  hookSetting: HookSetting;
   check: Check;
 };
 
@@ -219,8 +227,8 @@ function readerHealth(ctx: Ctx, config: Config, configRead: Change, seeds: reado
         killSignal: "SIGKILL",
         maxBuffer: 8192,
       });
-      const expected = provider === "gemini"
-        ? JSON.stringify({ hookSpecificOutput: { additionalContext: body } }) + "\n" : body;
+      const expected = provider === "antigravity"
+        ? JSON.stringify({ injectSteps: [{ ephemeralMessage: body }] }) + "\n" : body;
       if (probe.error || probe.status !== 0 || probe.stderr !== "" || probe.stdout !== expected) return result;
     }
     result.reason = "changed";
@@ -342,6 +350,7 @@ function diagnoseNative(
   route: NativeRoute,
   reader: ReaderHealth,
 ): NativeDiagnosis {
+  const event = hookEvent(route.tool);
   const nativeReader: NativeReaderHealth = {
     path: readerPath(ctx.paths.root),
     state: reader.state,
@@ -368,7 +377,7 @@ function diagnoseNative(
     // handlers, so setup can still add ours without touching what is already there. Calling an
     // untouched foreign settings file a stale copy of ours is the misreport this branch fixes.
     configuration = "missing";
-    detail = ctx.t.doctor.nativeMissing(route.path);
+    detail = ctx.t.doctor.nativeMissing(route.path, event);
     repairable = route.repairAllowed;
     if (change.before === null && resource !== undefined) {
       try {
@@ -397,14 +406,16 @@ function diagnoseNative(
       const current = contentHash(owned) === orderedFingerprint(desired, route.path, ctx.t);
       configuration = current ? "configured" : "stale";
       detail = current
-        ? (route.inherited ? ctx.t.doctor.nativeInherited(route.path) : ctx.t.doctor.nativeConfigured)
+        ? (route.inherited ? ctx.t.doctor.nativeInherited(route.path, event) : ctx.t.doctor.nativeConfigured(event))
         : ctx.t.doctor.nativeStale;
       repairable = current ? false : route.repairAllowed;
     }
   }
 
   const humanDetail = [configuration === "configured"
-    ? route.inherited ? ctx.t.doctor.nativeInheritedCompact(route.path) : ctx.t.doctor.nativeConfiguredCompact
+    ? route.inherited
+      ? ctx.t.doctor.nativeInheritedCompact(route.path, event)
+      : ctx.t.doctor.nativeConfiguredCompact(event)
     : detail];
 
   // Runtime availability is its own observation. It can make a configured entry unusable, and it
@@ -430,7 +441,32 @@ function diagnoseNative(
     : "unknown";
   if (trust === "disabled") {
     detail = `${detail} ${ctx.t.doctor.codexHookDisabled}`;
-    humanDetail.push(ctx.t.doctor.codexHookDisabledCompact);
+  }
+
+  const hookSetting: HookSetting = { tool: route.tool, state: "unknown", basis: "unverified", path: route.path };
+  if (trust === "disabled") {
+    hookSetting.state = "disabled";
+    hookSetting.basis = "codex-record";
+  } else if (route.tool === "claude" && configuration === "configured" && change?.before) {
+    const disabled: unknown = JSON.parse(change.before).disableAllHooks;
+    // shortcut: this is only the registered file's switch; effective host state needs a host API.
+    if (disabled === undefined || typeof disabled === "boolean") {
+      hookSetting.state = disabled === true ? "disabled" : "enabled";
+      hookSetting.basis = "registered-file";
+      if (disabled === true) detail = `${detail} ${ctx.t.doctor.hookSettingState.disabled}`;
+    }
+  } else if (route.tool === "antigravity" && configuration === "configured" && change?.before) {
+    try {
+      const named = JSON.parse(change.before).tonedial;
+      const enabled = named !== null && typeof named === "object" ? named.enabled : undefined;
+      if (enabled === undefined || typeof enabled === "boolean") {
+        hookSetting.state = enabled === false ? "disabled" : "enabled";
+        hookSetting.basis = "registered-file";
+        if (enabled === false) detail = `${detail} ${ctx.t.doctor.hookSettingState.disabled}`;
+      }
+    } catch {
+      // Keep enablement unknown when the owned hook document cannot be read as JSON.
+    }
   }
 
   const integration: NativeIntegration = {
@@ -447,10 +483,11 @@ function diagnoseNative(
   // host-review observation, never approval or activation evidence.
   const state: State =
     configuration === "configured" && runtime.state === "available" &&
-    trust !== "disabled" ? "ok" : "problem";
+    hookSetting.state !== "disabled" ? "ok" : "problem";
   const repair = repairable ? repairCommand(ctx, `init --tools ${route.tool}`) : undefined;
   return {
     integration,
+    hookSetting,
     check: {
       name: TARGETS[route.tool].label,
       state,
@@ -632,14 +669,6 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true, showCodexActi
   if (diagnosis.config === null || diagnosis.configChange === null || diagnosis.layout.inspectionFailure !== null) {
     const checks = [contextCheck(ctx, diagnosis)];
     const lines = [
-      ...(ctx.flags.verbose ? [
-        `  ${ctx.ui.dim(ctx.t.doctor.inspecting)}`,
-        `  ${ctx.ui.dim(humanText(ctx.agent.root))}`,
-        ...(ctx.agent.live
-          ? [`  ${ctx.ui.dim(ctx.t.wiring.scopeGlobal)}`]
-          : [`  ${ctx.ui.dim(ctx.t.doctor.scope)}`]),
-        "",
-      ] : []),
       ...checks.flatMap((check) => report(check, ctx)),
       "",
       `  ${ctx.ui.warn(ctx.t.doctor.toLookAt(1))}`,
@@ -706,17 +735,35 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true, showCodexActi
     : reader.reason !== null && reader.reason !== "inspection" && reader.reason !== "operation"
       ? ctx.t.doctor.seedReason[reader.reason] : "";
   const integrations: NativeIntegration[] = [];
+  const hookSettings: HookSetting[] = [];
   for (const tool of AGENT_TOOLS) {
     const route = nativeRoute(ctx, config, tool);
     if (route !== null) {
       const diagnosed = diagnoseNative(ctx, route, reader);
       integrations.push(diagnosed.integration);
+      hookSettings.push(diagnosed.hookSetting);
       checks.push(diagnosed.check);
       continue;
     }
 
     const check = wiringCheck(ctx, tool, shownPath);
     checks.push(check);
+    if (tool === "claude" || tool === "codex" || tool === "antigravity") {
+      hookSettings.push({ tool, state: "unknown", basis: "unverified", path: null });
+    }
+  }
+  for (const setting of hookSettings) {
+    const check = checks.find(check => check.name === TARGETS[setting.tool].label)!;
+    const integration = integrations.find(integration => integration.tool === setting.tool);
+    const guidance = setting.path === null && TARGETS[setting.tool].delivery === null ? ""
+      : setting.path === null ? ctx.t.doctor.hookNotConnected
+      : integration?.configuration !== "configured" || integration.runtime.state !== "available"
+        ? ctx.t.doctor.hookNeedsInspection
+      : setting.tool === "codex" && !showCodexAction ? ""
+      : ctx.t.doctor.hookGuidance[setting.tool];
+    check.humanDetail = [ctx.t.doctor.hookSettingState[setting.state],
+      ...(check.humanDetail ?? [check.detail]),
+      ...(guidance === "" ? [] : [guidance])];
   }
 
   checks.push(seedCheck(ctx, config, seeds));
@@ -765,59 +812,29 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true, showCodexActi
   const nativeAttention = (diagnosis.layout.nativeAttention?.legacyConsumers.length ?? 0) > 0 ||
     diagnosis.layout.nativeAttention?.inspectionFailure != null || integrations.some((integration) =>
       integration.configuration !== "configured" || integration.runtime.state !== "available" ||
-      integration.trust === "disabled");
+      integration.trust === "disabled") || hookSettings.some(setting => setting.state === "disabled");
   const elsewhere = wiredElsewhere(config, { scope, destination });
-  const nativeCheckNames = new Set(integrations.map(({ tool }) => TARGETS[tool].label));
+  const nativeCheckNames = new Set(hookSettings.map(({ tool }) => TARGETS[tool].label));
   const shownChecks = ctx.flags.verbose
     ? checks
     : checks.filter((check) =>
         check.state === "problem" || check.repair !== undefined || nativeCheckNames.has(check.name));
   const appHealthy = diagnosis.layout.kind === "current" && diagnosis.layout.cause === "none" && seeds.every(({ state }) => state === "current");
-  const codex = integrations.find(integration => integration.tool === "codex");
 
   const lines: string[] = [
-    ...(ctx.flags.verbose ? [
-      `  ${ctx.ui.dim(ctx.t.doctor.inspecting)}`,
-      `  ${ctx.ui.dim(humanText(ctx.agent.root))}`,
-      // Scope, not a preview warning. It called a real project directory a "preview root" — the
-      // misconception this change was made to remove, still being asserted by the command that
-      // exists to tell the truth about the install.
-      ...(ctx.agent.live
-        ? [`  ${ctx.ui.dim(ctx.t.wiring.scopeGlobal)}`]
-        : [`  ${ctx.ui.dim(ctx.t.doctor.scope)}`]),
-      "",
-    ] : []),
     `  ${ctx.ui.bold((appHealthy ? ctx.ui.success : ctx.ui.warn)(ctx.t.doctor.applicationHealth(appHealthy)))}`,
     ...wrap(ctx.t.doctor.connectionHealth(nativeAttention), ctx.ui.width - 2).map((line) =>
       `  ${nativeAttention ? ctx.ui.warn(line) : line}`),
+    ...wrap(ctx.t.doctor.hookSettingScope, ctx.ui.width - 2).map(line => `  ${line}`),
     "",
     ...shownChecks.flatMap((c) => report(c, ctx)),
-    ...(codex?.configuration === "configured" && codex.runtime.state === "available" && showCodexAction
-      ? ["", ...receiptLines(ctx.t.wiring.codexTrust(ctx.agent.live || codex.inherited), ctx.ui.width - 2)
-      .map(line => `  ${ctx.ui.accent(line)}`)] : []),
     // A repair receipt presents its new IDs once in native→app order. Standalone diagnosis
     // still lists available historical rollback commands.
     ...(showRollbackCommands ? inspected.journals.flatMap(({ operationId, state, journal }) =>
       state === "complete" && journal?.retention && inspectRollback(ctx.paths, operationId).allowed
         ? ["", `  ${operationId}  ${ctx.t.doctor.operationState.complete}`, `  tonedial doctor --fix --rollback ${operationId}`]
         : []) : []),
-    // Lines rather than checks, because `doctor-context.test.ts` pins the check list and these
-    // are not entries in it. They are also not problems: `healthy` is `problems.length === 0`,
-    // and a row this command will never repair must not hold that false forever — the reason
-    // this file gives for not latching at all, near the top.
-    //
-    // The destination gets its own line, unfolded, the way `inspecting` above does it: a folded
-    // path is a path nobody can copy, which is the whole reason the width contract exempts one.
-    // Complete repair commands remain copyable and use terminal soft wrapping for long paths.
-    ...(elsewhere.length === 0 ? [] : ["", `  ${ctx.ui.bold(ctx.t.doctor.wiredElsewhere)}`, ...elsewhere.flatMap((row) => [
-      `  ${row.state === "ok"
-        ? row.target
-        : ctx.ui.warn(`${row.target} — ${row.state === "gone" ? ctx.t.doctor.destinationGone : ctx.t.doctor.destinationUnwired}`)}`,
-      `  ${humanText(row.destination)}`,
-      ...(row.state === "ok"
-        ? []
-        : [`  ${ctx.ui.accent(humanText(`tonedial eject ${row.scope === "global" ? "--global" : `--project "${shellQuote(row.destination)}"`}`))}`]),
-    ])]),
+    ...elsewhereReport(elsewhere, ctx),
   ];
 
   if (problems.length) {
@@ -838,6 +855,7 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true, showCodexActi
       contextPayload: payload,
       reader,
       integrations,
+      hookSettings,
       diff: [],
       checks: checks.map(({ name, state, detail, repair, files }) => ({ name, state, detail, repair: repair ?? null, ...(files ? { files } : {}) })),
       wiredElsewhere: elsewhere,
@@ -1028,8 +1046,13 @@ function pathCheck(ctx: Ctx, shape: InstallShape): Check {
 /** One tool's region: absent, present and current, present and stale, present and damaged. */
 function wiringCheck(ctx: Ctx, tool: AgentTool, shownPath: WiredAt): Check {
   const target = TARGETS[tool];
-  const path = ctx.agent.wiredFile(tool);
   const name = target.label;
+  // A native target has no legacy region. An unregistered Antigravity hooks file is not evidence
+  // of a ToneDial connection, so leave it to the common hook-setting guidance below.
+  if (target.delivery === null) {
+    return { name, state: "note", detail: ctx.t.doctor.hookNotConnected };
+  }
+  const path = ctx.agent.wiredFile(tool);
   // Legacy delivery is inspected only; new setup uses the native pair route.
 
   // Use the shared bounded planner even for inspection. It rejects a directory, FIFO, device,
@@ -1066,7 +1089,7 @@ function wiringCheck(ctx: Ctx, tool: AgentTool, shownPath: WiredAt): Check {
     }
     if (present) {
       return existsSync(ctx.paths.tone)
-        ? { name, state: "ok", detail: ctx.t.doctor.hookPresent }
+        ? { name, state: "ok", detail: ctx.t.doctor.hookPresent(hookEvent(tool)) }
         : {
             name,
             state: "problem",
@@ -1145,6 +1168,43 @@ function wiredElsewhere(config: Config, here: { scope: WiringScope; destination:
     });
   }
   return rows.sort((a, b) => a.destination.localeCompare(b.destination));
+}
+
+/** Group presentation only; JSON retains each registration and its individual state. */
+function elsewhereReport(rows: Elsewhere[], ctx: Ctx): string[] {
+  if (rows.length === 0) return [];
+  const groups = new Map<string, Elsewhere[]>();
+  for (const row of rows) {
+    const key = JSON.stringify([row.scope, row.destination]);
+    const group = groups.get(key) ?? [];
+    group.push(row);
+    groups.set(key, group);
+  }
+  const lines = ["", ...wrap(ctx.t.doctor.wiredElsewhere, ctx.ui.width - 2)
+    .map(line => `  ${ctx.ui.bold(line)}`)];
+  for (const group of groups.values()) {
+    const { scope, destination } = group[0]!;
+    lines.push(...wrap(scope === "global" ? ctx.t.wiring.scopeGlobal : ctx.t.wiring.scopeHere, ctx.ui.width - 2)
+      .map(line => `  ${ctx.ui.dim(line)}`), `  ${humanText(destination)}`);
+    for (const state of ["ok", "unwired", "gone"] as const) {
+      const targets = group.filter(row => row.state === state).map(row => row.target);
+      if (targets.length === 0) continue;
+      const detail = state === "ok" ? ctx.t.doctor.destinationPresent
+        : state === "gone" ? ctx.t.doctor.destinationGone : ctx.t.doctor.destinationUnwired;
+      lines.push(...wrap(`${targets.join(", ")} — ${detail}`, ctx.ui.width - 4)
+        .map(line => `    ${state === "ok" ? line : ctx.ui.warn(line)}`));
+    }
+    if (group.some(row => row.state !== "ok")) {
+      const scopeFlag = scope === "global" ? "--global" : `--project "${shellQuote(destination)}"`;
+      lines.push(...wrap(ctx.t.doctor.inspectScope, ctx.ui.width - 4).map(line => `    ${line}`),
+        `    ${ctx.ui.accent(humanText(`tonedial doctor ${scopeFlag}`))}`,
+        ...wrap(ctx.t.doctor.disconnectScope, ctx.ui.width - 4).map(line => `    ${line}`),
+        `    ${ctx.ui.accent(humanText(`tonedial eject ${scopeFlag}`))}`);
+    }
+    lines.push("");
+  }
+  lines.pop();
+  return lines;
 }
 
 function report(check: Check, ctx: Ctx): string[] {

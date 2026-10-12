@@ -43,7 +43,7 @@ import { palette } from "../src/ui/style.ts";
 const EN = catalogue("en").cli;
 let scratch = "";
 
-function registration(target: "codex" | "claude" | "gemini", root: string): Omit<WiringRegistration, "resourceIds"> {
+function registration(target: "codex" | "claude" | "antigravity", root: string): Omit<WiringRegistration, "resourceIds"> {
   return { target, scope: "project", destination: root };
 }
 
@@ -329,7 +329,7 @@ test("skill actions refuse a destination parent replaced after preview", () => {
 test("selected tools share one physical action and retain separate consumers", () => {
   const agent = resolveAgentPaths({ global: false, project: null }, { HOME: scratch }, scratch);
   const source = join(scratch, "state", "skill", "tonedial");
-  const selected = planSelectedSkills(agent, ["codex", "gemini"], source, emptyWiring(), {
+  const selected = planSelectedSkills(agent, ["codex", "antigravity"], source, emptyWiring(), {
     "SKILL.md": "skill\n",
   }, EN);
 
@@ -338,7 +338,7 @@ test("selected tools share one physical action and retain separate consumers", (
   assert.equal(Object.keys(selected.wiring.resources).length, 1);
   const resource = Object.values(selected.wiring.resources)[0]!;
   assert.equal(resource.consumers.length, 2);
-  assert.deepEqual(selected.skills.map((skill) => skill.tool), ["codex", "gemini"]);
+  assert.deepEqual(selected.skills.map((skill) => skill.tool), ["codex", "antigravity"]);
 
   mkdirSync(source, { recursive: true });
   selected.actions[0]!.apply();

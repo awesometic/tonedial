@@ -5,7 +5,7 @@ import { join, dirname, isAbsolute } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { AGENT_TOOLS, resolveAgentPaths } from "../src/core/paths.ts";
-import { RESERVED_TARGETS, TARGETS, orderedHook, parseToolSelection } from "../src/wiring/targets.ts";
+import { TARGETS, orderedHook, parseToolSelection } from "../src/wiring/targets.ts";
 import { BUNDLED, SLUG_PATTERN } from "../src/core/presets.ts";
 import { LANGUAGES, catalogue } from "../src/core/i18n.ts";
 
@@ -30,19 +30,20 @@ test("every supported agent carries a complete route, named where it does not", 
       assert.ok(path.startsWith("/tmp/does-not-matter"), `${tool}'s ${what} escapes the agent root: ${path}`);
     }
 
-    // The lifecycle it fires on. One entry may carry an alternation where the host documents
-    // one, and needs one entry per source where it does not — either way the set is not empty,
-    // because a hook with no matcher is written, looks right, and never runs.
+    // Session hooks carry matchers. Antigravity's invocation hook is a direct event list and
+    // intentionally has no matcher.
     const spec = orderedHook(tool, "/tmp/state", "/usr/bin/node");
-    assert.ok(spec.matchers.length > 0, `${tool} installs a SessionStart hook with no matcher`);
-    for (const matcher of spec.matchers) {
-      assert.ok(matcher.trim().length > 0, `${tool} has an empty matcher`);
+    if (tool === "antigravity") {
+      assert.equal(spec.event, "PreInvocation");
+      assert.deepEqual(spec.matchers, []);
+    } else {
+      assert.ok(spec.matchers.length > 0, `${tool} installs a SessionStart hook with no matcher`);
+      for (const matcher of spec.matchers) {
+        assert.ok(matcher.trim().length > 0, `${tool} has an empty matcher`);
+      }
     }
     assert.ok(spec.handler.command, `${tool}'s hook has no command to run`);
 
-    // A name cannot be both supported and reserved: `parseToolSelection` checks reserved first,
-    // so leaving it in the reserved table makes the finished route unselectable.
-    assert.equal(RESERVED_TARGETS[tool], undefined, `${tool} is supported and still reserved`);
     assert.deepEqual(parseToolSelection(tool, false, EN), [tool], `${tool} is not selectable`);
   }
 });

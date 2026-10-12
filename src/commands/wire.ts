@@ -133,6 +133,7 @@ function selectedShell(ctx: Ctx, wiring: WiringV2, tools: AgentTool[], explicitT
 
 /** Explicit selection can recognize old bytes, never old creation flags or foreign entries. */
 function rebuildLegacyDelivery(ctx: Ctx, tool: AgentTool, wiring: WiringV2, explicit: boolean): { change: Change | null; wiring: WiringV2 } {
+  if (tool === "antigravity") return { change: null, wiring };
   const witnessed = planLegacyDeliveryRemoval(ctx.paths, ctx.agent, tool, wiring, ctx.env, ctx.t);
   if (witnessed) return witnessed;
   if (!explicit) return { change: null, wiring };

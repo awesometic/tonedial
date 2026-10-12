@@ -838,9 +838,9 @@ test("a Korean install speaks Korean where a user actually reads", async () => {
   }
   out = [];
   err = [];
-  assert.equal(await cli("wire", "--here", "--tools", "antigravity-cli", "--dry-run", "--auto"), 1, "wire --tools antigravity-cli");
+  assert.equal(await cli("wire", "--here", "--tools", "other-agent", "--dry-run", "--auto"), 1, "wire --tools other-agent");
   assert.equal(out.join(""), "", "native refusal has no stdout payload");
-  const expectedRefusal = catalogue("ko").cli.errors.reservedTarget("antigravity-cli", "project-path");
+  const expectedRefusal = catalogue("ko").cli.wiring.unknownTool("other-agent", ["claude", "antigravity", "codex"]);
   assert.equal(
     err.join("").replace(/\s+/g, " ").trim(),
     expectedRefusal.replace(/\s+/g, " ").trim(),
@@ -848,7 +848,7 @@ test("a Korean install speaks Korean where a user actually reads", async () => {
   );
   const refusal = stripStable(err.join(""));
   const refusalHit = refusal.match(ENGLISH);
-  assert.equal(refusalHit, null, `wire --tools gemini answered in English on "${refusalHit?.[0] ?? ""}"`);
+  assert.equal(refusalHit, null, `wire --tools other-agent answered in English on "${refusalHit?.[0] ?? ""}"`);
   // Errors too — they are what a user hits when something has already gone wrong.
   for (const argv of [
     ["set", "warmth=9"], ["set", "warmthh=3"], ["use", "nosuch"], ["edit", "traits"],
@@ -929,7 +929,7 @@ function stripStable(text: string): string {
     .replace(/\b[A-Z]{4,}: [^,\n]+/g, " ")
     .replace(/\b(Caring Brother|Bratty Kid|Eager Sycophant|Tough Love|Terse Operator)\b/g, " ")
     .replace(/\b(caring-brother|bratty-kid|eager-sycophant|tough-love|terse-operator)\b/g, " ")
-    .replace(/\b(Claude Code|Gemini CLI|Codex CLI|EDITOR|VISUAL|PATH|JSON|auto|always|never)\b/g, " ");
+    .replace(/\b(Claude Code|Codex CLI|Antigravity IDE\/Desktop|EDITOR|VISUAL|PATH|JSON|auto|always|never)\b/g, " ");
 }
 
 /** The words either side of a hit, so a failure names the sentence rather than the word. */

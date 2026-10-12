@@ -12,7 +12,7 @@ export const GUIDE_FORMAT_MARKER = `<!-- tonedial-guide:${GUIDE_FORMAT_VERSION} 
 /** Stable, short repair guidance shared by the emitted source and diagnostics. */
 export const READER_REPAIR_HINTS = {
   arguments: "pass --provider and --state",
-  provider: "choose codex, claude, or gemini",
+  provider: "choose codex, claude, or antigravity",
   state: "use an absolute dedicated state root",
   "missing-state": "run tonedial init --tools none",
   "nonregular-state": "use a dedicated directory for TONEDIAL_HOME",
@@ -54,7 +54,7 @@ const ARTIFACT_FILENAME = ${JSON.stringify(CONTEXT_ARTIFACT_FILENAME)};
 const LOCK_FILENAME = "operations.lock";
 const GUIDE_MARKER = ${JSON.stringify(GUIDE_FORMAT_MARKER)};
 const REPAIR_HINTS = ${JSON.stringify(READER_REPAIR_HINTS)};
-const PROVIDERS = new Set(["codex", "claude", "gemini"]);
+const PROVIDERS = new Set(["codex", "claude", "antigravity"]);
 const NO_FOLLOW = constants.O_NOFOLLOW ?? 0;
 const NON_BLOCKING = constants.O_NONBLOCK ?? 0;
 
@@ -250,8 +250,8 @@ function readPair(state) {
 }
 
 function empty(provider) {
-  if (provider === "gemini") {
-    process.stdout.write(JSON.stringify({ hookSpecificOutput: { additionalContext: "" } }) + "\n");
+  if (provider === "antigravity") {
+    process.stdout.write(JSON.stringify({ injectSteps: [] }) + "\n");
   }
 }
 
@@ -266,8 +266,8 @@ function main() {
   try {
     const { provider, state } = parseArgs(args);
     const body = readPair(state);
-    if (provider === "gemini") {
-      process.stdout.write(JSON.stringify({ hookSpecificOutput: { additionalContext: body } }) + "\n");
+    if (provider === "antigravity") {
+      process.stdout.write(JSON.stringify({ injectSteps: [{ ephemeralMessage: body }] }) + "\n");
     } else {
       process.stdout.write(body);
     }

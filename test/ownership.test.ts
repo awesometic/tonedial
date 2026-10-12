@@ -105,15 +105,15 @@ test("schema 2 round-trips graph state and serializes tuple maps deterministical
 test("schema 2 round-trips independent lexical access witnesses for one physical resource", () => {
   const destination = canonicalDestination(scratch);
   const first = registrationKey("claude", "project", destination);
-  const second = registrationKey("gemini", "project", destination);
+  const second = registrationKey("antigravity", "project", destination);
   const physical = join(scratch, "shared.md");
   const id = resourceKey(physical, "hook");
   const firstPath = join(scratch, ".claude", "CLAUDE.md");
-  const secondPath = join(scratch, ".gemini", "GEMINI.md");
+  const secondPath = join(scratch, ".agents", "hooks.json");
   const wiring: WiringV2 = {
     registrations: {
       [first]: { target: "claude", scope: "project", destination, resourceIds: [id] },
-      [second]: { target: "gemini", scope: "project", destination, resourceIds: [id] },
+      [second]: { target: "antigravity", scope: "project", destination, resourceIds: [id] },
     },
     resources: {
       [id]: {
@@ -146,17 +146,22 @@ test("schema 2 round-trips independent lexical access witnesses for one physical
 test("shared native settings retain each registration's handler identity through serialization and detach", () => {
   const destination = canonicalDestination(scratch);
   const first = registrationKey("claude", "project", destination);
-  const second = registrationKey("gemini", "project", destination);
-  const path = join(scratch, "settings.json");
+  const second = registrationKey("antigravity", "project", destination);
+  const path = join(scratch, "hooks.json");
   const id = resourceKey(path, "hook");
   const firstMetadata = { version: 2, event: "SessionStart", matcher: "startup", command: "/old/node", runtime: "/old/node", args: ["reader.mjs", "claude"], handlerSha256: HASH, statusMessage: "ToneDial: load saved response tone" };
-  const secondMetadata: ManagedResource["managed"] = { ...firstMetadata, command: '"/other/node" "reader.mjs" --provider gemini', name: "ToneDial", description: "Load saved response tone" };
+  const secondMetadata: ManagedResource["managed"] = {
+    ...firstMetadata,
+    event: "PreInvocation",
+    matchers: [],
+    command: '"/other/node" "reader.mjs" --provider antigravity',
+  };
   delete secondMetadata.args;
   delete secondMetadata.statusMessage;
   const wiring: WiringV2 = {
     registrations: {
       [first]: { target: "claude", scope: "project", destination, resourceIds: [id], context: "pair" },
-      [second]: { target: "gemini", scope: "project", destination, resourceIds: [id], context: "pair" },
+      [second]: { target: "antigravity", scope: "project", destination, resourceIds: [id], context: "pair" },
     },
     resources: { [id]: {
       ...resource(path, [first, second]),
@@ -174,8 +179,8 @@ test("shared native settings retain each registration's handler identity through
   assert.equal(recordedHook(shared, first)!.handler.statusMessage, "ToneDial: load saved response tone");
   assert.equal(recordedHook(shared, first)!.documentDescription, "ToneDial session hooks");
   assert.equal(recordedHook(shared, second)!.handler.args, undefined);
-  assert.equal(recordedHook(shared, second)!.handler.name, "ToneDial");
-  assert.equal(recordedHook(shared, second)!.handler.description, "Load saved response tone");
+  assert.equal(recordedHook(shared, second)!.event, "PreInvocation");
+  assert.deepEqual(recordedHook(shared, second)!.matchers, []);
   const missingMap = { ...shared };
   delete missingMap.managedByRegistration;
   assert.equal(recordedHook(missingMap, first), null);
@@ -192,7 +197,7 @@ test("shared native settings retain each registration's handler identity through
     (value: any) => { value.wiring.resources[id].managedByRegistration[first].version = 1; },
     (value: any) => { value.wiring.resources[id].managedByRegistration[first].args = "not argv"; },
     (value: any) => { value.wiring.resources[id].managedByRegistration[first].statusMessage = []; },
-    (value: any) => { value.wiring.resources[id].managedByRegistration[second].description = "bad\0value"; },
+    (value: any) => { value.wiring.resources[id].managedByRegistration[second].command = "bad\0value"; },
     (value: any) => { value.wiring.resources[id].documentDescription = false; },
     (value: any) => { value.wiring.resources[id].consumers = [second]; },
     (value: any) => { delete value.wiring.registrations[first].context; },
@@ -241,7 +246,7 @@ test("schema 2 rejects malformed tuple keys, ownership references, and seed reco
 test("schema 2 rejects an access witness that is not a resource consumer", () => {
   const destination = canonicalDestination(scratch);
   const first = registrationKey("claude", "project", destination);
-  const second = registrationKey("gemini", "project", destination);
+  const second = registrationKey("antigravity", "project", destination);
   const path = join(scratch, "shared.md");
   const id = resourceKey(path, "hook");
   const config = baseConfig({

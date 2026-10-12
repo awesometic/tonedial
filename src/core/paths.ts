@@ -135,14 +135,13 @@ export function shellProfile(shell: string | undefined): { file: string; line: (
   return RC_FILES[basename(shell ?? "")] ?? DEFAULT_RC;
 }
 
-/** The three tools with a global instruction file, and where each keeps it. */
-export const AGENT_TOOLS = ["claude", "gemini", "codex"] as const;
+/** Supported agents and their native connection directories. */
+export const AGENT_TOOLS = ["claude", "antigravity", "codex"] as const;
 export type AgentTool = (typeof AGENT_TOOLS)[number];
 
-// Keep native directory names identical in global and project scopes.
 const AGENT_LAYOUT: Record<AgentTool, { dir: string; file: string }> = {
   claude: { dir: ".claude", file: "CLAUDE.md" },
-  gemini: { dir: ".gemini", file: "GEMINI.md" },
+  antigravity: { dir: ".agents", file: "hooks.json" },
   codex: { dir: ".codex", file: "hooks.json" },
 };
 
@@ -152,7 +151,7 @@ export type AgentPaths = {
   /** Global scope, unless TONEDIAL_AGENT_HOME redirects the destination. */
   live: boolean;
   home: (tool: AgentTool) => string;
-  /** The file this tool writes for that agent — an instruction file, or Codex's hooks.json. */
+  /** Native destination, with retained instruction paths used only for scoped cleanup. */
   wiredFile: (tool: AgentTool) => string;
   /** Ordered-pair settings destination; legacy instruction paths remain available for cleanup. */
   hookFile: (tool: AgentTool) => string;
@@ -187,14 +186,15 @@ export function resolveAgentPaths(
   // no downstream caller has to remember which paths are still relative.
   const root = override ?? (live ? userHome : where.project !== null ? resolve(cwd, where.project) : cwd);
 
-  const home = (tool: AgentTool) => join(root, AGENT_LAYOUT[tool].dir);
+  const home = (tool: AgentTool) => tool === "antigravity" && where.global
+    ? join(root, ".gemini", "config") : join(root, AGENT_LAYOUT[tool].dir);
   return {
     root,
     live,
     home,
     wiredFile: (tool) => join(home(tool), AGENT_LAYOUT[tool].file),
-    hookFile: (tool) => join(home(tool), tool === "codex" ? "hooks.json" : "settings.json"),
-    skills: (tool) => tool === "claude" ? join(home(tool), "skills") : join(root, ".agents", "skills"),
+    hookFile: (tool) => join(home(tool), tool === "claude" ? "settings.json" : "hooks.json"),
+    skills: (tool) => tool === "claude" || tool === "antigravity" ? join(home(tool), "skills") : join(root, ".agents", "skills"),
     command: (name) => join(home("claude"), COMMAND_DIR, `${name}.md`),
     rc: (shell) => join(userHome, shellProfile(shell).file),
   };
@@ -212,6 +212,7 @@ export type SkillDestination = {
 
 /** Shared native discovery plus Claude's provider alias, both using one source. */
 export function skillDestinations(agent: AgentPaths, tool: AgentTool, name: string, source: string): SkillDestination[] {
+  if (tool === "antigravity") return [{ path: join(agent.skills(tool), name), source }];
   const shared = join(agent.root, ".agents", "skills", name);
   const routes = [{ path: shared, source }];
   if (tool === "claude") {

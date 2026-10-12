@@ -1,4 +1,4 @@
-// SessionStart JSON transforms preserve unrelated settings and handlers. A native delivery is
+// Native JSON transforms preserve unrelated settings and handlers. A native delivery is
 // one or more entries sharing a handler, identified by that handler and the matchers it is
 // written under; the historical string selector remains for scoped legacy recognition and
 // cleanup, not new setup. Provider command protocols live in targets.ts.
@@ -31,17 +31,10 @@ export type HookHandler = {
   [key: string]: unknown;
 };
 
-/**
- * One provider's SessionStart delivery: the lifecycle matchers it needs, and the handler they
- * all run.
- *
- * A list rather than one matcher, because how a provider names the sessions it wants is the
- * provider's business. Some accept an alternation in one entry; for at least one the reading is
- * that its sources are exact names, and an alternation there would match none of them — a hook
- * that is written, looks right, and silently never fires. Writing one entry per matcher is
- * correct whichever reading holds, so the shape that survives both is the one stored.
- */
+/** SessionStart uses lifecycle matchers; Antigravity's PreInvocation runs the handler directly. */
 export type HookSpec = {
+  /** Antigravity runs a named hook before each model invocation, without matchers. */
+  event?: "PreInvocation";
   matchers: readonly string[];
   handler: HookHandler;
   /** Separately owned file-level metadata; never part of a handler fingerprint. */
@@ -64,7 +57,7 @@ type Document = { hooks?: Record<string, Matcher[]> } & Record<string, unknown>;
  * in there, and replacing the document to add one entry would delete them. Absent is the only
  * thing treated as empty.
  */
-function parse(before: string | null, path: string, t: Messages): Document {
+function parse(before: string | null, path: string, t: Messages, named = false): Document {
   if (before === null || before.trim() === "") return {};
   let value: unknown;
   try {
@@ -73,6 +66,7 @@ function parse(before: string | null, path: string, t: Messages): Document {
     throw new ConfigError(t.errors.hooksNotJson(path, (cause as Error).message));
   }
   if (!isPlainObject(value)) throw new ConfigError(t.errors.hooksNotJson(path, ""));
+  if (named) return value as Document;
   // **Shape, not only syntax.** Parsing said this is JSON; it did not say `hooks` is an object or
   // that `SessionStart` is an array, and assuming either destroyed the user's file rather than
   // refusing it: spreading a string `hooks` produced `{"0":"n","1":"o",…}`, and an object
@@ -112,6 +106,18 @@ const isPlainObject = (value: unknown): value is Record<string, unknown> =>
 const serialize = (doc: Document): string => `${JSON.stringify(doc, null, 2)}\n`;
 
 const entriesOf = (doc: Document): Matcher[] => doc.hooks?.SessionStart ?? [];
+
+function namedDefinition(doc: Document, path: string, t: Messages): Record<string, unknown> | null {
+  if (doc.tonedial === undefined) return null;
+  if (!isPlainObject(doc.tonedial) || (doc.tonedial.PreInvocation !== undefined &&
+      (!Array.isArray(doc.tonedial.PreInvocation) || doc.tonedial.PreInvocation.some(handler => !isPlainObject(handler))))) {
+    throw new ConfigError(t.errors.hooksNotJson(path, "tonedial.PreInvocation must be an array of handlers"));
+  }
+  return doc.tonedial;
+}
+
+const invocationHandlers = (definition: Record<string, unknown> | null): HookEntry[] =>
+  (definition?.PreInvocation as HookEntry[] | undefined) ?? [];
 
 /** Read the file-level slot without treating a non-string user value as an absent slot. */
 export function hookDocumentDescription(before: string | null, path: string, t: Messages): unknown {
@@ -169,6 +175,9 @@ const withoutOursFromEntries = (entries: Matcher[], selector: string | HookSpec)
  * of them are, because that is what the fingerprint means and what removal would take away.
  */
 export function hasHook(before: string | null, selector: string | HookSpec, path: string, t: Messages): boolean {
+  if (typeof selector !== "string" && selector.event === "PreInvocation") {
+    return ownedHook(before, selector, path, t) !== null;
+  }
   const entries = entriesOf(parse(before, path, t));
   const present = (matcher: string | undefined) => entries.some((block) =>
     (matcher === undefined || block.matcher === matcher) &&
@@ -178,6 +187,7 @@ export function hasHook(before: string | null, selector: string | HookSpec, path
 
 /** Positions of exact managed handlers in the host's unfiltered matcher/handler arrays. */
 export function ownedHookLocations(before: string | null, selector: HookSpec, path: string, t: Messages): readonly (readonly [number, number])[] {
+  if (selector.event === "PreInvocation") return [];
   return entriesOf(parse(before, path, t)).flatMap((block, matcher) =>
     (block.hooks ?? []).flatMap((handler, index) => ownsHandler(block, handler, selector) ? [[matcher, index] as const] : []));
 }
@@ -192,6 +202,11 @@ export function ownedHookLocations(before: string | null, selector: HookSpec, pa
  * reasoning that keeps object key order out of ownership one level down.
  */
 export function ownedHook(before: string | null, selector: string | HookSpec, path: string, t: Messages): string | null {
+  if (typeof selector !== "string" && selector.event === "PreInvocation") {
+    const definition = namedDefinition(parse(before, path, t, true), path, t);
+    const selected = invocationHandlers(definition).filter(handler => sameJsonValue(handler, selector.handler));
+    return selected.length ? serialize({ tonedial: { PreInvocation: selected } }) : null;
+  }
   const selected = entriesOf(parse(before, path, t)).flatMap((block) => {
     const hooks = block.hooks?.filter((handler) => ownsHandler(block, handler, selector)) ?? [];
     return hooks.length ? [{ ...block, hooks }] : [];
@@ -213,6 +228,12 @@ export function ownedHook(before: string | null, selector: string | HookSpec, pa
  * beside its older self.
  */
 export function withHook(before: string | null, selector: string | HookSpec, path: string, t: Messages): string {
+  if (typeof selector !== "string" && selector.event === "PreInvocation") {
+    const doc = parse(before, path, t, true);
+    const definition = namedDefinition(doc, path, t);
+    const kept = invocationHandlers(definition).filter(handler => !sameJsonValue(handler, selector.handler));
+    return serialize({ ...doc, tonedial: { enabled: true, ...definition, PreInvocation: [...kept, { ...selector.handler }] } });
+  }
   const doc = parse(before, path, t);
   const ours: Matcher[] = typeof selector === "string"
     ? [{
@@ -241,6 +262,19 @@ export function withoutHook(
   t: Messages,
   empty: "content" | "document" = "content",
 ): string {
+  if (typeof selector !== "string" && selector.event === "PreInvocation") {
+    const doc = parse(before, path, t, true);
+    const definition = namedDefinition(doc, path, t);
+    const handlers = invocationHandlers(definition);
+    const kept = handlers.filter(handler => !sameJsonValue(handler, selector.handler));
+    if (kept.length === handlers.length) return before;
+    const remaining = { ...definition };
+    if (kept.length) remaining.PreInvocation = kept;
+    else delete remaining.PreInvocation;
+    if (Object.keys(remaining).every(key => key === "enabled")) delete doc.tonedial;
+    else doc.tonedial = remaining;
+    return Object.keys(doc).length === 0 && empty === "content" ? "" : serialize(doc);
+  }
   const doc = parse(before, path, t);
   if (!entriesOf(doc).some((block) => block.hooks?.some((handler) => ownsHandler(block, handler, selector)))) {
     return before;

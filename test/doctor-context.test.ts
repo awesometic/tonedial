@@ -134,10 +134,10 @@ function containsWrapped(text: string, expected: string): boolean {
  * which is the shape the contract has always exempted, so the two owners share one predicate
  * rather than disagreeing the first time one of them is right.
  */
-function assertHumanWidth(output: string, language: string): void {
+function assertHumanWidth(output: string, language: string, width = UNKNOWN_WIDTH): void {
   for (const line of output.split("\n")) {
     if (isUnbreakable(line)) continue;
-    assert.ok(maxCells(line) <= UNKNOWN_WIDTH, `${language}: ${maxCells(line)} cells: ${line}`);
+    assert.ok(maxCells(line) <= width, `${language}: ${maxCells(line)} cells: ${line}`);
   }
 }
 
@@ -364,6 +364,71 @@ test("native doctor reports independent runtime and reader health and repairs a 
   assert.equal(JSON.parse(readFileSync(hookPath, "utf8")).hooks.SessionStart.length, 1);
 });
 
+test("doctor shares hook setting states and guidance across agents and locales", async () => {
+  assert.equal((await invoke(["init", "--global", "--tools", "claude,codex,antigravity", "--auto"])).code, 0);
+  const agent = resolveAgentPaths({ global: true, project: null }, env);
+  const claudePath = agent.hookFile("claude");
+  const antigravityPath = agent.hookFile("antigravity");
+  const original = readFileSync(claudePath, "utf8");
+  const hooks = (result: Report) => result.value.hookSettings as Array<{
+    tool: string; state: string; basis: string; path: string | null;
+  }>;
+  const configured = await invoke(["doctor", "--global"]);
+  assert.deepEqual(hooks(configured).find(row => row.tool === "claude"), {
+    tool: "claude", state: "enabled", basis: "registered-file", path: claudePath,
+  });
+  assert.deepEqual(hooks(configured).find(row => row.tool === "antigravity"), {
+    tool: "antigravity", state: "enabled", basis: "registered-file", path: antigravityPath,
+  });
+  assert.equal(hooks(configured).find(row => row.tool === "codex")?.state, "unknown");
+  assert.deepEqual(hooks(configured).map(row => row.tool).sort(), ["antigravity", "claude", "codex"],
+    "diagnose all supported targets through the same hook layer");
+  // A project can inherit the same file; no project activation is inferred from that observation.
+  const inherited = await invoke(["doctor", "--here"]);
+  assert.deepEqual(hooks(inherited).find(row => row.tool === "claude"),
+    hooks(configured).find(row => row.tool === "claude"));
+
+  for (const language of ["en", "ko"] as const) {
+    assert.equal((await invoke(["set", `language=${language}`])).code, 0);
+    const human = await invokeHuman(["doctor", "--global"]);
+    const t = catalogue(language).cli.doctor;
+    assert.ok(containsWrapped(human.output, t.hookSettingState.enabled), human.output);
+    assert.ok(containsWrapped(human.output, t.hookGuidance.codex), human.output);
+    assert.ok(containsWrapped(human.output, t.hookGuidance.antigravity), human.output);
+    assert.ok(containsWrapped(human.output, t.hookGuidance.claude), human.output);
+    assert.equal(human.output.split("/hooks").length - 1, 2, human.output);
+    assert.ok(containsWrapped(human.output, t.hookSettingScope), human.output);
+  }
+  assert.equal(readFileSync(claudePath, "utf8"), original, "diagnosis must not change host settings");
+
+  for (const [disabled, expected] of [[true, "disabled"], [false, "enabled"], ["false", "unknown"]] as const) {
+    const contents = JSON.stringify({ ...JSON.parse(original), disableAllHooks: disabled });
+    writeFileSync(claudePath, contents);
+    const result = await invoke(["doctor", "--global"]);
+    assert.equal(hooks(result).find(row => row.tool === "claude")?.state, expected);
+    for (const language of ["en", "ko"] as const) {
+      assert.equal((await invoke(["set", `language=${language}`])).code, 0);
+      const human = await invokeHuman(["doctor", "--global"]);
+      const guide = catalogue(language).cli.doctor.hookGuidance.claude;
+      assert.ok(containsWrapped(human.output, guide), human.output);
+    }
+    if (expected === "disabled") {
+      assert.equal(check(result, "Claude Code").state, "problem");
+      assert.equal(result.value.nativeAttention, true);
+    }
+    assert.equal(readFileSync(claudePath, "utf8"), contents);
+  }
+
+  // An intact handler is required; another file's default-on switch is not ours.
+  writeFileSync(claudePath, '{"disableAllHooks":false}');
+  assert.equal(hooks(await invoke(["doctor", "--global"])).find(row => row.tool === "claude")?.state, "unknown");
+  writeFileSync(join(agent.home("codex"), "config.toml"),
+    `[hooks.state.${JSON.stringify(agent.hookFile("codex") + ":session_start:0:0")}]\nenabled = false\n`);
+  const off = hooks(await invoke(["doctor", "--global"])).find(row => row.tool === "codex");
+  assert.equal(off?.state, "disabled");
+  assert.equal(off?.basis, "codex-record");
+});
+
 test("native doctor refreshes an owned runtime but preserves an edited handler", async () => {
   const setup = await invoke(["init", "--here", "--tools", "claude", "--auto"]);
   assert.equal(setup.code, 0, setup.output);
@@ -463,7 +528,7 @@ test("project doctor reports a managed global native hook without creating a pro
     activation: "unverified",
   });
   assert.equal(check(report, "Claude Code").state, "ok", report.output);
-  assert.match(check(report, "Claude Code").detail, /global hook/i);
+  assert.match(check(report, "Claude Code").detail, /global SessionStart hook/i);
   assert.equal(existsSync(projectAgent.hookFile("claude")), false);
   const config = parseConfig(readFileSync(paths.config, "utf8"), catalogue("en").cli);
   assert.ok(isConfigV2(config));
@@ -785,6 +850,71 @@ test("legacy hook and skill resources do not require a reader seed in doctor or 
 });
 
 for (const language of ["en", "ko"] as const) {
+  test(`human doctor identifies its scope and groups other registrations in ${language}`, async () => {
+    env.LANG = language === "ko" ? "ko_KR.UTF-8" : "en_US.UTF-8";
+    env.COLUMNS = "60";
+    const copy = catalogue(language).cli.doctor;
+    const project = join(scratch, "project");
+    const other = join(scratch, "other");
+    mkdirSync(project);
+    mkdirSync(other);
+    const assertScope = (output: string, label: string, root: string) => {
+      assert.ok(output.includes(`  ${label}\n  ${root}\n`), output);
+      assert.equal(output.split(label).length - 1, 1, output);
+    };
+    const fresh = await invokeHuman(["doctor", "--here"]);
+    assertScope(fresh.output, copy.scope, project);
+    assert.equal((await invoke(["init", "--project", project, "--tools", "claude,codex,antigravity", "--lang", language, "--auto"])).code, 0);
+    assert.equal((await invoke(["wire", "codex", "--project", other, "--auto"])).code, 0);
+    const intact = await invokeHuman(["doctor", "--global"]);
+    assert.ok(!containsWrapped(intact.output, copy.inspectScope), intact.output);
+    assert.ok(!containsWrapped(intact.output, copy.disconnectScope), intact.output);
+    rmSync(join(project, ".claude", "settings.json"));
+    rmSync(join(project, ".agents", "hooks.json"));
+    rmSync(other, { recursive: true });
+
+    const mixed = await invokeHuman(["doctor"]);
+    assertScope(mixed.output, copy.scopeGlobal, scratch);
+    const section = mixed.output.slice(mixed.output.indexOf(copy.wiredElsewhere));
+    assert.ok(containsWrapped(section, `antigravity, claude — ${copy.destinationUnwired}`), section);
+    assert.ok(containsWrapped(section, `codex — ${copy.destinationPresent}`), section);
+    assert.ok(containsWrapped(section, `codex — ${copy.destinationGone}`), section);
+    assert.ok(containsWrapped(section, copy.inspectScope), section);
+    assert.ok(containsWrapped(section, copy.disconnectScope), section);
+    const unfolded = section.replace(/\s+/g, " ");
+    for (const advice of [copy.inspectScope, copy.disconnectScope]) {
+      assert.equal(unfolded.split(advice).length - 1, 2, section);
+    }
+    for (const destination of [project, other].map(canonicalDestination)) {
+      assert.equal(section.split("\n").filter(line => line.trim() === destination).length, 1, section);
+      for (const command of ["doctor", "eject"]) {
+        assert.equal(section.split(`tonedial ${command} --project "${destination}"`).length - 1, 1, section);
+      }
+    }
+    // The full scoped commands above stay copyable; their long paths use terminal soft wrapping.
+    const prose = (output: string) => output.split("\n").filter(line => !/^tonedial (doctor|eject) /.test(line.trim())).join("\n");
+    assertHumanWidth(prose(mixed.output), language, 60);
+
+    rmSync(join(project, ".codex", "hooks.json"));
+    const missing = await invokeHuman(["doctor", "--global", "--verbose"]);
+    assertScope(missing.output, copy.scopeGlobal, scratch);
+    assert.ok(containsWrapped(missing.output, `antigravity, claude, codex — ${copy.destinationUnwired}`), missing.output);
+    assertHumanWidth(prose(missing.output), language, 60);
+    for (const args of [["--here"], ["--project", project, "--verbose"]]) {
+      const selected = await invokeHuman(["doctor", ...args]);
+      assertScope(selected.output, copy.scope, project);
+      const elsewhere = selected.output.slice(selected.output.indexOf(copy.wiredElsewhere));
+      assert.ok(!elsewhere.includes(project), elsewhere);
+    }
+    assert.equal((await invoke(["wire", "codex", "--global", "--auto"])).code, 0);
+    rmSync(join(scratch, ".codex", "hooks.json"));
+    const global = await invokeHuman(["doctor", "--here"]);
+    const globalSection = global.output.slice(global.output.indexOf(copy.wiredElsewhere));
+    for (const command of ["doctor", "eject"]) {
+      assert.equal(globalSection.split(`tonedial ${command} --global`).length - 1, 1, globalSection);
+    }
+  });
+
   // Match the existing UI suite's global width scenario; long project repair paths are a
   // separately recorded soft-wrap limitation, not a reader-copy guarantee.
   test(`human global doctor keeps current reader detail behind verbose in ${language}`, async () => {

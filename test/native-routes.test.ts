@@ -38,16 +38,19 @@ async function invoke(args: string[], extraEnv: NodeJS.ProcessEnv = {}) {
   }
 }
 
-for (const tool of ["codex", "claude", "gemini"] as const) {
+for (const tool of ["codex", "claude", "antigravity"] as const) {
   test(`${tool} native setup delivers the pair and scoped removal preserves user settings`, async () => {
     const agent = resolveAgentPaths({ global: false, project: null }, env, project);
     const path = agent.hookFile(tool);
+    const isAntigravity = tool === "antigravity";
     const sibling = { matcher: "startup", hooks: [{ type: "command", command: "user-owned-hook", description: "User hook" }] };
-    const original = { custom: { keep: true }, hooks: { SessionStart: [sibling] } };
+    const original = isAntigravity
+      ? { custom: { keep: true }, foreign: { keep: "user hook" } }
+      : { custom: { keep: true }, hooks: { SessionStart: [sibling] } };
     mkdirSync(dirname(path), { recursive: true });
     writeFileSync(path, JSON.stringify(original));
-    const instruction = join(project, tool === "claude" ? "CLAUDE.md" : tool === "gemini" ? "GEMINI.md" : "AGENTS.md");
-    writeFileSync(instruction, "User project instructions stay unchanged.\n");
+    const instruction = isAntigravity ? null : join(project, tool === "claude" ? "CLAUDE.md" : "AGENTS.md");
+    if (instruction) writeFileSync(instruction, "User project instructions stay unchanged.\n");
 
     const args = ["init", "--here", "--tools", tool, "--auto", ...(tool === "claude" ? ["--commands"] : [])];
     const preview = await invoke([...args, "--dry-run"]);
@@ -61,33 +64,36 @@ for (const tool of ["codex", "claude", "gemini"] as const) {
     const installed = readFileSync(path, "utf8");
     const document = JSON.parse(installed);
     assert.deepEqual(document.custom, original.custom);
-    assert.deepEqual(document.hooks.SessionStart[0], sibling);
-    // Gemini documents its session sources as exact names, so it gets one entry each; the other
-    // two accept an alternation and get one. All of ours run the same handler.
-    const ourBlocks = document.hooks.SessionStart.slice(1);
-    assert.deepEqual(ourBlocks.map((block: { matcher: string }) => block.matcher),
-      tool === "gemini" ? ["startup", "resume", "clear"]
-        : tool === "claude" ? ["startup|resume|clear|compact|fork"] : ["startup|resume|clear|compact"]);
-    for (const block of ourBlocks) assert.deepEqual(block.hooks, ourBlocks[0].hooks);
-    const hook = ourBlocks[0].hooks[0];
-    if (tool === "gemini") {
-      assert.equal(hook.name, "ToneDial");
-      assert.equal(hook.description, "Load saved response tone");
-      assert.equal(hook.statusMessage, undefined, "Gemini does not document this display field");
+    if (isAntigravity) {
+      assert.deepEqual(document.foreign, original.foreign);
+      assert.equal(document.tonedial.enabled, true);
+      assert.equal(document.tonedial.PreInvocation.length, 1);
+      const hook = document.tonedial.PreInvocation[0];
+      assert.deepEqual(Object.keys(hook).sort(), ["command", "type"]);
+      assert.equal(hook.type, "command");
+      assert.match(hook.command, /--provider[ ="]+antigravity(?:[ "']|$)/);
+      const output = JSON.parse(execFileSync("/bin/sh", ["-c", hook.command], { env, encoding: "utf8" })) as {
+        injectSteps: Array<{ ephemeralMessage: string }>;
+      };
+      assert.equal(output.injectSteps[0]?.ephemeralMessage, `${readFileSync(paths.agents, "utf8")}\n\n${readFileSync(paths.tone, "utf8")}`);
     } else {
+      assert.deepEqual(document.hooks.SessionStart[0], sibling);
+      // Codex and Claude document their session sources as matcher expressions; all of their
+      // handlers run the same reader and preserve the user's existing block.
+      const ourBlocks = document.hooks.SessionStart.slice(1);
+      assert.deepEqual(ourBlocks.map((block: { matcher: string }) => block.matcher),
+        tool === "claude" ? ["startup|resume|clear|compact|fork"] : ["startup|resume|clear|compact"]);
+      for (const block of ourBlocks) assert.deepEqual(block.hooks, ourBlocks[0].hooks);
+      const hook = ourBlocks[0].hooks[0];
       assert.equal(hook.statusMessage, "ToneDial: load saved response tone");
-      assert.equal(hook.name, undefined, "only Gemini documents a handler name");
+      assert.equal(hook.name, undefined, "Codex and Claude do not use a handler name");
       assert.equal(hook.description, undefined, "the purpose slot is not a Codex/Claude handler field");
+      assert.equal(document.description, tool === "codex" ? "ToneDial: load saved response tone" : undefined);
+      const run = () => tool === "claude"
+        ? execFileSync(hook.command, hook.args, { env, encoding: "utf8", timeout: 5000 })
+        : execFileSync("/bin/sh", ["-c", hook.command], { env, encoding: "utf8", timeout: 5000 });
+      assert.equal(run(), `${readFileSync(paths.agents, "utf8")}\n\n${readFileSync(paths.tone, "utf8")}`);
     }
-    assert.equal(document.description, tool === "codex" ? "ToneDial: load saved response tone" : undefined);
-    const run = () => tool === "claude"
-      ? execFileSync(hook.command, hook.args, { env, encoding: "utf8", timeout: 5000 })
-      : execFileSync("/bin/sh", ["-c", hook.command], { env, encoding: "utf8", timeout: 5000 });
-    // Gemini takes its context as one JSON object; the other two take the body on stdout.
-    const execute = () => tool === "gemini"
-      ? (JSON.parse(run()) as { hookSpecificOutput: { additionalContext: string } }).hookSpecificOutput.additionalContext
-      : run();
-    assert.equal(execute(), `${readFileSync(paths.agents, "utf8")}\n\n${readFileSync(paths.tone, "utf8")}`);
 
     const repeated = await invoke(args);
     assert.equal(repeated.code, 0, JSON.stringify(repeated.value));
@@ -105,7 +111,19 @@ for (const tool of ["codex", "claude", "gemini"] as const) {
 
     const changed = await invoke(["set", "care=2"]);
     assert.equal(changed.code, 0, JSON.stringify(changed.value));
-    assert.equal(execute(), `${readFileSync(paths.agents, "utf8")}\n\n${readFileSync(paths.tone, "utf8")}`);
+    const afterChange = JSON.parse(readFileSync(path, "utf8")) as Record<string, any>;
+    if (isAntigravity) {
+      const output = JSON.parse(execFileSync("/bin/sh", ["-c", afterChange.tonedial.PreInvocation[0].command], { env, encoding: "utf8" })) as {
+        injectSteps: Array<{ ephemeralMessage: string }>;
+      };
+      assert.equal(output.injectSteps[0]?.ephemeralMessage, `${readFileSync(paths.agents, "utf8")}\n\n${readFileSync(paths.tone, "utf8")}`);
+    } else {
+      const afterHook = afterChange.hooks.SessionStart.slice(1)[0].hooks[0];
+      const output = tool === "claude"
+        ? execFileSync(afterHook.command, afterHook.args, { env, encoding: "utf8", timeout: 5000 })
+        : execFileSync("/bin/sh", ["-c", afterHook.command], { env, encoding: "utf8", timeout: 5000 });
+      assert.equal(output, `${readFileSync(paths.agents, "utf8")}\n\n${readFileSync(paths.tone, "utf8")}`);
+    }
     const doctor = await invoke(["doctor", "--here"]);
     assert.equal(doctor.code, 0, JSON.stringify(doctor.value));
     assert.equal(doctor.value.reader.state, "runnable");
@@ -113,7 +131,7 @@ for (const tool of ["codex", "claude", "gemini"] as const) {
     const eject = await invoke(["eject", "--here", "--auto"]);
     assert.equal(eject.code, 0, JSON.stringify(eject.value));
     assert.deepEqual(JSON.parse(readFileSync(path, "utf8")), original);
-    assert.equal(readFileSync(instruction, "utf8"), "User project instructions stay unchanged.\n");
+    if (instruction) assert.equal(readFileSync(instruction, "utf8"), "User project instructions stay unchanged.\n");
     assert.equal(existsSync(join(project, ".agents", "skills", "tonedial")), false);
     if (tool === "claude") {
       assert.equal(existsSync(join(project, ".claude", "skills", "tonedial")), false, "the provider alias outlived its registration");
@@ -237,20 +255,20 @@ test("Codex setup and removal preserve existing or edited file descriptions", as
   assert.deepEqual(JSON.parse(readFileSync(path, "utf8")), { ...original, description: "My session hooks" });
 });
 
-test("edited native display fields are preserved and refuse refresh or removal", async () => {
-  const setup = await invoke(["init", "--here", "--tools", "gemini", "--auto"]);
+test("edited Antigravity commands are preserved and refuse refresh or removal", async () => {
+  const setup = await invoke(["init", "--here", "--tools", "antigravity", "--auto"]);
   assert.equal(setup.code, 0, JSON.stringify(setup.value));
-  const path = resolveAgentPaths({ global: false, project: null }, env, project).hookFile("gemini");
+  const path = resolveAgentPaths({ global: false, project: null }, env, project).hookFile("antigravity");
   const document = JSON.parse(readFileSync(path, "utf8"));
-  document.hooks.SessionStart[0].hooks[0].description = "My custom hook description";
+  document.tonedial.PreInvocation[0].command += " --edited-by-user";
   writeFileSync(path, JSON.stringify(document));
   const paths = resolvePaths(env);
   const before = [path, paths.config].map((file) => ({ file, contents: readFileSync(file, "utf8") }));
   const doctor = await invoke(["doctor", "--here"]);
-  assert.equal(doctor.value.integrations.find((entry: { tool: string }) => entry.tool === "gemini").configuration, "foreign");
-  const refresh = await invoke(["wire", "--here", "gemini", "--auto"]);
+  assert.equal(doctor.value.integrations.find((entry: { tool: string }) => entry.tool === "antigravity").configuration, "foreign");
+  const refresh = await invoke(["wire", "--here", "antigravity", "--auto"]);
   assert.notEqual(refresh.code, 0, JSON.stringify(refresh.value));
-  const remove = await invoke(["unwire", "--here", "gemini", "--auto"]);
+  const remove = await invoke(["unwire", "--here", "antigravity", "--auto"]);
   assert.notEqual(remove.code, 0, JSON.stringify(remove.value));
   for (const { file, contents } of before) assert.equal(readFileSync(file, "utf8"), contents);
 });
@@ -919,27 +937,27 @@ test("a record written before delivery needed several entries keeps its ownershi
   assert.equal(readFileSync(resolveAgentPaths({ global: false, project: null }, env, project).hookFile("codex"), "utf8"), before);
 });
 
-test("one of gemini's entries removed by hand is preserved, not silently rewritten", async () => {
-  const setup = await invoke(["init", "--here", "--tools", "gemini", "--auto"]);
+test("an Antigravity hook removed by hand is preserved, not silently rewritten", async () => {
+  const setup = await invoke(["init", "--here", "--tools", "antigravity", "--auto"]);
   assert.equal(setup.code, 0, JSON.stringify(setup.value));
-  const settings = resolveAgentPaths({ global: false, project: null }, env, project).hookFile("gemini");
+  const settings = resolveAgentPaths({ global: false, project: null }, env, project).hookFile("antigravity");
 
-  // The fingerprint covers all three entries together, so a file missing one of them is no longer
-  // what this tool wrote. It cannot be told apart from a deliberate removal, so it is left alone.
-  const document = JSON.parse(readFileSync(settings, "utf8")) as { hooks: { SessionStart: unknown[] } };
-  assert.equal(document.hooks.SessionStart.length, 3);
-  document.hooks.SessionStart.splice(1, 1);
+  // The fingerprint covers the whole named hook, so a missing handler is no longer what this tool
+  // wrote. It cannot be told apart from a deliberate removal, so it is left alone.
+  const document = JSON.parse(readFileSync(settings, "utf8")) as { tonedial: { PreInvocation: unknown[] } };
+  assert.equal(document.tonedial.PreInvocation.length, 1);
+  document.tonedial.PreInvocation.splice(0, 1);
   writeFileSync(settings, `${JSON.stringify(document, null, 2)}\n`);
   const edited = readFileSync(settings, "utf8");
 
   const report = await invoke(["doctor", "--here"]);
-  const gemini = report.value.integrations.find((entry: { tool: string }) => entry.tool === "gemini");
-  assert.equal(gemini.configuration, "foreign");
+  const antigravity = report.value.integrations.find((entry: { tool: string }) => entry.tool === "antigravity");
+  assert.equal(antigravity.configuration, "foreign");
   const repaired = await invoke(["doctor", "--here", "--fix", "--auto"]);
   assert.equal(readFileSync(settings, "utf8"), edited, "--fix rewrote a hand-edited settings file");
   assert.equal(repaired.value.fixed ?? false, false);
 
-  const disconnect = await invoke(["unwire", "--here", "gemini", "--auto"]);
+  const disconnect = await invoke(["unwire", "--here", "antigravity", "--auto"]);
   assert.notEqual(disconnect.code, 0, "disconnect removed entries it could no longer identify");
   assert.equal(readFileSync(settings, "utf8"), edited);
 });

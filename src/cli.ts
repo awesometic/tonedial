@@ -550,8 +550,11 @@ export async function run(
     if (connection && name !== "doctor" && name !== "init" && flags.auto && !flags.dryRun && !scopeExplicit) {
       throw new ConfigError(t.errors.scopeRequired);
     }
-    const introduction = connection && name !== "init" && !(name === "doctor" && flags.verbose) && flags.rollback === null && !asJson
-      ? [`  ${agent.live ? t.wiring.scopeGlobal : t.wiring.scopeHere}`, `  ${humanText(agent.root)}`] : [];
+    const scopeLabel = name === "doctor"
+      ? (agent.live ? t.doctor.scopeGlobal : t.doctor.scope)
+      : (agent.live ? t.wiring.scopeGlobal : t.wiring.scopeHere);
+    const introduction = connection && name !== "init" && flags.rollback === null && !asJson
+      ? [`  ${scopeLabel}`, `  ${humanText(agent.root)}`, ""] : [];
     if (ctx.canPrompt && introduction.length) process.stdout.write(`${introduction.join("\n")}\n`);
     const contextExempt = name === "compile" && flags.check;
     if (command.context !== undefined && command.context !== "setup" && !contextExempt) {

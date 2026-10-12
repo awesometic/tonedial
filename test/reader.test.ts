@@ -83,13 +83,13 @@ test("emitted reader runs outside the package and preserves the ordered plain pa
   assert.equal(existsSync(join(scratch, "node_modules")), false);
 });
 
-test("Gemini receives exactly its JSON envelope with the same ordered body", () => {
+test("Antigravity receives exactly its injectSteps envelope with the same ordered body", () => {
   writePair();
-  const result = invoke("gemini");
+  const result = invoke("antigravity");
   assert.equal(result.status, 0, result.error?.message ?? result.stderr);
   assert.equal(
     result.stdout,
-    JSON.stringify({ hookSpecificOutput: { additionalContext: guide + "\n\n" + artifact } }) + "\n",
+    JSON.stringify({ injectSteps: [{ ephemeralMessage: guide + "\n\n" + artifact }] }) + "\n",
   );
   assert.equal(result.stderr, "");
 });
@@ -269,12 +269,12 @@ test("a mutation lock suppresses delivery immediately without reading or waiting
   assert.equal(readdirSync(state).sort().includes("operations.lock"), true);
 });
 
-test("a locked Gemini delivery remains protocol-valid and empty", () => {
+test("a locked Antigravity delivery remains protocol-valid and empty", () => {
   writePair();
   mkdirSync(lockPath());
-  const result = invoke("gemini");
+  const result = invoke("antigravity");
   assert.equal(result.status, 0);
-  assert.equal(result.stdout, JSON.stringify({ hookSpecificOutput: { additionalContext: "" } }) + "\n");
+  assert.equal(result.stdout, JSON.stringify({ injectSteps: [] }) + "\n");
   assert.match(result.stderr, /locked/);
 });
 
@@ -287,12 +287,12 @@ test("an unknown or replaced lock owner still suppresses delivery", () => {
   assert.match(result.stderr, /locked/);
 });
 
-test("a non-directory lock entry keeps Gemini's protocol envelope empty", () => {
+test("a non-directory lock entry keeps Antigravity's protocol envelope empty", () => {
   writePair();
   writeFileSync(lockPath(), "not an owner record\n");
-  const result = invoke("gemini");
+  const result = invoke("antigravity");
   assert.equal(result.status, 0, result.error?.message ?? result.stderr);
-  assert.equal(result.stdout, JSON.stringify({ hookSpecificOutput: { additionalContext: "" } }) + "\n");
+  assert.equal(result.stdout, JSON.stringify({ injectSteps: [] }) + "\n");
   assert.match(result.stderr, /locked/);
 });
 

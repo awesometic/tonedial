@@ -535,7 +535,7 @@ test("unknown or damaged preview presets and test-only flag misuse execute nothi
 test("unsupported providers, unavailable executables, and unavailable targets never launch", () => {
   install("codex");
   const before = snapshot(scratch);
-  for (const provider of ["gemini", "claude"]) {
+  for (const provider of ["antigravity", "claude"]) {
     const result = invoke([provider, "--json"]);
     assert.equal(result.status, 1);
     assert.equal(JSON.parse(result.stdout).ok, false);

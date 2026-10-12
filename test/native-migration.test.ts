@@ -10,7 +10,7 @@ import { run } from "../src/cli.ts";
 import { compile } from "../src/core/compile.ts";
 import { defaultConfig, isConfigV2, parseConfig, requireConfigV2, serializeConfig } from "../src/core/config.ts";
 import { catalogue } from "../src/core/i18n.ts";
-import { AGENT_TOOLS, canonicalDestination, resolveAgentPaths, resolvePaths, type AgentTool } from "../src/core/paths.ts";
+import { canonicalDestination, resolveAgentPaths, resolvePaths, type AgentTool } from "../src/core/paths.ts";
 import { toCompileInput } from "../src/core/resolve.ts";
 import { BUNDLED, serializePreset } from "../src/core/presets.ts";
 import { acquireOperation, beginJournal, inspectOperations } from "../src/core/operations.ts";
@@ -75,7 +75,7 @@ async function rollbackRebuild(value: Record<string, any>, scope: string[] = [])
 }
 
 /** Establish ownership through the existing mutation writer, not a fabricated journal. */
-async function legacyState(tools: AgentTool[] = [...AGENT_TOOLS], elsewhere?: string, destination = project) {
+async function legacyState(tools: Exclude<AgentTool, "antigravity">[] = ["codex", "claude"], elsewhere?: string, destination = project) {
   const paths = resolvePaths(env);
   mkdirSync(paths.root);
   const agent = resolveAgentPaths({ global: false, project: destination }, env, project);
@@ -119,7 +119,7 @@ async function legacyState(tools: AgentTool[] = [...AGENT_TOOLS], elsewhere?: st
 
 test("explicit native rebuild keeps compatibility delivery and separately rolls back native and application changes", async () => {
   const { paths, agent, lower, artifact, originals, configBytes } = await legacyState();
-  const args = ["init", "--here", "--tools", "codex,claude,gemini", "--commands", "--auto"];
+  const args = ["init", "--here", "--tools", "codex,claude", "--commands", "--auto"];
   const preview = await invoke([...args, "--dry-run"]);
   assert.equal(preview.code, 0, preview.stdout);
   assert.ok(readdirSync(paths.root).includes("tone.md"));
@@ -135,7 +135,7 @@ test("explicit native rebuild keeps compatibility delivery and separately rolls 
   assert.equal(typeof applied.value.native.operationId, "string");
   // Every provider's import is removed by the transition that replaces it, and nothing the user
   // wrote in those files goes with it.
-  for (const tool of ["claude", "gemini"] as const) {
+  for (const tool of ["claude"] as const) {
     assert.equal(readFileSync(agent.wiredFile(tool), "utf8"), "User instructions.\n", tool);
   }
   const codex = JSON.parse(readFileSync(agent.hookFile("codex"), "utf8"));

@@ -20,12 +20,12 @@ export type Delivery = "import" | "hook";
 export type Target = {
   /** What a person calls it. */
   label: string;
-  delivery: Delivery;
+  delivery: Delivery | null;
 };
 
 export const TARGETS: Record<AgentTool, Target> = {
   claude: { label: "Claude Code", delivery: "import" },
-  gemini: { label: "Gemini CLI", delivery: "import" },
+  antigravity: { label: "Antigravity IDE/Desktop", delivery: null },
   codex: { label: "Codex CLI", delivery: "hook" },
 };
 
@@ -33,37 +33,15 @@ export const TARGETS: Record<AgentTool, Target> = {
  * The lifecycle sources each provider is asked to fire on, and how it wants them written.
  *
  * Codex and Claude document a matcher that accepts an alternation, so one entry covers the set.
- * Gemini's own reference is ambiguous: it calls the matcher "regex or exact match" and does not
- * say whether one entry may cover several sources, while the recorded investigation of it read
- * the sources as exact names. Under that reading an alternation matches none of them — a hook
- * that is written, looks right in the file, and never fires. One entry per source is correct
- * under either reading, which is why the ambiguity did not have to be resolved to proceed.
+ * Antigravity's PreInvocation event has no lifecycle matcher.
  */
 const LIFECYCLE: Record<AgentTool, readonly string[]> = {
   codex: ["startup|resume|clear|compact"],
   claude: ["startup|resume|clear|compact|fork"],
-  gemini: ["startup", "resume", "clear"],
+  antigravity: [],
 };
 
 const HOOK_DESCRIPTION = "ToneDial: load saved response tone";
-
-/**
- * Target names that are claimed but not implemented, each with what blocks it.
- *
- * These are not adapters. They have no path, no delivery, and no entry in `TARGETS`, because an
- * adapter without a verified contract is a guess — and the guess available here is another
- * product's adapter, which a shared directory name makes look plausible and which would deliver
- * into a surface nobody has tested. Naming them keeps that guess from being made silently and
- * turns a selection into its actual blocker instead of a spelling complaint.
- *
- * A name leaves this list by gaining a verified contract and a real `TARGETS` entry, so the list
- * shrinks to nothing rather than becoming permanent furniture.
- */
-export const RESERVED_TARGETS: Record<string, "project-path" | "protocol"> = {
-  "antigravity-cli": "project-path",
-  "antigravity-desktop": "protocol",
-  "antigravity-ide": "protocol",
-};
 
 /** A scope that already delivers this tool's pair, reported rather than refused. */
 export type DeliveryDuplicate = {
@@ -86,7 +64,7 @@ export function orderedHook(tool: AgentTool, stateRoot: string, runtime: string)
   const command = [runtime, ...args].map((part) => `"${shellQuote(part)}"`).join(" ");
   return tool === "codex"
     ? { matchers, handler: { type: "command", command, statusMessage: HOOK_DESCRIPTION }, documentDescription: HOOK_DESCRIPTION }
-    : { matchers, handler: { type: "command", command, name: "ToneDial", description: "Load saved response tone" } };
+    : { event: "PreInvocation", matchers, handler: { type: "command", command } };
 }
 
 /** Version 2 identifies an ordered-pair hook, not an arbitrary legacy provider registration. */
@@ -94,9 +72,11 @@ export function recordedHook(resource: ManagedResource, registrationId: string):
   const metadata = resource.managedByRegistration?.[registrationId];
   if (!metadata) return null;
   const { version, event, matchers, command, args, statusMessage, name, description } = metadata;
-  if (resource.kind !== "hook" || version !== 2 || event !== "SessionStart" || !matchers?.length || !command) return null;
+  if (resource.kind !== "hook" || version !== 2 || !command ||
+      (event === "PreInvocation" ? matchers?.length !== 0 : event !== "SessionStart" || !matchers?.length)) return null;
   return {
-    matchers,
+    ...(event === "PreInvocation" ? { event } : {}),
+    matchers: matchers!,
     handler: {
       type: "command", command,
       ...(args === undefined ? {} : { args }),
@@ -118,7 +98,7 @@ export function recordedHook(resource: ManagedResource, registrationId: string):
  */
 export function sameDelivery(left: HookSpec | null, right: HookSpec | null): boolean {
   const canonical = (spec: HookSpec | null) =>
-    spec === null ? null : JSON.stringify({ matchers: [...spec.matchers].sort(), handler: spec.handler });
+    spec === null ? null : JSON.stringify({ event: spec.event ?? "SessionStart", matchers: [...spec.matchers].sort(), handler: spec.handler });
   return canonical(left) === canonical(right);
 }
 
@@ -127,7 +107,7 @@ function sameDeliveryCommand(left: HookSpec | null, right: HookSpec | null): boo
   const commandOnly = (spec: HookSpec | null): HookSpec | null => {
     if (spec === null) return null;
     const { statusMessage: _status, name: _name, description: _description, ...handler } = spec.handler;
-    return { matchers: spec.matchers, handler };
+    return { ...(spec.event ? { event: spec.event } : {}), matchers: spec.matchers, handler };
   };
   return sameDelivery(commandOnly(left), commandOnly(right));
 }
@@ -177,7 +157,11 @@ export function planOrderedDelivery(
         throw new ConfigError(t.errors.ownershipConflict(inherited.path));
       }
       const local = planChange(path, (before) => before, t);
-      if (ownedHook(local.before, desired, path, t) !== null || ownedHook(local.before, installed!, path, t) !== null) {
+      const localOwned = ownedHook(local.before, desired, path, t);
+      if (tool === "antigravity" && local.before?.trim() && Object.hasOwn(JSON.parse(local.before), "tonedial")) {
+        throw new ConfigError(t.errors.ownershipConflict(path));
+      }
+      if (localOwned !== null || ownedHook(local.before, installed!, path, t) !== null) {
         throw new ConfigError(t.errors.ownershipConflict(path));
       }
       checks.push(local);
@@ -204,6 +188,10 @@ export function planOrderedDelivery(
   }
   if (replacesLegacy) checks.push({ ...legacy, after: legacy.before });
   const before = planned.before;
+  const desiredOwned = ownedHook(before, desired, path, t);
+  if (tool === "antigravity" && !prior && before?.trim() && Object.hasOwn(JSON.parse(before), "tonedial")) {
+    throw new ConfigError(t.errors.ownershipConflict(path));
+  }
   let remaining = replacesLegacy ? legacy.after : before;
   if (previous && prior) {
     const owned = ownedHook(before, previous, path, t);
@@ -215,19 +203,28 @@ export function planOrderedDelivery(
       delete handlerOnly.documentDescription;
       remaining = withoutHook(before, handlerOnly, path, t);
     }
-  } else if (ownedHook(before, desired, path, t) !== null) {
+  } else if (desiredOwned !== null) {
     throw new ConfigError(t.errors.ownershipConflict(path));
   }
   const previousDescription = (prior ?? wiring.resources[resourceKey(planned.realPath, "hook")])?.documentDescription;
-  const descriptionBefore = hookDocumentDescription(remaining, path, t);
+  const descriptionBefore = tool === "antigravity" ? undefined : hookDocumentDescription(remaining, path, t);
   const ownsDescription = (desired.documentDescription !== undefined && descriptionBefore === undefined) ||
     (previousDescription !== undefined && descriptionBefore === previousDescription);
   if (reuseInherited && before === null) throw new ConfigError(t.errors.ownershipConflict(path));
-  const change = { ...planned, after: reuseInherited ? before! : withHook(remaining, desired, path, t) };
+  let after = reuseInherited ? before! : withHook(remaining, desired, path, t);
+  if (tool === "antigravity" && !reuseInherited && previous && before !== null) {
+    const enabled = JSON.parse(before).tonedial?.enabled;
+    if (enabled !== undefined) {
+      const document = JSON.parse(after);
+      document.tonedial.enabled = enabled;
+      after = JSON.stringify(document, null, 2) + "\n";
+    }
+  }
+  const change = { ...planned, after };
   if (prior) assertRecordedTextAccess(change, prior, prior.accessPaths?.[ownerId], t);
   const managed: ManagedResource["managed"] = {
     version: 2,
-    event: "SessionStart",
+    event: desired.event ?? "SessionStart",
     matchers: [...desired.matchers],
     command: desired.handler.command,
     runtime,
@@ -239,7 +236,7 @@ export function planOrderedDelivery(
   };
   const next = recordFileChange(wiring, { target: tool, scope, destination, context: "pair" }, change, "hook", managed, t);
   const recorded = next.resources[resourceKey(change.realPath, "hook")]!;
-  const descriptionAfter = hookDocumentDescription(change.after, path, t);
+  const descriptionAfter = tool === "antigravity" ? undefined : hookDocumentDescription(change.after, path, t);
   if (ownsDescription && typeof descriptionAfter === "string") recorded.documentDescription = descriptionAfter;
   else delete recorded.documentDescription;
   // Carry the retired record's creation fact onto the resource, not onto the `Change`.
@@ -328,6 +325,7 @@ export function planLegacyDeliveryRemoval(
   env: NodeJS.ProcessEnv,
   t: Messages,
 ): { change: Change; wiring: WiringV2 } | null {
+  if (tool === "antigravity") return null;
   const id = registrationKey(tool, agent.live ? "global" : "project", canonicalDestination(agent.root));
   const registration = wiring.registrations[id];
   const resourceId = registration?.resourceIds.find((key) => wiring.resources[key]?.kind === "hook");
@@ -405,8 +403,8 @@ export function inspectContextConsumers(
     destinations.set(id, { tool, path, json: json || destinations.get(id)?.json === true });
   };
   for (const tool of AGENT_TOOLS) {
-    add(tool, agent.wiredFile(tool), tool === "codex");
-    add(tool, global.wiredFile(tool), tool === "codex");
+    add(tool, agent.wiredFile(tool), tool !== "claude");
+    add(tool, global.wiredFile(tool), tool !== "claude");
     add(tool, agent.hookFile(tool), true);
     add(tool, global.hookFile(tool), true);
   }
@@ -418,7 +416,7 @@ export function inspectContextConsumers(
       const registered = resolveAgentPaths({ global: false, project: registration.destination },
         { ...env, TONEDIAL_AGENT_HOME: undefined }, agent.root);
       if (tool !== null) {
-        add(tool, registered.wiredFile(tool), tool === "codex");
+        add(tool, registered.wiredFile(tool), tool !== "claude");
         add(tool, registered.hookFile(tool), true);
       }
       for (const resourceId of registration.resourceIds) {
@@ -441,7 +439,8 @@ export function inspectContextConsumers(
       // Reuse the hook owner's syntax and shape checks for every known native destination.
       if (json) {
         reason = "invalid-provider-json";
-        hasHook(before, hookCommand(locations[0]!.toneAbsolute, locations[0]!.home), path, t);
+        hasHook(before, tool === "antigravity" ? orderedHook(tool, paths.root, process.execPath)
+          : hookCommand(locations[0]!.toneAbsolute, locations[0]!.home), path, t);
       }
       reason = "invalid-legacy-region";
       // Exact managed delivery is recognized by its existing transform. Ambiguous references
@@ -486,10 +485,6 @@ export function parseToolSelection(value: string, allowNone: boolean, t: Message
   if (names[0] === "none") return [];
   const known = Object.keys(TARGETS) as AgentTool[];
   for (const name of names) {
-    // Reserved before unknown: a name this project has claimed is not a typo, and saying so
-    // costs nothing while telling the user what would have to be true for it to work.
-    const reserved = RESERVED_TARGETS[name];
-    if (reserved !== undefined) throw new ConfigError(t.errors.reservedTarget(name, reserved));
     if (!known.includes(name as AgentTool)) throw new ConfigError(t.wiring.unknownTool(name, known));
   }
   return names as AgentTool[];
@@ -538,6 +533,7 @@ export function wiringRemoved(
   t: Messages,
 ): string | null {
   if (before === null) return null;
+  if (target.delivery === null) return before;
   if (target.delivery === "hook") return withoutHook(before, hookCommand(where.toneAbsolute, where.home), path, t);
   const region = legacyRegion(before, path, t);
   // Markers alone are not permission to delete an import for a different state root.
@@ -545,6 +541,7 @@ export function wiringRemoved(
 }
 
 export function ownedDelivery(target: Target, before: string | null, where: WiredAt, path: string, t: Messages): string | null {
+  if (target.delivery === null) return null;
   if (target.delivery === "hook") return ownedHook(before, hookCommand(where.toneAbsolute, where.home), path, t);
   const region = before === null ? null : legacyRegion(before, path, t);
   return region ? upsert("", region.content) : null;

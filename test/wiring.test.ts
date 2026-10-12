@@ -17,7 +17,7 @@ import { catalogue } from "../src/core/i18n.ts";
 const EN = catalogue("en").cli;
 import { cpSync, mkdtempSync, rmSync, readFileSync, writeFileSync, mkdirSync, existsSync, lstatSync, symlinkSync, chmodSync, statSync, readdirSync, readlinkSync, realpathSync, renameSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
-import { dirname, join, sep } from "node:path";
+import { dirname, join, relative, sep } from "node:path";
 
 import { run } from "../src/cli.ts";
 import { parseConfig, serializeConfig } from "../src/core/config.ts";
@@ -70,7 +70,7 @@ test("--global resolves to the real agent home", () => {
   assert.equal(paths.root, homedir());
   assert.equal(paths.live, true);
   assert.equal(paths.wiredFile("claude"), join(homedir(), ".claude", "CLAUDE.md"));
-  assert.equal(paths.wiredFile("gemini"), join(homedir(), ".gemini", "GEMINI.md"));
+  assert.equal(paths.hookFile("antigravity"), join(homedir(), ".gemini", "config", "hooks.json"));
   // Not an instruction file. `.codex/AGENTS.md` is read only in the home, so a project install
   // wrote a path Codex never looked at; the artifact arrives through a SessionStart hook now.
   assert.equal(paths.wiredFile("codex"), join(homedir(), ".codex", "hooks.json"));
@@ -169,11 +169,14 @@ test("the sandbox mirrors a real home exactly, so an agent can be pointed at it"
   const live = resolveAgentPaths({ global: true, project: null }, {}, "/work");
   const preview = resolveAgentPaths({ global: false, project: null }, {}, "/work");
   for (const tool of AGENT_TOOLS) {
-    assert.equal(
-      preview.wiredFile(tool).slice(preview.root.length),
-      live.wiredFile(tool).slice(live.root.length),
-      `${tool} sits at the same place under either root`,
-    );
+    const previewRelative = relative(preview.root, preview.wiredFile(tool));
+    const liveRelative = relative(live.root, live.wiredFile(tool));
+    if (tool === "antigravity") {
+      assert.equal(previewRelative, join(".agents", "hooks.json"));
+      assert.equal(liveRelative, join(".gemini", "config", "hooks.json"));
+    } else {
+      assert.equal(previewRelative, liveRelative, `${tool} sits at the same place under either root`);
+    }
   }
 });
 
@@ -265,7 +268,12 @@ const pathCheckOf = (payload: string) =>
     .find((c) => c.name === "PATH line")!;
 const stderr = () => err.join("");
 const agentFile = (tool: string) =>
-  join(work, "output", `.${tool}`, tool === "codex" ? "hooks.json" : tool === "gemini" ? "GEMINI.md" : "CLAUDE.md");
+  tool === "codex"
+    ? join(work, "output", ".codex", "hooks.json")
+    : tool === "claude"
+      ? join(work, "output", ".claude", "CLAUDE.md")
+      : join(work, "output", ".agents", "hooks.json");
+const LEGACY_TOOLS = ["claude", "codex"] as const;
 const legacyFixture = (routes: readonly LegacyRoute[] = [], skills: readonly LegacySkillRoute[] = []) =>
   createLegacyFixture({ env: envFor(), cwd: work, routes, skills });
 
@@ -273,7 +281,7 @@ const legacyFixture = (routes: readonly LegacyRoute[] = [], skills: readonly Leg
 async function legacyShellFixture(shell = "/bin/bash") {
   const root = join(work, "output");
   const { paths, config } = await legacyFixture(
-    AGENT_TOOLS.map((tool) => ({ tool, root })), [{ tools: AGENT_TOOLS, root }],
+    LEGACY_TOOLS.map((tool) => ({ tool, root })), [{ tools: LEGACY_TOOLS, root }],
   );
   const env = { ...curlEnv(), SHELL: shell };
   const agent = resolveAgentPaths({ global: false, project: null }, env, work);
@@ -290,55 +298,23 @@ async function legacyShellFixture(shell = "/bin/bash") {
   return path;
 }
 
-test("native wire refuses before claiming a destination or scope", async () => {
-  // Pinned on a reserved name, so the obligation survives each tool that ships: a refused
-  // selection stops after state-only setup and before any host path or scope is reported.
+test("native wire refuses an unknown target before claiming a destination or scope", async () => {
+  // A refused selection stops after state-only setup and before any host path or scope is reported.
   assert.equal(await cli("init", "--here", "--tools", "none", "--auto"), 0);
   out = [];
   err = [];
-  assert.equal(await cli("wire", "--here", "--tools", "antigravity-cli"), 1);
-  assert.match(stderr(), /Not a target ToneDial can connect yet/);
+  assert.equal(await cli("wire", "--here", "--tools", "other-agent"), 1);
+  assert.match(stderr(), /unsupported tool/);
   for (const tool of AGENT_TOOLS) assert.equal(existsSync(agentFile(tool)), false, tool);
 });
 
-test("legacy delivery links Claude and Gemini, hooks Codex, and carries no copy", async () => {
-  // Codex used to get the artifact inlined, which put a per-user copy into a file a repository's
-  // team owns and went stale on the next `set`. Nothing carries a copy now: every delivery points
-  // at the one artifact, so recompiling reaches all three.
-  const fixture = await legacyFixture(AGENT_TOOLS.map((tool) => ({ tool, root: join(work, "output") })));
-  const tone = readFileSync(join(fixture.paths.root, LEGACY_CONTEXT_ARTIFACT_FILENAME), "utf8");
-  const distinctive = tone.split("\n").find((l) => l.trim().length > 20)!.trim();
-
-  for (const tool of ["claude", "gemini"]) {
-    const body = find(readFileSync(agentFile(tool), "utf8"))!.content;
-    assert.match(body, /^@/, `${tool} imports`);
-    assert.equal(body.split("\n").length, 1, `${tool} is one line`);
-  }
-  const hooks = JSON.parse(readFileSync(agentFile("codex"), "utf8")) as {
-    hooks: { SessionStart: { matcher: string; hooks: { command: string; additionalContextLimit: number }[] }[] };
-  };
-  const entry = hooks.hooks.SessionStart[0]!.hooks[0]!;
-  assert.match(entry.command, /tone\.md"$/, "the hook reads the artifact, and the path is quoted");
-  // `cat`, not `tonedial`: the hook runs where this tool does not control the PATH, and the
-  // bare command not resolving is the defect the skill already hit.
-  assert.match(entry.command, /^cat /, "through cat, not a command that may not resolve");
-  assert.ok(entry.additionalContextLimit >= 2700, "and with room for a maximal artifact");
-  for (const tool of AGENT_TOOLS) {
-    assert.equal(
-      readFileSync(agentFile(tool), "utf8").includes(distinctive),
-      false,
-      `${tool} carries a copy of the artifact`,
-    );
-  }
-});
-
 test("legacy wiring twice leaves every host file byte-identical", async () => {
-  const routes = AGENT_TOOLS.map((tool) => ({ tool, root: join(work, "output") }));
+  const routes = LEGACY_TOOLS.map((tool) => ({ tool, root: join(work, "output") }));
   await legacyFixture(routes);
-  const first = AGENT_TOOLS.map((t) => readFileSync(agentFile(t), "utf8"));
+  const first = LEGACY_TOOLS.map((t) => readFileSync(agentFile(t), "utf8"));
   out = [];
   await legacyFixture(routes);
-  assert.deepEqual(AGENT_TOOLS.map((t) => readFileSync(agentFile(t), "utf8")), first);
+  assert.deepEqual(LEGACY_TOOLS.map((t) => readFileSync(agentFile(t), "utf8")), first);
 });
 
 test("legacy unwire and eject leave a pre-existing file byte-identical", async () => {
@@ -361,16 +337,15 @@ test("a legacy file this tool created is removed entirely, and one it did not is
   // Provenance is recorded at wire time, because afterwards it cannot be recovered: "we made
   // this" and "the user had an empty one" look identical on disk, and inferring ownership from
   // emptiness deleted a user's own file.
-  mkdirSync(join(work, "output", ".gemini"), { recursive: true });
-  writeFileSync(agentFile("gemini"), "");
+  mkdirSync(join(work, "output", ".claude"), { recursive: true });
+  writeFileSync(agentFile("claude"), "");
 
-  await legacyFixture(AGENT_TOOLS.map((tool) => ({ tool, root: join(work, "output") })));
+  await legacyFixture(LEGACY_TOOLS.map((tool) => ({ tool, root: join(work, "output") })));
   assert.equal(await cli("eject", "--here"), 0);
 
-  assert.equal(existsSync(agentFile("claude")), false, "claude was ours, so it is gone");
-  assert.equal(existsSync(agentFile("codex")), false, "so was codex");
-  assert.equal(existsSync(agentFile("gemini")), true, "gemini was the user's, so it stays");
-  assert.equal(readFileSync(agentFile("gemini"), "utf8"), "", "exactly as it was found");
+  assert.equal(existsSync(agentFile("codex")), false, "codex was ours, so it is gone");
+  assert.equal(existsSync(agentFile("claude")), true, "claude was the user's, so it stays");
+  assert.equal(readFileSync(agentFile("claude"), "utf8"), "", "exactly as it was found");
 });
 
 test("legacy wiring writes through a symlink instead of replacing it", async () => {
@@ -391,69 +366,6 @@ test("legacy wiring writes through a symlink instead of replacing it", async () 
   assert.equal(await cli("unwire", "--here", "claude"), 0);
   assert.equal(lstatSync(agentFile("claude")).isSymbolicLink(), true);
   assert.equal(readFileSync(real, "utf8"), "# from my dotfiles\n", "restored byte for byte");
-});
-
-test("legacy shared symlinked hooks retain lexical witnesses and reject a retargeted unwire", async () => {
-  const shared = join(work, "dotfiles", "shared.md");
-  const replacement = join(work, "dotfiles", "replacement.md");
-  const claude = agentFile("claude");
-  const gemini = agentFile("gemini");
-  mkdirSync(dirname(shared), { recursive: true });
-  mkdirSync(dirname(claude), { recursive: true });
-  mkdirSync(dirname(gemini), { recursive: true });
-  writeFileSync(shared, "");
-  symlinkSync(shared, claude);
-  symlinkSync(shared, gemini);
-
-  await legacyFixture([
-    { tool: "claude", root: join(work, "output") },
-    { tool: "gemini", root: join(work, "output") },
-  ]);
-
-  const configPath = join(home, "config.json");
-  const beforeConfig = readFileSync(configPath, "utf8");
-  const config = JSON.parse(beforeConfig) as {
-    wiring: {
-      resources: Record<string, {
-        kind: string;
-        path: string;
-        consumers: string[];
-        accessPaths?: Record<string, { path: string; type: string; linkTarget?: string }>;
-      }>;
-    };
-  };
-  const resource = Object.values(config.wiring.resources).find((candidate) =>
-    candidate.kind === "hook" && candidate.path === realpathSync(shared));
-  assert.ok(resource, "both registrations share one physical hook resource");
-  assert.deepEqual(
-    Object.values(resource.accessPaths ?? {}).sort((a, b) => a.path.localeCompare(b.path)),
-    [
-      { path: claude, type: "symlink", linkTarget: shared },
-      { path: gemini, type: "symlink", linkTarget: shared },
-    ],
-  );
-  const original = readFileSync(shared, "utf8");
-
-  const withoutWitness = JSON.parse(beforeConfig) as typeof config;
-  const unowned = Object.values(withoutWitness.wiring.resources).find((candidate) =>
-    candidate.kind === "hook" && candidate.path === realpathSync(shared));
-  assert.ok(unowned);
-  delete unowned.accessPaths;
-  const missingWitnessConfig = `${JSON.stringify(withoutWitness, null, 2)}\n`;
-  writeFileSync(configPath, missingWitnessConfig);
-  assert.notEqual(await cli("unwire", "--here", "claude"), 0, "a missing access witness is not removal authority");
-  assert.equal(readFileSync(shared, "utf8"), original, "missing provenance leaves the target untouched");
-  assert.equal(readFileSync(configPath, "utf8"), missingWitnessConfig, "missing provenance leaves the graph untouched");
-  writeFileSync(configPath, beforeConfig);
-
-  writeFileSync(replacement, "foreign\n");
-  rmSync(claude);
-  symlinkSync(replacement, claude);
-  assert.notEqual(await cli("unwire", "--here", "claude"), 0, "a retargeted access path is a conflict");
-  assert.equal(readFileSync(shared, "utf8"), original, "the old referent is untouched");
-  assert.equal(readFileSync(replacement, "utf8"), "foreign\n", "the new target is untouched");
-  assert.equal(readlinkSync(claude), replacement, "the retargeted link is preserved");
-  assert.equal(readFileSync(configPath, "utf8"), beforeConfig, "the failed unwire keeps both witnesses");
 });
 
 test("--dry-run shows the diff and writes nothing", async () => {
@@ -536,8 +448,8 @@ test("approval previews identify final-newline-only changes without altering str
 
 test("legacy eject --dry-run removes nothing, including the skill it does not diff", async () => {
   await legacyFixture(
-    AGENT_TOOLS.map((tool) => ({ tool, root: join(work, "output") })),
-    [{ tools: AGENT_TOOLS, root: join(work, "output") }],
+    LEGACY_TOOLS.map((tool) => ({ tool, root: join(work, "output") })),
+    [{ tools: LEGACY_TOOLS, root: join(work, "output") }],
   );
   const link = join(work, "output", ".claude", "skills", "tonedial");
   assert.ok(existsSync(link));
@@ -545,11 +457,11 @@ test("legacy eject --dry-run removes nothing, including the skill it does not di
   assert.equal(await cli("eject", "--here", "--dry-run"), 0);
   assert.ok(stdout().includes(EN.wiring.dryRun));
   assert.ok(existsSync(link), "the skill action stayed unapplied during dry-run");
-  for (const tool of AGENT_TOOLS) assert.ok(existsSync(agentFile(tool)), tool);
+  for (const tool of LEGACY_TOOLS) assert.ok(existsSync(agentFile(tool)), tool);
 });
 
 test("legacy eject keeps the state root, and says where it is", async () => {
-  await legacyFixture(AGENT_TOOLS.map((tool) => ({ tool, root: join(work, "output") })));
+  await legacyFixture(LEGACY_TOOLS.map((tool) => ({ tool, root: join(work, "output") })));
   out = [];
   assert.equal(await cli("eject", "--here"), 0);
   assert.ok(existsSync(join(home, "config.json")), "presets and settings survive");
@@ -652,13 +564,13 @@ test("init says the command is missing only when a shell would not find it", asy
 });
 
 test("doctor diagnoses legacy delivery without offering an unavailable native repair", async () => {
-  await legacyFixture(AGENT_TOOLS.map((tool) => ({ tool, root: join(work, "output") })));
+  await legacyFixture(LEGACY_TOOLS.map((tool) => ({ tool, root: join(work, "output") })));
 
   const claude = readFileSync(agentFile("claude"), "utf8");
   writeFileSync(agentFile("claude"), claude.replace("@", "@EDITED-"));
-  rmSync(agentFile("gemini"));
+  rmSync(agentFile("codex"));
   const before = readFileSync(join(home, "tone.md"));
-  const retained = [join(home, "config.json"), agentFile("claude"), agentFile("codex")]
+  const retained = [join(home, "config.json"), agentFile("claude")]
     .map((path) => ({ path, bytes: readFileSync(path) }));
 
   out = [];
@@ -671,26 +583,26 @@ test("doctor diagnoses legacy delivery without offering an unavailable native re
   assert.equal(byName.context!.state, "problem");
   assert.equal(byName.context!.detail, EN.recovery.keptSettings);
   assert.match(byName.context!.repair!, /tonedial doctor --fix/);
-  for (const name of ["Claude Code", "Gemini CLI", "Codex CLI"]) assert.equal(byName[name]!.repair, null);
+  for (const name of ["Claude Code", "Codex CLI"]) assert.equal(byName[name]!.repair, null);
   assert.deepEqual(readFileSync(join(home, "tone.md")), before);
-  assert.equal(existsSync(agentFile("gemini")), false);
+  assert.equal(existsSync(agentFile("codex")), false);
   for (const { path, bytes } of retained) assert.deepEqual(readFileSync(path), bytes, path);
 });
 
 test("doctor --fix preserves damaged legacy delivery for explicit resolution", async () => {
-  await legacyFixture(AGENT_TOOLS.map((tool) => ({ tool, root: join(work, "output") })));
+  await legacyFixture(LEGACY_TOOLS.map((tool) => ({ tool, root: join(work, "output") })));
   writeFileSync(agentFile("claude"), readFileSync(agentFile("claude"), "utf8").replace("@", "@EDITED-"));
   // A marker without its partner: which bytes are ours becomes unknowable, and guessing wrong
   // deletes a line of someone else's configuration.
-  writeFileSync(agentFile("gemini"), readFileSync(agentFile("gemini"), "utf8").replace(MARKDOWN.end, ""));
+  writeFileSync(agentFile("claude"), readFileSync(agentFile("claude"), "utf8").replace(MARKDOWN.end, ""));
 
-  const before = AGENT_TOOLS.map((tool) => readFileSync(agentFile(tool)));
+  const before = LEGACY_TOOLS.map((tool) => readFileSync(agentFile(tool)));
   const beforeConfig = readFileSync(join(home, "config.json"));
   const beforeTone = readFileSync(join(home, "tone.md"));
   out = [];
   assert.equal(await cli("doctor", "--here", "--fix", "--dry-run", "--json"), 0);
   assert.deepEqual(readFileSync(join(home, "config.json")), beforeConfig);
-  assert.deepEqual(AGENT_TOOLS.map((tool) => readFileSync(agentFile(tool))), before);
+  assert.deepEqual(LEGACY_TOOLS.map((tool) => readFileSync(agentFile(tool))), before);
   err = [];
   out = [];
   assert.equal(await cli("doctor", "--here", "--fix", "--json"), 0);
@@ -698,7 +610,7 @@ test("doctor --fix preserves damaged legacy delivery for explicit resolution", a
   assert.equal(repaired.appHealthy, true);
   assert.equal(repaired.native.applied, false);
   assert.equal(repaired.nativeAttention, true);
-  assert.deepEqual(AGENT_TOOLS.map((tool) => readFileSync(agentFile(tool))), before);
+  assert.deepEqual(LEGACY_TOOLS.map((tool) => readFileSync(agentFile(tool))), before);
   const saved = parseConfig(readFileSync(join(home, "config.json"), "utf8"));
   const prior = parseConfig(beforeConfig.toString("utf8"));
   for (const field of ["axes", "preset", "unsaved", "persona", "safeword", "speech_level", "language"] as const) {
@@ -714,12 +626,12 @@ test("doctor --fix preserves damaged legacy delivery for explicit resolution", a
     ),
   );
   assert.equal(byName.context!.state, "ok");
-  assert.equal(byName["Gemini CLI"]!.state, "problem");
+  assert.equal(byName["Claude Code"]!.state, "problem");
   const diagnosis = JSON.parse(stdout());
   assert.equal(diagnosis.context.inspectionFailure, null);
   assert.equal(diagnosis.nativeAttention, true);
-  assert.equal(diagnosis.checks.find((check: { name: string }) => check.name === "Gemini CLI").repair, null);
-  assert.deepEqual(AGENT_TOOLS.map((tool) => readFileSync(agentFile(tool))), before);
+  assert.equal(diagnosis.checks.find((check: { name: string }) => check.name === "Claude Code").repair, null);
+  assert.deepEqual(LEGACY_TOOLS.map((tool) => readFileSync(agentFile(tool))), before);
   for (const field of ["axes", "preset", "unsaved", "persona", "safeword", "speech_level", "language"] as const) {
     assert.deepEqual(parseConfig(readFileSync(join(home, "config.json"), "utf8"))[field], prior[field], field);
   }
@@ -727,27 +639,25 @@ test("doctor --fix preserves damaged legacy delivery for explicit resolution", a
 });
 
 test("eject refuses all legacy targets before touching a damaged sibling, while selected unwire can proceed", async () => {
-  await legacyFixture(AGENT_TOOLS.map((tool) => ({ tool, root: join(work, "output") })));
+  await legacyFixture(LEGACY_TOOLS.map((tool) => ({ tool, root: join(work, "output") })));
   const before = {
     codex: readFileSync(agentFile("codex")),
     claude: readFileSync(agentFile("claude")),
-    gemini: readFileSync(agentFile("gemini")),
     config: readFileSync(join(home, "config.json")),
   };
-  writeFileSync(agentFile("gemini"), before.gemini.toString().replace(MARKDOWN.end, ""));
+  writeFileSync(agentFile("claude"), before.claude.toString().replace(MARKDOWN.end, ""));
 
   err = [];
   assert.equal(await cli("eject", "--here"), 1, "all-target eject refuses before applying a partial plan");
   assert.deepEqual(readFileSync(agentFile("codex")), before.codex, "codex was not changed");
-  assert.deepEqual(readFileSync(agentFile("claude")), before.claude, "claude was not changed");
   assert.equal(
-    readFileSync(agentFile("gemini"), "utf8"),
-    before.gemini.toString().replace(MARKDOWN.end, ""),
+    readFileSync(agentFile("claude"), "utf8"),
+    before.claude.toString().replace(MARKDOWN.end, ""),
     "the damaged file was not changed",
   );
   assert.deepEqual(readFileSync(join(home, "config.json")), before.config, "provenance was not changed");
   assert.match(stderr(), /tonedial:end/, "the missing closing marker is named");
-  assert.match(stderr(), /GEMINI\.md/, "and the file it is about");
+  assert.match(stderr(), /CLAUDE\.md/, "and the file it is about");
 
   for (const lang of ["en", "ko"] as const) {
     const localizedConfig = JSON.stringify({ ...JSON.parse(before.config.toString()), language: lang });
@@ -756,28 +666,27 @@ test("eject refuses all legacy targets before touching a damaged sibling, while 
     assert.equal(await cli("eject", "--here", "--json", "--color", "never"), 1);
     const failure = JSON.parse(stdout()) as { ok: boolean; error: string };
     assert.equal(failure.ok, false);
-    assert.ok(failure.error.includes(agentFile("gemini")), "the full repair path remains copyable");
+    assert.ok(failure.error.includes(agentFile("claude")), "the full repair path remains copyable");
     assert.doesNotMatch(failure.error, /\u001b\[/, "JSON diagnostics contain no terminal styling");
     assert.equal(
       failure.error,
-      catalogue(lang).cli.doctor.damagedRegion(agentFile("gemini"), `${MARKDOWN.begin} has no ${MARKDOWN.end}`),
+      catalogue(lang).cli.doctor.damagedRegion(agentFile("claude"), `${MARKDOWN.begin} has no ${MARKDOWN.end}`),
     );
     assert.equal(readFileSync(join(home, "config.json"), "utf8"), localizedConfig);
   }
   writeFileSync(join(home, "config.json"), before.config);
 
   assert.equal(await cli("unwire", "--here", "codex"), 0);
-  assert.equal(await cli("unwire", "--here", "claude"), 0);
+  assert.equal(await cli("unwire", "--here", "claude"), 1, "a selected damaged file is still protected");
   assert.equal(existsSync(agentFile("codex")), false, "selected codex wiring came out");
-  assert.equal(existsSync(agentFile("claude")), false, "selected claude wiring came out");
-  assert.ok(existsSync(agentFile("gemini")), "the damaged Gemini file remains");
+  assert.ok(existsSync(agentFile("claude")), "the damaged Claude file remains");
+  assert.equal(readFileSync(agentFile("claude"), "utf8"), before.claude.toString().replace(MARKDOWN.end, ""));
   const after = JSON.parse(readFileSync(join(home, "config.json"), "utf8")) as {
     wiring: { registrations: Record<string, { target: string }>; };
   };
   const registrations = Object.values(after.wiring.registrations);
   assert.equal(registrations.some((registration) => registration.target === "codex"), false);
-  assert.equal(registrations.some((registration) => registration.target === "claude"), false);
-  assert.equal(registrations.some((registration) => registration.target === "gemini"), true);
+  assert.equal(registrations.some((registration) => registration.target === "claude"), true);
 });
 
 test("wire refuses a tool it does not have, by listing the ones it does", async () => {
@@ -797,10 +706,10 @@ test("wire refuses before there is an artifact to wire", async () => {
 
 // ── init ─────────────────────────────────────────────────────────────────────────────────
 
-test("native init refuses before creating a wired state", async () => {
+test("native init refuses an unknown target before creating a wired state", async () => {
   err = [];
-  assert.equal(await cli("init", "--here", "--lang", "en", "--tools", "antigravity-desktop", "--auto"), 1);
-  assert.match(stderr(), /Not a target ToneDial can connect yet/);
+  assert.equal(await cli("init", "--here", "--lang", "en", "--tools", "other-agent", "--auto"), 1);
+  assert.match(stderr(), /unsupported tool/);
   assert.equal(existsSync(join(home, "config.json")), false);
   assert.equal(existsSync(join(home, "AGENTS.md")), false);
   assert.equal(existsSync(join(home, "TONE.md")), false);
@@ -812,7 +721,7 @@ test("init with an unsupported --lang writes nothing at all", async () => {
   // A system locale is a guess and falls back quietly; `--lang` is a person stating an intent,
   // so an unsupported value stops before anything is created.
   err = [];
-  assert.equal(await cli("init", "--here", "--lang", "xx", "--tools", "codex,claude,gemini", "--auto"), 1);
+  assert.equal(await cli("init", "--here", "--lang", "xx", "--tools", "codex,claude,antigravity", "--auto"), 1);
   assert.match(stderr(), /en, ko/, "and it names the ones that work");
   assert.equal(existsSync(join(home, "config.json")), false);
   assert.equal(existsSync(join(home, "TONE.md")), false);
@@ -822,14 +731,14 @@ test("fresh init previews or refuses without creating state or agent roots", asy
   const state = join(home, "fresh");
   const env = envFor({ TONEDIAL_HOME: state, TONEDIAL_INSTALL_SHAPE: "curl", SHELL: "/bin/bash" });
   for (const args of [
-    ["init", "--here", "--lang", "en", "--tools", "antigravity-ide", "--auto", "--commands", "--dry-run", "--json"],
-    ["init", "--here", "--lang", "en", "--tools", "antigravity-ide", "--commands"],
+    ["init", "--here", "--lang", "en", "--tools", "other-agent", "--auto", "--commands", "--dry-run", "--json"],
+    ["init", "--here", "--lang", "en", "--tools", "other-agent", "--commands"],
   ]) {
     out = [];
     err = [];
     const code = await run(args, env, work, false, false);
     assert.equal(code, 1);
-    assert.match(stdout() + stderr(), /Not a target ToneDial can connect yet/);
+    assert.match(stdout() + stderr(), /unsupported tool/);
     assert.equal(existsSync(state), false, "an unapproved init created tone state");
     assert.equal(existsSync(join(work, "output")), false, "an unapproved init created agent resources");
     assert.equal(existsSync(join(work, "home")), false, "an unapproved init created shell configuration");
@@ -867,8 +776,8 @@ test("native init refuses before inspecting host configuration or changing state
   // English despite `--lang ko`: the selection is parsed before the interface language is
   // chosen, so a refusal raised there speaks the saved or system language. Pre-existing, and
   // recorded rather than changed here.
-  assert.equal(await cli("init", "--here", "--lang", "ko", "--tools", "antigravity-cli", "--auto"), 1);
-  assert.match(stderr(), /Not a target ToneDial can connect yet/);
+  assert.equal(await cli("init", "--here", "--lang", "ko", "--tools", "other-agent", "--auto"), 1);
+  assert.match(stderr(), /unsupported tool/);
   assert.deepEqual(readFileSync(join(home, "config.json")), config);
   assert.deepEqual(readFileSync(paths.tone), tone);
   assert.equal(existsSync(join(home, "skill")), skillPresent);
@@ -1452,7 +1361,7 @@ test("legacy schema-2 provenance spares a file it did not make", async () => {
   // fact even though the init operation also seeds state and skill resources.
   mkdirSync(dirname(agentFile("claude")), { recursive: true });
   writeFileSync(agentFile("claude"), "");
-  await legacyFixture(AGENT_TOOLS.map((tool) => ({ tool, root: join(work, "output") })));
+  await legacyFixture(LEGACY_TOOLS.map((tool) => ({ tool, root: join(work, "output") })));
   const config = JSON.parse(readFileSync(join(home, "config.json"), "utf8")) as {
     wiring: {
       registrations: Record<string, { target: string; resourceIds: string[] }>;
@@ -1583,12 +1492,12 @@ test("a marker in the artifact no longer reaches any legacy wired file", async (
   // artifact, so a note holding a marker wrote a region this tool could never parse again --
   // `wire`, `unwire`, `eject`, and `doctor --fix` all refusing forever over damage tonedial
   // itself caused. Nothing inlines the artifact now, so the note cannot get into a region at all.
-  const fixture = await legacyFixture(AGENT_TOOLS.map((tool) => ({ tool, root: join(work, "output") })));
+  const fixture = await legacyFixture(LEGACY_TOOLS.map((tool) => ({ tool, root: join(work, "output") })));
   const artifact = join(fixture.paths.root, LEGACY_CONTEXT_ARTIFACT_FILENAME);
   writeFileSync(artifact, `${readFileSync(artifact, "utf8")}\n${MARKDOWN.begin} sneaky\n`);
   assert.ok(readFileSync(artifact, "utf8").includes(MARKDOWN.begin), "the marker still reaches the artifact");
 
-  for (const tool of AGENT_TOOLS) {
+  for (const tool of LEGACY_TOOLS) {
     assert.equal(
       readFileSync(agentFile(tool), "utf8").includes(MARKDOWN.begin + " sneaky"),
       false,
@@ -1701,20 +1610,20 @@ test("a marker quoted mid-line is not the region", async () => {
 test("legacy eject removes a directory this tool created, and leaves one it did not", async () => {
   // `writeAtomic` creates `.codex/` on the way in. Leaving it behind made `doctor` report a
   // tool the user never installed, forever, because "installed" is read from the directory.
-  mkdirSync(join(work, "output", ".gemini"), { recursive: true });
-  await legacyFixture(AGENT_TOOLS.map((tool) => ({ tool, root: join(work, "output") })));
+  mkdirSync(join(work, "output", ".foreign-agent"), { recursive: true });
+  await legacyFixture(LEGACY_TOOLS.map((tool) => ({ tool, root: join(work, "output") })));
   assert.equal(await cli("eject", "--here"), 0);
   assert.equal(existsSync(join(work, "output", ".codex")), false, "ours went with the file");
-  assert.equal(existsSync(join(work, "output", ".gemini")), true, "theirs stayed");
+  assert.equal(existsSync(join(work, "output", ".foreign-agent")), true, "theirs stayed");
 });
 
 test("doctor --fix leaves an installed-but-unselected tool unwired", async () => {
   assert.equal(await cli("init", "--here", "--tools", "none"), 0);
-  mkdirSync(dirname(agentFile("gemini")), { recursive: true });
+  mkdirSync(dirname(agentFile("claude")), { recursive: true });
   const config = readFileSync(join(home, "config.json"));
   out = [];
   assert.equal(await cli("doctor", "--here", "--fix"), 0);
-  assert.equal(existsSync(agentFile("gemini")), false, "directory detection is not wiring approval");
+  assert.equal(existsSync(agentFile("claude")), false, "directory detection is not wiring approval");
   assert.deepEqual(readFileSync(join(home, "config.json")), config);
 });
 
@@ -1723,13 +1632,12 @@ test("legacy owned wiring ejects while retaining empty host containers", async (
   // survived an eject that promises tracelessness. Provenance has to be written by whoever
   // writes the file, at the only moment it is knowable.
   await legacyFixture(
-    AGENT_TOOLS.map((tool) => ({ tool, root: join(work, "output") })),
-    [{ tools: AGENT_TOOLS, root: join(work, "output") }],
+    LEGACY_TOOLS.map((tool) => ({ tool, root: join(work, "output") })),
+    [{ tools: LEGACY_TOOLS, root: join(work, "output") }],
   );
-  for (const tool of AGENT_TOOLS) assert.ok(existsSync(agentFile(tool)), tool);
+  for (const tool of LEGACY_TOOLS) assert.ok(existsSync(agentFile(tool)), tool);
   assert.equal(await cli("eject", "--here"), 0);
   assert.equal(existsSync(agentFile("claude")), false);
-  assert.equal(existsSync(agentFile("gemini")), false);
   assert.equal(existsSync(agentFile("codex")), false);
   assert.deepEqual(readdirSync(join(work, "output", ".agents", "skills")), [], "the shared skill entry is gone");
   assert.deepEqual(readdirSync(join(work, "output", ".claude", "skills")), [], "the Claude alias is gone");
@@ -1754,18 +1662,17 @@ test("the packaged skill seed is a valid Agent Skill, and carries no tool-specif
 });
 
 test("legacy skill wiring uses one shared native root, with a Claude provider alias", async () => {
-  const fixture = await legacyFixture([], [{ tools: AGENT_TOOLS, root: join(work, "output") }]);
+  const fixture = await legacyFixture([], [{ tools: LEGACY_TOOLS, root: join(work, "output") }]);
   const source = join(fixture.paths.skill, "tonedial");
   const shared = join(work, "output", ".agents", "skills", "tonedial");
   const claude = join(work, "output", ".claude", "skills", "tonedial");
-  for (const [tool, link] of [["codex", shared], ["gemini", shared], ["claude", claude]] as const) {
+  for (const [tool, link] of [["codex", shared], ["claude", claude]] as const) {
     assert.equal(lstatSync(link).isSymbolicLink(), true, `${tool} is linked, not copied`);
     assert.equal(realpathSync(link), realpathSync(source), `${tool} reaches the one seeded copy`);
     // Opened, not just resolved: a link is only wiring if something is at the other end.
     assert.match(readFileSync(join(link, "SKILL.md"), "utf8"), /^---\nname: tonedial$/m);
   }
   assert.equal(existsSync(join(work, "output", ".codex", "skills")), false);
-  assert.equal(existsSync(join(work, "output", ".gemini", "skills")), false);
   assert.match(readFileSync(join(fixture.paths.root, LEGACY_CONTEXT_ARTIFACT_FILENAME), "utf8"), /use the `tonedial` CLI/);
 });
 
@@ -1808,7 +1715,7 @@ test("a legacy skill link whose target is gone is replaced, not reported absent 
   // `existsSync` follows a symlink, so a dangling one read as "absent": `uninstall` left it
   // forever and `install` threw EEXIST creating a link over it, mid-way through an `init` that
   // had already written everything else.
-  const options = [{ tools: AGENT_TOOLS, root: join(work, "output") }];
+  const options = [{ tools: LEGACY_TOOLS, root: join(work, "output") }];
   const first = await legacyFixture([], options);
   const link = join(work, "output", ".claude", "skills", "tonedial");
   rmSync(first.paths.skill, { recursive: true, force: true });
@@ -2070,18 +1977,20 @@ test("an unavailable native selection refuses before linking anything or claimin
   const configBefore = readFileSync(join(home, "config.json"));
   const toneBefore = readFileSync(join(home, "TONE.md"));
   assert.equal(
-    await cli("init", "--here", "--lang", "en", "--tools", "antigravity-ide"),
+    await cli("init", "--here", "--lang", "en", "--tools", "other-agent"),
     1,
   );
-  for (const tool of ["claude", "gemini"] as const) {
+  for (const tool of ["claude", "codex"] as const) {
     assert.equal(
-      existsSync(join(work, "output", `.${tool}`, "skills", "tonedial")),
+      existsSync(tool === "claude"
+        ? join(work, "output", ".claude", "skills", "tonedial")
+        : join(work, "output", ".agents", "skills", "tonedial")),
       false,
       `${tool} was linked after the write was refused`,
     );
   }
   assert.doesNotMatch(stdout(), /Set up/, "a refused init reported itself finished");
-  assert.match(stderr(), /Not a target ToneDial can connect yet/);
+  assert.match(stderr(), /unsupported tool/);
   assert.deepEqual(readFileSync(join(home, "config.json")), configBefore);
   assert.deepEqual(readFileSync(join(home, "TONE.md")), toneBefore);
 });
@@ -2116,13 +2025,12 @@ test("a fish install disconnects host wiring while preserving its shell config",
   assert.equal(await fish("eject", "--here"), 0);
   assert.equal(existsSync(agentFile("codex")), false, "the Codex hook was disconnected");
   assert.equal(existsSync(agentFile("claude")), false, "the Claude import was disconnected");
-  assert.equal(existsSync(agentFile("gemini")), false, "the Gemini import was disconnected");
   assert.equal(existsSync(join(work, "output", ".agents", "skills", "tonedial")), false, "the shared skill was disconnected");
   assert.equal(existsSync(join(work, "output", ".claude", "skills", "tonedial")), false, "the Claude skill alias was disconnected");
   assert.deepEqual(readFileSync(config), installed, "the fish rc remains byte-identical");
 });
 
-test("all three destinations import the one artifact, and none of them moves the state", async () => {
+test("global and project destinations share one artifact without moving the state", async () => {
   // **The coupling this record exists to prevent.** The wiring moves and the state root does
   // not: tone is a user attribute, so N projects must not mean N configs, preset libraries, and
   // safewords. A destination that carried its own `tone.md` would be that, and the way it would
@@ -2183,15 +2091,14 @@ test("legacy global wiring writes the real agent files, and no preview at all", 
   mkdirSync(liveHome(".claude"), { recursive: true });
   writeFileSync(liveHome(".claude", "CLAUDE.md"), "# My own rules\n\nAlways run tests.\n");
 
-  // All three present, so detection checks all three. The subject here is what a real home
-  // gets written into it, not which agents a home happens to hold.
-  mkdirSync(liveHome(".gemini"), { recursive: true });
+  // The subject here is what a real home gets written into it, not which agents a home happens
+  // to hold.
   mkdirSync(liveHome(".codex"), { recursive: true });
   await createLegacyFixture({
     env: { TONEDIAL_HOME: liveHome(".tonedial"), HOME: liveHome() },
     cwd: work,
-    routes: AGENT_TOOLS.map((tool) => ({ tool, root: liveHome(), scope: "global" })),
-    skills: [{ tools: AGENT_TOOLS, root: liveHome(), scope: "global" }],
+    routes: LEGACY_TOOLS.map((tool) => ({ tool, root: liveHome(), scope: "global" })),
+    skills: [{ tools: LEGACY_TOOLS, root: liveHome(), scope: "global" }],
   });
 
   const claude = readFileSync(liveHome(".claude", "CLAUDE.md"), "utf8");
@@ -2200,7 +2107,6 @@ test("legacy global wiring writes the real agent files, and no preview at all", 
   assert.ok(claude.indexOf("Always run tests") < claude.indexOf("tonedial:begin"), "at the end, after theirs");
   assert.equal(claude.split("\n").filter((l) => l.startsWith("@")).length, 1, "one line, not the artifact");
 
-  assert.ok(existsSync(liveHome(".gemini", "GEMINI.md")));
   assert.ok(existsSync(liveHome(".claude", "skills", "tonedial")));
   assert.equal(existsSync(join(work, "output")), false, "the preview is not written when the real thing is");
 });
@@ -2213,13 +2119,12 @@ test("legacy global eject restores the user's file byte for byte", async () => {
   await createLegacyFixture({
     env: { TONEDIAL_HOME: liveHome(".tonedial"), HOME: liveHome() },
     cwd: work,
-    routes: AGENT_TOOLS.map((tool) => ({ tool, root: liveHome(), scope: "global" })),
+    routes: LEGACY_TOOLS.map((tool) => ({ tool, root: liveHome(), scope: "global" })),
   });
   assert.equal(await liveCli("eject", "--global", "--auto"), 0);
 
   assert.equal(readFileSync(liveHome(".claude", "CLAUDE.md"), "utf8"), original);
-  // `.gemini` and `.codex` were this tool's; `.claude` was the user's and stays with their file.
-  assert.equal(existsSync(liveHome(".gemini")), false, "a directory this tool created went with it");
+  // `.codex` was this tool's; `.claude` was the user's and stays with their file.
   assert.equal(existsSync(liveHome(".codex")), false);
   assert.ok(existsSync(liveHome(".claude", "CLAUDE.md")), "and theirs did not");
   assert.ok(existsSync(liveHome(".tonedial", "config.json")), "the state root is kept, as eject says it is");
@@ -2489,9 +2394,9 @@ test("a delivery of several entries is identified by its set, not by the order t
   // delivery: they share a handler, they are written together, and they are removed together.
   const spec: HookSpec = {
     matchers: ["startup", "resume", "clear"],
-    handler: { type: "command", command: "/usr/bin/node", args: ["/state/reader.mjs", "--provider", "gemini"] },
+    handler: { type: "command", command: "/usr/bin/node", args: ["/state/reader.mjs", "--provider", "codex"] },
   };
-  const path = "/project/.gemini/settings.json";
+  const path = "/project/.codex/hooks.json";
   const written = withHook(null, spec, path, EN);
   assert.equal(JSON.parse(written).hooks.SessionStart.length, 3);
   assert.equal(withHook(written, spec, path, EN), written, "a repeat run duplicated an entry");

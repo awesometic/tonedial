@@ -671,14 +671,14 @@ test("the install receipt remains runnable with quoted Unicode and shell metacha
   noUserState(first.home, first.agent, first.shellHome);
 });
 
-test("a packed setup refusal for a reserved target leaves shell and user state untouched", async () => {
+test("a packed setup refusal for an unknown target leaves shell and user state untouched", async () => {
   const first = await install("explicit-path");
   noUserState(first.home, first.agent, first.shellHome);
-  await assert.rejects(() => execFile(join(first.home, "bin", "tonedial"), ["init", "--global", "--lang", "en", "--auto", "--tools", "antigravity-cli"], {
+  await assert.rejects(() => execFile(join(first.home, "bin", "tonedial"), ["init", "--global", "--lang", "en", "--auto", "--tools", "other-agent"], {
     timeout: 10_000,
     encoding: "utf8",
     env: isolatedEnv({ HOME: first.shellHome, TONEDIAL_AGENT_HOME: first.agent, SHELL: "/bin/bash" }),
-  }), /Not a target ToneDial can connect yet/);
+  }), /unsupported tool/);
   noUserState(first.home, first.agent, first.shellHome);
   assert.match(await byName(first.home, first.agent, "--version"), /tonedial \d/);
 });
