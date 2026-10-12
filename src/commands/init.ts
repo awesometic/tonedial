@@ -371,19 +371,7 @@ function codexHandoff(
   };
 }
 
-/**
- * `--lang` states an intent, so an unsupported value stops before anything is written. A system
- * locale is only a guess, so an unsupported one quietly falls back — the two are different
- * kinds of input and get different treatment.
- */
-/**
- * `--lang`, then what this install already chose, then the system locale.
- *
- * The middle step is the one that was missing. `init` is the documented update path, so it is
- * re-run on an install that is already configured — and detecting the locale there silently
- * reset a Korean user's interface to English every time they refreshed their seeds. A choice
- * the user made once outranks a locale the machine reports.
- */
+/** Explicit language, then saved choice, then locale; reject unsupported explicit values. */
 function chooseLanguage(ctx: Ctx): Language {
   const requested = ctx.flags.lang;
   if (requested !== null) {

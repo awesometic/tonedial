@@ -476,6 +476,36 @@ test("bare set --json honors nonprompting context when streams report TTY", asyn
   assert.equal(tone(), beforeTone);
 });
 
+test("bare set commits an interactive dial change through the command path", async () => {
+  await initializeState();
+  const entry = join(dirname(fileURLToPath(import.meta.url)), "..", "src", "cli.ts");
+  // Drive the real CLI with a terminal-shaped stdin, then inspect the files it wrote. A dial
+  // unit test proves the selected axes; this catches a run-level regression that could lose the
+  // selection before the config/artifact transaction or print a receipt for a different state.
+  const source = `
+    Object.defineProperty(process.stdin, "isTTY", { value: true });
+    Object.defineProperty(process.stdout, "isTTY", { value: true });
+    process.stdin.setRawMode = () => process.stdin;
+    const { run } = await import(${JSON.stringify(pathToFileURL(entry).href)});
+    process.exitCode = await run(["set"]);
+  `;
+  const result = spawnSync(process.execPath, ["--input-type=module", "-e", source], {
+    cwd: join(home, "project"),
+    env: { ...commandEnv(), NO_COLOR: "1", TERM: "xterm" },
+    input: "\u001b[C\r", encoding: "utf8", timeout: 5_000,
+  });
+  assert.equal(result.error, undefined, "interactive set did not finish");
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /ToneDial · set/);
+  assert.match(result.stdout, /formality\s+3 → 4/);
+  assert.match(result.stdout, /TONE\.md generated/);
+
+  const saved = config();
+  assert.equal(saved.axes.formality, 4, "the dial selection was not persisted");
+  assert.equal(saved.unsaved, true, "the dial selection did not mark the artifact unsaved");
+  assert.equal(tone(), compile(toCompileInput(saved)), "the generated artifact does not match saved settings");
+});
+
 test("the interface language is settable after init, not only during it", async () => {
   await initializeState();
   // It used to be reachable through `init --lang` alone, so changing your mind about it meant

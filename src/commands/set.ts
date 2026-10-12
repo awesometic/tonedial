@@ -249,7 +249,7 @@ function applyPairs(config: Config, pairs: readonly (readonly [string, string])[
   return { warnings, changed, moves };
 }
 
-/** Recompile, write, and leave the receipt. The tail both writing commands share. */
+/** Recompile, write, and leave the receipt shared by set, address, and the dial. */
 async function commit(
   ctx: Ctx,
   configChange: ReturnType<typeof planConfig>["change"],
@@ -368,21 +368,11 @@ async function runDial(ctx: Ctx): Promise<CommandResult> {
 
   config.axes = chosen;
   config.unsaved = true;
-  const { change: toneChange, size } = planArtifact(ctx, config);
-  const finalConfig = { ...configChange, after: serializeConfig(config, ctx.t) };
-  await applyPlanned(ctx, [configChange, toneChange], [finalConfig]);
-
-  return {
-    // The same receipt `set <axis>=<level>` leaves, because it is the same event.
-    lines: [
-      `  ${ctx.ui.bold(ctx.ui.success(ctx.t.axis.settingsSaved))}`,
-      ...movementLines(moves, ctx, config.axes),
-      `  ${ctx.ui.success(ctx.t.artifact.generated)}`,
-      `  ${ctx.ui.dim(budget(size, ctx.t))}`,
-    ],
-    json: { changed: moves.map((m) => m.key), moves, config: toCompileInput(config), chars: size.chars },
-    warnings: [...riskWarnings(config.axes, ctx.t), ...comboWarnings(config, ctx.t), ...sizeWarning(size, ctx.t)],
-  };
+  return commit(ctx, configChange, config, {
+    warnings: [],
+    changed: moves.map((move) => move.key),
+    moves,
+  });
 }
 
 export async function runReset(ctx: Ctx, args: string[]): Promise<CommandResult> {

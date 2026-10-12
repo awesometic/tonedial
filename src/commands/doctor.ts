@@ -50,7 +50,7 @@ type Check = {
   humanDetail?: readonly string[];
   /** Actionable repair, when available. */
   repair?: string;
-  /** The change `--fix` would make. */
+  /** PATH repair snapshot used to check recorded shell ownership. */
   change?: Change;
   files?: { path: string; reason: Exclude<SeedState, "current"> }[];
 };
@@ -585,7 +585,6 @@ function suppressBlockedRepairs(checks: Check[], diagnosis: ContextDiagnosis): v
   if (diagnosis.config === null || diagnosis.layout.kind === "current") return;
   for (const check of checks) {
     if (check.name === "context") continue;
-    delete check.change;
     delete check.repair;
   }
 }
@@ -711,7 +710,7 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true, showCodexActi
     const onDisk = toneChange.before;
     checks.push(
       onDisk === null
-        ? { name: "TONE.md", state: "problem", detail: ctx.t.doctor.toneNotWritten, repair: "tonedial compile", change: toneChange }
+        ? { name: "TONE.md", state: "problem", detail: ctx.t.doctor.toneNotWritten, repair: "tonedial compile" }
         : onDisk === expected
           ? { name: "TONE.md", state: "ok", detail: budget(measure(expected), ctx.t) }
           : {
@@ -719,7 +718,6 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true, showCodexActi
               state: "problem",
               detail: ctx.t.doctor.toneDisagrees,
               repair: "tonedial compile",
-              change: toneChange,
             },
     );
   }
@@ -748,9 +746,7 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true, showCodexActi
 
     const check = wiringCheck(ctx, tool, shownPath);
     checks.push(check);
-    if (tool === "claude" || tool === "codex" || tool === "antigravity") {
-      hookSettings.push({ tool, state: "unknown", basis: "unverified", path: null });
-    }
+    hookSettings.push({ tool, state: "unknown", basis: "unverified", path: null });
   }
   for (const setting of hookSettings) {
     const check = checks.find(check => check.name === TARGETS[setting.tool].label)!;
