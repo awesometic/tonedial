@@ -31,6 +31,9 @@ Keep changes within the requested boundary and preserve unrelated edits.
 - Keep the CLI the shared owner of human and versioned JSON output.
   JSON does not prompt; native `test --json` and dry-run paths launch and probe no provider and expose no prompt body.
   Preserve stdout/stderr boundaries, actionable errors and advisory notices.
+  Show the selected scope in diagnostics without requiring verbose output.
+  Group repeated UI elements and messages by their shared context; show shared paths, status text and actions once,
+  while keeping distinct states, affected targets and action boundaries visible.
 - When a skill-exposed command, option, setting, response or integration changes, audit `src/core/skill.ts`'s body, traits reference and optional `/tone` command in the same change.
   Update affected guidance and audit seed refresh/provenance in `src/core/seeds.ts` and the skill/CLI boundary tests; state why an unaffected part needs no change.
   Installed generated copies are not the editing source; keep shipped `SKILL.md` portable.
