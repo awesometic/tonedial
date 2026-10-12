@@ -76,7 +76,7 @@ Verify the host's actual contract before adding an adapter:
 2. Add labels, delivery and lifecycle matchers in `src/wiring/targets.ts`, with the correct argument-vector or quoted-shell handler.
    A reserved name becomes supported only after its real contract is established; new routes deliver the ordered guide/artifact pair without editing project instructions.
 3. Implement the host's output envelope and accepted provider name/repair hint in `src/core/reader.ts`, and its matching self-test expectation in `src/commands/doctor.ts`.
-   Plain stdout is currently the default; Gemini requires `hookSpecificOutput.additionalContext`. A filename or table entry alone does not make a usable route.
+   Codex and Claude consume plain stdout; Antigravity consumes `injectSteps[].ephemeralMessage` in JSON. A filename or table entry alone does not make a usable route.
 4. Include trust/enablement, skill discovery, both scopes, merging of unrelated hooks, and data-preserving removal/recovery.
    Run applicable checks in `test/extension-points.test.ts`, `test/native-routes.test.ts` and `test/wiring.test.ts` in disposable paths, including negative cases for foreign or modified resources.
 5. Establish actual activation/context delivery in an explicitly approved host trial using [the actual-host procedure](./docs/TESTING.md#actual-host-and-one-day-trial).

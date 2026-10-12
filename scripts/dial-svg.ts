@@ -14,7 +14,7 @@ const escape = (text: string) => text.replace(/&/g, "&amp;").replace(/</g, "&lt;
 const paints: Record<number, string> = { 31: "#ef8585", 32: "#61d8a4", 33: "#d8c35d", 36: "#66d9dc", 39: "#edf3f6" };
 let colour = paints[39]!, bold = false, dim = false;
 const text: string[] = [];
-// ponytail: this frame's SGR and 2+ space columns only; revisit when the producer changes them.
+// shortcut: this frame's SGR and 2+ space columns, extend when the producer emits other styles or spacing.
 for (const [row, line] of rows.entries()) {
   let column = 0;
   for (const part of line.split(/(\x1b\[[\d;]*m)/u)) {

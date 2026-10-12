@@ -26,7 +26,7 @@
     "src/core/i18n.ts": "c3483dfa0468d2b042b6780a24c89ee86f378571b8eb0a957404780fa723afc3",
     "src/core/anchors.ts": "61f90129757a60fd7bc81d1710815bf609998422dad533b3714fb9f3620704d9",
     "src/core/presets.ts": "bac39b3ca78bba03c0b62047f1bd31be856224762d6be327ec8df1e0bbfcf2c7",
-    "scripts/dial-svg.ts": "beb832ac4344563ba3aac1b722774a0258daa628cf1623123e525a70f295159c"
+    "scripts/dial-svg.ts": "220fce4ed23c9d85872585ed984ae465623b2852826ca0fcb9e77e3facf74dc6"
   },
   "svgRecipe": [
     "scripts/dial-svg.ts",
