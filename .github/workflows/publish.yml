@@ -30,6 +30,9 @@ jobs:
           registry-url: https://registry.npmjs.org
           package-manager-cache: false
 
+      - name: Use npm with trusted publishing support
+        run: npm install --global npm@11 --ignore-scripts --no-audit --no-fund
+
       - run: npm ci
 
       - name: Run the complete release checks
@@ -38,22 +41,11 @@ jobs:
           npm pack --dry-run
           node scripts/check-release.mjs
 
-      - name: Verify the npm credential
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          test -n "$NODE_AUTH_TOKEN"
-          npm whoami --registry=https://registry.npmjs.org
-
-      # NPM_TOKEN authenticates npm. The id-token permission is only for provenance.
-      - name: Publish the package
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      # npm exchanges the job's OIDC identity for a short-lived publish credential.
+      - name: Publish the package with OIDC
         run: npm publish --ignore-scripts --provenance --access public
 
       - name: Verify the published metadata
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: >-
           npm view "tonedial@$(node -p 'JSON.parse(require("node:fs").readFileSync("package.json", "utf8")).version')" version
           dist.integrity dist.tarball --json
