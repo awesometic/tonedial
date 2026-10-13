@@ -1,0 +1,12 @@
+status: 0
+--- stdout --- [bytes=292; endsWithNewline=true]
+ToneDial · use
+
+  Tough Love 적용됨
+  TONE.md 생성됨 · TONE.md 1,124 / 2,700
+  세이프워드 없음 — 담백한 답은 스킬로만 요청할 수 있습니다
+  ! critique · 거친 표현
+  재미를 위한 도구이며 실무 사용은 권장하지 않습니다
+  tonedial show
+--- stderr --- [bytes=0; endsWithNewline=false]
+

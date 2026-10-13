@@ -1,0 +1,18 @@
+status: 0
+--- stdout --- [bytes=634; endsWithNewline=true]
+ToneDial · test
+
+  Would open a fresh Codex conversation.
+  Saved tone: caring-brother
+  <ROOT>/project
+  Your account tokens and limits are used; charges may apply.
+  - The model may overthink this preview or explain ToneDial at length. You are
+    responsible for the resulting usage and charges.
+  - The provider may retain this conversation in its own history.
+  - Dialogue only; the opening prompt forbids file changes and native tool
+    restrictions apply.
+  - The client is asked to skip existing tone hooks and automatic instructions
+    for this preview. Managed policy still applies; this is not filesystem
+    isolation.
+--- stderr --- [bytes=0; endsWithNewline=false]
+

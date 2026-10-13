@@ -1,0 +1,27 @@
+status: 0
+--- stdout --- [bytes=599; endsWithNewline=true]
+ToneDial · unwire
+
+  Connection scope: project
+  <ROOT>/project
+
+  <ROOT>/project/.codex/hooks.json
+  → <ROOT>/project/.codex/hooks.json
+  (modified)  +0 -17
+  - {
+  -   "description": "ToneDial: load saved response tone",
+  -   "hooks": {
+  -     "SessionStart": [
+  - Skill
+    <ROOT>/project/.agents/skills/tonedial
+  <ROOT>/state/config.json
+  → <ROOT>/state/config.json
+  (modified)  +2 -74
+  -     "registrations": {
+  -       "[\"codex\",\"project\",\"<ROOT>/project\"]": {
+  +     "registrations": {},
+  +     "resources": {}
+  Full diff: --verbose
+  Codex CLI connections disconnected
+--- stderr --- [bytes=0; endsWithNewline=false]
+

@@ -1,0 +1,11 @@
+status: 0
+--- stdout --- [bytes=166; endsWithNewline=true]
+ToneDial · import
+
+  example-import: imported
+  Example Import
+  Saved to the library; current tone unchanged.
+  <ROOT>/incoming.json
+  tonedial show example-import
+--- stderr --- [bytes=0; endsWithNewline=false]
+

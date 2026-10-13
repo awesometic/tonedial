@@ -1,0 +1,12 @@
+status: 0
+--- stdout --- [bytes=243; endsWithNewline=true]
+ToneDial · use
+
+  Tough Love active
+  TONE.md generated · TONE.md 1,124 / 2,700
+  no safeword — request a plain answer through the skill only
+  ! critique · harsh language
+  for fun, and not recommended for production use
+  tonedial show
+--- stderr --- [bytes=0; endsWithNewline=false]
+

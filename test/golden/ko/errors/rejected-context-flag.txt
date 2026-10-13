@@ -1,0 +1,5 @@
+status: 2
+--- stdout --- [bytes=0; endsWithNewline=false]
+
+--- stderr --- [bytes=49; endsWithNewline=true]
+compile: --project 옵션을 받지 않습니다

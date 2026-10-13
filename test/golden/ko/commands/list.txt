@@ -1,0 +1,26 @@
+status: 0
+--- stdout --- [bytes=798; endsWithNewline=true]
+  프리셋 보관함
+
+  * Caring Brother 적용됨
+    caring-brother · 다정하게 챙기며 코드는 직설적으로 평가합니다.
+
+    Bratty Kid
+    bratty-kid · 말대꾸와 농담을 섞고 따진 뒤에 움직입니다.
+    ! refusal, bravado · 치우친 판단·과장된 보고 · 성급한 실행·거절
+
+    Eager Sycophant
+    eager-sycophant · 무엇이든 길게 칭찬합니다.
+    ! flattery, compliance · 치우친 판단·과장된 보고 · 성급한 실행·거절
+
+    Tough Love
+    tough-love · 한 답변에서 코드는 매섭게, 사용자는 따뜻하게 대합니다.
+    ! critique · 거친 표현
+
+    Terse Operator
+    terse-operator · 짧고 감정 없이 답합니다.
+    ! conviction · 치우친 판단·과장된 보고
+
+  tonedial show <slug>
+--- stderr --- [bytes=0; endsWithNewline=false]
+

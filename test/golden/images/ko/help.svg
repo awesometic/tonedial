@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="624" height="456" viewBox="0 0 624 456" role="img" aria-labelledby="title description">
+<title id="title">ToneDial screen (ko · dial help)</title>
+<desc id="description">  다이얼 키
+  Tough Love · 현재 말투
+
+  ↑↓ / j k / Tab  축 선택
+  ←→ / h l  레벨 변경
+  1-5  레벨 지정
+  Enter  변경 적용
+  Esc / q / Ctrl+C  변경 취소
+  Ctrl+Z  일시 정지; fg로 복귀
+  ?  도움말 열기·닫기
+  *  ToneDial 기본값과 다른 축
+  !  위험 말투 · 레벨은 그대로 선택 가능
+
+  ? 다이얼로 복귀   Esc 취소
+</desc>
+<rect width="100%" height="100%" rx="16" fill="#171b20"/>
+<g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, system-ui" font-size="22"><text x="60" y="48" fill="#edf3f6" font-weight="700" opacity="1">다이얼 키</text>
+<text x="60" y="76" fill="#66d9dc" font-weight="400" opacity="1">Tough Love · 현재 말투</text>
+<text x="60" y="132" fill="#edf3f6" font-weight="400" opacity="0.65">↑↓ / j k / Tab</text>
+<text x="284" y="132" fill="#edf3f6" font-weight="400" opacity="0.65">축 선택</text>
+<text x="60" y="160" fill="#edf3f6" font-weight="400" opacity="0.65">←→ / h l</text>
+<text x="200" y="160" fill="#edf3f6" font-weight="400" opacity="0.65">레벨 변경</text>
+<text x="60" y="188" fill="#edf3f6" font-weight="400" opacity="0.65">1-5</text>
+<text x="130" y="188" fill="#edf3f6" font-weight="400" opacity="0.65">레벨 지정</text>
+<text x="60" y="216" fill="#edf3f6" font-weight="400" opacity="0.65">Enter</text>
+<text x="158" y="216" fill="#edf3f6" font-weight="400" opacity="0.65">변경 적용</text>
+<text x="60" y="244" fill="#edf3f6" font-weight="400" opacity="0.65">Esc / q / Ctrl+C</text>
+<text x="312" y="244" fill="#edf3f6" font-weight="400" opacity="0.65">변경 취소</text>
+<text x="60" y="272" fill="#edf3f6" font-weight="400" opacity="0.65">Ctrl+Z</text>
+<text x="172" y="272" fill="#edf3f6" font-weight="400" opacity="0.65">일시 정지; fg로 복귀</text>
+<text x="60" y="300" fill="#edf3f6" font-weight="400" opacity="0.65">?</text>
+<text x="102" y="300" fill="#edf3f6" font-weight="400" opacity="0.65">도움말 열기·닫기</text>
+<text x="60" y="328" fill="#edf3f6" font-weight="400" opacity="0.65">*</text>
+<text x="102" y="328" fill="#edf3f6" font-weight="400" opacity="0.65">ToneDial 기본값과 다른 축</text>
+<text x="60" y="356" fill="#edf3f6" font-weight="400" opacity="0.65">!</text>
+<text x="102" y="356" fill="#edf3f6" font-weight="400" opacity="0.65">위험 말투 · 레벨은 그대로 선택 가능</text>
+<text x="60" y="412" fill="#edf3f6" font-weight="400" opacity="0.65">? 다이얼로 복귀</text>
+<text x="312" y="412" fill="#edf3f6" font-weight="400" opacity="0.65">Esc 취소</text></g>
+</svg>

@@ -1,0 +1,5 @@
+status: 1
+--- stdout --- [bytes=0; endsWithNewline=false]
+
+--- stderr --- [bytes=108; endsWithNewline=true]
+<ROOT>/missing.json: 읽을 수 없습니다: ENOENT: no such file or directory, open '<ROOT>/missing.json'

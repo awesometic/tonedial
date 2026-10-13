@@ -1,0 +1,32 @@
+status: 0
+--- stdout --- [bytes=1712; endsWithNewline=true]
+ToneDial · doctor
+
+  검사 범위: 프로젝트
+  <ROOT>/project
+
+  앱 상태: 정상
+  연결 파일: 선택한 범위에서 문제 없음
+  훅 상태는 검사한 설정 파일만 읽어 표시합니다. 앱의 설정 덮어쓰기와 세션 전달
+  여부는 확인하지 않습니다.
+
+  ·  Claude Code         등록된 설정 파일에서 훅 활성화 여부를 확인할 수 없음
+                         이 경로에 설치되지 않음
+                         검사할 ToneDial 관리 훅이 없습니다. 연결하려면 같은
+                         범위에서 init을 실행하고 이 에이전트를 선택해 주세요.
+  ·  Antigravity IDE/Desktop  등록된 설정 파일에서 훅 활성화 여부를 확인할 수
+                              없음
+                              검사할 ToneDial 관리 훅이 없습니다. 연결하려면
+                              같은 범위에서 init을 실행하고 이 에이전트를
+                              선택해 주세요.
+  ·  Codex CLI           등록된 설정 파일에서 훅 활성화 여부를 확인할 수 없음
+                         이 경로에 설치되지 않음
+                         검사할 ToneDial 관리 훅이 없습니다. 연결하려면 같은
+                         범위에서 init을 실행하고 이 에이전트를 선택해 주세요.
+  !  tonedial on PATH    PATH에서 tonedial을 찾지 못했습니다. 스킬과 폴백 줄도
+                         실행할 수 없습니다. 전역 경로 확인: npm prefix -g
+                         그 경로의 bin 폴더(macOS/Linux)를 PATH에 추가하세요.
+
+  확인 필요 1건 · 가능한 항목은 --fix로 복구
+--- stderr --- [bytes=0; endsWithNewline=false]
+

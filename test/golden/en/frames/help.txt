@@ -1,0 +1,14 @@
+  Dial keys
+  Tough Love · current voice
+
+  ↑↓ / j k / Tab  select axis
+  ←→ / h l  change level
+  1-5  set level
+  Enter  apply changes
+  Esc / q / Ctrl+C  discard changes
+  Ctrl+Z  suspend; fg resumes
+  ?  show or hide help
+  *  differs from ToneDial's default
+  !  risky tone; levels remain selectable
+
+  ? return to dial   Esc discard

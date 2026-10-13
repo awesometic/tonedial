@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1156" height="848" viewBox="0 0 1156 848" role="img" aria-labelledby="title description">
+<title id="title">ToneDial screen (ko · doctor --global)</title>
+<desc id="description">ToneDial · doctor
+
+  검사 범위: 전역
+  &lt;ROOT&gt;
+
+  앱 상태: 정상
+  연결 파일: 선택한 범위에서 문제 없음
+  훅 상태는 검사한 설정 파일만 읽어 표시합니다. 앱의 설정 덮어쓰기와 세션 전달
+  여부는 확인하지 않습니다.
+
+  ·  Claude Code         등록된 설정 파일에서 훅 활성화 여부를 확인할 수 없음
+                         이 경로에 설치되지 않음
+                         검사할 ToneDial 관리 훅이 없습니다. 연결하려면 같은
+                         범위에서 init을 실행하고 이 에이전트를 선택해 주세요.
+  ·  Antigravity IDE/Desktop  등록된 설정 파일에서 훅 활성화 여부를 확인할 수
+                              없음
+                              검사할 ToneDial 관리 훅이 없습니다. 연결하려면
+                              같은 범위에서 init을 실행하고 이 에이전트를
+                              선택해 주세요.
+  ·  Codex CLI           등록된 설정 파일에서 훅 활성화 여부를 확인할 수 없음
+                         이 경로에 설치되지 않음
+                         검사할 ToneDial 관리 훅이 없습니다. 연결하려면 같은
+                         범위에서 init을 실행하고 이 에이전트를 선택해 주세요.
+  !  tonedial on PATH    PATH에서 tonedial을 찾지 못했습니다. 스킬과 폴백 줄도
+                         실행할 수 없습니다. 전역 경로 확인: npm prefix -g
+                         그 경로의 bin 폴더(macOS/Linux)를 PATH에 추가하세요.
+
+  확인 필요 1건 · 가능한 항목은 --fix로 복구
+</desc>
+<rect width="100%" height="100%" rx="16" fill="#171b20"/>
+<g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, system-ui" font-size="22"><text x="32" y="48" fill="#edf3f6" font-weight="400" opacity="1">ToneDial · doctor</text>
+<text x="60" y="104" fill="#edf3f6" font-weight="400" opacity="1">검사 범위: 전역</text>
+<text x="60" y="132" fill="#edf3f6" font-weight="400" opacity="1">&lt;ROOT&gt;</text>
+<text x="60" y="188" fill="#edf3f6" font-weight="400" opacity="1">앱 상태: 정상</text>
+<text x="60" y="216" fill="#edf3f6" font-weight="400" opacity="1">연결 파일: 선택한 범위에서 문제 없음</text>
+<text x="60" y="244" fill="#edf3f6" font-weight="400" opacity="1">훅 상태는 검사한 설정 파일만 읽어 표시합니다. 앱의 설정 덮어쓰기와 세션 전달</text>
+<text x="60" y="272" fill="#edf3f6" font-weight="400" opacity="1">여부는 확인하지 않습니다.</text>
+<text x="60" y="328" fill="#edf3f6" font-weight="400" opacity="1">·</text>
+<text x="102" y="328" fill="#edf3f6" font-weight="400" opacity="1">Claude Code</text>
+<text x="382" y="328" fill="#edf3f6" font-weight="400" opacity="1">등록된 설정 파일에서 훅 활성화 여부를 확인할 수 없음</text>
+<text x="382" y="356" fill="#edf3f6" font-weight="400" opacity="1">이 경로에 설치되지 않음</text>
+<text x="382" y="384" fill="#edf3f6" font-weight="400" opacity="1">검사할 ToneDial 관리 훅이 없습니다. 연결하려면 같은</text>
+<text x="382" y="412" fill="#edf3f6" font-weight="400" opacity="1">범위에서 init을 실행하고 이 에이전트를 선택해 주세요.</text>
+<text x="60" y="440" fill="#edf3f6" font-weight="400" opacity="1">·</text>
+<text x="102" y="440" fill="#edf3f6" font-weight="400" opacity="1">Antigravity IDE/Desktop</text>
+<text x="452" y="440" fill="#edf3f6" font-weight="400" opacity="1">등록된 설정 파일에서 훅 활성화 여부를 확인할 수</text>
+<text x="452" y="468" fill="#edf3f6" font-weight="400" opacity="1">없음</text>
+<text x="452" y="496" fill="#edf3f6" font-weight="400" opacity="1">검사할 ToneDial 관리 훅이 없습니다. 연결하려면</text>
+<text x="452" y="524" fill="#edf3f6" font-weight="400" opacity="1">같은 범위에서 init을 실행하고 이 에이전트를</text>
+<text x="452" y="552" fill="#edf3f6" font-weight="400" opacity="1">선택해 주세요.</text>
+<text x="60" y="580" fill="#edf3f6" font-weight="400" opacity="1">·</text>
+<text x="102" y="580" fill="#edf3f6" font-weight="400" opacity="1">Codex CLI</text>
+<text x="382" y="580" fill="#edf3f6" font-weight="400" opacity="1">등록된 설정 파일에서 훅 활성화 여부를 확인할 수 없음</text>
+<text x="382" y="608" fill="#edf3f6" font-weight="400" opacity="1">이 경로에 설치되지 않음</text>
+<text x="382" y="636" fill="#edf3f6" font-weight="400" opacity="1">검사할 ToneDial 관리 훅이 없습니다. 연결하려면 같은</text>
+<text x="382" y="664" fill="#edf3f6" font-weight="400" opacity="1">범위에서 init을 실행하고 이 에이전트를 선택해 주세요.</text>
+<text x="60" y="692" fill="#edf3f6" font-weight="400" opacity="1">!</text>
+<text x="102" y="692" fill="#edf3f6" font-weight="400" opacity="1">tonedial on PATH</text>
+<text x="382" y="692" fill="#edf3f6" font-weight="400" opacity="1">PATH에서 tonedial을 찾지 못했습니다. 스킬과 폴백 줄도</text>
+<text x="382" y="720" fill="#edf3f6" font-weight="400" opacity="1">실행할 수 없습니다. 전역 경로 확인: npm prefix -g</text>
+<text x="382" y="748" fill="#edf3f6" font-weight="400" opacity="1">그 경로의 bin 폴더(macOS/Linux)를 PATH에 추가하세요.</text>
+<text x="60" y="804" fill="#edf3f6" font-weight="400" opacity="1">확인 필요 1건 · 가능한 항목은 --fix로 복구</text></g>
+</svg>

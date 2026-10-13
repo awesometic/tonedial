@@ -1,0 +1,27 @@
+status: 0
+--- stdout --- [bytes=900; endsWithNewline=true]
+  Caring Brother                                          TONE.md 1,124 / 2,700
+
+                         현재      ToneDial 기본값 · ! 위험 말투
+  form      formality    ▮▯▯▯▯  1   *3
+            verbosity    ▮▮▮▮▯  4   *3
+            profanity    ▮▮▯▯▯  2   *1
+            playfulness  ▮▮▮▯▯  3    3
+  target    critique     ▮▮▯▯▯  2   *3
+            flattery     ▮▯▯▯▯  1    1
+            warmth       ▮▮▮▮▮  5   *3
+  behaviour conviction   ▮▮▮▮▯  4   *3
+            care         ▮▮▮▮▮  5   *3
+            compliance   ▮▮▮▯▯  3    3
+            refusal      ▮▯▯▯▯  1    1
+            bravado      ▮▯▯▯▯  1    1
+
+  사용자 설정
+  세이프워드 없음 · 말씨 auto
+  화면 언어 ko
+  연결: 없음
+
+  * ToneDial 기본값과 다름
+  tonedial show --explain
+--- stderr --- [bytes=91; endsWithNewline=true]
+  ⚠ 사용하는 모델에 따라 기대한 말투가 나오지 않을 수 있습니다.

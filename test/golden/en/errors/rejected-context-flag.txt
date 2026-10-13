@@ -1,0 +1,5 @@
+status: 2
+--- stdout --- [bytes=0; endsWithNewline=false]
+
+--- stderr --- [bytes=35; endsWithNewline=true]
+compile: does not accept --project

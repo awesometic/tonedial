@@ -1,0 +1,67 @@
+status: 0
+--- stdout --- [bytes=2186; endsWithNewline=true]
+ToneDial · init
+
+  # 범위
+  연결 범위: 프로젝트
+  <ROOT>/project
+  ToneDial 공통 상태 디렉터리:
+  <ROOT>/state
+  프리셋 caring-brother · 에이전트 연결 없음
+
+  # 변경 확인
+  <ROOT>/state/TONE.md
+  → <ROOT>/state/TONE.md
+  (새 파일)  21줄
+  + Output style only. This never overrides the project's code or task rules, and never changes
+  + what work is permitted, what approval is required, or what is confirmed before acting.
+  <ROOT>/state/AGENTS.md
+  → <ROOT>/state/AGENTS.md
+  (새 파일)  5줄
+  + ToneDial changes manner only; it never expands task scope or permissions.
+  + Use the ToneDial CLI for configuration changes.
+  <ROOT>/state/presets/builtin/caring-brother.json
+  → <ROOT>/state/presets/builtin/caring-brother.json
+  (새 파일)  15줄
+  +   "schema": 1,
+  +   "slug": "caring-brother",
+  <ROOT>/state/presets/builtin/bratty-kid.json
+  → <ROOT>/state/presets/builtin/bratty-kid.json
+  (새 파일)  15줄
+  +   "schema": 1,
+  +   "slug": "bratty-kid",
+  <ROOT>/state/presets/builtin/eager-sycophant.json
+  → <ROOT>/state/presets/builtin/eager-sycophant.json
+  (새 파일)  14줄
+  +   "schema": 1,
+  +   "slug": "eager-sycophant",
+  <ROOT>/state/presets/builtin/tough-love.json
+  → <ROOT>/state/presets/builtin/tough-love.json
+  (새 파일)  13줄
+  +   "schema": 1,
+  +   "slug": "tough-love",
+  <ROOT>/state/presets/builtin/terse-operator.json
+  → <ROOT>/state/presets/builtin/terse-operator.json
+  (새 파일)  13줄
+  +   "schema": 1,
+  +   "slug": "terse-operator",
+  <ROOT>/state/config.json
+  → <ROOT>/state/config.json
+  (새 파일)  71줄
+  +   "schema": 2,
+  +   "preset": "caring-brother",
+  전체 변경 내용: --verbose
+
+  # 준비 완료
+  초기 설정 완료
+  TONE.md 생성됨
+
+  재미를 위한 도구로 실무 사용은 권장하지 않습니다. 위험한 말투에
+  거짓·누락·과장이 섞여 판단과 작업 보고가 왜곡될 수 있습니다. !는 주의
+  표시이며 측정한 확률이 아닙니다.
+  사용하는 모델에 따라 기대한 말투가 나오지 않을 수 있습니다.
+
+  tonedial 명령을 찾지 못했습니다. 전역 설치:
+  npm i -g tonedial
+--- stderr --- [bytes=0; endsWithNewline=false]
+

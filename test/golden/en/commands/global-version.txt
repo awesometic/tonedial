@@ -1,0 +1,5 @@
+status: 0
+--- stdout --- [bytes=19; endsWithNewline=true]
+tonedial <VERSION>
+--- stderr --- [bytes=0; endsWithNewline=false]
+

@@ -1,0 +1,2 @@
+# Golden captures preserve stream line endings and intentional blank output.
+test/golden/**/*.txt -text whitespace=-blank-at-eof

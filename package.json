@@ -22,7 +22,9 @@
     "test": "npm run typecheck && npm run build && node scripts/extract-fixtures.ts --check && node scripts/regenerate-packs.ts --check && node --test",
     "fixtures": "node scripts/extract-fixtures.ts",
     "packs": "node scripts/regenerate-packs.ts",
-    "prepublishOnly": "npm test && node scripts/check-release.mjs"
+    "prepublishOnly": "npm test && node scripts/check-release.mjs",
+    "test:golden": "node --test test/output-golden.test.ts test/frame-golden.test.ts test/image-golden.test.ts",
+    "test:pty": "npm run build && node --test test/pty.test.ts"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

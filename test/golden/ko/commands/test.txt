@@ -1,0 +1,17 @@
+status: 0
+--- stdout --- [bytes=729; endsWithNewline=true]
+ToneDial · test
+
+  Codex에서 새 대화를 시작할 계획입니다.
+  저장된 말투: caring-brother
+  <ROOT>/project
+  본인 계정의 토큰·사용 한도를 쓰며 요금이 나올 수 있습니다.
+  - 모델이 과하게 추론하거나 ToneDial 설정을 길게 설명할 수 있습니다. 늘어난
+    사용량과 비용도 본인 부담입니다.
+  - 도구가 자체 대화 기록을 남길 수 있습니다.
+  - 대화만 하는 세션입니다. 시작 프롬프트에 파일 수정 금지를 넣고 도구 사용을
+    제한합니다.
+  - 시험 세션에는 기존 톤 훅과 자동 지침을 끄도록 요청합니다. 관리 정책은
+    그대로 적용되며 파일시스템 차단은 아닙니다.
+--- stderr --- [bytes=0; endsWithNewline=false]
+

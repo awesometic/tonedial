@@ -1,0 +1,4 @@
+Terminal too small. Resize to at least 60 ×
+24.
+
+Esc/q/Ctrl+C discard

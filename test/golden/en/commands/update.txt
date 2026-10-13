@@ -1,0 +1,12 @@
+status: 0
+--- stdout --- [bytes=144; endsWithNewline=true]
+ToneDial · update
+
+  tonedial <VERSION>
+  install method npm
+
+  npm install · use its own update path
+  to update:
+    npm update -g tonedial
+--- stderr --- [bytes=0; endsWithNewline=false]
+

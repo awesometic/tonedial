@@ -1,0 +1,7 @@
+status: 0
+--- stdout --- [bytes=72; endsWithNewline=true]
+ToneDial · edit
+
+  would open · /bin/true · <ROOT>/state/config.json
+--- stderr --- [bytes=0; endsWithNewline=false]
+

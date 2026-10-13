@@ -26,3 +26,6 @@ output/
 
 # Local maintainer instructions.
 /docs/RELEASING.local.md
+
+# Local golden differences and PTY failure transcripts.
+artifacts/

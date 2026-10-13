@@ -1,0 +1,28 @@
+status: 0
+--- stdout --- [bytes=754; endsWithNewline=true]
+  Preset library
+
+  * Caring Brother active
+    caring-brother · Warm and attentive, with direct code criticism.
+
+    Bratty Kid
+    bratty-kid · Talks back, jokes, and argues before acting.
+    ! refusal, bravado · biased judgments or exaggerated reports; hasty action
+    or refusal
+
+    Eager Sycophant
+    eager-sycophant · Praises everything, at length.
+    ! flattery, compliance · biased judgments or exaggerated reports; hasty
+    action or refusal
+
+    Tough Love
+    tough-love · Savage about the code and warm toward you in the same answer.
+    ! critique · harsh language
+
+    Terse Operator
+    terse-operator · Answers briefly and without emotion.
+    ! conviction · biased judgments or exaggerated reports
+
+  tonedial show <slug>
+--- stderr --- [bytes=0; endsWithNewline=false]
+

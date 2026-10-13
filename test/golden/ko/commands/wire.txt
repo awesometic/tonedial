@@ -1,0 +1,46 @@
+status: 0
+--- stdout --- [bytes=1387; endsWithNewline=true]
+ToneDial · wire
+
+  연결 범위: 프로젝트
+  <ROOT>/project
+
+
+  # 에이전트 연결
+  <ROOT>/state/reader.mjs
+  → <ROOT>/state/reader.mjs
+  (새 파일)  241줄
+  + #!/usr/bin/env node
+  + import {
+  <ROOT>/state/skill/tonedial/SKILL.md
+  → <ROOT>/state/skill/tonedial/SKILL.md
+  (새 파일)  237줄
+  + ---
+  + name: tonedial
+  <ROOT>/state/skill/tonedial/references/traits.md
+  → <ROOT>/state/skill/tonedial/references/traits.md
+  (새 파일)  69줄
+  + Twelve axes, each 1 to 5. Read the live values with `tonedial show --json`; this file says what
+  + each one **owns**, which is what tells you which axis a request is actually about.
+  <ROOT>/project/.codex/hooks.json
+  → <ROOT>/project/.codex/hooks.json
+  (새 파일)  17줄
+  +   "description": "ToneDial: load saved response tone",
+  +   "hooks": {
+  - 스킬
+    <ROOT>/project/.agents/skills/tonedial
+  <ROOT>/state/config.json
+  → <ROOT>/state/config.json
+  (수정)  +129 -39
+  -     "registrations": {},
+  -     "resources": {}
+  +     "registrations": {
+  +       "[\"codex\",\"project\",\"<ROOT>/project\"]": {
+  전체 변경 내용: --verbose
+  Codex CLI 연결을 설정했습니다
+  codex: 훅 설정됨
+  <ROOT>/project/.codex/hooks.json
+  먼저 Codex에서 이 프로젝트를 신뢰해 주세요.
+  Codex: /hooks → SessionStart → ToneDial. 실행 명령을 확인하고 훅을 켜세요.
+--- stderr --- [bytes=0; endsWithNewline=false]
+

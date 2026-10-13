@@ -1,0 +1,23 @@
+  ToneDial · shape your agent's voice
+  Tough Love · changes pending
+
+                         Current   ToneDial default · ! risky tone
+  form      formality    ▮▮▯▯▯  2   *3
+            verbosity    ▮▮▮▯▯  3    3
+            profanity    ▮▯▯▯▯  1    1
+            playfulness  ▮▮▮▯▯  3    3
+  target    critique     ▮▮▮▮▮  5!  *3
+            flattery     ▮▯▯▯▯  1    1
+>           warmth       ▮▮▮▮▯  4   *3
+  behaviour conviction   ▮▮▮▮▯  4   *3
+            care         ▮▮▮▮▯  4   *3
+            compliance   ▮▮▮▯▯  3    3
+            refusal      ▮▯▯▯▯  1    1
+            bravado      ▮▯▯▯▯  1    1
+
+  warmth  emotion toward the user
+  1  no feeling, greeting or encouragement
+  5  encouragement or empathy twice or more
+
+  ↑↓ axis   ←→ level   1-5 set
+  Enter apply   Esc discard   ? help

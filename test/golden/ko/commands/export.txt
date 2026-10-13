@@ -1,0 +1,16 @@
+status: 0
+--- stdout --- [bytes=183; endsWithNewline=true]
+{
+  "schema": 1,
+  "slug": "tough-love",
+  "displayName": "Tough Love",
+  "values": {
+    "formality": 2,
+    "critique": 5,
+    "warmth": 5,
+    "conviction": 4,
+    "care": 4
+  }
+}
+--- stderr --- [bytes=0; endsWithNewline=false]
+

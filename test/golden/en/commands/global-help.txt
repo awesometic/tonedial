@@ -1,0 +1,68 @@
+status: 0
+--- stdout --- [bytes=2990; endsWithNewline=true]
+tonedial — set a coding agent's manner once and keep using it
+
+tonedial <command> [options]
+
+Set up your tone, then inspect it:
+  tonedial init --tools none --global --auto
+  tonedial show
+
+Tone
+  set <axis>=<level> …   change an axis or setting · bare opens dial
+  address [self user]    set names for each party · bare prompts
+  reset [axis]           reset an axis · bare resets all axes
+  show [slug]            the gauges and the state summary
+  test [claude|codex]    try saved settings or a preset in a new conversation
+
+Preset library
+  use <slug>             apply a preset and compile
+  save <display name>    save current axes as a preset
+  list                   bundled and user presets
+  export <slug>          export a preset as JSON
+  import <file>          import a JSON preset
+  edit [preset <slug>]   open settings or a preset in $EDITOR
+
+Connections
+  init                   set up and refresh bundled files
+  wire [tool]            connect an agent here · bare prompts
+  unwire [tool]          remove a managed connection
+  doctor                 check connections · repair with --fix
+  eject                  disconnect everything · keep presets
+
+Maintenance
+  compile                recompile current state
+  update                 update this install
+
+Options
+  --global               global connections (default) · explicit scope
+  --here                 connect the current project
+  --project=DIR          connection directory · use: export artifact
+  --migrate-legacy       init: approve validated older state
+  --auto                 skip approval prompt · always show diff
+  --dry-run              show changes · write nothing
+  --lang=CODE            init: interface language (en, ko)
+  --commands             init: also install /tone
+  --tools=LIST           agents to connect · init: none = state only
+  --fix                  doctor: repair fixable findings
+  --rollback=ID          doctor --fix: restore one operation
+  --from-operation=ID    doctor --fix: select saved settings from an operation
+  --from-preset=SLUG     doctor --fix: preset for unavailable settings
+  --restore-preset=SLUG  doctor --fix: restore one missing or damaged user
+                         preset
+  --preset=SLUG          test: preview a preset · keep saved settings
+  --accept-usage         test: accept account usage and charges for this launch
+  --explain              show: explain axes, settings, risky levels
+  --check                compile: report size · write nothing
+  --json                 machine-readable output with schema
+  -v, --verbose          command details, diagnostics, and diffs
+  --color=MODE           auto (default), always, or never
+  --version              version · --verbose adds Node and schema
+  --help                 this text
+
+Connections default to global. Use --here for cwd or --project PATH elsewhere.
+Unattended writes require an explicit scope.
+Command help: tonedial <command> --help
+Full reference: tonedial --help
+--- stderr --- [bytes=0; endsWithNewline=false]
+
