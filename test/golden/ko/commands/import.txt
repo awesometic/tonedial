@@ -1,11 +1,12 @@
 status: 0
---- stdout --- [bytes=198; endsWithNewline=true]
+--- stdout --- [bytes=199; endsWithNewline=true]
 ToneDial · import
 
   example-import: 가져옴
   Example Import
   보관함에 저장했습니다. 현재 말투는 바꾸지 않았습니다.
   <ROOT>/incoming.json
+
   tonedial show example-import
 --- stderr --- [bytes=0; endsWithNewline=false]
 

@@ -289,6 +289,35 @@ for (const language of LANGUAGES) {
   });
 }
 
+test("a rejected connection command identifies itself and its scope without writes", async () => {
+  mkdirSync(join(home, "project"));
+  await initializeState();
+  const configPath = join(home, "state", "config.json");
+  const before = readFileSync(configPath, "utf8");
+  assert.equal(await cli("wire", "codex", "--here"), 1);
+  const screen = out.join("");
+  assert.ok(screen.startsWith("ToneDial · wire\n\n"), "the rejected command had no leading title");
+  assert.equal(screen.split("ToneDial · wire").length - 1, 1, "the result repeated the title");
+  assert.ok(screen.includes(`  ${EN.wiring.scopeHere}\n`), "the rejected command did not identify its scope");
+  assert.equal(readFileSync(configPath, "utf8"), before, "an unapproved preview changed the settings");
+});
+
+test("an unreadable import keeps its path copyable and reflows the diagnostic", async () => {
+  for (const language of LANGUAGES) {
+    await cli("init", "--here", "--tools", "none", "--auto", "--lang", language);
+    out = []; err = [];
+    const path = join(home, "a missing preset with spaces.json");
+    assert.equal(await run(["import", path], {
+      HOME: home, TONEDIAL_HOME: join(home, "state"), PATH: "", COLUMNS: "40",
+    }, join(home, "project"), false, false), 1);
+    const [target, ...diagnostic] = err.join("").trimEnd().split("\n");
+    assert.equal(err.join("").split(path).length - 1, 1, `${language}: the diagnostic repeated the target`);
+    assert.equal(target, path, `${language}: the path was split or lost`);
+    assert.ok(diagnostic.length > 1, `${language}: the diagnostic did not reflow`);
+    for (const line of diagnostic) assert.ok(maxCells(line) <= resolveBudget(40), `${language}: ${line}`);
+  }
+});
+
 test("default show keeps axes before settings and fits an 80 by 24 viewport", async () => {
   await initializeState();
   await cli("use", "bratty-kid");
@@ -305,6 +334,14 @@ test("default show keeps axes before settings and fits an 80 by 24 viewport", as
   assert.match(screen, /refusal\s+[▮▯]{5}\s+3!\s+\*1/);
   assert.ok(screen.includes(EN.artifact.displaySettings("en")));
   assert.ok(screen.includes(EN.artifact.connectionRecords([])));
+
+  await cli("address", "guide", "friend");
+  out = [];
+  assert.equal(await run(["show"], { HOME: home, TONEDIAL_HOME: join(home, "state"), PATH: "", COLUMNS: "80" }, join(home, "project"), false), 0);
+  const withPersona = out.join("");
+  assert.ok(withPersona.trimEnd().split("\n").length <= 24, withPersona);
+  assert.ok(withPersona.includes("guide") && withPersona.includes("friend"), "the viewport hid the persona");
+  assert.ok(withPersona.includes("bravado") && withPersona.includes("tonedial show --explain"), "the viewport hid an axis or action");
 });
 
 test("show and explain stack cleanly at 60 columns without changing saved state", async () => {
@@ -839,7 +876,7 @@ test("a Korean install speaks Korean where a user actually reads", async () => {
   out = [];
   err = [];
   assert.equal(await cli("wire", "--here", "--tools", "other-agent", "--dry-run", "--auto"), 1, "wire --tools other-agent");
-  assert.equal(out.join(""), "", "native refusal has no stdout payload");
+  assert.equal(out.join(""), `ToneDial · wire\n\n  ${catalogue("ko").cli.wiring.scopeHere}\n  ${join(home, "project")}\n`, "native refusal must contain only the command title and scope");
   const expectedRefusal = catalogue("ko").cli.wiring.unknownTool("other-agent", ["claude", "antigravity", "codex"]);
   assert.equal(
     err.join("").replace(/\s+/g, " ").trim(),

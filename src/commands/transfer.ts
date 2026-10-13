@@ -7,7 +7,7 @@ import type { CommandResult, Ctx } from "../cli.ts";
 import { ConfigError } from "../core/config.ts";
 import { decodeUtf8, getBounded, urlIdentity } from "../core/net.ts";
 import { truncate } from "../ui/width.ts";
-import { humanText } from "../ui/format.ts";
+import { humanText, nextStep } from "../ui/format.ts";
 import {
   BUNDLED, SLUG_PATTERN, inspectPresetLibrary, parsePreset, presetObject, preparePresetWrite, resolvePreset, serializePreset,
 } from "../core/presets.ts";
@@ -91,7 +91,12 @@ export async function runImport(ctx: Ctx, args: string[]): Promise<CommandResult
     try {
       text = readFileSync(file, "utf8");
     } catch (cause) {
-      throw new ConfigError(ctx.t.preset.unreadable(file, (cause as Error).message));
+      const error = cause as NodeJS.ErrnoException;
+      // The path has its own copyable row; do not repeat it inside the OS diagnostic.
+      const suffix = `, ${error.syscall} '${error.path}'`;
+      const reason = error.path === file && error.message.endsWith(suffix)
+        ? error.message.slice(0, -suffix.length) : error.message;
+      throw new ConfigError(ctx.t.preset.unreadable(file, reason), { cause });
     }
   }
 
@@ -147,7 +152,7 @@ export async function runImport(ctx: Ctx, args: string[]): Promise<CommandResult
       ...(url === null
         ? [`  ${humanText(resolve(file))}`]
         : [`  ${ctx.ui.dim(ctx.t.config.fetchedFrom(humanText(source)))}`]),
-      `  ${ctx.ui.accent(`tonedial show ${slug}`)}`,
+      ...nextStep(`tonedial show ${slug}`, ctx.ui),
     ],
     json: { slug, displayName: preset.displayName, replaced: existed, source },
     warnings: existed ? [ctx.t.preset.replaced(slug)] : [],

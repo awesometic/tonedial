@@ -1,9 +1,12 @@
 status: 0
---- stdout --- [bytes=710; endsWithNewline=true]
+--- stdout --- [bytes=752; endsWithNewline=true]
 ToneDial · eject
 
   연결 범위: 프로젝트
   <ROOT>/project
+
+  변경 확인
+  변경 항목 3개
 
   <ROOT>/project/.codex/hooks.json
   → <ROOT>/project/.codex/hooks.json
@@ -12,8 +15,10 @@ ToneDial · eject
   -   "description": "ToneDial: load saved response tone",
   -   "hooks": {
   -     "SessionStart": [
+
   - 스킬
     <ROOT>/project/.agents/skills/tonedial
+
   <ROOT>/state/config.json
   → <ROOT>/state/config.json
   (수정)  +2 -74
@@ -21,7 +26,9 @@ ToneDial · eject
   -       "[\"codex\",\"project\",\"<ROOT>/project\"]": {
   +     "registrations": {},
   +     "resources": {}
+
   전체 변경 내용: --verbose
+
   Claude Code, Antigravity IDE/Desktop, Codex CLI 연결을 해제했습니다
   프리셋과 설정은 유지했습니다.
   <ROOT>/state

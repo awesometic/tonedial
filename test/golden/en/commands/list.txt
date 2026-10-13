@@ -1,6 +1,6 @@
 status: 0
---- stdout --- [bytes=754; endsWithNewline=true]
-  Preset library
+--- stdout --- [bytes=762; endsWithNewline=true]
+ToneDial · list
 
   * Caring Brother active
     caring-brother · Warm and attentive, with direct code criticism.
@@ -23,6 +23,6 @@ status: 0
     terse-operator · Answers briefly and without emotion.
     ! conviction · biased judgments or exaggerated reports
 
-  tonedial show <slug>
+  tonedial show caring-brother
 --- stderr --- [bytes=0; endsWithNewline=false]
 

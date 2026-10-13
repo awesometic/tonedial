@@ -1,9 +1,8 @@
 status: 0
---- stdout --- [bytes=80; endsWithNewline=true]
+--- stdout --- [bytes=56; endsWithNewline=true]
 ToneDial · reset
 
   warmth 5 → 3
   TONE.md generated
-  TONE.md 1,090 / 2,700
 --- stderr --- [bytes=0; endsWithNewline=false]
 

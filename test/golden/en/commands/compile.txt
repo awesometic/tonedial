@@ -1,10 +1,11 @@
 status: 0
---- stdout --- [bytes=102; endsWithNewline=true]
+--- stdout --- [bytes=103; endsWithNewline=true]
 ToneDial · compile
 
   TONE.md current
   <ROOT>/state/TONE.md
   TONE.md 1,124 / 2,700
+
   tonedial show
 --- stderr --- [bytes=0; endsWithNewline=false]
 

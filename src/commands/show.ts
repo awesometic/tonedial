@@ -16,7 +16,7 @@ import { inspectContextLayout } from "../core/seeds.ts";
 import { catalogue, isLanguage, type Messages } from "../core/i18n.ts";
 import { explainBlock, gaugeBlock, gaugeHeader } from "../ui/gauge.ts";
 import { planConfig, sizeWarning } from "./compile.ts";
-import { budget as budgetLine, combination, humanText, riskWarnings } from "../ui/format.ts";
+import { budget as budgetLine, combination, humanText, nextStep, riskWarnings } from "../ui/format.ts";
 import { maxCells, truncate, wrap } from "../ui/width.ts";
 import { inspectContextConsumers } from "../wiring/targets.ts";
 
@@ -54,11 +54,12 @@ export function runShow(ctx: Ctx, args: string[]): CommandResult {
   const budget = budgetLine(size, ctx.t);
   // A display name has no length cap, so the title is the one row that can be pushed past the
   // budget by state alone. Truncating keeps the size at the right margin where it is read.
-  const nameBudget = ctx.ui.width - maxCells(budget) - maxCells(status) - 4;
+  const prefix = "ToneDial · show · ";
+  const nameBudget = ctx.ui.width - maxCells(budget) - maxCells(status) - maxCells(prefix) - 4;
   if (nameBudget >= 2) {
-    lines.push(titleRow(truncate(humanText(activeName), nameBudget) + status, budget, size.overCap, ctx));
+    lines.push(titleRow(prefix + truncate(humanText(activeName), nameBudget) + status, budget, size.overCap, ctx));
   } else {
-    const title = truncate(humanText(activeName), Math.max(2, ui.width - maxCells(status) - 2)) + status;
+    const title = prefix + truncate(humanText(activeName), Math.max(2, ui.width - maxCells(status) - maxCells(prefix) - 2)) + status;
     for (const folded of wrap(title, ui.width - 2)) lines.push(`  ${ui.bold(folded)}`);
     for (const folded of wrap(budget, ui.width - 2)) lines.push(`  ${(size.overCap ? ui.error : ui.dim)(folded)}`);
   }
@@ -128,8 +129,9 @@ export function runShow(ctx: Ctx, args: string[]): CommandResult {
     // screen whose content depends on the catalogue. Nothing here reaches `tone.md`.
     lines.push(...explainBlock(ui, catalogue(isLanguage(config.language) ? config.language : "en")));
   } else {
+    // Keep the short legend and action together so a one-row persona still fits 80×24.
     lines.push(`  ${ui.accent("*")} ${ui.dim(ctx.t.artifact.movedFromDefault)}`,
-      `  ${ui.accent(preview ? `tonedial use ${preview.slug}` : "tonedial show --explain")}`);
+      ...nextStep(preview ? `tonedial use ${preview.slug}` : "tonedial show --explain", ui).slice(1));
   }
 
   const combinations = checkCombos(axes, config.persona, config.speech_level);

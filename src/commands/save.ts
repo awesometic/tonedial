@@ -4,7 +4,7 @@ import type { CommandResult, Ctx } from "../cli.ts";
 import { AXIS_DEFAULT, AXIS_ORDER, type Axes, type Level } from "../core/anchors.ts";
 import { ConfigError, serializeConfig } from "../core/config.ts";
 import { BUNDLED, SLUG_PATTERN, preparePresetWrite, slugify, type Preset } from "../core/presets.ts";
-import { budget, humanText } from "../ui/format.ts";
+import { budget, humanText, nextStep } from "../ui/format.ts";
 import { cells, truncate } from "../ui/width.ts";
 import { applyPlanned, planArtifact, planConfig, sizeWarning } from "./compile.ts";
 import { planChange, rawReadChange, rawReadCheck } from "../wiring/apply.ts";
@@ -68,8 +68,9 @@ export async function runSave(ctx: Ctx, args: string[]): Promise<CommandResult> 
         humanText(displayName),
         Math.max(1, ctx.ui.width - cells(`    ${countLabel}`)),
       )}  ${ctx.ui.dim(countLabel)}`,
-      `  ${ctx.t.artifact.generated} · ${ctx.ui.dim(budget(size, ctx.t))}`,
-      `  ${ctx.ui.accent("tonedial list")}`,
+      `  ${ctx.t.artifact.generated}`,
+      ...(ctx.flags.verbose ? [`  ${ctx.ui.dim(budget(size, ctx.t))}`] : []),
+      ...nextStep("tonedial list", ctx.ui),
     ],
     json: { slug, displayName, values, nonDefaultAxes: count, replaced, chars: size.chars },
     warnings,

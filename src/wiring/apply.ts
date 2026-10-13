@@ -51,7 +51,7 @@ import {
 } from "../core/operations.ts";
 import { confirm, interactive } from "../ui/prompt.ts";
 import { palette as paletteFor, type Palette } from "../ui/style.ts";
-import { humanText } from "../ui/format.ts";
+import { humanText, section } from "../ui/format.ts";
 import { probeSkillAction, rollbackSkillAction, validateSkillAction } from "./skill.ts";
 
 export type Change = {
@@ -2464,7 +2464,7 @@ export async function gate(changes: Change[], opts: GateOptions): Promise<GateRe
   const real = changes.filter((c) => !isNoop(c));
   const finalReal = finalChanges.filter((c) => !isNoop(c));
   const operationActions = opts.operationActions ?? [];
-  const lines: string[] = opts.heading === undefined ? [] : ["", `  ${opts.ui.bold(opts.ui.accent(`# ${opts.heading}`))}`];
+  const lines: string[] = opts.heading === undefined ? [] : section(opts.heading, opts.ui);
   if (real.length === 0 && finalReal.length === 0 && operationActions.length === 0) {
     for (const change of [...changes, ...finalChanges]) assertFresh(change, opts.t);
     try { await opts.verify?.(); }
@@ -2497,22 +2497,21 @@ export async function gate(changes: Change[], opts: GateOptions): Promise<GateRe
   }));
   const diff = [...fileDiff(real), ...actionDiff, ...fileDiff(finalReal)];
   const renderHuman = opts.verbose === true ? renderVerboseDiff : renderSummary;
+  if (opts.heading === undefined) lines.push(...section(opts.t.wiring.planHeading, opts.ui));
+  lines.push(`  ${opts.t.wiring.changeCount(real.length + operationActions.length + finalReal.length)}`);
   if (typeof opts.recoveryPresentation === "object") lines.push(...(opts.recoveryPresentation.lines ?? []));
   for (const change of real) {
-    lines.push(...(opts.recoveryPresentation ? renderAction({ kind: "file", path: change.path, realPath: change.realPath }, opts.ui, opts.t) : renderHuman(change, opts.ui, opts.t)));
-    if (opts.verbose) lines.push("");
+    lines.push("", ...(opts.recoveryPresentation ? renderAction({ kind: "file", path: change.path, realPath: change.realPath }, opts.ui, opts.t) : renderHuman(change, opts.ui, opts.t)));
   }
   for (const action of operationActions) {
-    lines.push(...renderAction(action.action, opts.ui, opts.t));
-    if (opts.verbose) lines.push("");
+    lines.push("", ...renderAction(action.action, opts.ui, opts.t));
   }
   for (const change of finalReal) {
-    lines.push(...(opts.recoveryPresentation ? renderAction({ kind: "file", path: change.path, realPath: change.realPath }, opts.ui, opts.t) : renderHuman(change, opts.ui, opts.t)));
-    if (opts.verbose) lines.push("");
+    lines.push("", ...(opts.recoveryPresentation ? renderAction({ kind: "file", path: change.path, realPath: change.realPath }, opts.ui, opts.t) : renderHuman(change, opts.ui, opts.t)));
   }
 
   if (!opts.recoveryPresentation && !opts.verbose && real.length + finalReal.length > 0) {
-    lines.push(`  ${opts.ui.dim(opts.t.wiring.previewMore)}`);
+    lines.push("", `  ${opts.ui.dim(opts.t.wiring.previewMore)}`);
   }
 
   if (opts.dryRun) return { applied: false, lines, reason: "dry-run", diff };

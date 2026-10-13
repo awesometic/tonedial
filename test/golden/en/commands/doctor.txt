@@ -1,33 +1,28 @@
 status: 0
---- stdout --- [bytes=1465; endsWithNewline=true]
+--- stdout --- [bytes=777; endsWithNewline=true]
 ToneDial · doctor
 
   Inspection scope: project
   <ROOT>/project
 
   Application: healthy
+
+  Connections
   Connection files: no issues in selected scope
   Hook status is read from the inspected settings file only; host overrides and
   session delivery are unverified.
 
-  ·  Claude Code         Hook enablement unknown in the registered settings
-                         file
-                         not installed under this root
-                         No managed ToneDial hook to inspect. To connect, run
-                         init with this agent selected in the same scope.
-  ·  Antigravity IDE/Desktop  Hook enablement unknown in the registered
-                              settings file
-                              No managed ToneDial hook to inspect. To connect,
-                              run init with this agent selected in the same
-                              scope.
-  ·  Codex CLI           Hook enablement unknown in the registered settings
-                         file
-                         not installed under this root
-                         No managed ToneDial hook to inspect. To connect, run
-                         init with this agent selected in the same scope.
-  !  tonedial on PATH    tonedial is not on PATH. The skill and fallback line
-                         cannot run it. Find the global prefix: npm prefix -g
-                         Add its bin directory (macOS/Linux) to PATH.
+  Checks
+  · Agent hooks
+    Hook enablement could not be confirmed for: Claude Code, Antigravity
+    IDE/Desktop, Codex CLI.
+    No managed ToneDial hook is registered for these agents in this scope.
+    To connect ToneDial, run init in this scope and select these agents.
+
+  ! tonedial on PATH
+    tonedial is not on PATH. The skill and fallback line cannot run it. Find
+    the global prefix: npm prefix -g
+    Add its bin directory (macOS/Linux) to PATH.
 
   1 need attention · --fix repairs what it can
 --- stderr --- [bytes=0; endsWithNewline=false]

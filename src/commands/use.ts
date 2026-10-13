@@ -11,7 +11,7 @@ import { check as checkCombos } from "../core/combos.ts";
 import { applyPreset, assertPresetSelection, inspectPresetLibrary, resolvePreset } from "../core/presets.ts";
 import { applyPlanned, planArtifact, planConfig, sizeWarning } from "./compile.ts";
 import { planChange, rawReadCheck } from "../wiring/apply.ts";
-import { budget, combination, humanText } from "../ui/format.ts";
+import { budget, combination, humanText, nextStep } from "../ui/format.ts";
 import { truncate, wrap } from "../ui/width.ts";
 
 /**
@@ -83,12 +83,14 @@ export async function runUse(ctx: Ctx, args: string[]): Promise<CommandResult> {
   const lines = [
     ...wrap(ctx.t.preset.active(truncate(humanText(preset.displayName), ui.width - 12)), ui.width - 2)
       .map((line) => `  ${ui.success(ui.bold(line))}`),
-    `  ${ctx.t.artifact.generated} · ${ui.dim(budget(size, ctx.t))}`,
+    `  ${ctx.t.artifact.generated}`,
+    ...(ctx.flags.verbose ? [`  ${ui.dim(budget(size, ctx.t))}`] : []),
     // Folded here rather than at the printer: `lines` are laid out by the command that built
     // them, and a printer that reflowed them would break every column in the gauge block.
+    "",
     ...notices.flatMap((n) => wrap(humanText(n), ui.width - 2).map((folded) => `  ${n === notice.riskAxes ? ui.risk(folded) : n === notice.risk ? ui.warn(folded) : folded}`)),
     ...project,
-    `  ${ui.accent("tonedial show")}`,
+    ...nextStep("tonedial show", ui),
   ];
 
   return {

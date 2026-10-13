@@ -246,6 +246,7 @@ export type Messages = {
     whatElseIsSettable: string;
   };
   wiring: {
+    changeCount: (count: number) => string;
     hookConfigured: (tool: string, path: string) => string;
     hookInherited: (tool: string, path: string) => string;
     hookDuplicate: (tool: string, destination: string, stale: boolean) => string;
@@ -295,6 +296,8 @@ export type Messages = {
     applyQuestion: (count: number) => string;
   };
   doctor: {
+    connectionsHeading: string;
+    checksHeading: string;
     applicationHealth: (healthy: boolean) => string;
     connectionHealth: (attention: boolean) => string;
     healthy: string;
@@ -342,6 +345,10 @@ export type Messages = {
     nativeConfiguredCompact: (event: "SessionStart" | "PreInvocation") => string;
     hookSettingState: Record<"enabled" | "disabled" | "unknown", string>;
     hookSettingScope: string;
+    hookGroupHeading: string;
+    hookGroupUnknown: (tools: readonly string[]) => string;
+    hookGroupMissing: string;
+    hookGroupAction: string;
     hookNotConnected: string;
     hookNeedsInspection: string;
     hookGuidance: Record<"claude" | "codex" | "antigravity", string>;
@@ -606,7 +613,7 @@ const enMessages: Messages = {
     userLevelNotCaptured: "persona and safeword are user settings, so presets do not save them",
     replaced: (slug) => `${slug}: existing preset replaced`,
     imported: (slug, replaced) => `${slug}: ${replaced ? "replaced" : "imported"}`,
-    unreadable: (path, reason) => `${path}: cannot read: ${reason}`,
+    unreadable: (path, reason) => `${path}\ncannot read: ${reason}`,
     notJson: (path, reason) => `${path}: invalid JSON: ${reason}`,
     notJsonRemote: (url) => `${url}: response is not valid JSON`,
     notAPreset: (name) => `${name}: not a preset object`,
@@ -717,6 +724,7 @@ const enMessages: Messages = {
     whatElseIsSettable: "Other settings accepted by set:",
   },
   wiring: {
+    changeCount: (count) => `Changes: ${count}`,
     modifiedFile: "(modified)",
     modeChanged: "(permissions changed)",
     finalNewlineAdded: "(final newline added)",
@@ -766,6 +774,8 @@ const enMessages: Messages = {
     applyQuestion: (count) => `Apply ${count} change${count === 1 ? "" : "s"}?`,
   },
   doctor: {
+    connectionsHeading: "Connections",
+    checksHeading: "Checks",
     applicationHealth: (healthy) => `Application: ${healthy ? "healthy" : "needs attention"}`,
     connectionHealth: (attention) => `Connection files: ${attention ? "attention needed" : "no issues in selected scope"}`,
     healthy: "No problems found",
@@ -843,6 +853,10 @@ const enMessages: Messages = {
       unknown: "Hook enablement unknown in the registered settings file",
     },
     hookSettingScope: "Hook status is read from the inspected settings file only; host overrides and session delivery are unverified.",
+    hookGroupHeading: "Agent hooks",
+    hookGroupUnknown: (tools) => `Hook enablement could not be confirmed for: ${tools.join(", ")}.`,
+    hookGroupMissing: "No managed ToneDial hook is registered for these agents in this scope.",
+    hookGroupAction: "To connect ToneDial, run init in this scope and select these agents.",
     hookNotConnected: "No managed ToneDial hook to inspect. To connect, run init with this agent selected in the same scope.",
     hookNeedsInspection: "Resolve the reported hook settings or program issue before checking enablement in the app.",
     hookGuidance: {
@@ -1249,7 +1263,7 @@ const koMessages: Messages = {
     userLevelNotCaptured: "페르소나와 세이프워드는 사용자 설정이므로 프리셋에 저장하지 않습니다",
     replaced: (slug) => `${slug}: 기존 프리셋 교체됨`,
     imported: (slug, replaced) => `${slug}: ${replaced ? "교체됨" : "가져옴"}`,
-    unreadable: (path, reason) => `${path}: 읽을 수 없습니다: ${reason}`,
+    unreadable: (path, reason) => `${path}\n읽을 수 없습니다: ${reason}`,
     notJson: (path, reason) => `${path}: 올바른 JSON이 아닙니다: ${reason}`,
     notJsonRemote: (url) => `${url}: 응답이 올바른 JSON이 아닙니다`,
     notAPreset: (name) => `${name}: 프리셋 객체가 아닙니다`,
@@ -1362,6 +1376,7 @@ const koMessages: Messages = {
     whatElseIsSettable: "set으로 바꿀 수 있는 기타 설정:",
   },
   wiring: {
+    changeCount: (count) => `변경 항목 ${count}개`,
     modifiedFile: "(수정)",
     modeChanged: "(권한 변경)",
     finalNewlineAdded: "(마지막 줄바꿈 추가)",
@@ -1411,6 +1426,8 @@ const koMessages: Messages = {
     applyQuestion: (count) => `변경 ${count}건을 적용할까요?`,
   },
   doctor: {
+    connectionsHeading: "연결",
+    checksHeading: "검사",
     applicationHealth: (healthy) => `앱 상태: ${healthy ? "정상" : "점검 필요"}`,
     connectionHealth: (attention) => `연결 파일: ${attention ? "점검 필요" : "선택한 범위에서 문제 없음"}`,
     healthy: "문제 없음",
@@ -1488,6 +1505,10 @@ const koMessages: Messages = {
       unknown: "등록된 설정 파일에서 훅 활성화 여부를 확인할 수 없음",
     },
     hookSettingScope: "훅 상태는 검사한 설정 파일만 읽어 표시합니다. 앱의 설정 덮어쓰기와 세션 전달 여부는 확인하지 않습니다.",
+    hookGroupHeading: "에이전트 훅",
+    hookGroupUnknown: (tools) => `다음 에이전트의 훅 활성화 여부를 확인할 수 없습니다: ${tools.join(", ")}`,
+    hookGroupMissing: "이 검사 범위에는 ToneDial 관리 훅이 등록되어 있지 않습니다.",
+    hookGroupAction: "ToneDial을 연결하려면 같은 범위에서 init을 실행하고 이 에이전트들을 선택하세요.",
     hookNotConnected: "검사할 ToneDial 관리 훅이 없습니다. 연결하려면 같은 범위에서 init을 실행하고 이 에이전트를 선택해 주세요.",
     hookNeedsInspection: "위에 나온 훅 설정이나 실행 프로그램 문제를 먼저 확인한 뒤 앱에서 활성화 여부를 확인해 주세요.",
     hookGuidance: {

@@ -1,12 +1,11 @@
 status: 0
---- stdout --- [bytes=150; endsWithNewline=true]
+--- stdout --- [bytes=126; endsWithNewline=true]
 ToneDial · address
 
   설정 저장됨
   persona.self_ref  — → self
   persona.user_ref  — → user
   TONE.md 생성됨
-  TONE.md 1,263 / 2,700
 --- stderr --- [bytes=219; endsWithNewline=true]
   ⚠ 페르소나에는 앵커가 없어 축보다 우선순위가 낮습니다. 나이·성별·노트는
     모델의 연상에 따라 출력을 바꾸며 호칭은 축이 허용하는 답변에만 나타납니다.

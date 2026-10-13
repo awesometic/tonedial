@@ -1,5 +1,6 @@
 status: 1
---- stdout --- [bytes=0; endsWithNewline=false]
+--- stdout --- [bytes=17; endsWithNewline=true]
+ToneDial · set
 
 --- stderr --- [bytes=47; endsWithNewline=true]
 warmth: 1~5만 쓸 수 있습니다(입력: 9)

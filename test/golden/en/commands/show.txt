@@ -1,6 +1,6 @@
 status: 0
 --- stdout --- [bytes=878; endsWithNewline=true]
-  Caring Brother                                          TONE.md 1,124 / 2,700
+  ToneDial · show · Caring Brother                      TONE.md 1,124 / 2,700
 
                          Current   ToneDial default · ! risky tone
   form      formality    ▮▯▯▯▯  1   *3

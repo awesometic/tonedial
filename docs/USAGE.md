@@ -44,7 +44,8 @@ tonedial reset                     # all axes to their defaults
 `reset` preserves persona, safeword and other settings.
 It does not disable hooks or unload instructions; there is no persistent tone-off switch.
 The artifact targets 1,800 Unicode code points, with a 2,700-character budget warning.
-Dial changes, `show` and `compile --check` report its size.
+Mutation receipts show generated/current status; `--verbose` adds the numeric artifact count.
+`show` and `compile` report the count by default; use `doctor --verbose` or `doctor --json` during diagnosis.
 
 ## Presets and personal settings
 
@@ -103,6 +104,9 @@ Human output measures stdout and stderr separately and stacks detail in narrower
 Unknown width uses a 100-cell prose fallback; non-terminal output is linear, non-animated and non-prompting.
 Paths, commands, JSON and exports remain intact; human displays escape control characters without changing stored values.
 `--color=auto|always|never` overrides environment settings; `NO_COLOR` otherwise beats `FORCE_COLOR`.
+Primary human receipts use one frame: title, scope or result, blank-separated detail groups, then a separate next action.
+`show` combines title and artifact size on one row to keep its normal preview within 24 rows.
+The interactive dial owns its live title and controls; `export` stays raw, help keeps its reference layout and `--json` keeps its machine envelope.
 There is no saved width setting or universal output cap.
 `fixed_width` and `guards` are not active settings. Assignments fail without writes; valid boolean values have no effect and are removed only by an authorized canonical write.
 Read-only inspection preserves their bytes; malformed values require diagnosis or disclosed recovery.

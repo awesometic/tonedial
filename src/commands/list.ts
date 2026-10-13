@@ -7,6 +7,7 @@ import { applyPreset, inspectPresetLibrary } from "../core/presets.ts";
 import { nonDefaultAxes } from "../core/combos.ts";
 import { catalogue, configLanguage, detectLanguage, isLanguage } from "../core/i18n.ts";
 import { truncate, wrap } from "../ui/width.ts";
+import { nextStep } from "../ui/format.ts";
 import { captureRawEntry, rawReadChange } from "../wiring/apply.ts";
 
 export function runList(ctx: Ctx): CommandResult {
@@ -42,8 +43,6 @@ export function runList(ctx: Ctx): CommandResult {
 
   return {
     lines: [
-      `  ${ctx.ui.bold(ctx.t.help.groups.presets)}`,
-      "",
       ...rows.flatMap((r, index) => {
         const name = r.active ? ctx.t.preset.active(r.displayName) : r.displayName;
         const ownership = r.bundled ? "" : ` (${ctx.t.preset.yours})`;
@@ -56,12 +55,12 @@ export function runList(ctx: Ctx): CommandResult {
           ...wrap(`${r.slug} · ${summary}`, ctx.ui.width - 4).map((line) => `    ${line}`),
           ...(r.riskAxes.length ? wrap(ctx.t.notice.riskAxes(r.riskAxes), ctx.ui.width - 4).map((line) => `    ${ctx.ui.risk(line)}`) : []),
           ...(ctx.flags.verbose && changed ? wrap(changed, ctx.ui.width - 4).map((line) => `    ${ctx.ui.dim(line)}`) : []),
-          "",
+          ...(index < rows.length - 1 ? [""] : []),
         ];
       }),
       ...library.unavailable.flatMap((entry) => wrap(ctx.t.preset.unavailable(entry.slug, entry.reason), ctx.ui.width - 2)
         .map((line) => `  ${ctx.ui.warn(line)}`)),
-      `  ${ctx.ui.accent("tonedial show <slug>")}`,
+      ...nextStep(rows[0] ? `tonedial show ${rows[0].slug}` : "tonedial doctor", ctx.ui),
     ],
     json: {
       presets: [...rows, ...library.unavailable.map((entry) => ({ ...entry, available: false, active: null }))],

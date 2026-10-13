@@ -1,10 +1,11 @@
 status: 0
---- stdout --- [bytes=133; endsWithNewline=true]
+--- stdout --- [bytes=109; endsWithNewline=true]
 ToneDial · save
 
   Saved preset: example
   Example  7 non-default axes
-  TONE.md generated · TONE.md 1,117 / 2,700
+  TONE.md generated
+
   tonedial list
 --- stderr --- [bytes=74; endsWithNewline=true]
   ⚠ persona and safeword are user settings, so presets do not save them

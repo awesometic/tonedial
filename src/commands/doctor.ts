@@ -27,8 +27,8 @@ import {
   type SeedState,
 } from "../core/seeds.ts";
 import { toCompileInput } from "../core/resolve.ts";
-import { budget, humanText, receiptLines, recoveryRollbackLines } from "../ui/format.ts";
-import { cells, maxCells, padEnd, wrap } from "../ui/width.ts";
+import { budget, humanText, nextStep, receiptLines, recoveryRollbackLines, section } from "../ui/format.ts";
+import { wrap } from "../ui/width.ts";
 import { applyRollback, assertFresh, planChange, previewRollback, type Change } from "../wiring/apply.ts";
 import { confirm } from "../ui/prompt.ts";
 import { RegionError, find } from "../wiring/region.ts";
@@ -668,7 +668,8 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true, showCodexActi
   if (diagnosis.config === null || diagnosis.configChange === null || diagnosis.layout.inspectionFailure !== null) {
     const checks = [contextCheck(ctx, diagnosis)];
     const lines = [
-      ...checks.flatMap((check) => report(check, ctx)),
+      ...section(ctx.t.doctor.checksHeading, ctx.ui).slice(1),
+      ...renderCheckBlocks(checks, [], [], ctx),
       "",
       `  ${ctx.ui.warn(ctx.t.doctor.toLookAt(1))}`,
     ];
@@ -751,9 +752,9 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true, showCodexActi
   for (const setting of hookSettings) {
     const check = checks.find(check => check.name === TARGETS[setting.tool].label)!;
     const integration = integrations.find(integration => integration.tool === setting.tool);
-    const guidance = setting.path === null && TARGETS[setting.tool].delivery === null ? ""
-      : setting.path === null ? ctx.t.doctor.hookNotConnected
-      : integration?.configuration !== "configured" || integration.runtime.state !== "available"
+    const guidance = integration === undefined && TARGETS[setting.tool].delivery === null ? ""
+      : integration === undefined ? ctx.t.doctor.hookNotConnected
+      : integration.configuration !== "configured" || integration.runtime.state !== "available"
         ? ctx.t.doctor.hookNeedsInspection
       : setting.tool === "codex" && !showCodexAction ? ""
       : ctx.t.doctor.hookGuidance[setting.tool];
@@ -819,11 +820,12 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true, showCodexActi
 
   const lines: string[] = [
     `  ${ctx.ui.bold((appHealthy ? ctx.ui.success : ctx.ui.warn)(ctx.t.doctor.applicationHealth(appHealthy)))}`,
+    ...section(ctx.t.doctor.connectionsHeading, ctx.ui),
     ...wrap(ctx.t.doctor.connectionHealth(nativeAttention), ctx.ui.width - 2).map((line) =>
       `  ${nativeAttention ? ctx.ui.warn(line) : line}`),
     ...wrap(ctx.t.doctor.hookSettingScope, ctx.ui.width - 2).map(line => `  ${line}`),
-    "",
-    ...shownChecks.flatMap((c) => report(c, ctx)),
+    ...section(ctx.t.doctor.checksHeading, ctx.ui),
+    ...renderCheckBlocks(shownChecks, ctx.flags.verbose ? [] : hookSettings, integrations, ctx),
     // A repair receipt presents its new IDs once in native→app order. Standalone diagnosis
     // still lists available historical rollback commands.
     ...(showRollbackCommands ? inspected.journals.flatMap(({ operationId, state, journal }) =>
@@ -1126,7 +1128,6 @@ function repairCommand(ctx: Ctx, rest: string): string {
 }
 
 const MARK: Record<State, string> = { ok: "ok", problem: "!", note: "·", absent: "·" };
-const NAME_WIDTH = 18;
 
 /** A registration this run is not inspecting, and whether its destination is still there. */
 type Elsewhere = { target: string; scope: WiringScope; destination: string; state: "ok" | "gone" | "unwired" };
@@ -1176,8 +1177,7 @@ function elsewhereReport(rows: Elsewhere[], ctx: Ctx): string[] {
     group.push(row);
     groups.set(key, group);
   }
-  const lines = ["", ...wrap(ctx.t.doctor.wiredElsewhere, ctx.ui.width - 2)
-    .map(line => `  ${ctx.ui.bold(line)}`)];
+  const lines = section(ctx.t.doctor.wiredElsewhere, ctx.ui);
   for (const group of groups.values()) {
     const { scope, destination } = group[0]!;
     lines.push(...wrap(scope === "global" ? ctx.t.wiring.scopeGlobal : ctx.t.wiring.scopeHere, ctx.ui.width - 2)
@@ -1206,20 +1206,55 @@ function elsewhereReport(rows: Elsewhere[], ctx: Ctx): string[] {
 function report(check: Check, ctx: Ctx): string[] {
   const paint =
     check.state === "problem" ? ctx.ui.error : check.state === "ok" ? ctx.ui.success : ctx.ui.dim;
-  // Width from the unpainted text. An escape sequence is characters with no cells, so measuring
-  // a painted string indents every continuation line by the length of the colour codes.
-  const plainHead = `  ${padEnd(MARK[check.state], 2)} ${padEnd(check.name, NAME_WIDTH)}  `;
-  const indent = " ".repeat(cells(plainHead));
-  const head = `  ${paint(padEnd(MARK[check.state], 2))} ${ctx.ui.bold(padEnd(check.name, NAME_WIDTH))}  `;
-  // The note mark is East Asian Ambiguous: it occupies one cell in the layout calculation but
-  // can occupy two in a CJK terminal. Reserve its pessimistic width so a verbose row still fits.
+  const head = `  ${paint(MARK[check.state])} ${ctx.ui.bold(humanText(check.name))}`;
+  // Keep the marker and check name together, then give every detail a stable four-cell hanging
+  // indent. A fixed name column made a narrow doctor report spend most of its width on padding.
   const body = (check.humanDetail ?? [check.detail]).flatMap(detail => detail.split("\n"))
-    .flatMap(line => receiptLines(humanText(line), ctx.ui.width - maxCells(plainHead)));
-  const lines = body.map((line, i) => (i === 0 ? head : indent) + (check.state === "ok" ? ctx.ui.dim(line) : line));
+    .flatMap(line => receiptLines(humanText(line), ctx.ui.width - 6));
+  const lines = [head, ...body.map((line) => `    ${check.state === "ok" ? ctx.ui.dim(line) : line}`)];
   for (const file of check.files ?? []) {
-    lines.push(...wrap(ctx.t.doctor.seedReason[file.reason], ctx.ui.width - 2).map((line) => `  ${line}`));
-    lines.push(`  ${humanText(file.path)}`);
+    lines.push(...wrap(ctx.t.doctor.seedReason[file.reason], ctx.ui.width - 6).map((line) => `    ${line}`));
+    lines.push(`    ${humanText(file.path)}`);
   }
-  if (check.repair) lines.push(`  ${ctx.ui.accent(humanText(check.repair))}`);
+  if (check.repair) lines.push(...nextStep(check.repair, ctx.ui));
   return lines;
+}
+
+/** Render the human report without changing the individual machine checks. */
+function renderCheckBlocks(
+  checks: readonly Check[],
+  settings: readonly HookSetting[],
+  integrations: readonly NativeIntegration[],
+  ctx: Ctx,
+): string[] {
+  const unconnected = settings.filter((setting) => {
+    const check = checks.find(({ name }) => name === TARGETS[setting.tool].label);
+    return check !== undefined &&
+      !integrations.some(({ tool }) => tool === setting.tool) &&
+      (check.state === "absent" || check.detail === ctx.t.doctor.hookNotConnected) && check.repair === undefined;
+  });
+  const unconnectedNames = new Set(unconnected.map(({ tool }) => TARGETS[tool].label));
+  const blocks: string[][] = [];
+  let grouped = false;
+  for (const check of checks) {
+    if (unconnectedNames.has(check.name)) {
+      if (!grouped) {
+        blocks.push(unconnectedReport(unconnected, ctx));
+        grouped = true;
+      }
+      continue;
+    }
+    blocks.push(report(check, ctx));
+  }
+  return blocks.flatMap((block, index) => index === 0 ? block : ["", ...block]);
+}
+
+function unconnectedReport(settings: readonly HookSetting[], ctx: Ctx): string[] {
+  const tools = settings.map(({ tool }) => TARGETS[tool].label);
+  return [
+    `  ${ctx.ui.dim(MARK.note)} ${ctx.ui.bold(ctx.t.doctor.hookGroupHeading)}`,
+    ...wrap(ctx.t.doctor.hookGroupUnknown(tools), ctx.ui.width - 4).map(line => `    ${line}`),
+    ...wrap(ctx.t.doctor.hookGroupMissing, ctx.ui.width - 4).map(line => `    ${line}`),
+    ...wrap(ctx.t.doctor.hookGroupAction, ctx.ui.width - 4).map(line => `    ${line}`),
+  ];
 }

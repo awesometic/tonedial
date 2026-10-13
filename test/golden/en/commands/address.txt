@@ -1,12 +1,11 @@
 status: 0
---- stdout --- [bytes=148; endsWithNewline=true]
+--- stdout --- [bytes=124; endsWithNewline=true]
 ToneDial · address
 
   Settings saved
   persona.self_ref  — → self
   persona.user_ref  — → user
   TONE.md generated
-  TONE.md 1,263 / 2,700
 --- stderr --- [bytes=172; endsWithNewline=true]
   ⚠ persona has no anchors and ranks below the axes. Age, gender, and note
     change output through model associations; names appear only where the axes

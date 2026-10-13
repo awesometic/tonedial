@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1170" height="904" viewBox="0 0 1170 904" role="img" aria-labelledby="title description">
+<svg xmlns="http://www.w3.org/2000/svg" width="1170" height="764" viewBox="0 0 1170 764" role="img" aria-labelledby="title description">
 <title id="title">ToneDial screen (en · doctor --global)</title>
 <desc id="description">ToneDial · doctor
 
@@ -6,28 +6,23 @@
   &lt;ROOT&gt;
 
   Application: healthy
+
+  Connections
   Connection files: no issues in selected scope
   Hook status is read from the inspected settings file only; host overrides and
   session delivery are unverified.
 
-  ·  Claude Code         Hook enablement unknown in the registered settings
-                         file
-                         not installed under this root
-                         No managed ToneDial hook to inspect. To connect, run
-                         init with this agent selected in the same scope.
-  ·  Antigravity IDE/Desktop  Hook enablement unknown in the registered
-                              settings file
-                              No managed ToneDial hook to inspect. To connect,
-                              run init with this agent selected in the same
-                              scope.
-  ·  Codex CLI           Hook enablement unknown in the registered settings
-                         file
-                         not installed under this root
-                         No managed ToneDial hook to inspect. To connect, run
-                         init with this agent selected in the same scope.
-  !  tonedial on PATH    tonedial is not on PATH. The skill and fallback line
-                         cannot run it. Find the global prefix: npm prefix -g
-                         Add its bin directory (macOS/Linux) to PATH.
+  Checks
+  · Agent hooks
+    Hook enablement could not be confirmed for: Claude Code, Antigravity
+    IDE/Desktop, Codex CLI.
+    No managed ToneDial hook is registered for these agents in this scope.
+    To connect ToneDial, run init in this scope and select these agents.
+
+  ! tonedial on PATH
+    tonedial is not on PATH. The skill and fallback line cannot run it. Find
+    the global prefix: npm prefix -g
+    Add its bin directory (macOS/Linux) to PATH.
 
   1 need attention · --fix repairs what it can
 </desc>
@@ -36,34 +31,19 @@
 <text x="60" y="104" fill="#edf3f6" font-weight="400" opacity="1">Inspection scope: global</text>
 <text x="60" y="132" fill="#edf3f6" font-weight="400" opacity="1">&lt;ROOT&gt;</text>
 <text x="60" y="188" fill="#edf3f6" font-weight="400" opacity="1">Application: healthy</text>
-<text x="60" y="216" fill="#edf3f6" font-weight="400" opacity="1">Connection files: no issues in selected scope</text>
-<text x="60" y="244" fill="#edf3f6" font-weight="400" opacity="1">Hook status is read from the inspected settings file only; host overrides and</text>
-<text x="60" y="272" fill="#edf3f6" font-weight="400" opacity="1">session delivery are unverified.</text>
-<text x="60" y="328" fill="#edf3f6" font-weight="400" opacity="1">·</text>
-<text x="102" y="328" fill="#edf3f6" font-weight="400" opacity="1">Claude Code</text>
-<text x="382" y="328" fill="#edf3f6" font-weight="400" opacity="1">Hook enablement unknown in the registered settings</text>
-<text x="382" y="356" fill="#edf3f6" font-weight="400" opacity="1">file</text>
-<text x="382" y="384" fill="#edf3f6" font-weight="400" opacity="1">not installed under this root</text>
-<text x="382" y="412" fill="#edf3f6" font-weight="400" opacity="1">No managed ToneDial hook to inspect. To connect, run</text>
-<text x="382" y="440" fill="#edf3f6" font-weight="400" opacity="1">init with this agent selected in the same scope.</text>
-<text x="60" y="468" fill="#edf3f6" font-weight="400" opacity="1">·</text>
-<text x="102" y="468" fill="#edf3f6" font-weight="400" opacity="1">Antigravity IDE/Desktop</text>
-<text x="452" y="468" fill="#edf3f6" font-weight="400" opacity="1">Hook enablement unknown in the registered</text>
-<text x="452" y="496" fill="#edf3f6" font-weight="400" opacity="1">settings file</text>
-<text x="452" y="524" fill="#edf3f6" font-weight="400" opacity="1">No managed ToneDial hook to inspect. To connect,</text>
-<text x="452" y="552" fill="#edf3f6" font-weight="400" opacity="1">run init with this agent selected in the same</text>
-<text x="452" y="580" fill="#edf3f6" font-weight="400" opacity="1">scope.</text>
-<text x="60" y="608" fill="#edf3f6" font-weight="400" opacity="1">·</text>
-<text x="102" y="608" fill="#edf3f6" font-weight="400" opacity="1">Codex CLI</text>
-<text x="382" y="608" fill="#edf3f6" font-weight="400" opacity="1">Hook enablement unknown in the registered settings</text>
-<text x="382" y="636" fill="#edf3f6" font-weight="400" opacity="1">file</text>
-<text x="382" y="664" fill="#edf3f6" font-weight="400" opacity="1">not installed under this root</text>
-<text x="382" y="692" fill="#edf3f6" font-weight="400" opacity="1">No managed ToneDial hook to inspect. To connect, run</text>
-<text x="382" y="720" fill="#edf3f6" font-weight="400" opacity="1">init with this agent selected in the same scope.</text>
-<text x="60" y="748" fill="#edf3f6" font-weight="400" opacity="1">!</text>
-<text x="102" y="748" fill="#edf3f6" font-weight="400" opacity="1">tonedial on PATH</text>
-<text x="382" y="748" fill="#edf3f6" font-weight="400" opacity="1">tonedial is not on PATH. The skill and fallback line</text>
-<text x="382" y="776" fill="#edf3f6" font-weight="400" opacity="1">cannot run it. Find the global prefix: npm prefix -g</text>
-<text x="382" y="804" fill="#edf3f6" font-weight="400" opacity="1">Add its bin directory (macOS/Linux) to PATH.</text>
-<text x="60" y="860" fill="#edf3f6" font-weight="400" opacity="1">1 need attention · --fix repairs what it can</text></g>
+<text x="60" y="244" fill="#edf3f6" font-weight="400" opacity="1">Connections</text>
+<text x="60" y="272" fill="#edf3f6" font-weight="400" opacity="1">Connection files: no issues in selected scope</text>
+<text x="60" y="300" fill="#edf3f6" font-weight="400" opacity="1">Hook status is read from the inspected settings file only; host overrides and</text>
+<text x="60" y="328" fill="#edf3f6" font-weight="400" opacity="1">session delivery are unverified.</text>
+<text x="60" y="384" fill="#edf3f6" font-weight="400" opacity="1">Checks</text>
+<text x="60" y="412" fill="#edf3f6" font-weight="400" opacity="1">· Agent hooks</text>
+<text x="88" y="440" fill="#edf3f6" font-weight="400" opacity="1">Hook enablement could not be confirmed for: Claude Code, Antigravity</text>
+<text x="88" y="468" fill="#edf3f6" font-weight="400" opacity="1">IDE/Desktop, Codex CLI.</text>
+<text x="88" y="496" fill="#edf3f6" font-weight="400" opacity="1">No managed ToneDial hook is registered for these agents in this scope.</text>
+<text x="88" y="524" fill="#edf3f6" font-weight="400" opacity="1">To connect ToneDial, run init in this scope and select these agents.</text>
+<text x="60" y="580" fill="#edf3f6" font-weight="400" opacity="1">! tonedial on PATH</text>
+<text x="88" y="608" fill="#edf3f6" font-weight="400" opacity="1">tonedial is not on PATH. The skill and fallback line cannot run it. Find</text>
+<text x="88" y="636" fill="#edf3f6" font-weight="400" opacity="1">the global prefix: npm prefix -g</text>
+<text x="88" y="664" fill="#edf3f6" font-weight="400" opacity="1">Add its bin directory (macOS/Linux) to PATH.</text>
+<text x="60" y="720" fill="#edf3f6" font-weight="400" opacity="1">1 need attention · --fix repairs what it can</text></g>
 </svg>

@@ -7,7 +7,7 @@ import { ConfigError, defaultConfig, parseConfig, type Config } from "../core/co
 import { toCompileInput } from "../core/resolve.ts";
 import { contextArtifactTargets } from "../core/seeds.ts";
 import type { Messages } from "../core/i18n.ts";
-import { budget, humanText, num } from "../ui/format.ts";
+import { budget, humanText, nextStep, num } from "../ui/format.ts";
 import { wrap } from "../ui/width.ts";
 import { captureRawEntry, gate, planChange, rawReadChange, type Change } from "../wiring/apply.ts";
 
@@ -113,7 +113,7 @@ export async function runCompile(ctx: Ctx): Promise<CommandResult> {
       ...wrap(status, ctx.ui.width - 2).map(line => `  ${ctx.ui.bold((!check || current ? ctx.ui.success : ctx.ui.warn)(line))}`),
       `  ${humanText(ctx.paths.tone)}`,
       `  ${size.overCap ? ctx.ui.error(budget(size, ctx.t)) : ctx.ui.dim(budget(size, ctx.t))}`,
-      `  ${ctx.ui.accent(check && !current ? "tonedial compile" : "tonedial show")}`,
+      ...nextStep(check && !current ? "tonedial compile" : "tonedial show", ctx.ui),
     ],
     json: { path: ctx.paths.tone, agentsPath: ctx.paths.agents, written: !check, ...size },
     warnings: sizeWarning(size, ctx.t),

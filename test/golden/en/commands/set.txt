@@ -1,9 +1,8 @@
 status: 0
---- stdout --- [bytes=80; endsWithNewline=true]
+--- stdout --- [bytes=56; endsWithNewline=true]
 ToneDial · set
 
   Settings unchanged
   TONE.md current
-  TONE.md 1,124 / 2,700
 --- stderr --- [bytes=53; endsWithNewline=true]
   ⚠ The model may not produce the tone you expect.

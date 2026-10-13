@@ -1,10 +1,11 @@
 status: 0
---- stdout --- [bytes=150; endsWithNewline=true]
+--- stdout --- [bytes=126; endsWithNewline=true]
 ToneDial · save
 
   저장한 프리셋: example
   Example  기본값과 다른 축 7개
-  TONE.md 생성됨 · TONE.md 1,117 / 2,700
+  TONE.md 생성됨
+
   tonedial list
 --- stderr --- [bytes=106; endsWithNewline=true]
   ⚠ 페르소나와 세이프워드는 사용자 설정이므로 프리셋에 저장하지 않습니다

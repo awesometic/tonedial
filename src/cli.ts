@@ -554,8 +554,7 @@ export async function run(
       ? (agent.live ? t.doctor.scopeGlobal : t.doctor.scope)
       : (agent.live ? t.wiring.scopeGlobal : t.wiring.scopeHere);
     const introduction = connection && name !== "init" && flags.rollback === null && !asJson
-      ? [`  ${scopeLabel}`, `  ${humanText(agent.root)}`, ""] : [];
-    if (ctx.canPrompt && introduction.length) process.stdout.write(`${introduction.join("\n")}\n`);
+      ? [`  ${scopeLabel}`, `  ${humanText(agent.root)}`] : [];
     const contextExempt = name === "compile" && flags.check;
     if (command.context !== undefined && command.context !== "setup" && !contextExempt) {
       const { change, config } = planConfig(ctx);
@@ -573,16 +572,19 @@ export async function run(
       }
       ctx.contextChecks = layout.checks;
     }
-    const earlyBanner = name === "init" || name === "test";
+    // The dial owns its live title; other human commands identify themselves before approval.
+    const earlyBanner = !["export", "show"].includes(name) && !(name === "set" && rest.length === 0);
     if (!asJson && earlyBanner) process.stdout.write(`${ui.bold(`ToneDial · ${name}`)}\n\n`);
+    if (introduction.length) process.stdout.write(`${introduction.join("\n")}\n`);
     const result = await command.run(ctx, rest);
     if (asJson) {
       process.stdout.write(
         `${JSON.stringify({ ...result.json, schema: JSON_SCHEMA, ok: true, warnings: result.warnings ?? [] }, null, 2)}\n`,
       );
     } else {
-      if (!earlyBanner && !["export", "show", "list"].includes(name)) process.stdout.write(`${ui.bold(`ToneDial · ${name}`)}\n\n`);
-      for (const line of [...(ctx.canPrompt ? [] : introduction), ...result.lines]) process.stdout.write(`${line}\n`);
+      if (!earlyBanner && !["export", "show"].includes(name)) process.stdout.write(`${ui.bold(`ToneDial · ${name}`)}\n\n`);
+      if (introduction.length && result.lines.length && result.lines[0] !== "") process.stdout.write("\n");
+      for (const line of result.lines) process.stdout.write(`${line}\n`);
       for (const w of result.warnings ?? []) process.stderr.write(notice(w, uiErr));
       // After the receipt, never instead of part of it.
       const afterStatus = await result.after?.();

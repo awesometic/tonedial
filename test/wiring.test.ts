@@ -398,7 +398,9 @@ test("compact approval previews bound key lines while verbose shows the complete
   const after = "alpha\nbeta\ngamma\ndelta\nepsilon\nzeta\n";
   writeFileSync(target, before);
   const change = planChange(target, () => after, EN);
-  const compact = await gate([change], {
+  const second = join(scratch, "second-preview.txt");
+  const changes = [change, planChange(second, () => "new content\n", EN)];
+  const compact = await gate(changes, {
     paths: gatePaths,
     dryRun: true, auto: true, t: EN, ui: palette("never", {}, false),
   });
@@ -408,8 +410,10 @@ test("compact approval previews bound key lines while verbose shows the complete
   assert.match(compactPreview, /\+ alpha/, "compact output carries a representative added line");
   assert.match(compactPreview, new RegExp(EN.wiring.previewMore));
   assert.doesNotMatch(compactPreview, /zeta/, "compact output is bounded");
+  assert.ok(compactPreview.includes(EN.wiring.changeCount(2)), "the approval scope has no change count");
+  assert.ok(compactPreview.includes(`\n\n  ${second}\n`), "separate files run together");
 
-  const verbose = await gate([change], {
+  const verbose = await gate(changes, {
     paths: gatePaths,
     dryRun: true, auto: true, verbose: true, t: EN, ui: palette("never", {}, false),
   });

@@ -299,6 +299,11 @@ test("state-only doctor refuses an unavailable native wire repair, including a r
     assert.equal(claude.state, "note");
     assert.equal(claude.repair, null);
     assert.equal(claude.detail, catalogue("en").cli.doctor.legacyRepairWithheld);
+    for (const flags of [[], ["--verbose"]]) {
+      const human = await invokeHuman(["doctor", "--here", ...flags]);
+      assert.equal(human.code, 0, human.output + human.error);
+      assert.ok(containsWrapped(human.output, catalogue("en").cli.doctor.legacyRepairWithheld), "grouping concealed the withheld legacy diagnosis");
+    }
     assert.doesNotMatch(report.output, /tonedial wire claude/);
     assert.equal(existsSync(join(project, ".claude", "CLAUDE.md")), false);
   }
@@ -1148,3 +1153,31 @@ test("doctor revalidates its classifier read-set before an interactive repair", 
   assert.equal(readFileSync(paths.agents, "utf8"), "guide changed after approval preview\n");
   assert.notEqual(readFileSync(paths.agents, "utf8"), guideBefore);
 });
+
+for (const language of ["en", "ko"] as const) {
+  test(`human doctor groups unconnected agents into one readable check in ${language}`, async () => {
+    env.LANG = language === "ko" ? "ko_KR.UTF-8" : "en_US.UTF-8";
+    env.COLUMNS = "60";
+    assert.equal((await invoke(["init", "--global", "--tools", "none", "--lang", language, "--auto"])).code, 0);
+
+    const result = await invokeHuman(["doctor", "--global"]);
+    const copy = catalogue(language).cli.doctor;
+    const tools = ["Claude Code", "Antigravity IDE/Desktop", "Codex CLI"];
+    const unfolded = result.output.replace(/\s+/g, " ");
+    const count = (value: string) => unfolded.split(value.replace(/\s+/g, " ")).length - 1;
+    assert.equal(result.code, 0, result.output + result.error);
+    assert.equal(count(copy.hookGroupHeading), 1, result.output);
+    assert.ok(containsWrapped(result.output, copy.hookGroupUnknown(tools)), result.output);
+    assert.equal(count(copy.hookGroupMissing), 1, result.output);
+    assert.equal(count(copy.hookGroupAction), 1, result.output);
+    assert.ok(result.output.includes(copy.scopeGlobal), result.output);
+    assert.doesNotMatch(result.output, /Hook enabled|훅이 켜져/);
+    assertHumanWidth(result.output, language, 60);
+
+    const verbose = await invokeHuman(["doctor", "--global", "--verbose"]);
+    assert.equal(verbose.code, 0, verbose.output + verbose.error);
+    assert.ok(containsWrapped(verbose.output, copy.notInstalled), "verbose concealed a missing agent home");
+    assert.ok(tools.every(tool => verbose.output.includes(tool)), "verbose lost an individual agent check");
+    assert.ok(!verbose.output.includes(copy.hookGroupHeading), "verbose still collapsed diagnostic evidence");
+  });
+}

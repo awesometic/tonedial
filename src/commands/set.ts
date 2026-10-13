@@ -264,7 +264,7 @@ async function commit(
       `  ${ctx.ui.bold(finalConfig.before === finalConfig.after ? ctx.t.axis.settingsUnchanged : ctx.ui.success(ctx.t.axis.settingsSaved))}`,
       ...movementLines(applied.moves, ctx, config.axes),
       `  ${ctx.ui.success(toneChange.before === toneChange.after ? ctx.t.artifact.current : ctx.t.artifact.generated)}`,
-      `  ${ctx.ui.dim(budget(size, ctx.t))}`,
+      ...(ctx.flags.verbose ? [`  ${ctx.ui.dim(budget(size, ctx.t))}`] : []),
     ],
     json: {
       changed: applied.changed,
@@ -407,7 +407,7 @@ export async function runReset(ctx: Ctx, args: string[]): Promise<CommandResult>
           : `  ${ctx.ui.bold(axis)} ${ctx.ui.dim(String(before))} ${ctx.ui.dim("→")} ${ctx.ui.bold(ctx.ui.accent(String(AXIS_DEFAULT[axis])))}`]
         : wrap(ctx.t.axis.resetAll, ctx.ui.width - 2).map(line => `  ${ctx.ui.bold(ctx.ui.success(line))}`)),
       `  ${ctx.ui.success(toneChange.before === toneChange.after ? ctx.t.artifact.current : ctx.t.artifact.generated)}`,
-      `  ${ctx.ui.dim(budget(size, ctx.t))}`,
+      ...(ctx.flags.verbose ? [`  ${ctx.ui.dim(budget(size, ctx.t))}`] : []),
     ],
     json: { reset: axis ?? "all", chars: size.chars },
     warnings: [...riskWarnings(config.axes, ctx.t), ...comboWarnings(config, ctx.t), ...sizeWarning(size, ctx.t)],

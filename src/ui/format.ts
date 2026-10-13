@@ -3,7 +3,18 @@
 import type { SizeReport } from "../core/compile.ts";
 import type { Warning } from "../core/combos.ts";
 import type { Messages } from "../core/i18n.ts";
+import type { Palette } from "./style.ts";
 import { riskyAxes, type Axes } from "../core/anchors.ts";
+
+/** One blank row separates groups; headings carry no decorative prefix. */
+export function section(title: string, ui: Palette): string[] {
+  return ["", ...wrap(title, ui.width - 2).map(line => `  ${ui.bold(line)}`)];
+}
+
+/** Keep the next action separate and intact for copying into the shell. */
+export function nextStep(command: string, ui: Palette): string[] {
+  return ["", `  ${ui.accent(humanText(command))}`];
+}
 
 /** One advisory notice from the shared axis metadata, without changing selected levels. */
 export function riskWarnings(axes: Axes, t: Messages): string[] {

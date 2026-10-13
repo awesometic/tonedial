@@ -16,7 +16,7 @@ import { BUNDLED, applyPreset } from "../core/presets.ts";
 import { SEED_VERSION, inspectContextLayout, planSeedChanges } from "../core/seeds.ts";
 import { inspectOperations } from "../core/operations.ts";
 import { SKILL_NAME, TONE_COMMAND_MD, TONE_COMMAND_VERSION } from "../core/skill.ts";
-import { budget, humanText, nativeSetup, receiptLines, recoveryRollbackLines, riskWarnings } from "../ui/format.ts";
+import { budget, humanText, nativeSetup, receiptLines, recoveryRollbackLines, riskWarnings, section } from "../ui/format.ts";
 import { riskyAxes } from "../core/anchors.ts";
 import { padEnd, wrap } from "../ui/width.ts";
 import { gate, planChange } from "../wiring/apply.ts";
@@ -199,7 +199,7 @@ export async function runInit(entry: Ctx, _args: string[]): Promise<CommandResul
   const status = applied
     ? copy.init.done
     : wiring.reason === "dry-run" ? ctx.t.wiring.dryRun : ctx.t.wiring.declined;
-  lines.push("", `  ${ctx.ui.bold(ctx.ui.accent(`# ${copy.init.resultHeading}`))}`,
+  lines.push(...section(copy.init.resultHeading, ctx.ui),
     `  ${ctx.ui.bold(applied ? ctx.ui.success(status) : status)}`);
   if (applied) {
     addReceipt(ctx.t.artifact.generated, ctx.ui.success);
@@ -275,7 +275,7 @@ function hasPresetState(path: string): boolean {
 
 function scopeIntroduction(ctx: Ctx, heading: string): string[] {
   return [
-    `  ${ctx.ui.bold(ctx.ui.accent(`# ${heading}`))}`,
+    ...section(heading, ctx.ui).slice(1),
     `  ${ctx.agent.live ? ctx.t.wiring.scopeGlobal : ctx.t.wiring.scopeHere}`,
     `  ${humanText(ctx.agent.root)}`,
     `  ${ctx.t.wiring.stateRoot}`,
@@ -294,7 +294,7 @@ async function rebuildExisting(entry: Ctx): Promise<CommandResult> {
   const introduction = scopeIntroduction(ctx, copy.init.scopeHeading);
   if (ctx.canPrompt) process.stdout.write(`${introduction.join("\n")}\n`);
   const resultHeading = ctx.canPrompt && !ctx.flags.auto && !ctx.flags.dryRun
-    ? ["", `  ${ctx.ui.bold(ctx.ui.accent(`# ${copy.init.resultHeading}`))}`] : [];
+    ? section(copy.init.resultHeading, ctx.ui) : [];
   const app = await runAppRebuild(ctx);
   const riskIntro = [
     ...receiptLines(copy.init.risk, ctx.ui.width - 2).map(line => `  ${ctx.ui.warn(line)}`),
@@ -404,7 +404,7 @@ async function ask(ctx: Ctx, copy: ReturnType<typeof catalogue>, fresh: boolean,
   try {
     const answers: Answers = {};
     if (fresh) {
-    process.stdout.write(`\n  ${ctx.ui.bold(ctx.ui.accent(`# ${copy.init.toneHeading}`))}\n${ctx.ui.bold(questionText(copy.init.preset))}\n`);
+    process.stdout.write(`${section(copy.init.toneHeading, ctx.ui).join("\n")}\n${ctx.ui.bold(questionText(copy.init.preset))}\n`);
     for (const [i, preset] of BUNDLED.entries()) {
       const summary = copy.presets[preset.slug] ?? "";
       const label = `    ${i + 1}. ${padEnd(preset.displayName, 18)} `;
@@ -435,7 +435,7 @@ async function ask(ctx: Ctx, copy: ReturnType<typeof catalogue>, fresh: boolean,
 
     if (selection !== null) return answers;
 
-    process.stdout.write(`\n  ${ctx.ui.bold(ctx.ui.accent(`# ${copy.init.connectionsHeading}`))}\n${questionText(copy.init.tools)}\n`);
+    process.stdout.write(`${section(copy.init.connectionsHeading, ctx.ui).join("\n")}\n${questionText(copy.init.tools)}\n`);
     for (const [i, tool] of AGENT_TOOLS.entries()) {
       process.stdout.write(`    ${i + 1}. ${tool}\n`);
     }

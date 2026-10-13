@@ -283,7 +283,7 @@ async function wireSelected(ctx: Ctx, tools: AgentTool[], rebuilding?: NativeReb
   }));
 
   return {
-    lines: [...result.lines, ...(tools.length ? summary(ctx, result.reason, tools) :
+    lines: [...result.lines, ...(result.lines.length ? [""] : []), ...(tools.length ? summary(ctx, result.reason, tools) :
       configured && shellChange ? [`  ${ctx.t.doctor.pathLineAt(humanText(shellChange.path))}`] : []),
       ...(configured ? nativeSetup(ctx.t, routes, ctx.agent.live).flatMap((line) =>
         receiptLines(line, ctx.ui.width - 2).map((folded) => `  ${folded}`)) : [])],
@@ -423,7 +423,7 @@ export async function runUnwire(ctx: Ctx, args: string[]): Promise<CommandResult
   });
 
   return {
-    lines: [...result.lines, ...summary(ctx, result.reason, tools, "disconnect")],
+    lines: [...result.lines, ...(result.lines.length ? [""] : []), ...summary(ctx, result.reason, tools, "disconnect")],
     json: {
       unlinked: result.applied ? unlinked : [],
       root: ctx.agent.root,

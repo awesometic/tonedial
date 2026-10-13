@@ -1,6 +1,6 @@
 status: 0
---- stdout --- [bytes=798; endsWithNewline=true]
-  프리셋 보관함
+--- stdout --- [bytes=801; endsWithNewline=true]
+ToneDial · list
 
   * Caring Brother 적용됨
     caring-brother · 다정하게 챙기며 코드는 직설적으로 평가합니다.
@@ -21,6 +21,6 @@ status: 0
     terse-operator · 짧고 감정 없이 답합니다.
     ! conviction · 치우친 판단·과장된 보고
 
-  tonedial show <slug>
+  tonedial show caring-brother
 --- stderr --- [bytes=0; endsWithNewline=false]
 
