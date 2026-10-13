@@ -9,7 +9,14 @@ permissions:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    name: Test (${{ matrix.language }})
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [en, ko]
+    env:
+      TONEDIAL_TEST_LANG: ${{ matrix.language }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
@@ -20,10 +27,21 @@ jobs:
           node-version: 24
           cache: npm
 
+      - run: python3 --version
       - run: npm ci
 
       # Public changes must not introduce local provider wiring or private authoring assets.
       - run: node scripts/check-release.mjs --history
-      - run: npm test
+      - name: Test commands, frames, images and PTY flows
+        run: npm test
+
+      - name: Upload golden differences and PTY transcripts
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: visual-regression-${{ matrix.language }}
+          path: artifacts/
+          if-no-files-found: ignore
+          retention-days: 7
       - run: npm pack --dry-run
       - run: node scripts/check-release.mjs

@@ -24,6 +24,43 @@ For documentation-only work, resolve links, exercise changed examples and run th
 For README/media changes, `node --test test/dial-example.test.ts` checks canonical asset URLs, locale provenance and renderer output.
 Local documentation checks may be focused; CI still runs the complete suite and release gate on every push and pull request.
 
+## Output and terminal regression tests
+
+`npm test` includes English and Korean command text, interactive-frame and SVG image goldens, plus real PTY flows.
+The command corpus checks the live CLI registry, stdout, stderr and exit status.
+Frames cover the existing dial renderer; image goldens compare deterministic SVG output, including cell positions and supported ANSI styles.
+These checks do not certify a font's rasterization, a native agent session or model adherence.
+PTY checks use Python 3.9+ and its standard library on Linux and macOS; `python3` must be available on `PATH`.
+Unsupported platforms are reported as skipped.
+Missing Python on a supported platform fails the check.
+All state, projects and provider paths are disposable; external-agent and network actions are not part of the golden corpus.
+
+For focused verification from the checkout:
+
+```bash
+npm run test:golden
+npm run test:pty
+TONEDIAL_TEST_LANG=en npm run test:golden
+TONEDIAL_TEST_LANG=ko npm run test:pty
+```
+
+`test:pty` builds the CLI first.
+Omit `TONEDIAL_TEST_LANG` to check both locales; an empty or unknown locale is an error.
+Golden files live under `test/golden/` and belong in version control.
+Only replace them after inspecting the changed command output and representative images:
+
+```bash
+TONEDIAL_GOLDEN_UPDATE=1 npm run test:golden
+npm run test:golden
+```
+
+Update mode is forbidden in CI.
+Text and frame mismatches retain expected/actual output and a diff; image mismatches also include an HTML visual comparison.
+PTY failures retain the captured terminal transcript.
+Local failure artifacts live under ignored `artifacts/`.
+GitHub CI runs independent `en` and `ko` jobs on pushes and pull requests, and uploads failure artifacts as `visual-regression-en` or `visual-regression-ko`.
+CI verifies the committed baselines and never updates them.
+
 ## Isolated candidate
 
 The following helper isolates CLI state and configuration, not an authenticated agent process.

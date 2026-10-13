@@ -43,6 +43,7 @@ Changed artifact bytes require new measurement evidence; existing evidence appli
 
 Use focused existing checks during development and the relevant full suite after runtime/build changes settle.
 Documentation changes need checks that can reveal failures in the edited material, such as link resolution or validation of an example.
+For output and terminal changes, use the [golden and PTY procedures](./docs/TESTING.md#output-and-terminal-regression-tests), review baseline changes and retain the existing state/stream assertions.
 For changed issue forms, parse the YAML with an available parser and check GitHub's form schema or preview.
 Record passed, failed, not-run and unavailable checks in the PR;
 a documentation check does not prove runtime behavior.
