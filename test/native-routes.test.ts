@@ -10,7 +10,7 @@ import { run } from "../src/cli.ts";
 import { catalogue } from "../src/core/i18n.ts";
 import { isConfigV2, parseConfig, serializeConfig, type Config } from "../src/core/config.ts";
 import { readerPath, resolveAgentPaths, resolvePaths } from "../src/core/paths.ts";
-import { inspectSeeds, seedFiles, seedRecord } from "../src/core/seeds.ts";
+import { inspectSeeds, seedFiles, seedRecord, SEED_VERSION } from "../src/core/seeds.ts";
 import { gate, planChange } from "../src/wiring/apply.ts";
 import { orderedFingerprint, planOrderedDelivery, recordedHook } from "../src/wiring/targets.ts";
 import { palette } from "../src/ui/style.ts";
@@ -827,7 +827,7 @@ test("installed explicit-setting examples use the CLI without changing neighbour
   const examples = [...settings.matchAll(/\|[^|\n]*\|\s*`tonedial (.+?)`\s*\|/g)].map((match) => match[1]!);
   const expected = parseConfig(readFileSync(paths.config, "utf8"));
   const changes: ((config: Config) => void)[] = [
-    (config) => { config.persona.address = { self_ref: null, user_ref: "friend" }; },
+    (config) => { config.persona.address = { self_ref: config.persona.address?.self_ref ?? null, user_ref: "friend" }; },
     (config) => { config.persona.address!.self_ref = "guide"; },
     (config) => { config.persona.address = { self_ref: "assistant", user_ref: "reader" }; },
     (config) => { config.persona.age = "30s"; },
@@ -896,10 +896,10 @@ test("approved native refresh updates stale skill seeds and the selected optiona
   assert.equal(refreshed.code, 0, JSON.stringify(refreshed.value));
   const after = parseConfig(readFileSync(paths.config, "utf8"));
   assert.ok(isConfigV2(after));
-  assert.equal(after.seedVersion, 13);
+  assert.equal(after.seedVersion, SEED_VERSION);
   assert.deepEqual(Object.fromEntries(Object.entries(after.managedSeeds).filter(([id]) => !id.startsWith("skill/"))), retainedRecords);
   for (const seed of skills) {
-    assert.equal(after.managedSeeds[seed.id]?.version, seed.id === "skill/body" ? 13 : 7, seed.id);
+    assert.equal(after.managedSeeds[seed.id]?.version, seed.id === "skill/body" ? 14 : 8, seed.id);
     assert.equal(readFileSync(seed.path, "utf8"), seed.contents, seed.id);
     assert.equal(after.managedSeeds[seed.id]?.sha256, createHash("sha256").update(seed.contents).digest("hex"), seed.id);
   }
@@ -911,7 +911,7 @@ test("approved native refresh updates stale skill seeds and the selected optiona
   ]);
   assert.equal(readFileSync(agent.command("tone"), "utf8"), currentCommand);
   const refreshedCommand = Object.values(after.wiring.resources).find((resource) => resource.kind === "command");
-  assert.equal(refreshedCommand?.managed.version, 6);
+  assert.equal(refreshedCommand?.managed.version, 7);
   assert.equal(refreshedCommand?.expected.sha256, createHash("sha256").update(currentCommand).digest("hex"));
   assert.equal(Object.values(after.managedSeeds).some((seed) => seed.path === agent.command("tone")), false,
     "the optional command is a wiring resource, not a seed");

@@ -19,7 +19,7 @@ export function nextStep(command: string, ui: Palette): string[] {
 /** One advisory notice from the shared axis metadata, without changing selected levels. */
 export function riskWarnings(axes: Axes, t: Messages): string[] {
   const risks = riskyAxes(axes);
-  return risks.length ? [t.notice.riskAxes(risks)] : [];
+  return [...(risks.length ? [t.notice.riskAxes(risks)] : []), ...(axes.playfulness >= 4 ? [t.notice.roleplay] : [])];
 }
 
 /** Two retained phases restore their shared config in reverse order, with copyable IDs. */

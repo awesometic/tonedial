@@ -7,7 +7,7 @@ import { stripVTControlCharacters } from "node:util";
 
 import type { CommandResult, Ctx } from "../cli.ts";
 import { AXIS_DEFAULT, AXIS_GROUP, AXIS_KIND, AXIS_RISK_FROM, riskyAxes } from "../core/anchors.ts";
-import { check as checkCombos } from "../core/combos.ts";
+import { check as checkCombos, PERSONA_DESCRIPTION_MAX } from "../core/combos.ts";
 import { ConfigError, isConfigV2, type Config } from "../core/config.ts";
 import { compile, measure } from "../core/compile.ts";
 import { withPreset, matchesPreset, inspectPresetLibrary, resolvePreset } from "../core/presets.ts";
@@ -82,8 +82,9 @@ export function runShow(ctx: Ctx, args: string[]): CommandResult {
       p.address?.self_ref ? ctx.t.persona.callsItself(humanText(p.address.self_ref)) : null,
       p.address?.user_ref ? ctx.t.persona.callsYou(humanText(p.address.user_ref)) : null,
       p.note ? ctx.t.persona.noteChars([...p.note].length) : null,
-      p.user && !ctx.flags.verbose ? ctx.t.persona.descriptionChars("user", [...p.user].length) : null,
-      p.agent && !ctx.flags.verbose ? ctx.t.persona.descriptionChars("agent", [...p.agent].length) : null,
+      p.user && p.agent && !ctx.flags.verbose ? ctx.t.persona.descriptionCounts([...p.user].length, [...p.agent].length, PERSONA_DESCRIPTION_MAX) : null,
+      p.user && !p.agent && !ctx.flags.verbose ? ctx.t.persona.descriptionChars("user", [...p.user].length) : null,
+      p.agent && !p.user && !ctx.flags.verbose ? ctx.t.persona.descriptionChars("agent", [...p.agent].length) : null,
     ].filter(Boolean);
     if (bits.length) for (const folded of wrap(bits.join(" · "), detailWidth)) details.push(ui.dim(folded));
     if (ctx.flags.verbose) {

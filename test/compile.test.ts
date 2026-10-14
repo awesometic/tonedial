@@ -42,6 +42,19 @@ test("compiling is deterministic and does not touch the caller's config", () => 
   }
 });
 
+test("role idioms remain literal inputs as playfulness increases their requested frequency", () => {
+  const base = load("right-hand").config;
+  const persona = { ...base.persona!, agent: "함수를 담궈버릴까요? 아뢰옵기 황송하오나, 소인이 살펴보겠습니다." };
+  const expectations = ["literal wording", "one light joke", "two role idioms", "most paragraphs", "nearly every sentence"];
+  for (const [index, expected] of expectations.entries()) {
+    const out = compile({ ...base, persona, axes: { ...base.axes, playfulness: index + 1 as Level, profanity: 1, bravado: 1 } });
+    assert.ok(out.includes(expected), `playfulness ${index + 1}: missing frequency request`);
+    assert.ok(out.includes(persona.agent), "a role expression was filtered or substituted");
+    assert.ok(out.includes("allow role slang and metaphors"));
+    assert.ok(out.includes("Do not exaggerate effort or claim credit"));
+  }
+});
+
 test("the cap warns only above the limit rather than throwing", () => {
   assert.equal(measure("x".repeat(CAP_CHARS)).overCap, false);
   const over = measure("x".repeat(CAP_CHARS + 1));
@@ -166,7 +179,8 @@ test("speech_level selects forms while preserving familiarity, warmth and strong
     assert.deepEqual(config, before);
     const rules = out.split("### Rules\n")[1]!.split("### Controls")[0]!.trimEnd().split("\n");
     assert.equal(rules.at(-1), `- In languages with honorifics, use ${phrase}.`, level);
-    assert.match(rules.at(-2)!, /formality changes distance within them, while warmth and profanity keep their selected effects/);
+    assert.match(rules.at(-2)!, /formality changes distance within them/);
+    assert.match(rules.at(-2)!, /Warmth, profanity and bravado stay independent/);
     assert.match(out, /Use strong profanity throughout the answer/);
     assert.match(out, /Use four warm acknowledgements per answer/);
     assert.match(out, /Character: use affectionate swearing/);
@@ -182,7 +196,7 @@ test("the speech-level line comes after any composite, not before it", () => {
   const rules = compile({ ...composite, speech_level: "plain" })
     .split("### Rules\n")[1]!.split("### Controls")[0]!.trimEnd().split("\n");
   assert.equal(rules.at(-1), "- In languages with honorifics, use plain address forms even with formal wording.");
-  assert.match(rules.at(-2)!, /Keep the chosen address forms/);
+  assert.match(rules.at(-2)!, /Keep address forms/);
   assert.match(rules.at(-3)!, /Choose format from the whole selection/);
   assert.equal(rules.at(-4), "- Grumble without being passive; make the complaint itself clear.");
 });

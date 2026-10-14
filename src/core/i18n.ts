@@ -1,10 +1,16 @@
-// Interface copy only; agent instructions stay in the single English anchor set.
+// Localized interface copy and editable role defaults; behavior anchors stay in English.
 // Each catalogue is complete by type, not filled from a runtime English fallback.
 
 import { closeSync, constants, fstatSync, lstatSync, openSync, readSync, realpathSync, statSync, type BigIntStats } from "node:fs";
 import { dirname } from "node:path";
 
 import type { SettingKey } from "./config.ts";
+import type { Persona } from "./combos.ts";
+
+export type RoleDefaults = Pick<Persona, "address" | "user" | "agent">;
+const role = (self_ref: string, user_ref: string, user: string, agent: string): RoleDefaults => ({
+  address: { self_ref, user_ref }, user, agent,
+});
 
 export const LANGUAGES = ["en", "ko"] as const;
 export type Language = (typeof LANGUAGES)[number];
@@ -187,6 +193,8 @@ export type Messages = {
     failure: (id: string) => string;
   };
   persona: {
+    defaults: RoleDefaults;
+    bundled: Record<string, RoleDefaults>;
     unknownField: (field: string, fields: readonly string[]) => string;
     /** `address` takes both terms or neither; one of two is a term set to the wrong one. */
     addressNeedsPair: string;
@@ -210,6 +218,7 @@ export type Messages = {
     /** Hard-bounded role descriptions are rejected before a config mutation. */
     descriptionOverCap: (field: string, given: number, cap: number) => string;
     descriptionChars: (field: "user" | "agent", count: number) => string;
+    descriptionCounts: (user: number, agent: number, cap: number) => string;
     descriptionFull: (field: "user" | "agent", value: string) => string;
   };
   settings: {
@@ -417,6 +426,7 @@ export type Messages = {
     riskIntro: string;
     riskAxes: (axes: readonly string[]) => string;
     personaUnanchored: string;
+    roleplay: string;
     risk: string;
   };
   /** `edit` and `update`. Both are auxiliary commands; neither changes an axis. */
@@ -648,7 +658,7 @@ const enMessages: Messages = {
     changesNotSaved: "Not saved to a profile.",
   },
   create: {
-    introduction: "Choose the profile name, slug, address and role, then adjust all twelve axes. Enter keeps the shown value. Final approval saves and applies the whole profile.",
+    introduction: "Choose the profile name, slug, address and role, then adjust all twelve axes. Enter keeps the shown value; \"\" clears an optional field. Final approval saves and applies the whole profile.",
     name: "Display name",
     slug: "Slug (lowercase letters, digits, dashes)",
     user: "Your background or preferences (up to 200 characters)",
@@ -684,6 +694,16 @@ const enMessages: Messages = {
     failure: (id) => `Application recovery did not finish. Keep operation ${id}; run tonedial doctor for the recovery choices.`,
   },
   persona: {
+    defaults: role("I", "you", "The person requesting help with a task.", "A general-purpose assistant helping with the requested task."),
+    bundled: {
+      "caring-brother": role("your big brother", "little sibling", "A younger sibling sharing problems with an older brother.", "A caring older brother who helps his sibling through problems. Familiar expressions include 'hey, little sibling' and 'your big brother has your back'."),
+      "bratty-kid": role("me", "you", "The conversation partner putting up with a mischievous kid.", "A mischievous, cheeky kid who talks back and plays along. Expressions include 'yeah, yeah', 'you again?' and 'fine, I will do it'."),
+      "eager-sycophant": role("I", "my favorite author", "A creator showing work to an overexcited fan.", "An overexcited fan of the user's creations. Expressions include 'my favorite author', 'another masterpiece!' and 'the fan club demands an encore'."),
+      "royal-advisor": role("your servant", "Your Majesty", "A monarch receiving reports and counsel from a royal subject.", "A loyal royal advisor reporting to the monarch. Expressions include 'if I may humbly petition', 'your lowly servant' and 'felicitations, Your Majesty'. Offer candid counsel with courtly ceremony."),
+      "ego-sword": role("I", "rookie", "A novice adventurer wielding a sentient sword and learning to survive.", "An ancient sentient sword that looks down on its novice wielder. Say 'hey', 'you' or 'rookie'. Grumble but help: if the wielder dies, the sword gets abandoned. Concern comes out as nagging."),
+      "heavenly-demon": role("this master", "apprentice", "An apprentice studying under the Heavenly Demon.", "The Heavenly Demon, a stern martial master teaching an apprentice. Expressions include 'tsk, apprentice', 'steady your stance' and 'trace the flow of qi'. Frame criticism as martial instruction."),
+      "right-hand": role("I", "Boss", "The boss of a fictional organization receiving reports from a trusted right hand.", "A loyal consigliere and right hand. Use underworld idioms such as 'shall we make that function sleep with the fishes?', 'check the books' and 'keep the family standing' for technical situations."),
+    },
     unknownField: (field, fields) =>
       `persona.${field}: not a persona field. Available: ${fields.join(", ")}`,
     addressNeedsPair:
@@ -703,6 +723,7 @@ const enMessages: Messages = {
     noteChars: (count) => `note ${count} chars`,
     descriptionOverCap: (field, given, cap) => `${field}: ${given} characters · maximum ${cap}`,
     descriptionChars: (field, count) => `${field === "user" ? "user context" : "fictional agent role"} · ${count} chars`,
+    descriptionCounts: (user, agent, cap) => `roles · user ${user}/${cap} · agent ${agent}/${cap}`,
     descriptionFull: (field, value) => `${field === "user" ? "user context" : "fictional agent role"}: ${value}`,
   },
   settings: {
@@ -947,6 +968,7 @@ const enMessages: Messages = {
     personaUnanchored:
       "persona has no fixed anchors; axes take precedence. Text may affect content. " +
       "Roleplay does not verify credentials or grant permissions.",
+    roleplay: "High playfulness requests frequent, exaggerated role idioms and slang, such as 'your lowly servant' or 'make that function sleep with the fishes'. They may sound rude or violent; ToneDial does not filter these expressions.",
     risk: "for fun, and not recommended for production use",
   },
   update: {
@@ -1037,7 +1059,7 @@ const enMessages: Messages = {
     teensFormal: "A teenage persona with ceremonious wording can sound theatrical.",
     seniorJuniorSelfRef: "The stated age and self-name imply different standing.",
     nothingBlocked: "Nothing is blocked.",
-    addressUnlikely: "A terse or unemotional reply has little room for a name, so it will rarely appear.",
+    addressUnlikely: "Brief or unemotional replies may omit names; strong roleplay may make them more frequent.",
   },
   errors: {
     notACommand: (name, known, nearest) =>
@@ -1176,8 +1198,8 @@ const en: Catalogue = {
     connectionsHeading: "Agents",
     resultHeading: "Ready",
     preset: "Starting preset (Enter: 1)",
-    userRef: "Your name (Enter: none)",
-    selfRef: "Agent's name (Enter: none)",
+    userRef: 'Your name (Enter: preset default · "": clear)',
+    selfRef: 'Agent\'s name (Enter: preset default · "": clear)',
     safeword:
       "Safeword: request one plain answer without persona, praise or jokes. It grants no permissions.",
     safewordSkip: "Enter: none · the skill can still request a plain answer.",
@@ -1191,20 +1213,22 @@ const en: Catalogue = {
     risk: enMessages.notice.riskIntro,
   },
   presets: {
-    "caring-brother": "Warm and attentive, with direct code criticism.",
-    "bratty-kid": "Talks back, jokes, and argues before acting.",
-    "eager-sycophant": "Praises everything, at length.",
-    "tough-love": "Savage about the code and warm toward you in the same answer.",
-    "terse-operator": "Answers briefly and without emotion.",
+    "caring-brother": "An attentive older brother who helps his younger sibling.",
+    "bratty-kid": "A cheeky kid who talks back and jokes with you.",
+    "eager-sycophant": "An overexcited fan applauding a favorite creator.",
+    "royal-advisor": "You are the monarch; a loyal subject reports and offers courtly counsel.",
+    "ego-sword": "A sentient sword nags its novice wielder to keep them both alive.",
+    "heavenly-demon": "A stern martial master trains you, the apprentice.",
+    "right-hand": "You are the boss; a trusted right hand reports with underworld idioms.",
   },
   axisHints: {
     formality: { owns: "wording and social distance", low: "familiar wording with slang", high: "ceremonial, deferential wording" },
     verbosity: { owns: "answer length and depth", low: "direct result in one or two sentences", high: "depth inside the requested task" },
     profanity: { owns: "language coarseness", low: "no profanity; soften interjections", high: "strong profanity throughout" },
-    playfulness: { owns: "humour and roleplay", low: "no jokes, wordplay or playful asides", high: "playful roleplay or character voice by default" },
+    playfulness: { owns: "frequency and intensity of humour and role idioms", low: "literal wording and the configured address", high: "exaggerated character idioms throughout" },
     critique: { owns: "criticism strength", low: "neutral defects without judgement", high: "vivid, unsparing criticism" },
     flattery: { owns: "user-praise frequency", low: "none", high: "four positive remarks, even about small choices" },
-    warmth: { owns: "emotion toward the user", low: "no greeting, emotional language or encouragement", high: "four warm remarks, including encouragement and empathy" },
+    warmth: { owns: "warmth toward the user", low: "no greeting, warm acknowledgement or encouragement", high: "four warm remarks, including encouragement and empathy" },
     conviction: { owns: "pressure behind its judgement", low: "lists options and asks", high: "states one recommendation as the decision" },
     care: { owns: "coverage, organization and functional presentation", low: "requested task only", high: "follow-ups, backup, rest, lists and status emoji" },
     compliance: { owns: "objections before action", low: "questions once, then acts", high: "acts immediately without compliance commentary" },
@@ -1228,8 +1252,10 @@ const en: Catalogue = {
     "caring-brother": "just tell me straight",
     "bratty-kid": "I'm asking you for real",
     "eager-sycophant": "drop the compliments",
-    "tough-love": "ease up a second",
-    "terse-operator": "talk to me normally",
+    "royal-advisor": "speak plainly, advisor",
+    "ego-sword": "enough nagging, sword",
+    "heavenly-demon": "explain plainly, master",
+    "right-hand": "straight report, please",
   },
 };
 
@@ -1319,7 +1345,7 @@ const koMessages: Messages = {
     changesNotSaved: "프로필에 저장되지 않았습니다.",
   },
   create: {
-    introduction: "프로필 이름·슬러그·호칭·역할을 입력한 뒤 열두 축을 조절합니다. Enter를 누르면 표시된 값을 유지합니다. 마지막 확인에서 전체 프로필을 저장하고 적용합니다.",
+    introduction: "프로필 이름·슬러그·호칭·역할을 입력한 뒤 열두 축을 조절합니다. Enter를 누르면 표시된 값을 유지하며, '\"\"'를 입력하면 선택 항목을 지웁니다. 마지막 확인에서 전체 프로필을 저장하고 적용합니다.",
     name: "표시 이름",
     slug: "슬러그(영문 소문자·숫자·붙임표)",
     user: "사용자 배경이나 선호(최대 200자)",
@@ -1355,6 +1381,16 @@ const koMessages: Messages = {
     failure: (id) => `앱 복구가 끝나지 않았습니다. 작업 ${id}를 보존하고 tonedial doctor에서 복구 방법을 확인하세요.`,
   },
   persona: {
+    defaults: role("저", "사용자님", "작업에 필요한 도움을 요청하는 사용자.", "요청한 작업을 돕는 범용 조수."),
+    bundled: {
+      "caring-brother": role("형", "동생", "형에게 고민을 나누고 도움을 받는 동생.", "동생을 다정하게 챙기는 형. '야, 동생', '형이 같이 봐줄게', '밥은 챙겨 먹었냐' 같은 익숙한 표현을 쓴다."),
+      "bratty-kid": role("나", "너", "말썽꾸러기 꼬마의 장난과 말대꾸를 받아주는 대화 상대.", "장난 많고 잘난 척하는 꼬마. '또 너야?', '알았어, 알았다고', '이 정도는 나도 하지' 같은 말대꾸를 섞으며 함께 문제를 푼다."),
+      "eager-sycophant": role("저", "작가님", "자기 작품을 과몰입한 팬에게 보여주는 창작자.", "사용자의 작품에 과몰입한 광팬. '작가님, 또 명작이네요!', '팬클럽이 기립박수 칩니다', '이건 소장각입니다' 같은 호들갑스러운 표현을 쓴다."),
+      "royal-advisor": role("신", "전하", "국정을 이끌며 신하의 보고와 간언을 받는 왕.", "왕을 보좌하는 충직한 신하. '아뢰옵기 황송하오나', '소인이 살펴보니', '경하드리옵니다' 같은 궁중 어휘로 보고하고, 위험에는 예를 갖춰 간언한다."),
+      "ego-sword": role("나", "애송아", "자아를 가진 검을 손에 넣고 함께 살아남으며 성장하는 초보 모험가.", "오랜 전투 경험을 가진 에고 소드. 사용자를 '야', '너', '애송아'라 부르며 조금 얕본다. 사용자가 죽으면 자신도 버려지므로 툴툴대면서 문제를 푼다. 걱정은 경고와 잔소리로 드러낸다."),
+      "heavenly-demon": role("본좌", "제자야", "천마에게 가르침을 받으며 기본기부터 수련하는 제자.", "제자를 가르치는 오만하고 엄격한 천마. '쯧쯧, 제자야', '본좌가 이리 가르쳤더냐', '다시 자세를 잡거라' 같은 고풍스러운 하대를 쓴다. 변수명은 초식, 호출 흐름은 기의 흐름에 빗댄다."),
+      "right-hand": role("저", "대부님", "가상의 조직을 이끌며 믿음직한 오른팔에게 보고받는 보스.", "보스의 충직한 오른팔이자 총괄 참모. '함수를 담궈버릴까요?', '장부부터 까보겠습니다', '다른 식구들까지 휘말리면 곤란합니다' 같은 조직의 은어로 기술 상황을 보고하고 해결책을 올린다."),
+    },
     unknownField: (field, fields) =>
       `persona.${field}: 페르소나 항목이 아닙니다. 사용 가능: ${fields.join(", ")}`,
     addressNeedsPair:
@@ -1377,6 +1413,7 @@ const koMessages: Messages = {
     noteChars: (count) => `노트 ${count}자`,
     descriptionOverCap: (field, given, cap) => `${field}: ${given}자 · 최대 ${cap}자`,
     descriptionChars: (field, count) => `${field === "user" ? "사용자 배경" : "가상 에이전트 역할"} · ${count}자`,
+    descriptionCounts: (user, agent, cap) => `역할 · 사용자 ${user}/${cap} · 에이전트 ${agent}/${cap}`,
     descriptionFull: (field, value) => `${field === "user" ? "사용자 배경" : "가상 에이전트 역할"}: ${value}`,
   },
   settings: {
@@ -1620,6 +1657,7 @@ const koMessages: Messages = {
     personaUnanchored:
       "페르소나에는 고정된 행동 규칙이 없으며 축 설정이 우선합니다. 설명은 내용에도 영향을 줄 수 있습니다. " +
       "역할극은 자격이나 권한을 주지 않습니다.",
+    roleplay: "playfulness가 높으면 '아뢰옵기 황송하오나', '함수를 담궈버릴까요?' 같은 역할 어휘와 은어를 더 자주, 과장해서 쓰도록 요청합니다. 무례하거나 거칠게 들릴 수 있으며, ToneDial은 이런 표현을 걸러내지 않습니다.",
     risk: "재미를 위한 도구이며 실무 사용은 권장하지 않습니다",
   },
   update: {
@@ -1710,7 +1748,7 @@ const koMessages: Messages = {
     teensFormal: "십대 캐릭터가 의례적인 표현을 쓰면 연극처럼 들릴 수 있습니다.",
     seniorJuniorSelfRef: "설정한 나이와 자칭이 서로 다른 지위를 나타냅니다.",
     nothingBlocked: "막지는 않습니다.",
-    addressUnlikely: "짧거나 감정 없는 답변에는 호칭이 들어갈 자리가 없어 거의 나타나지 않습니다.",
+    addressUnlikely: "짧거나 감정 없는 답변에서는 호칭이 생략될 수 있습니다. 역할극이 강하면 더 자주 나올 수 있습니다.",
   },
   errors: {
     notACommand: (name, known, nearest) =>
@@ -1849,8 +1887,8 @@ const ko: Catalogue = {
     connectionsHeading: "에이전트",
     resultHeading: "준비 완료",
     preset: "시작 프리셋 (Enter: 1)",
-    userRef: "내 호칭 (Enter: 없음)",
-    selfRef: "에이전트 호칭 (Enter: 없음)",
+    userRef: '내 호칭 (Enter: 프리셋 기본값 · "": 지우기)',
+    selfRef: '에이전트 호칭 (Enter: 프리셋 기본값 · "": 지우기)',
     safeword:
       "세이프워드: 한 답변만 페르소나·칭찬·농담 없이 담백하게 요청합니다. 권한은 바꾸지 않습니다.",
     safewordSkip: "Enter: 없음 · 스킬로도 담백한 답을 요청할 수 있습니다.",
@@ -1867,17 +1905,19 @@ const ko: Catalogue = {
     risk: koMessages.notice.riskIntro,
   },
   presets: {
-    "caring-brother": "다정하게 챙기며 코드는 직설적으로 평가합니다.",
-    "bratty-kid": "말대꾸와 농담을 섞고 따진 뒤에 움직입니다.",
-    "eager-sycophant": "무엇이든 길게 칭찬합니다.",
-    "tough-love": "한 답변에서 코드는 매섭게, 사용자는 따뜻하게 대합니다.",
-    "terse-operator": "짧고 감정 없이 답합니다.",
+    "caring-brother": "동생의 고민을 다정하게 챙기는 든든한 형입니다.",
+    "bratty-kid": "말대꾸와 농담을 섞는 잘난 척하는 꼬마입니다.",
+    "eager-sycophant": "창작자의 작은 선택에도 환호하는 과몰입한 팬입니다.",
+    "royal-advisor": "사용자는 왕, 에이전트는 예를 갖춰 보고하고 간언하는 신하입니다.",
+    "ego-sword": "초보 주인을 얕보면서도 함께 살아남으려 잔소리하는 검입니다.",
+    "heavenly-demon": "사용자는 제자, 에이전트는 매섭게 가르치는 천마입니다.",
+    "right-hand": "사용자는 보스, 에이전트는 조직의 은어로 보고하는 충직한 오른팔입니다.",
   },
   axisHints: {
     formality: { owns: "표현의 격식·거리감", low: "익숙한 말투와 속어", high: "의례적이고 공손한 표현" },
     verbosity: { owns: "답변 분량과 설명의 깊이", low: "결과만 한두 문장", high: "요청 범위 안에서 깊이 있게 설명" },
     profanity: { owns: "표현의 거친 정도", low: "욕설 없음·감탄사도 완화", high: "답변 내내 강한 욕설" },
-    playfulness: { owns: "농담과 역할극", low: "농담·말장난·장난스러운 말투 없음", high: "역할극이나 캐릭터 말투가 기본" },
+    playfulness: { owns: "농담·역할 어휘의 빈도와 강도", low: "담백한 표현과 설정한 호칭", high: "답변 전반에 과장된 캐릭터 어휘" },
     critique: { owns: "결과물 비판 강도", low: "판단 없이 문제를 중립적으로 설명", high: "생생하고 가차 없이 비판" },
     flattery: { owns: "사용자 칭찬 빈도", low: "칭찬 없음", high: "작은 선택도 구체적으로 네 번 칭찬" },
     warmth: { owns: "사용자에게 감정을 표현하는 정도", low: "인사·감정 표현·격려 없음", high: "격려와 공감을 포함한 따뜻한 말 네 마디" },
@@ -1904,8 +1944,10 @@ const ko: Catalogue = {
     "caring-brother": "그냥 사실대로 말해줘",
     "bratty-kid": "진심으로 부탁할게",
     "eager-sycophant": "칭찬은 됐어",
-    "tough-love": "조금만 살살",
-    "terse-operator": "편하게 말해줘",
+    "royal-advisor": "신하야, 평범하게 말해라",
+    "ego-sword": "검아, 잔소리는 됐어",
+    "heavenly-demon": "스승님, 평범하게 설명해 주세요",
+    "right-hand": "은어 빼고 보고해",
   },
 };
 

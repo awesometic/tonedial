@@ -75,6 +75,7 @@ export async function runUse(ctx: Ctx, args: string[]): Promise<CommandResult> {
     safeword: config.safeword ? ctx.t.settings.safewordSet(config.safeword) : ctx.t.settings.noSafeword,
     riskAxes: risks.length ? ctx.t.notice.riskAxes(risks) : null,
     risk: ctx.t.notice.risk,
+    roleplay: config.axes.playfulness >= 4 ? ctx.t.notice.roleplay : null,
   };
   const notices = [notice.safeword, ...(notice.riskAxes ? [notice.riskAxes] : []), notice.risk];
 
@@ -106,6 +107,7 @@ export async function runUse(ctx: Ctx, args: string[]): Promise<CommandResult> {
       project: projectPath,
     },
     warnings: [
+      ...(notice.roleplay ? [notice.roleplay] : []),
       ...checkCombos(config.axes, config.persona, config.speech_level).map((w) => combination(w, ctx.t)),
       ...sizeWarning(size, ctx.t),
     ],

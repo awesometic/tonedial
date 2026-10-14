@@ -48,7 +48,7 @@ After installing a durable candidate, start with `tonedial init` and choose the 
 Connections default globally; `--here` or `--project <path>` chooses a project, not another tone library.
 
 ```bash
-tonedial use tough-love
+tonedial use ego-sword
 tonedial set warmth=5 critique=5
 tonedial set persona.user="I maintain services and prefer direct trade-offs" \
   persona.agent="A fictional SRE specialist with 12 years' experience; speaks plainly"
@@ -57,8 +57,14 @@ tonedial show
 tonedial export my-tone > my-tone.json
 ```
 
-Five axis-only presets are bundled. Saved custom profiles carry axes, persona, address, register and safeword together.
-`use` restores a custom profile's complete settings; older axis-only presets keep the current separate settings.
+Seven character profiles are bundled: Caring Brother, Bratty Kid, Eager Sycophant,
+Royal Advisor, Ego Sword, Heavenly Demon and Right Hand.
+Each supplies address, user role, fictional agent role and register defaults.
+Bundled and saved custom profiles carry axes, persona, address, register and safeword together.
+`use` restores their complete settings; older axis-only presets keep the current separate settings.
+Tough Love and Terse Operator are retired from the menu; their old slugs and saved copies remain usable.
+Higher `playfulness` requests more frequent, exaggerated character expressions and role slang.
+These expressions are not filtered; CLI notices show examples of language that may sound rude or violent.
 Use `tonedial create` for guided creation with a name, separate slug, tone settings and the twelve-axis dial.
 `show` reports current settings and offers a save command when the tone differs from the saved profile;
 `show <slug>` previews the saved profile.

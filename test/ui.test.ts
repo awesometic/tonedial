@@ -377,8 +377,7 @@ for (const language of LANGUAGES) {
     out = [];
     assert.equal(await run(["show"], env, join(home, "project"), false), 0);
     const compact = out.join("");
-    assert.ok(visible(compact).includes(copy.persona.descriptionChars("user", [...user].length)));
-    assert.ok(visible(compact).includes(copy.persona.descriptionChars("agent", [...agent].length)));
+    assert.ok(visible(compact).includes(copy.persona.descriptionCounts([...user].length, [...agent].length, 200)));
     assert.equal(compact.includes(user), false);
     assert.equal(compact.includes(agent), false);
     for (const line of compact.trimEnd().split("\n")) assert.ok(maxCells(line) <= 59 || isUnbreakable(line), line);

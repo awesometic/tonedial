@@ -247,7 +247,7 @@ export async function captureDialFrame(
   columns = language === "ko" ? 60 : 80,
 ): Promise<DialFrameCapture> {
   const rows = 24;
-  const preset = BUNDLED.find((entry) => entry.slug === "tough-love")!;
+  const preset = BUNDLED.find((entry) => entry.slug === "caring-brother")!;
   const input = fakeInput();
   const { output, writes } = fakeOutput(columns, rows);
   const pending = dial(

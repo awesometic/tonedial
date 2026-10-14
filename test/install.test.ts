@@ -500,7 +500,7 @@ test("update replaces lib and leaves the command working", async () => {
   assert.match(await byName(home, agent, "--version"), /tonedial \d/);
   // The user's own state is not the package.
   assert.ok(existsSync(join(home, "config.json")));
-  assert.ok(existsSync(join(home, "presets", "builtin", "tough-love.json")));
+  assert.ok(existsSync(join(home, "presets", "builtin", "heavenly-demon.json")));
 });
 
 test("a tarball that fails its hash leaves the install untouched", async () => {

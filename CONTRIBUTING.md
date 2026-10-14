@@ -61,8 +61,8 @@ a documentation check does not prove runtime behavior.
 
 Compilation uses no LLM or external state and produces identical bytes for identical inputs.
 All twelve axes use one English anchor set at levels 1–5; risk notices are advisory and tone never changes permission or approval requirements.
-Custom profiles carry axes, persona, address, register and safeword together.
-Legacy and bundled axis-only presets preserve the current separate settings; interface language and wiring remain global.
+Bundled and custom profiles carry axes, persona, address, register and safeword together.
+Legacy axis-only presets preserve the current separate settings; interface language and wiring remain global.
 All ordinary tone changes recompile the artifact, while project scope chooses connections to the shared state.
 Preserve user data and foreign settings/handlers; generated files and ownership markers do not authorize overwriting unrelated content.
 Generated configuration, observed host activation, delivered context and model adherence are separate claims.
@@ -92,7 +92,7 @@ Native preview prompts and tool flags are not OS filesystem isolation.
 ## Presets and copy
 
 Prefer a user preset created with `set`, `save` and `export`; it needs no repository change.
-The bundled set is deliberately five presets, each with 3–7 non-default axes.
+The bundled set is deliberately seven character profiles, each with 3–7 non-default axes and address/role defaults.
 A new bundled preset needs a user-facing reason and an agreed proposal; axis coverage belongs to the measurement harness.
 Update `src/core/presets.ts`, English/Korean summaries and safeword suggestions in `src/core/i18n.ts`, the pack/fixtures, extension-point/count checks and maintained product lists together.
 The first bundled preset determines the unattended default, so changing its position changes behavior.

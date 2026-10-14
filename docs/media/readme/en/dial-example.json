@@ -5,7 +5,7 @@
   "language": "en",
   "columns": 80,
   "terminalRows": 24,
-  "preset": "tough-love",
+  "preset": "caring-brother",
   "selectedAxis": "warmth",
   "previewLevel": 4,
   "committed": false,
@@ -14,18 +14,18 @@
   "font": "Menlo",
   "fontRedistributed": false,
   "renderer": "rasterized current dial SVG text at its cell positions with Menlo 22px, regular/bold weights and fixed palette; actual terminal appearance varies",
-  "frameSha256": "ebf881fd62c15f1efad0718a8229ac9f7406fb6e24ac9ca5cbe9f560e4799605",
-  "imageSha256": "e5004de46f01786284c33c0c21b66f041d99fced7fd3f032cf2c2c83956de41f",
+  "frameSha256": "c3289263f53b7cda4c11a95d560e896ce063dd98989714ed22f5ebc36809a8df",
+  "imageSha256": "74814ce1a39d711a004c801f64659a408b9fb1d5bb7a58504c84cca2d78857e1",
   "inputs": {
-    "scripts/dial-frame.ts": "297de2a29a475a4b114e5035c151f563934a5e1e2270fa617cb52ee70446da0c",
+    "scripts/dial-frame.ts": "2c915e2a9d746e7944918943b231b9ccb4e131d537e495d1f88bedd8daf4f30a",
     "src/ui/dial.ts": "89be03aa196219d24ce36b286287f1cd586e58b6417eff433f82c1c3fd70f98c",
     "src/ui/gauge.ts": "7b4a8d69780103421c1ec691746be8defae8d1489768367e8b9e0f909f9eca1a",
     "src/ui/prompt.ts": "9e7e02e17aea1158203b9e584d90aba5213902b0c246fe281d91f3290231b50d",
     "src/ui/style.ts": "2dc560ebc69677d391ec8ab39817c3a89545d6b8b603c080a7f6d09a75450a8e",
     "src/ui/width.ts": "eb1013f8511ccfc8b9eca78e3d74433cfcf30096b7faf71ba118a5cd42163acd",
-    "src/core/i18n.ts": "36ecb02940ba6bb0d476c1657df48884b08fe4273893402f59d1e0887df167ab",
-    "src/core/anchors.ts": "f5801acf3b73b1ce2febe6f14935abc67cf25fd1eac4a299392843535795369b",
-    "src/core/presets.ts": "f9a7a55e78147812127bb910f2c7a381e80fea56f544584f24ec08cadd19e323",
+    "src/core/i18n.ts": "c503762f882191a814e7366c4480c7204054622747ea3ec5699d2aee6ec9f5cd",
+    "src/core/anchors.ts": "906050bea776cc55e898eb277ea128b21e9af83f0b0215c384c6b8f9acd10218",
+    "src/core/presets.ts": "992d498f5787856c914027427b07b6d7544e581ee7c6bf5921a7420fb45d5aa7",
     "scripts/dial-svg.ts": "eb81cde392f472ea8df8b251150afccfcf02e5adf936221a174ab17d965e13a4"
   }
 }

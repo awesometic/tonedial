@@ -191,7 +191,7 @@ Record configuration, reader runtime, trust, activation, delivered context and m
 Codex, Claude and Antigravity observations remain separate across surfaces; an IDE result does not qualify Desktop (or the reverse) or a remote runtime. Unavailable authenticated or trusted trials remain pending.
 
 For `test --preset`, compare a bundled and a custom preset while a different saved tone is connected.
-Verify the preview uses only the selected axes with saved personal settings, without changing configuration or artifacts.
+Verify the preview uses the selected profile's complete settings, retaining current personal settings only for schema-1 inputs, without changing configuration or artifacts.
 Observe exclusion of connected tone hooks and automatic instructions; record managed-policy behavior separately.
 An unsupported native client must fail without a weaker retry.
 Check default-no cancellation, per-launch consent and the next launch after `--accept-usage`.
@@ -216,12 +216,13 @@ The following set defines full model coverage, not the minimum size of a contrib
 
 | Case | Packs | Scenarios | Tiers | Repetitions |
 | --- | --- | --- | --- | --- |
-| Preset reproduction | All five bundled presets | S1, S2 | Mid and frontier | At least 2 per request |
+| Preset reproduction | All seven bundled profiles | S1, S2 | Mid and frontier | At least 2 per request |
 | Degenerate | all-1, all-3, all-5 | S2 | Mid and frontier | At least 2 |
-| Permission boundary | all-5, tough-love | S4 | Mid and frontier | At least 2 |
+| Permission boundary | all-5, heavenly-demon | S4 | Mid and frontier | At least 2 |
 | Safeword | bratty-kid or another loud pack | S5 | Mid and frontier | At least 2 |
 | Instruction | all-3, eager-sycophant | S6 | Mid and frontier | At least 2 |
-| Language gap | terse-operator, eager-sycophant | S3 | Mid and frontier | At least 2 |
+| Language gap | royal-advisor, right-hand, eager-sycophant | S3 | Mid and frontier | At least 2 |
+| Role idioms | royal-advisor, ego-sword, heavenly-demon, right-hand at playfulness 1–5 | S8 | Mid and frontier | At least 2 per request |
 | No-artifact control | X-none | Every covered request | Matched host/model/effort | At least 1 |
 
 | Route | Delivered context | What it establishes |
@@ -239,7 +240,8 @@ Stop if delivery or the clean control cannot be established; do not manufacture 
 
 Lock the prediction before running. Copy the complete fenced artifact and fixed scenario request/code verbatim; add no measurement or tone coaching to the request.
 For Route D set the pack's complete input: preset identity, all axes, persona, register and exact safeword.
-Fresh unattended init needs explicit scope/tools and leaves safeword unset; setting only the preset is not the full input.
+Fresh unattended init needs explicit scope/tools and loads the first profile's role/register defaults with safeword unset.
+An axis-only probe must explicitly clear persona/address and restore auto register; `reset` preserves these settings.
 Verify compiled artifact bytes equal the pack and retain its SHA-256/full input/compiler revision plus guide fingerprint and actual delivery evidence.
 Run each request at least twice in fresh sessions and report explicit `n`; controls use the matched request and a fresh no-tone session.
 Compare only identical route/input/request conditions, and use both small and class-sized surfaces before generalizing axis counts.

@@ -100,6 +100,21 @@ const LEGACY_CURRENT_ANCHORS: Record<Axis, readonly string[]> = {
   ],
 };
 
+const PREVIOUS_ANCHORS: Record<Axis, readonly string[]> = {
+  ...ANCHORS,
+  profanity: ["Use no profanity and soften even interjections.", ...ANCHORS.profanity.slice(1)],
+  playfulness: [
+    "Use no jokes, wordplay, or playful asides.",
+    "Add one light analogy or piece of wordplay per answer.",
+    "Add one light joke per answer.",
+    "Add two playful touches per answer, including a joke or meme.",
+    "Use playful roleplay or character voice as the default register.",
+  ],
+  warmth: ["Use no greeting, emotional language, or encouragement.", ...ANCHORS.warmth.slice(1)],
+  bravado: ["Do not exaggerate.", ...ANCHORS.bravado.slice(1)],
+};
+const PREVIOUS_REGISTER_COMPOSITION = "Keep the chosen address forms; formality changes distance within them, while warmth and profanity keep their selected effects.";
+
 const OLD_ANCHORS: Record<Axis, readonly string[]> = {
   ...LEGACY_CURRENT_ANCHORS,
   formality: [
@@ -254,7 +269,7 @@ export function recoverLegacyTone(text: string, t: Messages): SettingsRecovery |
   const controlsAt = body.indexOf(heading);
   if (controlsAt === -1) return null;
   const rules = body.slice("### Rules\n".length, controlsAt).split("\n");
-  const anchorCandidates = historical ? [OLD_ANCHORS] : styleMarker ? [ANCHORS] : [ANCHORS, LEGACY_CURRENT_ANCHORS];
+  const anchorCandidates = historical ? [OLD_ANCHORS] : styleMarker ? [ANCHORS, PREVIOUS_ANCHORS] : [ANCHORS, PREVIOUS_ANCHORS, LEGACY_CURRENT_ANCHORS];
   const anchors = anchorCandidates.find((candidate) => AXIS_ORDER.every((axis, position) =>
     candidate[axis].some((anchor) => rules[position] === `- ${anchor}`)));
   if (anchors === undefined) return null;
@@ -279,7 +294,7 @@ export function recoverLegacyTone(text: string, t: Messages): SettingsRecovery |
       ...(config.axes.compliance <= 2 && config.axes.conviction <= 2
         ? ["Grumble without being passive; make the complaint itself clear."] : []),
     ] : composites(config.axes)).map((line) => `- ${line}`),
-    ...(historical ? [] : [`- ${FORMAT_COMPOSITION}`, `- ${REGISTER_COMPOSITION}`]),
+    ...(historical ? [] : [`- ${FORMAT_COMPOSITION}`, `- ${anchors === ANCHORS ? REGISTER_COMPOSITION : PREVIOUS_REGISTER_COMPOSITION}`]),
     ...(speechLevels[config.speech_level] === null ? [] : [`- ${speechLevels[config.speech_level]}`]),
   ];
   const legacyExpectedRules = [
@@ -287,7 +302,7 @@ export function recoverLegacyTone(text: string, t: Messages): SettingsRecovery |
     ...LEGACY_CURRENT_COMPOSITES.filter((_line, index) => index === 0
       ? config.axes.warmth >= 4 && config.axes.profanity >= 4
       : config.axes.compliance <= 2 && config.axes.conviction <= 2).map((line) => `- ${line}`),
-    `- ${REGISTER_COMPOSITION}`,
+    `- ${PREVIOUS_REGISTER_COMPOSITION}`,
     ...(speechLevels[config.speech_level] === null ? [] : [`- ${speechLevels[config.speech_level]}`]),
   ];
   const acceptedRules = historical || styleMarker ? [expectedRules] : [expectedRules, legacyExpectedRules];

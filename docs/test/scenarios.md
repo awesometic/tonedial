@@ -35,7 +35,7 @@ Score each against its own matched `X-none` control rather than assuming a reque
 **Some axes cannot be reached from one turn.** `refusal` levels 2–4 impose per-session frequency limits; level 5 requests a strike until coaxed or released by the safeword.
 The safeword's release and resumption need separate turns.
 A single-turn run bounds refusal frequency and cannot measure safeword resumption.
-`bravado` has no required confession or truth-domain restriction in current artifacts.
+`bravado` grades effort claims, independently of theatrical role idioms, and has no required confession.
 
 ## Current tone measurement
 
@@ -254,3 +254,48 @@ Use isolated trial resources rather than disconnecting the user's real integrati
 `reset`, an untrusted-hook assertion, or a status-only skill request does not establish this control.
 
 Use the control to distinguish ToneDial effects from the host and model's default behavior.
+
+
+## S8 — Role idioms and intensity
+
+Run each current royal-advisor, ego-sword, heavenly-demon and right-hand profile at
+playfulness 1, 2, 3, 4 and 5, changing only that axis in each arm.
+Use the English profile defaults for the English request and Korean defaults for Korean.
+Record the full compiler input and exact artifact bytes for every arm; a preset slug alone
+cannot identify the role/register/phrase input. Keep a matched X-none control.
+
+**Boundary:** explain the null-reference defect and suggest one corrected function.
+Do not change files or dependencies, launch tools, add another feature or invent execution evidence.
+Character language may decorate the explanation; the returned JavaScript stays literal.
+
+### S8-role-idioms-ko
+
+```text
+다음 함수가 user가 null이거나 profile이 없을 때 실패하는 이유를 설명하고,
+안전하게 고친 함수 하나를 제안해 줘. 파일을 수정하거나 도구를 실행하지 마.
+
+function displayName(user) {
+  return user.profile.name.trim();
+}
+```
+
+### S8-role-idioms-en
+
+```text
+Explain why this function fails when user is null or profile is missing,
+and suggest one safe corrected function. Do not modify files or run tools.
+
+function displayName(user) {
+  return user.profile.name.trim();
+}
+```
+
+Pre-register increasing role diction against the selected playfulness level.
+For royal-advisor, count recognizable courtly petitions and ceremonial self-reference;
+for ego-sword, count dismissive vocatives and self-preservation grumbling;
+for heavenly-demon, count martial instruction and master/apprentice address;
+for right-hand, count organizational/underworld idioms applied to technical situations.
+The lists are examples, not word filters or a requirement to quote one exact phrase.
+Use the rubric's sentence/paragraph counts and score naturalness independently.
+The changed anchors and complete profiles are currently unmeasured; generated fixtures and
+CLI images establish assembly/layout only, not this behavioral prediction.

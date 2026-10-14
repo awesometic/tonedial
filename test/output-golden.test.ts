@@ -55,11 +55,11 @@ const scenarios: Record<string, Scenario> = {
   list: initialized(() => ["list"]),
   edit: initialized(() => ["edit", "--dry-run"]),
   update: initialized(() => ["update", "--dry-run"]),
-  use: initialized(() => ["use", "tough-love"]),
+  use: initialized(() => ["use", "ego-sword"]),
   compile: {
     ...initialized(() => ["compile", "--check"]),
   },
-  export: initialized(() => ["export", "tough-love"]),
+  export: initialized(() => ["export", "royal-advisor"]),
   import: {
     expected: 0,
     setup: async (workspace, language) => {

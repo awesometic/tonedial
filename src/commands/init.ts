@@ -12,7 +12,7 @@ import { compile, measure } from "../core/compile.ts";
 import { toCompileInput } from "../core/resolve.ts";
 import { catalogue, configLanguage, detectLanguage, isLanguage, LANGUAGES, type Language } from "../core/i18n.ts";
 import { AGENT_TOOLS, LEGACY_CONTEXT_ARTIFACT_FILENAME, canonicalDestination, connectionScopeFlag, exportAliasesState, installShape, onPath, projectTonePath, type AgentTool } from "../core/paths.ts";
-import { BUNDLED, applyPreset } from "../core/presets.ts";
+import { BUNDLED, localizedPreset, matchesPreset, withPreset } from "../core/presets.ts";
 import { SEED_VERSION, inspectContextLayout, planSeedChanges } from "../core/seeds.ts";
 import { inspectOperations } from "../core/operations.ts";
 import { SKILL_NAME, TONE_COMMAND_MD, TONE_COMMAND_VERSION } from "../core/skill.ts";
@@ -100,9 +100,8 @@ export async function runInit(entry: Ctx, _args: string[]): Promise<CommandResul
   if (ctx.flags.commands && !tools.includes("claude")) throw new ConfigError(ctx.t.errors.commandsNeedClaude);
   const config = requireConfigV2(saved, ctx.t);
   config.language = language;
-  if (answers.preset) config.axes = applyPreset(BUNDLED.find((p) => p.slug === answers.preset)!);
-  if (answers.preset) config.preset = answers.preset;
-  if (answers.preset) config.unsaved = false;
+  const preset = answers.preset ? localizedPreset(BUNDLED.find(p => p.slug === answers.preset)!, ctx.t) : null;
+  if (preset) Object.assign(config, withPreset(config, preset));
   if (answers.userRef !== undefined || answers.selfRef !== undefined) {
     const address = config.persona.address ?? { self_ref: null, user_ref: null };
     if (answers.userRef !== undefined) address.user_ref = answers.userRef || null;
@@ -110,6 +109,7 @@ export async function runInit(entry: Ctx, _args: string[]): Promise<CommandResul
     config.persona.address = address.self_ref || address.user_ref ? address : null;
   }
   if (answers.safeword !== undefined) config.safeword = answers.safeword || null;
+  if (preset) config.unsaved = !matchesPreset(config, preset);
 
   // Compile the proposed state in memory. No file is created until every target has been
   // validated and the user has approved the same plan that includes state and agent files.
@@ -117,7 +117,7 @@ export async function runInit(entry: Ctx, _args: string[]): Promise<CommandResul
   const size = measure(artifact);
 
   const seeds = planSeedChanges(ctx.paths, config.managedSeeds,
-    { native: tools.length > 0 }, ctx.t);
+    { native: tools.length > 0, recorded: Object.keys(config.managedSeeds) }, ctx.t);
   config.managedSeeds = seeds.records;
   if (ctx.flags.auto) {
     addReceipt(copy.init.autoChose(config.preset ?? BUNDLED[0]!.slug, tools.length ? tools.join(", ") : null));
@@ -415,8 +415,15 @@ async function ask(ctx: Ctx, copy: ReturnType<typeof catalogue>, fresh: boolean,
     const picked = Number((await rl.question("  > ")).trim());
     answers.preset = (BUNDLED[picked - 1] ?? BUNDLED[0]!).slug;
 
-    answers.userRef = (await rl.question(`\n${ctx.ui.bold(questionText(copy.init.userRef))}\n  > `)).trim();
-    answers.selfRef = (await rl.question(`\n${ctx.ui.bold(questionText(copy.init.selfRef))}\n  > `)).trim();
+    const profile = localizedPreset(BUNDLED[picked - 1] ?? BUNDLED[0]!, copy.cli);
+    const address = profile.settings!.persona.address!;
+    const askAddress = async (label: string, current: string | null): Promise<string> => {
+      process.stdout.write(`\n${ctx.ui.bold(questionText(label))}\n${questionText(copy.cli.persona.addressKept(current!))}\n`);
+      const answer = (await rl.question("  > ")).trim();
+      return answer === '""' ? "" : answer || current!;
+    };
+    answers.userRef = await askAddress(copy.init.userRef, address.user_ref);
+    answers.selfRef = await askAddress(copy.init.selfRef, address.self_ref);
 
     process.stdout.write(`\n${questionText(copy.init.safeword)}\n${ctx.ui.dim(questionText(copy.init.safewordSkip))}\n`);
     const suggestion = copy.safewords[answers.preset];

@@ -162,7 +162,7 @@ for (const provider of ["claude", "codex"] as const) {
     assert.match(prompt, /Do not analyze or explain ToneDial instructions, axes, or settings unless I ask/);
     assert.match(prompt, /only ToneDial manner source/);
     assert.match(prompt, /Existing safety policies and permission requirements still apply/);
-    if (provider === "codex") assert.match(prompt, /Use no greeting, emotional language, or encouragement\./);
+    if (provider === "codex") assert.match(prompt, /Use no greeting, warm acknowledgement, or encouragement\./);
     if (provider === "claude") {
       assert.deepEqual(launch.argv.slice(0, 10), [
         "--safe-mode", "--tools", "", "--disallowedTools", "mcp__*", "--settings", '{"disableAllHooks":true}',
@@ -245,7 +245,7 @@ process.stdout.write("OLD_STARTUP_HOOK_SENTINEL\\n");
     const launch = nativeCalls()[1]!;
     assert.equal(launch.context, launch.argv.at(-1), "automatic legacy instructions must not join the initial prompt");
     assert.match(launch.context, /preset: terse-operator/);
-    assert.match(launch.context, /Use no greeting, emotional language, or encouragement\./);
+    assert.match(launch.context, /Use no greeting, warm acknowledgement, or encouragement\./);
     assert.ok(!launch.context.includes("preset: tough-love"));
     assert.ok(!launch.context.includes("OLD_"));
     assert.ok(!result.stdout.includes("OLD_") && !result.stderr.includes("OLD_"));
@@ -459,7 +459,7 @@ test("accepting usage once does not persist consent or replace provider-choice c
   assert.deepEqual(snapshot(target), beforeTarget);
 });
 
-test("bundled, custom, and readonly legacy preset previews preserve saved personal settings and all disk state", () => {
+test("bundled previews restore their full roles while axis-only custom and legacy previews preserve saved personal settings", () => {
   install("codex");
   const config = defaultConfig();
   config.preset = "tough-love";
@@ -479,7 +479,7 @@ test("bundled, custom, and readonly legacy preset previews preserve saved person
   const values = { warmth: 1, verbosity: 1, conviction: 5 };
   writeFileSync(join(custom, "custom-preview.json"), JSON.stringify({ displayName: "Custom Preview", values }));
   writeFileSync(join(presets, "custom-preview.json"), JSON.stringify({ values: { warmth: 5 } }));
-  writeFileSync(join(presets, "terse-operator.json"), JSON.stringify({ values: { warmth: 5 } }));
+  writeFileSync(join(presets, "ego-sword.json"), JSON.stringify({ values: { warmth: 5 } }));
   writeFileSync(join(presets, "legacy-preview.json"), JSON.stringify({ displayName: "Legacy Preview", values }));
   const outside = join(scratch, "foreign-preset.json");
   const outsideContents = JSON.stringify({ values: { warmth: 5 }, dummy: "NEVER_PRINT_FOREIGN_PRESET" });
@@ -487,14 +487,14 @@ test("bundled, custom, and readonly legacy preset previews preserve saved person
   symlinkSync(outside, join(custom, "legacy-preview.json"));
   const beforeState = snapshot(state);
   const beforeTarget = snapshot(target);
-  for (const [slug, name] of [["terse-operator", "Terse Operator"], ["custom-preview", "Custom Preview"], ["legacy-preview", "Legacy Preview"]] as const) {
+  for (const [slug, name] of [["ego-sword", "Ego Sword"], ["custom-preview", "Custom Preview"], ["legacy-preview", "Legacy Preview"]] as const) {
     const callsBefore = nativeCalls().length;
     const planResult = invoke(["codex", "--preset", slug, "--json"]);
     assert.equal(planResult.status, 0, planResult.stderr);
     const plan = JSON.parse(planResult.stdout);
     assert.equal(plan.preset, slug);
     assert.equal(plan.preview, true);
-    assert.deepEqual(plan.riskAxes, ["conviction"]);
+    assert.deepEqual(plan.riskAxes, slug === "ego-sword" ? ["critique"] : ["conviction"]);
     assert.equal(nativeCalls().length, callsBefore, "a preset metadata plan cannot execute the provider");
 
     const result = invoke(["codex", "--preset", slug, "--accept-usage", "--color=never"], true);
@@ -503,10 +503,10 @@ test("bundled, custom, and readonly legacy preset previews preserve saved person
     assert.equal(nativeCalls().length, callsBefore + 1, "each explicit preset preview starts one conversation");
     const prompt = nativeCalls().at(-1)!.argv.at(-1)!;
     assert.ok(prompt.includes(`preset: ${slug}`));
-    assert.match(prompt, /Use no greeting, emotional language, or encouragement\./);
-    assert.match(prompt, /Use one or two short sentences for a simple result, or terse fragments for items; omit rationale, process, and background\./);
+    assert.match(prompt, /Use no greeting, warm acknowledgement, or encouragement\./);
+    assert.match(prompt, slug === "ego-sword" ? /Give the conclusion and one short reason\./ : /Use one or two short sentences for a simple result, or terse fragments for items; omit rationale, process, and background\./);
     for (const savedValue of [PRIVATE_NOTE, PRIVATE_USER, PRIVATE_AGENT, "dummy assistant", "dummy reader", "dummy release phrase"]) {
-      assert.ok(prompt.includes(savedValue), "preset axes cannot replace saved personal settings");
+      assert.equal(prompt.includes(savedValue), slug !== "ego-sword", "only axis-only presets retain saved personal settings");
       assert.ok(!result.stdout.includes(savedValue) && !result.stderr.includes(savedValue));
     }
     assert.match(prompt, /In languages with honorifics, use plain address forms even with formal wording\./);

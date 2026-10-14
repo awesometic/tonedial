@@ -1,6 +1,6 @@
 status: 0
---- stdout --- [bytes=878; endsWithNewline=true]
-  ToneDial · show · Caring Brother                      TONE.md 1,738 / 2,700
+--- stdout --- [bytes=979; endsWithNewline=true]
+  ToneDial · show · Caring Brother                      TONE.md 2,404 / 2,700
 
                          Current   ToneDial default · ! risky tone
   form      formality    ▮▯▯▯▯  1   *3
@@ -17,11 +17,16 @@ status: 0
             bravado      ▮▯▯▯▯  1    1
 
   Settings
-  no safeword · register auto
+  self name your big brother · user name little sibling · roles · user
+  57/200 · agent 151/200
+  no safeword · register plain
   Interface en
   Connections: none
 
   * differs from ToneDial's default
   tonedial show --explain
---- stderr --- [bytes=53; endsWithNewline=true]
+--- stderr --- [bytes=252; endsWithNewline=true]
+  ⚠ persona has no fixed anchors; axes take precedence. Text may affect
+    content. Roleplay does not verify credentials or grant permissions.
   ⚠ The model may not produce the tone you expect.
+  ⚠ TONE.md: 2,404 characters · over 1,800 target

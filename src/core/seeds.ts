@@ -16,11 +16,11 @@ import { catalogue, type Messages } from "./i18n.ts";
 import { inspectOperations, type OperationAction, type OperationsInspection } from "./operations.ts";
 import { GUIDE_FORMAT_MARKER, GUIDE_FORMAT_VERSION, READER_PROTOCOL_VERSION, READER_SOURCE } from "./reader.ts";
 import { captureRawEntry, caseRenameMatchesCurrent, isNoop, planChange, planEntryRebuild, planGeneratedFamilyRebuild, rawReadChange, restoredArtifactMatchesCurrent, validateRollbackJournal, type Change, type PlannedOperationAction, type RawEntryCapture } from "../wiring/apply.ts";
-import { BUNDLED, builtinPresetDir, LEGACY_BUILTIN_SLUGS } from "./presets.ts";
+import { BUNDLED, builtinPresetDir, LEGACY_BUILTIN_SLUGS, RETIRED_PRESETS } from "./presets.ts";
 import { SKILL_MD, SKILL_NAME, SKILL_TRAITS_MD } from "./skill.ts";
 
 // Bump for changed generated content; freshness also checks each managed seed's bytes/provenance.
-export const SEED_VERSION = 13;
+export const SEED_VERSION = 14;
 
 /** The state-root operating boundaries. The compiler owns the current tone separately. */
 export const GUIDE_MD = `${GUIDE_FORMAT_MARKER}
@@ -89,10 +89,10 @@ export function seedFiles(paths: Paths, selection: SeedSelection): Seed[] {
   };
   const native: Seed[] = [
     reader,
-    { id: "skill/body", version: 13, path: join(paths.skill, SKILL_NAME, "SKILL.md"), label: `skill/${SKILL_NAME}/SKILL.md`, contents: SKILL_MD },
+    { id: "skill/body", version: 14, path: join(paths.skill, SKILL_NAME, "SKILL.md"), label: `skill/${SKILL_NAME}/SKILL.md`, contents: SKILL_MD },
     {
       id: "skill/traits",
-      version: 7,
+      version: 8,
       path: join(paths.skill, SKILL_NAME, "references", "traits.md"),
       label: `skill/${SKILL_NAME}/references/traits.md`,
       contents: SKILL_TRAITS_MD,
@@ -101,16 +101,16 @@ export function seedFiles(paths: Paths, selection: SeedSelection): Seed[] {
   return [
     guide,
     ...native.filter((seed) => selection.native || selection.recorded?.includes(seed.id)),
-    ...BUNDLED.map((preset) => ({
+    ...[...BUNDLED, ...RETIRED_PRESETS.filter(preset => selection.recorded?.includes(`preset/${preset.slug}`))].map((preset) => ({
       id: `preset/${preset.slug}`,
-      version: 1,
+      version: preset.schema,
       path: join(builtinPresetDir(paths.presets), `${preset.slug}.json`),
       label: `presets/builtin/${preset.slug}.json`,
       contents: `${JSON.stringify(preset, null, 2)}\n`,
     })),
-    ...BUNDLED.filter((preset) => LEGACY_BUILTIN_SLUGS.includes(preset.slug) &&
+    ...[...BUNDLED, ...RETIRED_PRESETS].filter((preset) => LEGACY_BUILTIN_SLUGS.includes(preset.slug) &&
       (selection.legacyCaches?.includes(preset.slug) || selection.recorded?.includes(`legacy-preset/${preset.slug}`)))
-      .map((preset) => ({ id: `legacy-preset/${preset.slug}`, version: 1,
+      .map((preset) => ({ id: `legacy-preset/${preset.slug}`, version: preset.schema,
         path: join(paths.presets, `${preset.slug}.json`), label: `presets/${preset.slug}.json`,
         contents: `${JSON.stringify(preset, null, 2)}\n` })),
   ];

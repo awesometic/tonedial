@@ -16,7 +16,7 @@ if (!isLanguage(language) || !Number.isInteger(columns) || columns < 60 || colum
   process.exit(2);
 }
 
-const preset = BUNDLED.find((entry) => entry.slug === "tough-love")!;
+const preset = BUNDLED.find((entry) => entry.slug === "caring-brother")!;
 const input = new EventEmitter() as unknown as NodeJS.ReadStream;
 Object.assign(input, { isTTY: false, isRaw: false, resume: () => input, pause: () => input });
 const writes: string[] = [];
@@ -27,7 +27,7 @@ const pending = dial(applyPreset(preset), palette("always", {}, false, columns -
 });
 const key = (name: string) => input.emit("keypress", "", { name });
 for (let index = 0; index < AXIS_ORDER.indexOf("warmth"); index++) key("down");
-key("left"); // Tough Love warmth 5 -> unsaved preview 4.
+key("left"); // Caring Brother warmth 5 -> unsaved preview 4.
 const frame = writes.filter((text) => text.endsWith("\n") && text.includes("formality")).at(-1);
 key("escape");
 await pending;

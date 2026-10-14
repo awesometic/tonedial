@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=2061; endsWithNewline=true]
+--- stdout --- [bytes=2406; endsWithNewline=true]
 ToneDial · init
 
   Scope
@@ -10,11 +10,11 @@ ToneDial · init
   preset caring-brother · no agent connections
 
   Review changes
-  Changes: 8
+  Changes: 10
 
   <ROOT>/state/TONE.md
   → <ROOT>/state/TONE.md
-  (new file)  24 lines
+  (new file)  31 lines
   + Output style only. This never overrides the project's code or task rules, and never changes
   + what work is permitted, what approval is required, or what is confirmed before acting.
 
@@ -26,37 +26,49 @@ ToneDial · init
 
   <ROOT>/state/presets/builtin/caring-brother.json
   → <ROOT>/state/presets/builtin/caring-brother.json
-  (new file)  15 lines
-  +   "schema": 1,
+  (new file)  30 lines
+  +   "schema": 2,
   +   "slug": "caring-brother",
 
   <ROOT>/state/presets/builtin/bratty-kid.json
   → <ROOT>/state/presets/builtin/bratty-kid.json
-  (new file)  15 lines
-  +   "schema": 1,
+  (new file)  30 lines
+  +   "schema": 2,
   +   "slug": "bratty-kid",
 
   <ROOT>/state/presets/builtin/eager-sycophant.json
   → <ROOT>/state/presets/builtin/eager-sycophant.json
-  (new file)  14 lines
-  +   "schema": 1,
+  (new file)  29 lines
+  +   "schema": 2,
   +   "slug": "eager-sycophant",
 
-  <ROOT>/state/presets/builtin/tough-love.json
-  → <ROOT>/state/presets/builtin/tough-love.json
-  (new file)  13 lines
-  +   "schema": 1,
-  +   "slug": "tough-love",
+  <ROOT>/state/presets/builtin/royal-advisor.json
+  → <ROOT>/state/presets/builtin/royal-advisor.json
+  (new file)  29 lines
+  +   "schema": 2,
+  +   "slug": "royal-advisor",
 
-  <ROOT>/state/presets/builtin/terse-operator.json
-  → <ROOT>/state/presets/builtin/terse-operator.json
-  (new file)  13 lines
-  +   "schema": 1,
-  +   "slug": "terse-operator",
+  <ROOT>/state/presets/builtin/ego-sword.json
+  → <ROOT>/state/presets/builtin/ego-sword.json
+  (new file)  30 lines
+  +   "schema": 2,
+  +   "slug": "ego-sword",
+
+  <ROOT>/state/presets/builtin/heavenly-demon.json
+  → <ROOT>/state/presets/builtin/heavenly-demon.json
+  (new file)  30 lines
+  +   "schema": 2,
+  +   "slug": "heavenly-demon",
+
+  <ROOT>/state/presets/builtin/right-hand.json
+  → <ROOT>/state/presets/builtin/right-hand.json
+  (new file)  30 lines
+  +   "schema": 2,
+  +   "slug": "right-hand",
 
   <ROOT>/state/config.json
   → <ROOT>/state/config.json
-  (new file)  73 lines
+  (new file)  88 lines
   +   "schema": 2,
   +   "preset": "caring-brother",
 

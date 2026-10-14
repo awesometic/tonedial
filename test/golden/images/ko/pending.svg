@@ -1,18 +1,18 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="960" height="708" viewBox="0 0 960 708" role="img" aria-labelledby="title description">
 <title id="title">ToneDial screen (ko · dial pending)</title>
 <desc id="description">  ToneDial · 내 취향의 말투
-  Tough Love · 변경 미리보기
+  Caring Brother · 변경 미리보기
 
                          현재      ToneDial 기본값 · ! 위험 말투
-  form      formality    ▮▮▯▯▯  2   *3
-            verbosity    ▮▮▮▯▯  3    3
-            profanity    ▮▯▯▯▯  1    1
+  form      formality    ▮▯▯▯▯  1   *3
+            verbosity    ▮▮▮▮▯  4   *3
+            profanity    ▮▮▯▯▯  2   *1
             playfulness  ▮▮▮▯▯  3    3
-  target    critique     ▮▮▮▮▮  5!  *3
+  target    critique     ▮▮▯▯▯  2   *3
             flattery     ▮▯▯▯▯  1    1
 &gt;           warmth       ▮▮▮▮▯  4   *3
   behaviour conviction   ▮▮▮▮▯  4   *3
-            care         ▮▮▮▮▯  4   *3
+            care         ▮▮▮▮▮  5   *3
             compliance   ▮▮▮▯▯  3    3
             refusal      ▮▯▯▯▯  1    1
             bravado      ▮▯▯▯▯  1    1
@@ -26,30 +26,30 @@
 </desc>
 <rect width="100%" height="100%" rx="16" fill="#171b20"/>
 <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, system-ui" font-size="22"><text x="60" y="48" fill="#edf3f6" font-weight="700" opacity="1">ToneDial · 내 취향의 말투</text>
-<text x="60" y="76" fill="#d8c35d" font-weight="400" opacity="1">Tough Love · 변경 미리보기</text>
+<text x="60" y="76" fill="#d8c35d" font-weight="400" opacity="1">Caring Brother · 변경 미리보기</text>
 <text x="382" y="132" fill="#edf3f6" font-weight="400" opacity="0.65">현재</text>
 <text x="522" y="132" fill="#edf3f6" font-weight="400" opacity="0.65">ToneDial 기본값 · ! 위험 말투</text>
 <text x="60" y="160" fill="#edf3f6" font-weight="400" opacity="0.65">form</text>
 <text x="200" y="160" fill="#edf3f6" font-weight="400" opacity="1">formality</text>
-<text x="382" y="160" fill="#66d9dc" font-weight="400" opacity="1">▮▮▯▯▯</text>
-<text x="480" y="160" fill="#edf3f6" font-weight="700" opacity="1">2</text>
+<text x="382" y="160" fill="#66d9dc" font-weight="400" opacity="1">▮▯▯▯▯</text>
+<text x="480" y="160" fill="#edf3f6" font-weight="700" opacity="1">1</text>
 <text x="536" y="160" fill="#66d9dc" font-weight="400" opacity="1">*3</text>
-<text x="200" y="188" fill="#edf3f6" font-weight="400" opacity="0.65">verbosity</text>
-<text x="382" y="188" fill="#edf3f6" font-weight="400" opacity="1">▮▮▮▯▯</text>
-<text x="480" y="188" fill="#edf3f6" font-weight="700" opacity="1">3</text>
-<text x="550" y="188" fill="#edf3f6" font-weight="400" opacity="1">3</text>
-<text x="200" y="216" fill="#edf3f6" font-weight="400" opacity="0.65">profanity</text>
-<text x="382" y="216" fill="#edf3f6" font-weight="400" opacity="1">▮▯▯▯▯</text>
-<text x="480" y="216" fill="#edf3f6" font-weight="700" opacity="1">1</text>
-<text x="550" y="216" fill="#edf3f6" font-weight="400" opacity="1">1</text>
+<text x="200" y="188" fill="#edf3f6" font-weight="400" opacity="1">verbosity</text>
+<text x="382" y="188" fill="#66d9dc" font-weight="400" opacity="1">▮▮▮▮▯</text>
+<text x="480" y="188" fill="#edf3f6" font-weight="700" opacity="1">4</text>
+<text x="536" y="188" fill="#66d9dc" font-weight="400" opacity="1">*3</text>
+<text x="200" y="216" fill="#edf3f6" font-weight="400" opacity="1">profanity</text>
+<text x="382" y="216" fill="#66d9dc" font-weight="400" opacity="1">▮▮▯▯▯</text>
+<text x="480" y="216" fill="#edf3f6" font-weight="700" opacity="1">2</text>
+<text x="536" y="216" fill="#66d9dc" font-weight="400" opacity="1">*1</text>
 <text x="200" y="244" fill="#edf3f6" font-weight="400" opacity="0.65">playfulness</text>
 <text x="382" y="244" fill="#edf3f6" font-weight="400" opacity="1">▮▮▮▯▯</text>
 <text x="480" y="244" fill="#edf3f6" font-weight="700" opacity="1">3</text>
 <text x="550" y="244" fill="#edf3f6" font-weight="400" opacity="1">3</text>
 <text x="60" y="272" fill="#edf3f6" font-weight="400" opacity="0.65">target</text>
 <text x="200" y="272" fill="#edf3f6" font-weight="400" opacity="1">critique</text>
-<text x="382" y="272" fill="#ef8585" font-weight="400" opacity="1">▮▮▮▮▮</text>
-<text x="480" y="272" fill="#ef8585" font-weight="700" opacity="1">5!</text>
+<text x="382" y="272" fill="#66d9dc" font-weight="400" opacity="1">▮▮▯▯▯</text>
+<text x="480" y="272" fill="#edf3f6" font-weight="700" opacity="1">2</text>
 <text x="536" y="272" fill="#66d9dc" font-weight="400" opacity="1">*3</text>
 <text x="200" y="300" fill="#edf3f6" font-weight="400" opacity="0.65">flattery</text>
 <text x="382" y="300" fill="#edf3f6" font-weight="400" opacity="1">▮▯▯▯▯</text>
@@ -66,8 +66,8 @@
 <text x="480" y="356" fill="#edf3f6" font-weight="700" opacity="1">4</text>
 <text x="536" y="356" fill="#66d9dc" font-weight="400" opacity="1">*3</text>
 <text x="200" y="384" fill="#edf3f6" font-weight="400" opacity="1">care</text>
-<text x="382" y="384" fill="#66d9dc" font-weight="400" opacity="1">▮▮▮▮▯</text>
-<text x="480" y="384" fill="#edf3f6" font-weight="700" opacity="1">4</text>
+<text x="382" y="384" fill="#66d9dc" font-weight="400" opacity="1">▮▮▮▮▮</text>
+<text x="480" y="384" fill="#edf3f6" font-weight="700" opacity="1">5</text>
 <text x="536" y="384" fill="#66d9dc" font-weight="400" opacity="1">*3</text>
 <text x="200" y="412" fill="#edf3f6" font-weight="400" opacity="0.65">compliance </text>
 <text x="382" y="412" fill="#edf3f6" font-weight="400" opacity="1">▮▮▮▯▯</text>

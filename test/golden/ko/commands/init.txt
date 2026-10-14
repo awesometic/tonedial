@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=2210; endsWithNewline=true]
+--- stdout --- [bytes=2553; endsWithNewline=true]
 ToneDial · init
 
   범위
@@ -10,11 +10,11 @@ ToneDial · init
   프리셋 caring-brother · 에이전트 연결 없음
 
   변경 확인
-  변경 항목 8개
+  변경 항목 10개
 
   <ROOT>/state/TONE.md
   → <ROOT>/state/TONE.md
-  (새 파일)  24줄
+  (새 파일)  31줄
   + Output style only. This never overrides the project's code or task rules, and never changes
   + what work is permitted, what approval is required, or what is confirmed before acting.
 
@@ -26,37 +26,49 @@ ToneDial · init
 
   <ROOT>/state/presets/builtin/caring-brother.json
   → <ROOT>/state/presets/builtin/caring-brother.json
-  (새 파일)  15줄
-  +   "schema": 1,
+  (새 파일)  30줄
+  +   "schema": 2,
   +   "slug": "caring-brother",
 
   <ROOT>/state/presets/builtin/bratty-kid.json
   → <ROOT>/state/presets/builtin/bratty-kid.json
-  (새 파일)  15줄
-  +   "schema": 1,
+  (새 파일)  30줄
+  +   "schema": 2,
   +   "slug": "bratty-kid",
 
   <ROOT>/state/presets/builtin/eager-sycophant.json
   → <ROOT>/state/presets/builtin/eager-sycophant.json
-  (새 파일)  14줄
-  +   "schema": 1,
+  (새 파일)  29줄
+  +   "schema": 2,
   +   "slug": "eager-sycophant",
 
-  <ROOT>/state/presets/builtin/tough-love.json
-  → <ROOT>/state/presets/builtin/tough-love.json
-  (새 파일)  13줄
-  +   "schema": 1,
-  +   "slug": "tough-love",
+  <ROOT>/state/presets/builtin/royal-advisor.json
+  → <ROOT>/state/presets/builtin/royal-advisor.json
+  (새 파일)  29줄
+  +   "schema": 2,
+  +   "slug": "royal-advisor",
 
-  <ROOT>/state/presets/builtin/terse-operator.json
-  → <ROOT>/state/presets/builtin/terse-operator.json
-  (새 파일)  13줄
-  +   "schema": 1,
-  +   "slug": "terse-operator",
+  <ROOT>/state/presets/builtin/ego-sword.json
+  → <ROOT>/state/presets/builtin/ego-sword.json
+  (새 파일)  30줄
+  +   "schema": 2,
+  +   "slug": "ego-sword",
+
+  <ROOT>/state/presets/builtin/heavenly-demon.json
+  → <ROOT>/state/presets/builtin/heavenly-demon.json
+  (새 파일)  30줄
+  +   "schema": 2,
+  +   "slug": "heavenly-demon",
+
+  <ROOT>/state/presets/builtin/right-hand.json
+  → <ROOT>/state/presets/builtin/right-hand.json
+  (새 파일)  30줄
+  +   "schema": 2,
+  +   "slug": "right-hand",
 
   <ROOT>/state/config.json
   → <ROOT>/state/config.json
-  (새 파일)  73줄
+  (새 파일)  88줄
   +   "schema": 2,
   +   "preset": "caring-brother",
 

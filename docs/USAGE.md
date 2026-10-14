@@ -20,11 +20,11 @@ not measured model adherence.
 |---|---|---|---|
 | form | `formality` | 3 | familiar wording and social distance → ceremonial, deferential wording |
 | form | `verbosity` | 3 | requested result in 1–2 sentences → deep explanation within the requested scope |
-| form | `profanity` | **1** | no profanity; soften interjections → strong profanity throughout |
-| form | `playfulness` | 3 | no jokes or playful asides → playful roleplay or character voice by default |
+| form | `profanity` | **1** | no profanity; role slang remains available → strong profanity throughout |
+| form | `playfulness` | 3 | literal wording → exaggerated character idioms throughout |
 | target | `critique` | 3 | neutral defect observations → vivid, unsparing criticism |
 | target | `flattery` | **1** | no praise → four positive remarks, even about small choices |
-| target | `warmth` | 3 | no greeting, emotion or encouragement → four warm acknowledgements with encouragement and empathy |
+| target | `warmth` | 3 | no greeting, warm acknowledgement or encouragement → four warm acknowledgements with encouragement and empathy |
 | behaviour | `conviction` | 3 | list options and ask → state one recommendation as the decision |
 | behaviour | `care` | 3 | requested result only → follow-up, backup, rest, and useful organization and presentation |
 | behaviour | `compliance` | 3 | question once, then act → act immediately without compliance commentary |
@@ -60,8 +60,8 @@ The artifact targets 1,800 Unicode code points, with a 2,700-character budget wa
 their text contributes at most 400 before labels and wrappers. The
 compiler reports the actual size and advisory budget state without silently shortening either
 description; the `note` field, address terms and safeword are not globally bounded. Current
-representative counts, including wrappers and whitespace, with other persona fields and safeword unset, are 1,469 code points for default axes
-with no persona, 2,246 with both descriptions at 200 code points, and 2,947 for all axes at 5 with
+representative counts, including wrappers and whitespace, with other persona fields and safeword unset, are 1,539 code points for default axes
+with no persona, 2,316 with both descriptions at 200 code points, and 3,034 for all axes at 5 with
 both descriptions; the last triggers the warning. These are generated-size observations, not a
 whole-config worst-case bound or model-adherence evidence.
 Mutation receipts show generated/current status; `--verbose` adds the numeric artifact count.
@@ -69,7 +69,33 @@ Mutation receipts show generated/current status; `--verbose` adds the numeric ar
 
 ## Presets and personal settings
 
-Five bundled presets provide starting points.
+Seven bundled profiles provide character relationships and complete tone defaults.
+
+| Profile | User role | Agent role | Korean self / user address |
+|---|---|---|---|
+| `caring-brother` | Younger sibling | Caring older brother | 형 / 동생 |
+| `bratty-kid` | Conversation partner | Mischievous kid | 나 / 너 |
+| `eager-sycophant` | Creator | Overexcited fan | 저 / 작가님 |
+| `royal-advisor` | Monarch | Loyal royal subject | 신 / 전하 |
+| `ego-sword` | Novice adventurer | Sentient sword | 나 / 애송아 |
+| `heavenly-demon` | Apprentice | Heavenly Demon | 본좌 / 제자야 |
+| `right-hand` | Organization boss | Trusted right hand | 저 / 대부님 |
+
+Built-in defaults follow the interface language when selected or previewed; changing the interface alone never rewrites current role text.
+Saved custom profiles keep literal address and role text across interface changes.
+Fresh `init` applies the first complete profile; Enter keeps its suggested address, while `""` clears one.
+`create` inherits current settings and fills missing address/description values with neutral defaults before explicit assignments.
+Empty assignments still clear a description or address; defaults are editable, not mandatory identities.
+
+`playfulness` grades frequency and theatrical intensity: 1 uses literal wording with the chosen address,
+2 adds one restrained touch, 3 two recognizable touches, 4 frequent idioms in most paragraphs,
+and 5 exaggerated character idioms throughout, even in short answers.
+Courtly phrases such as “아뢰옵기 황송하오나” and underworld metaphors such as “함수를 담궈버릴까요?”
+remain in role text; ToneDial has no role-word blacklist and no silent substitution.
+The CLI warns that role language may sound rude or violent.
+`profanity` still grades actual swearing; `bravado` grades effort claims, independent of theatrical idioms.
+These are compiled requests; actual frequency and language naturalness need model measurements.
+
 `list` marks the active preset and custom entries; `list --verbose` adds non-default axis values.
 `show <slug>` previews a saved profile without applying it.
 Bare `show` reports the current settings, including changes made with `set`.
@@ -79,7 +105,7 @@ Running `use <slug>` again replaces the current axes with the profile's saved va
 
 ```bash
 tonedial list
-tonedial use tough-love
+tonedial use ego-sword
 tonedial save "My Tone"
 tonedial export my-tone > my-tone.json
 tonedial import my-tone.json
@@ -88,7 +114,7 @@ tonedial use my-tone
 
 `create` guides you through a display name, a separate slug, address terms, user context,
 agent role, register and safeword, followed by the existing twelve-axis dial.
-It starts from the current settings; Enter keeps a displayed value.
+It starts from the current settings; Enter keeps a displayed value and `""` clears an optional field.
 User context and agent role each accept up to 200 Unicode code points, including internal spaces and punctuation.
 The guided form reports each accepted count and retries an invalid field without discarding earlier answers.
 Review the file changes after the dial, then approve to save and apply the preset in one transaction.
@@ -112,7 +138,11 @@ JSON and dry-run creation never ask questions; provide the name and any desired 
 Creation saves address, role, register and safeword with the axes. `use` restores the whole profile.
 
 Custom profiles use preset schema 2 and carry axes, persona, address, safeword and speech level.
-Bundled and older schema-1 presets carry axes only and keep the current separate settings when applied.
+Bundled profiles also use schema 2, including localized address, user role, agent role and register defaults.
+Older schema-1 presets carry axes only and keep the current separate settings when applied.
+Tough Love and Terse Operator are retired from the bundled menu; their old slugs still resolve.
+Custom and flat user definitions take precedence over their historical axes, and modified retired caches remain readable.
+Saving a retired cache writes a custom profile while preserving its original cache bytes and mode.
 Interface language and wiring stay global and are never part of a profile.
 `export` and `import` back up or move the whole profile, including address, role descriptions and persona notes.
 `import` writes the custom preset but does not activate it; follow it with `use <slug>` when you want to apply the imported axes.
@@ -411,7 +441,7 @@ Successful tone mutations recompile in the same action.
 Every command accepts `--json` and returns integer `schema: 3` envelopes, including version and errors.
 Ordinary tone changes already compile automatically; `compile` is for a missing or stale artifact,
 and `compile --check --json` supplies the paths used by the skill's explicit session reload.
-Persisted config stays schema 2; custom profiles use preset schema 2; older schema 1 remains supported and operation formats are separate.
+Persisted config stays schema 2; bundled and custom profiles use preset schema 2; older schema 1 remains supported and operation formats are separate.
 `show` includes `riskAxes` and `riskThresholds`, omitting unsupported guard, ceiling and width fields.
 JSON stdout has no terminal escapes; JSON mode has no ToneDial-owned prompt or after-receipt provider handoff.
 An explicitly requested editor in `edit --json` still runs with live output on stderr.
@@ -438,7 +468,7 @@ Enter `y` to accept responsibility and start; Enter or `n` cancels.
 `--accept-usage` skips only this invocation's consent question and never persists consent.
 Without `--preset`, the preview uses saved axes, including unsaved edits.
 With it, a schema-2 profile supplies axes, persona, note, address, register and safeword.
-Bundled and older schema-1 presets supply axes while keeping the current separate settings.
+Older schema-1 presets supply axes while keeping the current separate settings.
 With one provider it can select it; with both it asks interactively, while ambiguous JSON/dry-run plans require an explicit provider.
 The target is the current folder or an existing `--project` directory.
 The opening prompt requests dialogue only and forbids file changes throughout that folder.

@@ -78,6 +78,11 @@ test("every bundled preset carries its copy in every language the interface ship
         safeword !== undefined && safeword.trim().length > 0,
         `${preset.slug} has no ${language} safeword suggestion — init would offer none`,
       );
+      const role = copy.cli.persona.bundled[preset.slug]!;
+      assert.ok(role?.address?.self_ref && role.address.user_ref, `${preset.slug}: missing ${language} address defaults`);
+      for (const field of ["user", "agent"] as const) {
+        assert.ok(role[field] && [...role[field]].length <= 200, `${preset.slug}: invalid ${language} ${field} default`);
+      }
     }
   }
 });

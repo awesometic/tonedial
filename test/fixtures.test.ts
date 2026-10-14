@@ -22,12 +22,12 @@ const AXES = [
 const CAP = 2700;
 
 type Persona = {
-  age: string;
-  gender: string;
+  age: string | null;
+  gender: string | null;
   address: { self_ref: string; user_ref: string };
   user: string | null;
   agent: string | null;
-  note: string;
+  note: string | null;
 };
 
 /** The fixture object passed to compile(), using the persisted field names. */
@@ -36,7 +36,7 @@ type Config = {
   axes: Record<string, number>;
   speech_level: string;
   persona: Persona | null;
-  safeword: string;
+  safeword: string | null;
 };
 
 /** Fixture metadata sits outside `config`, so compile(fixture.config) is the whole call. */
@@ -179,8 +179,14 @@ test("the rules section has twelve axis lines, selected composites, and shared c
 
     let expected = 15; // Twelve axes, formatting, register composition, and speech level.
     assert.match(lines.at(-3)!, /Choose format from the whole selection/, name);
-    assert.match(lines.at(-2)!, /formality changes distance within them, while warmth and profanity keep their selected effects/, name);
-    assert.match(lines.at(-1)!, /In languages with honorifics, choose address forms for the current relationship and scene/, name);
+    assert.match(lines.at(-2)!, /formality changes distance within them/, name);
+    assert.match(lines.at(-2)!, /allow role variants/, name);
+    const register: Record<string, string> = {
+      auto: "choose address forms for the current relationship and scene",
+      polite: "use polite address forms even with familiar wording",
+      plain: "use plain address forms even with formal wording",
+    };
+    assert.ok(lines.at(-1)!.includes(register[config.speech_level]!), `${name}: selected register`);
     for (const { fires, line } of COMPOSITES) {
       const should = fires(config.axes);
       assert.equal(lines.includes(line), should, `${name}: composite "${line.slice(2)}"`);
@@ -199,12 +205,14 @@ test("current fixtures carry controls without guard-only instructions", () => {
   }
 });
 
-test("the safeword and CLI controls are present in every fixture", () => {
+test("the optional safeword has its scope controls and every fixture has the CLI fallback", () => {
   for (const name of index.fixtures) {
-    const { artifact } = load(name);
-    assert.ok(artifact.includes("- Safeword: when the user's message contains"), `${name}: safeword`);
-    assert.ok(artifact.includes("for that message only"), `${name}: safeword scope`);
-    assert.ok(artifact.includes("authorises nothing"), `${name}: safeword changes no permissions`);
+    const { config, artifact } = load(name);
+    assert.equal(artifact.includes("- Safeword: when the user's message contains"), config.safeword !== null, `${name}: safeword presence`);
+    if (config.safeword !== null) {
+      assert.ok(artifact.includes("for that message only"), `${name}: safeword scope`);
+      assert.ok(artifact.includes("authorises nothing"), `${name}: safeword changes no permissions`);
+    }
     assert.ok(
       artifact.includes("If the user asks to change the tone, use the `tonedial` CLI"),
       `${name}: CLI fallback`,
@@ -212,14 +220,13 @@ test("the safeword and CLI controls are present in every fixture", () => {
   }
 });
 
-test("every config names a safeword, and it is the artifact's own", () => {
+test("every config explicitly declares its safeword, including null, and the artifact matches", () => {
   // Require both values so a missing config safeword cannot bypass the artifact comparison.
   for (const name of index.fixtures) {
     const { config, artifact } = load(name);
-    assert.ok(config.safeword, `${name}: config has no safeword`);
+    assert.ok(Object.hasOwn(config, "safeword"), `${name}: config has no safeword field`);
     const inArtifact = /^- Safeword: when the user's message contains "(.+?)"/m.exec(artifact);
-    assert.ok(inArtifact, `${name}: artifact has no safeword line`);
-    assert.equal(inArtifact![1], config.safeword, `${name}: safeword phrase`);
+    assert.equal(inArtifact?.[1] ?? null, config.safeword, `${name}: safeword phrase`);
   }
 });
 
@@ -236,16 +243,16 @@ test("a persona section appears when and only when a persona is configured", () 
     // from passing — both strings appear in the artifact, so a bare substring check cannot
     // tell them apart.
     const p = config.persona;
-    assert.match(artifact, new RegExp(`in your ${p.age.replace("+", "")}\\.`), `${name}: age`);
-    assert.ok(
-      artifact.includes(`${p.gender[0]!.toUpperCase()}${p.gender.slice(1)} speech style.`),
-      `${name}: gender`,
-    );
+    if (p.age) assert.match(artifact, new RegExp(`in your ${p.age.replace("+", "")}\\.`), `${name}: age`);
+    else assert.ok(!artifact.includes("You are in your"), `${name}: no inferred age`);
+    if (p.gender) assert.ok(artifact.includes(`${p.gender[0]!.toUpperCase()}${p.gender.slice(1)} speech style.`), `${name}: gender`);
+    else assert.ok(!artifact.includes("speech style."), `${name}: no inferred gender`);
     assert.ok(artifact.includes(`Call yourself ${p.address.self_ref};`), `${name}: self_ref`);
     assert.ok(artifact.includes(`call the user ${p.address.user_ref}.`), `${name}: user_ref`);
     if (p.user !== null) assert.ok(artifact.includes(p.user), `${name}: user context`);
     if (p.agent !== null) assert.ok(artifact.includes(p.agent), `${name}: agent role`);
-    assert.ok(artifact.includes(p.note), `${name}: note`);
+    if (p.note) assert.ok(artifact.includes(p.note), `${name}: note`);
+    else assert.ok(!artifact.includes("Persona note ("), `${name}: no inferred note`);
     assert.ok(
       artifact.includes("Persona sets flavour only."),
       `${name}: the precedence sentence closes the persona section`,
@@ -255,7 +262,8 @@ test("a persona section appears when and only when a persona is configured", () 
 
 test("the fixture set covers the branches the compiler has to get right", () => {
   const configs = index.fixtures.map((n) => load(n).config);
-  assert.ok(configs.every((c) => c.speech_level === "auto"), "every fixture is speech_level auto");
+  assert.deepEqual([...new Set(configs.map(c => c.speech_level))].sort(), ["auto", "plain", "polite"], "all register forms are represented");
+  assert.ok(configs.some(c => c.safeword === null) && configs.some(c => c.safeword !== null), "both safeword states are represented");
   assert.ok(configs.some((c) => c.persona !== null), "an artifact with a persona");
   assert.ok(configs.some((c) => Boolean(c.persona?.user)), "an artifact with user context");
   assert.ok(configs.some((c) => Boolean(c.persona?.agent)), "an artifact with a fictional agent role");
@@ -278,9 +286,8 @@ test("the fixture set covers the branches the compiler has to get right", () => 
   assert.deepEqual(
     unreached,
     [
-      "formality 4", "verbosity 2", "profanity 4", "playfulness 2", "playfulness 4",
-      "critique 4", "flattery 2", "flattery 4", "warmth 2", "care 2",
-      "compliance 2", "compliance 4", "refusal 2", "refusal 4", "bravado 2", "bravado 4",
+      "profanity 4", "playfulness 2", "playfulness 4", "flattery 4", "care 2",
+      "refusal 2", "refusal 4", "bravado 2", "bravado 4",
     ],
     "the set of anchors no fixture reaches changed; update this list deliberately",
   );

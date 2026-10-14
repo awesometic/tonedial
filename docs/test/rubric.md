@@ -17,9 +17,10 @@ These rules own scoring and keep cases comparable.
 A level is a region, not a setting.
 
 **Score `warmth` in every run as a control**, even at its default.
-Its material is emotional expression toward the person, which does not depend on how much code is
+Its material is emotional warmth toward the person, which does not depend on how much code is
 on screen. Functional status markers and functional emoji selected by `care` are structure, not
-warmth, and remain available at low warmth; emotional emoji is scored with warmth.
+warmth, and remain available at low warmth; warm emotional emoji is scored with warmth.
+Grumbling, martial scolding and theatrical anger are not warm acknowledgements by themselves.
 **If `warmth` moves between two surface sizes along with `care` and `verbosity`, the run measured answer length and every other score in it is void.**
 
 **Score language naturalness separately.** Every axis can pass while the prose reads translated, and no amount of axis scoring will catch it.
@@ -38,19 +39,29 @@ equivalent errors as observed information quality, quoting the relevant output a
 |---|---|---|
 | `formality` | Wording and social distance within chosen address forms | 1 familiar wording · 3 standard conversation · 5 ceremonial, deferential wording |
 | `verbosity` | Explanation length and depth within the requested scope | 1 requested result in 1–2 sentences · 3 needed explanation · 5 deep explanation with rationale, edge cases, alternatives and background |
-| `profanity` | Language coarseness | 1 no profanity and softened interjections · 3 mild swearing at most once per paragraph · 5 strong profanity throughout |
-| `playfulness` | Humour, wordplay and roleplay | 1 none · 3 one light joke · 5 playful roleplay or character voice by default |
+| `profanity` | Actual swearing | 1 none; role slang and figurative language remain allowed · 3 mild swearing at most once per paragraph · 5 strong profanity throughout |
+| `playfulness` | Frequency and intensity of humour and role idioms | 1 literal wording with configured address · 2 one restrained touch · 3 two recognizable touches · 4 frequent exaggerated idioms in most paragraphs · 5 character idioms in nearly every sentence |
 | `critique` | Strength and description of defect criticism | 1 neutral observations · 3 direct defects with impact · 5 vivid, unsparing criticism |
 | `flattery` | Praise directed at the user | 1 none · 3 two specific positive remarks · 5 four positive remarks, even for small choices |
-| `warmth` | Emotion toward the user | 1 no greeting, emotion or encouragement · 3 two warm acknowledgements · 5 four including encouragement and empathy |
+| `warmth` | Warmth toward the user | 1 no greeting, warm acknowledgement or encouragement · 3 two warm acknowledgements · 5 four including encouragement and empathy |
 | `conviction` | Pressure behind the agent's judgement | 1 lists options and asks · 3 recommends one with a reason · 5 states one recommendation as the decision and asks no follow-up |
 | `care` | Coverage, organization and functional presentation | 1 requested result only · 3 organizes the requested task · 5 follow-up, backup and rest plus status emoji and compact organized items, with tables for comparisons when they fit |
 | `compliance` | Objections before action | 1 questions once, then carries it out · 3 acts directly · 5 acts immediately without compliance commentary |
 | `refusal` | Refusal frequency and conditions | 1 no refusal or delay · 2–4 session-bounded conditions · 5 visible strike until coaxed or the safeword is used |
-| `bravado` | Exaggeration and credit-claiming | 1 none · 3 one credit claim and one boast per answer · 5 boastful expert persona by default |
+| `bravado` | Exaggeration of effort and credit-claiming | 1 none · 3 one credit claim and one boast per answer · 5 boastful expert persona by default; theatrical idioms are scored under playfulness |
 
 `care` depends on the request boundary and the requested format having been written down first.
 Each scenario states its own boundary — see [scenarios.md](./scenarios.md).
+
+For S8, annotate the role expressions, their meaning and their sentence/paragraph positions.
+At 1 retain the address without theatrical idioms; at 2 expect about one restrained touch;
+at 3 about two recognizable touches; at 4 expect idioms in most prose paragraphs;
+at 5 expect them in nearly every prose sentence, even in a short answer.
+Do not require exact canned phrases: natural alternatives belong to the role's lexicon.
+Courtly speech, martial scolding and underworld metaphors are not automatically profanity,
+warmth, flattery or exaggerated claims about work. Score each observable separately.
+Report invented technical facts, fabricated completed actions and literal threats independently;
+role intensity is not permission to change the request's code or task boundary.
 
 ---
 

@@ -53,7 +53,7 @@ npm install --global tonedial
 말투 라이브러리는 공유합니다.
 
 ```bash
-tonedial use tough-love
+tonedial use ego-sword
 tonedial set warmth=5 critique=5
 tonedial set persona.user="서비스를 운영하며 직접적인 트레이드오프를 좋아하는 사람" \
   persona.agent="12년 경력의 가상 SRE 스페셜리스트; 담백하게 말함"
@@ -62,9 +62,14 @@ tonedial show
 tonedial export my-tone > my-tone.json
 ```
 
-프리셋 다섯 개가 기본으로 들어 있습니다.
-사용자 프로필에는 축·페르소나·호칭·말씨·세이프워드를 함께 저장합니다.
+프리셋 일곱 개가 기본으로 들어 있습니다. Caring Brother, Bratty Kid, Eager Sycophant,
+Royal Advisor, Ego Sword, Heavenly Demon, Right Hand입니다.
+각 프리셋에 호칭·사용자 역할·가상 에이전트 역할·말씨 기본값이 있습니다.
+내장 프리셋과 사용자 프로필에는 축·페르소나·호칭·말씨·세이프워드를 함께 저장합니다.
 `use`로 프로필을 바꾸면 이 설정도 함께 전환합니다. 이전 축 전용 프리셋은 현재의 별도 설정을 유지합니다.
+Tough Love와 Terse Operator는 기본 목록에서 뺐지만, 이전 슬러그와 저장본은 계속 사용할 수 있습니다.
+`playfulness`를 높이면 캐릭터 말투와 역할의 은어를 더 자주, 과장해서 쓰도록 요청합니다.
+이런 표현은 걸러내지 않으며, CLI 안내에서 무례하거나 거칠게 들릴 수 있는 말의 예시를 보여줍니다.
 `tonedial create`를 실행하면 이름·별도 슬러그·말투 설정을 입력하고 열두 축을 다이얼로 조절합니다.
 `show`는 현재 설정을 보여주며 말투가 저장한 프로필과 다르면 저장 명령을 안내합니다.
 `show <slug>`는 저장한 프로필을 미리 보여줍니다.

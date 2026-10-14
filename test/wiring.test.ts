@@ -1947,12 +1947,12 @@ test("the seed check compares content, so a stale seed cannot report ok", async 
 
 test("a seed that is simply gone is refreshed too", async () => {
   assert.equal(await cli("init", "--here", "--lang", "en", "--tools", "none", "--auto"), 0);
-  rmSync(join(home, "presets", "builtin", "tough-love.json"));
+  rmSync(join(home, "presets", "builtin", "heavenly-demon.json"));
   out = [];
   assert.equal(await cli("doctor", "--here", "--json"), 0);
-  assert.ok(seedCheckOf(stdout()).files?.some((file) => file.path.endsWith("tough-love.json")));
+  assert.ok(seedCheckOf(stdout()).files?.some((file) => file.path.endsWith("heavenly-demon.json")));
   assert.equal(await cli("init", "--here", "--lang", "en", "--tools", "none", "--auto"), 0);
-  assert.ok(existsSync(join(home, "presets", "builtin", "tough-love.json")));
+  assert.ok(existsSync(join(home, "presets", "builtin", "heavenly-demon.json")));
 });
 
 test("the approval gate stands in front of the skill and the command too", async () => {

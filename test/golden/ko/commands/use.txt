@@ -1,8 +1,8 @@
 status: 0
---- stdout --- [bytes=269; endsWithNewline=true]
+--- stdout --- [bytes=268; endsWithNewline=true]
 ToneDial · use
 
-  Tough Love 적용됨
+  Ego Sword 적용됨
   TONE.md 생성됨
 
   세이프워드 없음 — 담백한 답은 스킬로만 요청할 수 있습니다
@@ -10,5 +10,10 @@ ToneDial · use
   재미를 위한 도구이며 실무 사용은 권장하지 않습니다
 
   tonedial show
---- stderr --- [bytes=0; endsWithNewline=false]
-
+--- stderr --- [bytes=537; endsWithNewline=true]
+  ⚠ playfulness가 높으면 '아뢰옵기 황송하오나', '함수를 담궈버릴까요?' 같은
+    역할 어휘와 은어를 더 자주, 과장해서 쓰도록 요청합니다. 무례하거나 거칠게
+    들릴 수 있으며, ToneDial은 이런 표현을 걸러내지 않습니다.
+  ⚠ address set while warmth≤2 or verbosity≤2: 짧거나 감정 없는 답변에서는
+    호칭이 생략될 수 있습니다. 역할극이 강하면 더 자주 나올 수 있습니다.
+  ⚠ TONE.md: 2,282자 · 목표 1,800자 초과

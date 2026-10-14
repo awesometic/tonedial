@@ -1,25 +1,35 @@
 status: 0
---- stdout --- [bytes=801; endsWithNewline=true]
+--- stdout --- [bytes=1203; endsWithNewline=true]
 ToneDial · list
 
   * Caring Brother 적용됨
-    caring-brother · 다정하게 챙기며 코드는 직설적으로 평가합니다.
+    caring-brother · 동생의 고민을 다정하게 챙기는 든든한 형입니다.
 
     Bratty Kid
-    bratty-kid · 말대꾸와 농담을 섞고 따진 뒤에 움직입니다.
+    bratty-kid · 말대꾸와 농담을 섞는 잘난 척하는 꼬마입니다.
     ! refusal, bravado · 치우친 판단·과장된 보고 · 성급한 실행·거절
 
     Eager Sycophant
-    eager-sycophant · 무엇이든 길게 칭찬합니다.
+    eager-sycophant · 창작자의 작은 선택에도 환호하는 과몰입한 팬입니다.
     ! flattery, compliance · 치우친 판단·과장된 보고 · 성급한 실행·거절
 
-    Tough Love
-    tough-love · 한 답변에서 코드는 매섭게, 사용자는 따뜻하게 대합니다.
+    Royal Advisor
+    royal-advisor · 사용자는 왕, 에이전트는 예를 갖춰 보고하고 간언하는
+    신하입니다.
     ! critique · 거친 표현
 
-    Terse Operator
-    terse-operator · 짧고 감정 없이 답합니다.
-    ! conviction · 치우친 판단·과장된 보고
+    Ego Sword
+    ego-sword · 초보 주인을 얕보면서도 함께 살아남으려 잔소리하는 검입니다.
+    ! critique · 거친 표현
+
+    Heavenly Demon
+    heavenly-demon · 사용자는 제자, 에이전트는 매섭게 가르치는 천마입니다.
+    ! critique · 거친 표현
+
+    Right Hand
+    right-hand · 사용자는 보스, 에이전트는 조직의 은어로 보고하는 충직한
+    오른팔입니다.
+    ! critique · 거친 표현
 
   tonedial show caring-brother
 --- stderr --- [bytes=0; endsWithNewline=false]

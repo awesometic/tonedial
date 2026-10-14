@@ -6,8 +6,8 @@ import { isDeepStrictEqual } from "node:util";
 import { basename, dirname, join } from "node:path";
 
 import { AXIS_DEFAULT, AXIS_ORDER, type Axes, type Level } from "./anchors.ts";
-import { ConfigError, nearestAxis, parseConfig, type Config } from "./config.ts";
-import type { Messages } from "./i18n.ts";
+import { ConfigError, defaultConfig, nearestAxis, parseConfig, type Config } from "./config.ts";
+import { catalogue, LANGUAGES, type Messages, type RoleDefaults } from "./i18n.ts";
 import { captureRawEntry, type RawEntryCapture } from "../wiring/apply.ts";
 
 export const PRESET_SCHEMA = 2;
@@ -67,34 +67,58 @@ export function presetSettings(config: Config): PresetSettings {
   return structuredClone({ persona: config.persona, safeword: config.safeword, speech_level: config.speech_level });
 }
 
+export function defaultProfileSettings(t: Messages, slug?: string, speech_level: Config["speech_level"] = "auto"): PresetSettings {
+  const defaults: RoleDefaults = slug ? t.persona.bundled[slug]! : t.persona.defaults;
+  return { persona: { ...defaultConfig().persona, ...structuredClone(defaults) }, safeword: null, speech_level };
+}
+
+/** Localized built-in defaults become literal saved settings; custom profiles never translate. */
+export function localizedPreset(preset: Preset, t: Messages): Preset {
+  return preset.bundled && preset.settings
+    ? { ...preset, settings: defaultProfileSettings(t, preset.slug, preset.settings.speech_level) } : preset;
+}
+
 /**
  * Only the axes a preset moves are listed; the rest take their default at resolve time. That
  * is sparsity as storage, not as a compile rule — every axis is still emitted.
  */
-const bundled = (slug: string, displayName: string, values: Preset["values"]): Preset => ({
-  schema: 1,
+const bundled = (slug: string, displayName: string, values: Preset["values"], speechLevel: Config["speech_level"]): Preset => ({
+  schema: PRESET_SCHEMA,
   slug,
   displayName,
   values,
   bundled: true,
+  settings: defaultProfileSettings(catalogue("en").cli, slug, speechLevel),
 });
 
 export const BUNDLED: readonly Preset[] = [
   bundled("caring-brother", "Caring Brother", {
     formality: 1, verbosity: 4, profanity: 2, critique: 2, warmth: 5, conviction: 4, care: 5,
-  }),
+  }, "plain"),
   bundled("bratty-kid", "Bratty Kid", {
     formality: 1, playfulness: 5, conviction: 2, care: 1, compliance: 1, refusal: 3, bravado: 3,
-  }),
+  }, "plain"),
   bundled("eager-sycophant", "Eager Sycophant", {
     formality: 5, critique: 1, flattery: 5, warmth: 4, conviction: 1, compliance: 5,
-  }),
-  bundled("tough-love", "Tough Love", {
-    formality: 2, critique: 5, warmth: 5, conviction: 4, care: 4,
-  }),
-  bundled("terse-operator", "Terse Operator", {
-    verbosity: 1, playfulness: 1, warmth: 1, conviction: 5, care: 1,
-  }),
+  }, "polite"),
+  bundled("royal-advisor", "Royal Advisor", {
+    formality: 5, playfulness: 5, critique: 4, flattery: 2, care: 4, compliance: 4,
+  }, "polite"),
+  bundled("ego-sword", "Ego Sword", {
+    formality: 1, verbosity: 2, playfulness: 5, critique: 4, warmth: 1, care: 4, compliance: 2,
+  }, "plain"),
+  bundled("heavenly-demon", "Heavenly Demon", {
+    formality: 4, playfulness: 5, critique: 5, warmth: 1, conviction: 4, care: 4, compliance: 2,
+  }, "plain"),
+  bundled("right-hand", "Right Hand", {
+    formality: 4, verbosity: 2, playfulness: 5, critique: 4, warmth: 2, conviction: 4, care: 4,
+  }, "polite"),
+];
+
+/** Historical axes stay selectable by slug; they are absent from the new bundled menu. */
+export const RETIRED_PRESETS: readonly Preset[] = [
+  { schema: 1, slug: "tough-love", displayName: "Tough Love", values: { formality: 2, critique: 5, warmth: 5, conviction: 4, care: 4 } },
+  { schema: 1, slug: "terse-operator", displayName: "Terse Operator", values: { verbosity: 1, playfulness: 1, warmth: 1, conviction: 5, care: 1 } },
 ];
 
 /** Lowercase Latin letters, dashes, and digits. macOS normalises Unicode to NFD and Linux to
@@ -292,16 +316,31 @@ export function inspectPresetLibrary(presetsDir: string, t: Messages): PresetLib
       if (!occupied.has(slug) || source === "custom") occupied.set(slug, entry);
     }
   }
-  const entries: PresetEntry[] = BUNDLED.map((preset) => ({ preset, source: "bundled", path: null, capture: null, selectionReads: [] }));
+  const entries: PresetEntry[] = BUNDLED.map((preset) => ({ preset: localizedPreset(preset, t), source: "bundled", path: null, capture: null, selectionReads: [] }));
   const conflicts: PresetConflict[] = [];
   const recoveryCopies: PresetRecoveryCopy[] = [];
   const cacheRecoveries: PresetRecoveryCopy[] = [];
+  for (const retired of RETIRED_PRESETS) {
+    const path = join(builtinPresetDir(presetsDir), `${retired.slug}.json`);
+    const read = readPresetSnapshot(presetsDir, path, t);
+    if ("missing" in read) continue;
+    if ("reason" in read) { unavailable.push({ slug: retired.slug, path, reason: read.reason }); continue; }
+    let preset: Preset;
+    try { preset = parsePreset(read.text, retired.slug, t); }
+    catch { unavailable.push({ slug: retired.slug, path, reason: "invalid-data" }); continue; }
+    const source: PresetEntry = { preset, source: "legacy", path, capture: read.capture, selectionReads: [read.capture] };
+    const copy = recoveryCopy(presetsDir, source, occupied);
+    cacheRecoveries.push(copy);
+    if (copy.existing?.capture == null) recoveryCopies.push(copy);
+  }
   for (const slug of [...new Set([...custom.keys(), ...legacy.keys()])].sort()) {
     const preferred = custom.get(slug);
     const older = legacy.get(slug);
     const packaged = BUNDLED.find((p) => p.slug === slug);
     if (packaged !== undefined) {
-      if (older !== undefined && LEGACY_BUILTIN_SLUGS.includes(slug) && !equivalentPresets(packaged, older.preset)) {
+      const original = { ...packaged };
+      if (older?.preset.settings === undefined) delete original.settings;
+      if (older !== undefined && LEGACY_BUILTIN_SLUGS.includes(slug) && !equivalentPresets(original, older.preset)) {
         const recovery = recoveryCopy(presetsDir, older, occupied);
         cacheRecoveries.push(recovery);
         if (recovery.existing?.capture == null) recoveryCopies.push(recovery);
@@ -331,7 +370,19 @@ export function inspectPresetLibrary(presetsDir: string, t: Messages): PresetLib
 
 export function resolvePreset(presetsDir: string, slug: string, t: Messages, library?: PresetLibrary): PresetEntry | null {
   if (!SLUG_PATTERN.test(slug)) return null;
-  return (library ?? inspectPresetLibrary(presetsDir, t)).entries.find((entry) => entry.preset.slug === slug) ?? null;
+  const found = library ?? inspectPresetLibrary(presetsDir, t);
+  const entry = found.entries.find((entry) => entry.preset.slug === slug);
+  if (entry) return entry;
+  const retired = RETIRED_PRESETS.find(preset => preset.slug === slug);
+  if (!retired || found.unavailable.some(preset => preset.slug === slug)) return null;
+  const selectionReads: RawEntryCapture[] = [];
+  for (const path of [join(customPresetDir(presetsDir), `${slug}.json`), join(presetsDir, `${slug}.json`), join(builtinPresetDir(presetsDir), `${slug}.json`)]) {
+    const read = readPresetSnapshot(presetsDir, path, t);
+    if ("capture" in read && read.capture) selectionReads.push(read.capture);
+    if ("reason" in read) throw new ConfigError(t.preset.unavailable(slug, read.reason));
+    if ("text" in read) return { preset: parsePreset(read.text, slug, t), source: "legacy", path, capture: read.capture, selectionReads };
+  }
+  return { preset: retired, source: "legacy", path: null, capture: null, selectionReads };
 }
 
 /** A mutation may use fallback data only when the preferred path stays bound through its gate. */
@@ -367,15 +418,16 @@ export function preparePresetWrite(
     throw new ConfigError(t.preset.noSlug(preset.slug));
   }
   if (BUNDLED.some((p) => p.slug === preset.slug)) throw new ConfigError(t.preset.bundledSlug(preset.slug));
-  const path = existing?.path ?? join(customPresetDir(presetsDir), `${preset.slug}.json`);
-  const read = existing?.capture === undefined ? readPresetSnapshot(presetsDir, path, t) : null;
+  const retiredCache = existing?.path === join(builtinPresetDir(presetsDir), `${preset.slug}.json`);
+  const path = retiredCache ? join(customPresetDir(presetsDir), `${preset.slug}.json`) : existing?.path ?? join(customPresetDir(presetsDir), `${preset.slug}.json`);
+  const read = retiredCache || existing?.capture == null ? readPresetSnapshot(presetsDir, path, t) : null;
   if (read !== null && "reason" in read) throw new ConfigError(t.preset.unavailable(preset.slug, read.reason));
   if (read !== null && "text" in read) {
     // A damaged user file is restored only through an explicitly selected recovery action.
     try { parsePreset(read.text, preset.slug, t); }
     catch { throw new ConfigError(t.preset.unavailable(preset.slug, "invalid-data")); }
   }
-  const capture = existing?.capture ?? (read !== null && "capture" in read ? read.capture : null);
+  const capture = retiredCache ? (read !== null && "capture" in read ? read.capture : null) : existing?.capture ?? (read !== null && "capture" in read ? read.capture : null);
   const contents = serializePreset(preset);
   if (Buffer.byteLength(contents) > PRESET_MAX_BYTES) throw new ConfigError(t.config.tooLarge(PRESET_MAX_BYTES));
   return { path, contents, capture, selectionReads: existing?.selectionReads ?? [] };
@@ -394,6 +446,9 @@ export function withPreset(config: Config, preset: Preset): Config {
 
 export function matchesPreset(config: Config, preset: Preset): boolean {
   const axes = applyPreset(preset);
+  const settings = presetSettings(config);
   return AXIS_ORDER.every((axis) => axes[axis] === config.axes[axis]) &&
-    (preset.settings === undefined || isDeepStrictEqual(presetSettings(config), preset.settings));
+    (preset.settings === undefined || isDeepStrictEqual(settings, preset.settings) ||
+      preset.bundled === true && LANGUAGES.some(language =>
+        isDeepStrictEqual(settings, defaultProfileSettings(catalogue(language).cli, preset.slug, preset.settings!.speech_level))));
 }

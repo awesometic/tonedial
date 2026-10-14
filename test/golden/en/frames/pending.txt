@@ -1,22 +1,22 @@
   ToneDial · shape your agent's voice
-  Tough Love · changes pending
+  Caring Brother · changes pending
 
                          Current   ToneDial default · ! risky tone
-  form      formality    ▮▮▯▯▯  2   *3
-            verbosity    ▮▮▮▯▯  3    3
-            profanity    ▮▯▯▯▯  1    1
+  form      formality    ▮▯▯▯▯  1   *3
+            verbosity    ▮▮▮▮▯  4   *3
+            profanity    ▮▮▯▯▯  2   *1
             playfulness  ▮▮▮▯▯  3    3
-  target    critique     ▮▮▮▮▮  5!  *3
+  target    critique     ▮▮▯▯▯  2   *3
             flattery     ▮▯▯▯▯  1    1
 >           warmth       ▮▮▮▮▯  4   *3
   behaviour conviction   ▮▮▮▮▯  4   *3
-            care         ▮▮▮▮▯  4   *3
+            care         ▮▮▮▮▮  5   *3
             compliance   ▮▮▮▯▯  3    3
             refusal      ▮▯▯▯▯  1    1
             bravado      ▮▯▯▯▯  1    1
 
-  warmth  emotion toward the user
-  1  no greeting, emotional language or encouragement
+  warmth  warmth toward the user
+  1  no greeting, warm acknowledgement or encouragement
   5  four warm remarks, including encouragement and empathy
 
   ↑↓ axis   ←→ level   1-5 set

@@ -5,7 +5,7 @@ import type { CommandResult, Ctx } from "../cli.ts";
 import { ConfigError, serializeConfig } from "../core/config.ts";
 import { check as checkCombos, PERSONA_DESCRIPTION_MAX } from "../core/combos.ts";
 import { catalogue, isLanguage } from "../core/i18n.ts";
-import { slugify } from "../core/presets.ts";
+import { defaultProfileSettings, slugify } from "../core/presets.ts";
 import { toCompileInput } from "../core/resolve.ts";
 import { dial } from "../ui/dial.ts";
 import { combination, humanText, riskWarnings } from "../ui/format.ts";
@@ -19,6 +19,11 @@ export async function runCreate(ctx: Ctx, args: string[]): Promise<CommandResult
   try {
     const state = planConfig(ctx);
     const { config } = state;
+    const defaults = defaultProfileSettings(ctx.t).persona;
+    config.persona.address = { self_ref: config.persona.address?.self_ref ?? defaults.address!.self_ref,
+      user_ref: config.persona.address?.user_ref ?? defaults.address!.user_ref };
+    config.persona.user ??= defaults.user;
+    config.persona.agent ??= defaults.agent;
     let displayName = args[0]?.trim() ?? "";
     let slug = ctx.flags.slug ?? undefined;
     const warnings = applyAssignments(config, args.slice(1), ctx.t, ctx.asJson).warnings;
@@ -33,7 +38,8 @@ export async function runCreate(ctx: Ctx, args: string[]): Promise<CommandResult
           for (const line of wrap(`${label}${current ? `: ${humanText(current)}` : ""}`, ctx.ui.width - 2)) {
             process.stdout.write(`  ${line}\n`);
           }
-          return (await rl.question("  > ")).trim() || current;
+          const answer = (await rl.question("  > ")).trim();
+          return answer === '""' ? "" : answer || current;
         };
         displayName = await ask(ctx.t.create.name, displayName);
         if (!displayName) throw new ConfigError(ctx.t.create.needsName);

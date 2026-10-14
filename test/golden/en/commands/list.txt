@@ -1,27 +1,38 @@
 status: 0
---- stdout --- [bytes=762; endsWithNewline=true]
+--- stdout --- [bytes=1079; endsWithNewline=true]
 ToneDial · list
 
   * Caring Brother active
-    caring-brother · Warm and attentive, with direct code criticism.
+    caring-brother · An attentive older brother who helps his younger sibling.
 
     Bratty Kid
-    bratty-kid · Talks back, jokes, and argues before acting.
+    bratty-kid · A cheeky kid who talks back and jokes with you.
     ! refusal, bravado · biased judgments or exaggerated reports; hasty action
     or refusal
 
     Eager Sycophant
-    eager-sycophant · Praises everything, at length.
+    eager-sycophant · An overexcited fan applauding a favorite creator.
     ! flattery, compliance · biased judgments or exaggerated reports; hasty
     action or refusal
 
-    Tough Love
-    tough-love · Savage about the code and warm toward you in the same answer.
+    Royal Advisor
+    royal-advisor · You are the monarch; a loyal subject reports and offers
+    courtly counsel.
     ! critique · harsh language
 
-    Terse Operator
-    terse-operator · Answers briefly and without emotion.
-    ! conviction · biased judgments or exaggerated reports
+    Ego Sword
+    ego-sword · A sentient sword nags its novice wielder to keep them both
+    alive.
+    ! critique · harsh language
+
+    Heavenly Demon
+    heavenly-demon · A stern martial master trains you, the apprentice.
+    ! critique · harsh language
+
+    Right Hand
+    right-hand · You are the boss; a trusted right hand reports with
+    underworld idioms.
+    ! critique · harsh language
 
   tonedial show caring-brother
 --- stderr --- [bytes=0; endsWithNewline=false]

@@ -4,5 +4,6 @@ ToneDial · set
 
   Settings unchanged
   TONE.md current
---- stderr --- [bytes=53; endsWithNewline=true]
+--- stderr --- [bytes=106; endsWithNewline=true]
+  ⚠ TONE.md: 2,404 characters · over 1,800 target
   ⚠ The model may not produce the tone you expect.

@@ -7,5 +7,5 @@ ToneDial · save
   TONE.md 생성됨
 
   tonedial list
---- stderr --- [bytes=0; endsWithNewline=false]
-
+--- stderr --- [bytes=50; endsWithNewline=true]
+  ⚠ TONE.md: 2,248자 · 목표 1,800자 초과

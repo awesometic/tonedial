@@ -14,7 +14,7 @@ import { AXIS_DEFAULT } from "../src/core/anchors.ts";
 import { defaultConfig, parseConfig } from "../src/core/config.ts";
 import { catalogue } from "../src/core/i18n.ts";
 import {
-  applyPreset, customPresetDir, inspectPresetLibrary, parsePreset, presetSettings, PRESET_MAX_BYTES, resolvePreset,
+  applyPreset, builtinPresetDir, customPresetDir, inspectPresetLibrary, parsePreset, presetSettings, PRESET_MAX_BYTES, resolvePreset,
   serializePreset,
 } from "../src/core/presets.ts";
 import { assertFresh, gate, rawReadChange, rawReadCheck } from "../src/wiring/apply.ts";
@@ -152,10 +152,10 @@ test("collision recovery gives both definitions stable selectors, reuses equival
 test("reserved cache edits are extractable without replacing package definitions and occupied recovery names stay intact", () => {
   const f = fixture();
   try {
-    writeFileSync(join(f.presets, "tough-love.json"), JSON.stringify({ values: { warmth: 1 } }));
+    writeFileSync(join(f.presets, "caring-brother.json"), JSON.stringify({ values: { warmth: 1 } }));
     const first = inspectPresetLibrary(f.presets, EN).recoveryCopies[0]!;
-    assert.equal(resolvePreset(f.presets, "tough-love", EN)!.source, "bundled");
-    assert.equal(applyPreset(resolvePreset(f.presets, "tough-love", EN)!.preset).warmth, 5);
+    assert.equal(resolvePreset(f.presets, "caring-brother", EN)!.source, "bundled");
+    assert.equal(applyPreset(resolvePreset(f.presets, "caring-brother", EN)!.preset).warmth, 5);
     const foreign = JSON.stringify({ values: { warmth: 2 } });
     writeFileSync(first.path, foreign);
     const second = inspectPresetLibrary(f.presets, EN).recoveryCopies[0]!;
@@ -370,5 +370,66 @@ test("profiles with identical axes and different roles remain distinct recovery 
     assert.equal(library.recoveryCopies[0]!.preset.settings?.persona.agent, "Older role");
     const invalid = { ...profile, settings: { ...profile.settings, speech_level: "invalid" } };
     assert.throws(() => parsePreset(JSON.stringify(invalid), "shared", EN), /auto, polite, plain/);
+  } finally { f.dispose(); }
+});
+
+test("built-in role defaults localize on selection and a saved custom role survives interface changes", async () => {
+  const f = fixture();
+  try {
+    assert.equal((await invoke(f, "init", "--here", "--tools", "none", "--lang", "ko", "--auto")).status, 0);
+    const read = () => parseConfig(readFileSync(join(f.root, "config.json"), "utf8"));
+    assert.deepEqual(read().persona.address, { self_ref: "형", user_ref: "동생" }, "init loads complete profile defaults");
+    assert.equal((await invoke(f, "use", "ego-sword")).status, 0);
+    assert.deepEqual(read().persona.address, { self_ref: "나", user_ref: "애송아" });
+    assert.equal((await invoke(f, "use", "royal-advisor")).status, 0);
+    const royal = presetSettings(read());
+    assert.deepEqual(royal.persona.address, { self_ref: "신", user_ref: "전하" });
+    assert.match(readFileSync(join(f.root, "TONE.md"), "utf8"), /아뢰옵기 황송하오나/);
+    assert.equal((await invoke(f, "save", "My Court", "--slug", "my-court")).status, 0);
+    assert.equal((await invoke(f, "set", "language=en")).status, 0);
+    assert.equal((await invoke(f, "show")).payload.unsaved, false, "changing only interface language does not dirty the built-in role snapshot");
+    assert.equal((await invoke(f, "use", "right-hand")).status, 0);
+    assert.deepEqual(read().persona.address, { self_ref: "I", user_ref: "Boss" });
+    assert.equal((await invoke(f, "use", "my-court")).status, 0);
+    assert.deepEqual(presetSettings(read()), royal, "a saved literal role never translates on use");
+  } finally { f.dispose(); }
+});
+
+test("creation fills neutral role defaults while explicit empty assignments still clear them", async () => {
+  const f = fixture();
+  try {
+    assert.equal((await invoke(f, "init", "--here", "--tools", "none", "--auto")).status, 0);
+    assert.equal((await invoke(f, "set", "persona.self_ref=", "persona.user_ref=", "persona.user=", "persona.agent=")).status, 0);
+    assert.equal((await invoke(f, "create", "Neutral", "--auto")).status, 0);
+    const saved = parsePreset(readFileSync(join(f.custom, "neutral.json"), "utf8"), "neutral", EN);
+    assert.deepEqual(saved.settings!.persona.address, { self_ref: "I", user_ref: "you" });
+    assert.ok(saved.settings!.persona.user && saved.settings!.persona.agent);
+    assert.equal((await invoke(f, "create", "Empty", "persona.user=", "persona.agent=", "--auto")).status, 0);
+    const cleared = parsePreset(readFileSync(join(f.custom, "empty.json"), "utf8"), "empty", EN);
+    assert.equal(cleared.settings!.persona.user, null);
+    assert.equal(cleared.settings!.persona.agent, null);
+  } finally { f.dispose(); }
+});
+
+test("retired cache edits remain selectable, bind higher-priority paths, and save into custom without overwriting the cache", async () => {
+  const f = fixture();
+  try {
+    assert.equal((await invoke(f, "init", "--here", "--tools", "none", "--auto")).status, 0);
+    const cache = join(builtinPresetDir(f.presets), "tough-love.json");
+    const bytes = JSON.stringify({ schema: 1, displayName: "My Old Coach", values: { warmth: 2 } });
+    writeFileSync(cache, bytes, { mode: 0o640 });
+    const selected = resolvePreset(f.presets, "tough-love", EN)!;
+    assert.equal(selected.preset.values.warmth, 2);
+    const preferred = join(f.custom, "tough-love.json");
+    const missingRead = selected.selectionReads.find(read => read.path === preferred)!;
+    writeFileSync(preferred, JSON.stringify({ values: { warmth: 5 } }));
+    assert.throws(() => assertFresh(rawReadCheck(missingRead, EN), EN), /changed/);
+    rmSync(preferred);
+    assert.equal((await invoke(f, "use", "tough-love")).status, 0);
+    assert.equal((await invoke(f, "save")).status, 0);
+    assert.equal(parsePreset(readFileSync(preferred, "utf8"), "tough-love", EN).schema, 2);
+    assert.equal(readFileSync(cache, "utf8"), bytes);
+    assert.equal(statSync(cache).mode & 0o777, 0o640);
+    assert.equal((await invoke(f, "use", "tough-love")).status, 0);
   } finally { f.dispose(); }
 });

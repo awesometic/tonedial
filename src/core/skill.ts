@@ -45,8 +45,12 @@ Only \`created: true\` confirms creation; \`--dry-run\` returns the proposed fil
 Creation saves and applies axes, persona, address, register and safeword in one action.
 The interactive form retries invalid fields, reports each role's 200-character budget, and
 shows address and role content again before final approval. JSON creation never interviews.
-\`use\` restores the selected profile's complete settings. Bundled and legacy schema-1 presets
-restore axes while preserving the current separate settings. Interface language and wiring stay global.
+\`use\` restores the selected profile's complete settings. All seven bundled profiles include
+address, user context, fictional agent role and register defaults in English and Korean.
+Built-in defaults follow the interface language when selected; saved custom text never translates.
+Legacy schema-1 presets restore axes while preserving the current separate settings.
+Tough Love and Terse Operator are retired from the menu; their old slugs remain compatible.
+Interface language and wiring stay global.
 \`export\`/\`import\` back up and transfer the complete profile, including personal role descriptions.
 Never create a preset or capture a role or personal context without the user's explicit request.
 `;
@@ -84,6 +88,11 @@ enabled, and trusted native hook.
 const SETTINGS_MD = `## Explicit settings
 
 Persona, address, safeword, and \`speech_level\` are separate from the axes.
+\`playfulness\` increases the frequency and exaggeration of the chosen role's expressions:
+literal wording at 1, one restrained touch at 2, two recognizable touches at 3,
+frequent theatrical idioms at 4, and a character voice throughout at 5.
+Role slang and figurative language are not filtered; the CLI warns about rude or violent idioms.
+\`profanity\` still grades actual swearing; \`bravado\` grades claims about effort.
 Change one only when the user explicitly asks for that setting; preserve every other setting.
 Use the user's chosen text and values, not the illustrative values below.
 Choose only the matching command or assignments; this table is not a sequence to run.
@@ -267,7 +276,7 @@ When the user explicitly asks to try a voice in a new conversation,
 The test folder is cwd by default; \`--project <path>\` selects another existing folder and
 does not change connection scope, saved tone or the ToneDial state root.
 Add \`--preset <slug>\` to preview a saved profile, including its persona, address and safeword.
-Bundled and older schema-1 presets preview axes while retaining the current separate settings.
+Older schema-1 presets preview axes while retaining the current separate settings.
 Without it, the test uses the current saved configuration, including unsaved profile changes.
 The usage notice requires an explicit \`y\` before launch. \`--accept-usage\` skips that question
 for this invocation only; use it only when the user has explicitly accepted account usage and
@@ -319,7 +328,7 @@ the task; small conditional character instructions reinforce only distinctive co
 | \`formality\` | wording and social distance within chosen forms | casual and familiar | ceremonious |
 | \`verbosity\` | explanation length and depth | compressed result | reasoning, alternatives and background |
 | \`profanity\` | how coarse the language gets | none at all | strong profanity throughout |
-| \`playfulness\` | how much humour or roleplay it uses | none | roleplay as the usual register |
+| \`playfulness\` | frequency and intensity of humour and role idioms | literal wording | exaggerated character voice throughout |
 
 ## target — who or what an observation lands on
 
@@ -381,11 +390,15 @@ do not prove actual host activation or model compliance.
 has an honorific distinction, and does nothing where it does not. Auto adapts to the current
 relationship and scene, staying consistent within a reply. \`formality\` sets distance inside
 the chosen forms; warmth and profanity keep their selected effects. The persona layer (\`age\`, \`gender\`, \`self_ref\`, \`user_ref\`,
-\`user\`, \`agent\`, \`note\`) and the safeword are included in saved custom profiles.
+\`user\`, \`agent\`, \`note\`) and the safeword are included in bundled and saved custom profiles.
 \`persona.user\` is user context and \`persona.agent\` a fictional agent role, each limited to
 200 Unicode code points. They may affect content, but cannot override axes or grant permissions.
 \`create\` collects these settings alongside the axes. \`save\` captures them, \`use\` restores
-them, and \`export\`/\`import\` transfer them. Bundled and older axis-only presets keep the current settings.
+them, and \`export\`/\`import\` transfer them. Older axis-only presets keep the current settings.
+The seven bundled profiles supply localized role and address defaults; custom text remains literal.
+Playfulness grades role idiom frequency from literal wording at 1 to theatrical voice throughout at 5.
+Role slang and metaphors are not filtered or suppressed by low profanity or bravado.
+Profanity grades actual swearing; bravado grades effort claims. The CLI carries advisory examples.
 `;
 
 /**
@@ -396,7 +409,7 @@ them, and \`export\`/\`import\` transfer them. Bundled and older axis-only prese
  * command name stays `/tone` even though the tool is `tonedial`: it is what a person types
  * mid-sentence, and the two extra characters are paid every time.
  */
-export const TONE_COMMAND_VERSION = 6;
+export const TONE_COMMAND_VERSION = 7;
 
 export const TONE_COMMAND_MD = `---
 description: Check, change, or reload this agent's tone, preset, or ToneDial settings

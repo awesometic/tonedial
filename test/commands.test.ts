@@ -20,7 +20,7 @@ import { parseConfig, serializeConfig, defaultConfig, nearestAxis } from "../src
 import { resolvePaths } from "../src/core/paths.ts";
 import { editorCommand } from "../src/commands/edit.ts";
 import { catalogue } from "../src/core/i18n.ts";
-import { BUNDLED, slugify, applyPreset, customPresetDir, builtinPresetDir } from "../src/core/presets.ts";
+import { BUNDLED, RETIRED_PRESETS, slugify, applyPreset, customPresetDir, builtinPresetDir } from "../src/core/presets.ts";
 import { nonDefaultAxes } from "../src/core/combos.ts";
 import { gate, planChange } from "../src/wiring/apply.ts";
 import { contentHash, recordFileChange } from "../src/wiring/ownership.ts";
@@ -82,6 +82,7 @@ const config = () => parseConfig(readFileSync(paths().config, "utf8"));
 async function initializeState(): Promise<void> {
   assert.equal(await cli("init", "--here", "--tools", "none", "--auto"), 0, stderr());
   assert.equal(await cli("reset"), 0, stderr());
+  assert.equal(await cli("set", "persona.self_ref=", "persona.user_ref=", "persona.user=", "persona.agent=", "speech_level=auto"), 0, stderr());
   out = [];
   err = [];
 }
@@ -153,20 +154,20 @@ test("human compile comparison does not follow an artifact link or reveal its co
   assert.deepEqual(readFileSync(paths().config), before);
 });
 
-test("the bundled set is five, which is a closed count rather than a current one", async () => {
-  // Five bundled starting points are settled; axis-space coverage belongs to measurements.
+test("the bundled set contains the seven agreed character profiles", async () => {
+  // Bundled starting points are settled; axis-space coverage belongs to measurements.
   // Nothing pinned it, so a preset lost in a refactor would empty the loops below in silence.
-  assert.equal(BUNDLED.length, 5);
+  assert.equal(BUNDLED.length, 7);
   assert.deepEqual(
     BUNDLED.map((p) => p.slug),
-    ["caring-brother", "bratty-kid", "eager-sycophant", "tough-love", "terse-operator"],
+    ["caring-brother", "bratty-kid", "eager-sycophant", "royal-advisor", "ego-sword", "heavenly-demon", "right-hand"],
   );
 });
 
-test("every bundled preset compiles to its measured artifact, byte for byte", async () => {
+test("every bundled profile compiles to its current pack artifact, byte for byte", async () => {
   await initializeState();
   // The end-to-end claim: state on disk, through resolve, through the compiler, equals the
-  // artifact that was hand-built and measured. Without it the state layer could be quietly
+  // current pack artifact, including its full profile settings. Without it the state layer could be quietly
   // wrong in a way the compiler's own golden test cannot see.
   assert.equal(await cli("set", "safeword=진심으로 부탁할게"), 0);
   for (const preset of BUNDLED) {
@@ -709,15 +710,15 @@ test("a forbidden combination warns and still applies", async () => {
   assert.equal(tone(), compile(toCompileInput(config())), "the artifact includes the unchanged choice");
 });
 
-test("use applies axis values and never touches persona or safeword", async () => {
+test("use restores a bundled profile's complete settings, including clearing the previous safeword", async () => {
   await initializeState();
   assert.equal(await cli("set", "safeword=연기 그만", "persona.user_ref=선생님",
     "persona.user=likes small tools", "persona.agent=plain-speaking reviewer"), 0);
   assert.equal(await cli("use", "eager-sycophant"), 0);
-  assert.equal(config().safeword, "연기 그만", "a preset switch does not rename the user");
-  assert.deepEqual(config().persona.address, { self_ref: null, user_ref: "선생님" });
-  assert.equal(config().persona.user, "likes small tools");
-  assert.equal(config().persona.agent, "plain-speaking reviewer");
+  const profile = BUNDLED.find(p => p.slug === "eager-sycophant")!;
+  assert.equal(config().safeword, profile.settings!.safeword);
+  assert.deepEqual(config().persona, profile.settings!.persona);
+  assert.equal(config().speech_level, profile.settings!.speech_level);
   assert.deepEqual(config().axes, applyPreset(BUNDLED.find((p) => p.slug === "eager-sycophant")!));
 });
 
@@ -782,7 +783,7 @@ test("save captures axes and the complete profile settings, excluding interface 
 
 test("save refuses to shadow a bundled slug", async () => {
   await initializeState();
-  assert.equal(await cli("save", "Tough Love"), 1);
+  assert.equal(await cli("save", "Royal Advisor"), 1);
   assert.match(stderr(), /bundled preset/);
 });
 
@@ -803,7 +804,7 @@ test("export and import round-trip full profiles without activating them", async
   await initializeState();
   assert.equal(await cli("set", "safeword=연기 그만", "persona.note=A senior engineer.",
     "persona.user=likes small tools", "persona.agent=plain-speaking reviewer"), 0);
-  assert.equal(await cli("use", "bratty-kid"), 0);
+  assert.equal(await cli("use", "terse-operator"), 0);
   assert.equal(await cli("save", "Portable"), 0);
   out = [];
   assert.equal(await cli("export", "portable"), 0);
@@ -828,11 +829,11 @@ test("export and import round-trip full profiles without activating them", async
 test("import refuses to replace a bundled preset", async () => {
   await initializeState();
   const file = join(home, "evil.json");
-  writeFileSync(file, JSON.stringify({ schema: 1, slug: "tough-love", displayName: "x", values: {} }));
+  writeFileSync(file, JSON.stringify({ schema: 1, slug: "royal-advisor", displayName: "x", values: {} }));
   assert.equal(await cli("import", file), 1);
   // Against the catalogue rather than a literal: what matters is that *this* message is the one
   // emitted, which stays true when the wording changes and fails when the wrong one is picked.
-  assert.match(stderr(), new RegExp(catalogue("en").cli.preset.bundledSlug("tough-love")));
+  assert.match(stderr(), new RegExp(catalogue("en").cli.preset.bundledSlug("royal-advisor")));
 });
 
 test("importing JSON null is refused through the preset boundary without writing state", async () => {
@@ -859,7 +860,7 @@ test("show marks every axis that has moved off its default", async () => {
   assert.equal(await cli("show"), 0);
   const text = stdout();
   for (const axis of AXIS_ORDER) {
-    const moved = applyPreset(BUNDLED.find((p) => p.slug === "terse-operator")!)[axis] !== AXIS_DEFAULT[axis];
+    const moved = applyPreset(RETIRED_PRESETS.find((p) => p.slug === "terse-operator")!)[axis] !== AXIS_DEFAULT[axis];
     const line = text.split("\n").find((l) => new RegExp(`\\b${axis}\\b`).test(l))!;
     assert.equal(line.includes("*"), moved, `${axis} marker`);
   }
@@ -1007,7 +1008,7 @@ test("create previews without writes and refuses missing approval, unsafe input 
 
 test("show refusing a preset name lists the ones it would have taken", async () => {
   // It passed an empty list where every other refusal passes the real one, so the message read
-  // "Available:" and then stopped, on a root holding all five bundled presets.
+  // "Available:" and then stopped, on a root holding all seven bundled profiles.
   await initializeState();
   err = [];
   assert.equal(await cli("show", "nope"), 1);
@@ -1017,9 +1018,9 @@ test("show refusing a preset name lists the ones it would have taken", async () 
 
 test("reset with no argument clears the axes and leaves persona and safeword alone", async () => {
   await initializeState();
+  assert.equal(await cli("use", "eager-sycophant"), 0);
   assert.equal(await cli("set", "safeword=연기 그만", "persona.age=40s",
     "persona.user=likes small tools", "persona.agent=plain-speaking reviewer"), 0);
-  assert.equal(await cli("use", "eager-sycophant"), 0);
   assert.equal(await cli("reset"), 0);
   assert.deepEqual(config().axes, AXIS_DEFAULT);
   assert.equal(config().safeword, "연기 그만");
@@ -1251,7 +1252,7 @@ test("the keyed use notice preserves its shape with and without risky axes", asy
   await initializeState();
   assert.equal(await cli("use", "caring-brother", "--json"), 0);
   const on = JSON.parse(stdout()) as { notice: Record<string, unknown> };
-  assert.deepEqual(Object.keys(on.notice), ["safeword", "riskAxes", "risk"]);
+  assert.deepEqual(Object.keys(on.notice), ["safeword", "riskAxes", "risk", "roleplay"]);
   assert.equal(on.notice.riskAxes, null, "absent as a null, not as a missing position");
 
   out = [];
@@ -1519,7 +1520,7 @@ test("an ordinary invalid setting is left in live config only with unchanged pro
 test("a bundled preset is refused before the editor is given the file", async () => {
   assert.equal(await cli("init", "--here", "--tools", "none", "--auto"), 0);
   err = [];
-  assert.equal(await cliWith(fakeEditor("{}"), "edit", "preset", "tough-love"), 1);
+  assert.equal(await cliWith(fakeEditor("{}"), "edit", "preset", "heavenly-demon"), 1);
   // The point of the refusal: an edit here is written back over by the next init, so the file
   // must never have been opened. Contents alone cannot show that; the marker can.
   assert.ok(!editorRan(), "the editor was run on a bundled preset");
@@ -1609,14 +1610,14 @@ test("update distinguishes locally modified seeds from a routine package refresh
 
   // An npm update replaces the package and never touches ~/.tonedial/, so the anchors on disk
   // can be a version behind with nothing saying so. This is the case that gap produces.
-  writeFileSync(join(builtinPresetDir(paths().presets), "tough-love.json"), '{"schema":1,"slug":"tough-love","displayName":"x","values":{}}\n');
+  writeFileSync(join(builtinPresetDir(paths().presets), "heavenly-demon.json"), '{"schema":1,"slug":"tough-love","displayName":"x","values":{}}\n');
   out = [];
   assert.equal(await cli("update"), 0);
   assert.doesNotMatch(stdout(), /tonedial init/, "a local edit must not be presented as a routine refresh");
   const payload = JSON.parse(
     (out = [], await cli("update", "--json"), stdout()),
   ) as { staleSeeds: string[] | null; seedIssues: { reason: string }[]; checkedRemote: boolean };
-  assert.deepEqual(payload.staleSeeds, ["presets/builtin/tough-love.json"]);
+  assert.deepEqual(payload.staleSeeds, ["presets/builtin/heavenly-demon.json"]);
   assert.deepEqual(payload.seedIssues.map((issue) => issue.reason), ["modified"]);
   // Named for what it is. This command has no network and must not read as "you are current".
   assert.equal(payload.checkedRemote, false);

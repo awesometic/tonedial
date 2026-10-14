@@ -18,8 +18,10 @@ Keep changes within the requested boundary and preserve unrelated edits.
   Keep address forms separate from formality's wording/distance, warmth and profanity; familiar polite and formal plain are valid combinations.
   Risk metadata and combination notices are advisory: they never clamp values, add tone approval or change host permissions.
   The safeword requests one plain answer and authorizes nothing; `reset` restores axes rather than disabling delivery.
-- Custom profiles save axes, persona, address, register and safeword together.
-  Applying a profile restores its full tone settings; legacy and bundled axis-only presets preserve the current separate settings.
+- Bundled and custom profiles save axes, persona, address, register and safeword together.
+  Applying a profile restores its full tone settings; legacy axis-only presets preserve the current separate settings.
+  Role idioms and slang are not filtered; playfulness grades their frequency and theatrical intensity.
+  Profanity grades swearing, while bravado grades claims about effort; neither suppresses figurative role language.
   Interface language and wiring remain outside profiles.
   State belongs to the shared state root; project scope chooses wiring, not a separate tone library.
   Tone-changing mutations recompile in the same action.
