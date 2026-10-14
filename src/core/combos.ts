@@ -1,10 +1,16 @@
 import { AXIS_ORDER, type Axes, type Axis } from "./anchors.ts";
 
+export const PERSONA_DESCRIPTION_MAX = 200;
+
 export type Persona = {
   age: string | null;
   gender: string | null;
   address: { self_ref: string | null; user_ref: string | null } | null;
   note: string | null;
+  /** Free-form user context, kept separate from the address and closed-set fields. */
+  user: string | null;
+  /** A fictional agent role; any credentials in it are unverified. */
+  agent: string | null;
 };
 
 export type ComboId =

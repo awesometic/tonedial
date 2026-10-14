@@ -6,7 +6,7 @@
 
 import type { CommandResult, Ctx } from "../cli.ts";
 import { AXIS_DEFAULT, AXIS_ORDER, riskyAxes, type Axes, type Axis, type Level } from "../core/anchors.ts";
-import { check as checkCombos } from "../core/combos.ts";
+import { check as checkCombos, PERSONA_DESCRIPTION_MAX } from "../core/combos.ts";
 import {
   AGE_BANDS, GENDERS, NOTE_MAX, SPEECH_LEVELS,
   ConfigError, SETTING_KEYS, isAxis, nearest, nearestAxis, serializeConfig, type Config,
@@ -34,7 +34,7 @@ function bucketAge(value: string, t: Messages, asJson: boolean): string {
 }
 
 /** The settable persona keys, in the order `set --help` and the error message list them. */
-const PERSONA_FIELDS = ["age", "gender", "self_ref", "user_ref", "note"] as const;
+const PERSONA_FIELDS = ["age", "gender", "self_ref", "user_ref", "note", "user", "agent"] as const;
 
 const OBSERVABLE_WORDS: Record<string, Axis> = {
   formal: "formality", polite: "formality", casual: "formality",
@@ -123,6 +123,20 @@ function assign(config: Config, key: string, value: string, t: Messages, asJson:
         config.persona.note = empty ? null : value;
         if (!empty) warnings.push(...noteWarnings(value, t));
         break;
+      case "user":
+      case "agent": {
+        const description = value.trim();
+        if (description === "") {
+          config.persona[field] = null;
+          break;
+        }
+        const count = [...description].length;
+        if (count > PERSONA_DESCRIPTION_MAX) {
+          throw new ConfigError(t.persona.descriptionOverCap(`persona.${field}`, count, PERSONA_DESCRIPTION_MAX));
+        }
+        config.persona[field] = description;
+        break;
+      }
       default:
         // Naming the fields, because the stored shape nests the two address terms under
         // `address` and someone who has read `config.json` reaches for `persona.address.user`
@@ -199,6 +213,10 @@ function readKey(config: Config, key: string, t: Messages): string | undefined {
     if (field === "note") {
       const note = config.persona.note;
       return note ? t.persona.noteChars([...note].length) : UNSET;
+    }
+    if (field === "user" || field === "agent") {
+      const description = config.persona[field];
+      return description ? t.persona.descriptionChars(field, [...description].length) : UNSET;
     }
     return undefined;
   }

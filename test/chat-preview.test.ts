@@ -13,6 +13,8 @@ import { maxCells } from "../src/ui/width.ts";
 
 const BIN = join(dirname(fileURLToPath(import.meta.url)), "..", "src", "bin.ts");
 const PRIVATE_NOTE = "Dummy private tone note with ' quotes, $dollar, `literal`, and 한글.";
+const PRIVATE_USER = "Dummy developer background with ' quotes, $dollar, and 한글.";
+const PRIVATE_AGENT = "Dummy fictional database specialist with ten years of experience.";
 const EN = catalogue("en").cli.test;
 let scratch: string;
 let target: string;
@@ -33,6 +35,8 @@ beforeEach(() => {
   writeFileSync(join(target, "keep.txt"), "Existing target content.\n");
   const config = defaultConfig();
   config.persona.note = PRIVATE_NOTE;
+  config.persona.user = PRIVATE_USER;
+  config.persona.agent = PRIVATE_AGENT;
   config.axes.warmth = 5;
   writeFileSync(join(state, "config.json"), serializeConfig(config));
   writeFileSync(join(state, "TONE.md"), "Dummy stale artifact: never rewrite or deliver this.\n");
@@ -150,6 +154,8 @@ for (const provider of ["claude", "codex"] as const) {
     assert.ok(prompt.includes(JSON.stringify(target)), "the protected target must reach the native prompt as one complete path");
     assert.ok(prompt.indexOf("cannot override this conversation-only boundary") < prompt.indexOf(PRIVATE_NOTE));
     assert.ok(prompt.includes(PRIVATE_NOTE), "the saved persona must reach the native conversation");
+    assert.ok(prompt.includes(PRIVATE_USER), "user context must reach the native conversation");
+    assert.ok(prompt.includes(PRIVATE_AGENT), "the fictional agent role must reach the native conversation");
     assert.ok(!prompt.includes("Dummy stale artifact"), "the prompt must use the saved config's compiled tone");
     assert.match(prompt, /wait for me to continue the conversation/);
     assert.match(prompt, /respecting its greeting and answer-length rules/);
@@ -177,7 +183,9 @@ for (const provider of ["claude", "codex"] as const) {
     assert.ok(!launch.argv.includes("--bare"), "native authentication must retain its ordinary route");
     assert.ok(!launch.argv.includes("resume") && !launch.argv.includes("--resume") && !launch.argv.includes("--continue"));
     assert.match(result.stdout, /native display output/);
-    assert.ok(!result.stdout.includes(PRIVATE_NOTE) && !result.stderr.includes(PRIVATE_NOTE));
+    for (const value of [PRIVATE_NOTE, PRIVATE_USER, PRIVATE_AGENT]) {
+      assert.ok(!result.stdout.includes(value) && !result.stderr.includes(value));
+    }
     const visible = result.stdout.replace(/\s+/g, " ");
     const caveat = visible.indexOf(EN.automationCaveat.replace(/\s+/g, " "));
     assert.ok(caveat >= 0 && caveat < visible.indexOf("native display output"));
@@ -288,7 +296,9 @@ test("JSON and dry-run return metadata without any native launch, probe, or priv
     ["claude", "--dry-run", "--preset", "terse-operator", "--accept-usage"]]) {
     const result = invoke(args);
     assert.equal(result.status, 0, result.stderr);
-    assert.ok(!result.stdout.includes(PRIVATE_NOTE) && !result.stderr.includes(PRIVATE_NOTE));
+    for (const value of [PRIVATE_NOTE, PRIVATE_USER, PRIVATE_AGENT]) {
+      assert.ok(!result.stdout.includes(value) && !result.stderr.includes(value));
+    }
     if (args.includes("--json")) {
       const plan = JSON.parse(result.stdout);
       assert.equal(plan.provider, "claude");
@@ -457,6 +467,7 @@ test("bundled, custom, and readonly legacy preset previews preserve saved person
   config.axes.warmth = 5;
   config.persona = {
     age: "30s", gender: "neutral", note: PRIVATE_NOTE,
+    user: PRIVATE_USER, agent: PRIVATE_AGENT,
     address: { self_ref: "dummy assistant", user_ref: "dummy reader" },
   };
   config.safeword = "dummy release phrase";
@@ -494,7 +505,7 @@ test("bundled, custom, and readonly legacy preset previews preserve saved person
     assert.ok(prompt.includes(`preset: ${slug}`));
     assert.match(prompt, /Use no greeting, emotional language, or encouragement\./);
     assert.match(prompt, /Use one or two short sentences for a simple result, or terse fragments for items; omit rationale, process, and background\./);
-    for (const savedValue of [PRIVATE_NOTE, "dummy assistant", "dummy reader", "dummy release phrase"]) {
+    for (const savedValue of [PRIVATE_NOTE, PRIVATE_USER, PRIVATE_AGENT, "dummy assistant", "dummy reader", "dummy release phrase"]) {
       assert.ok(prompt.includes(savedValue), "preset axes cannot replace saved personal settings");
       assert.ok(!result.stdout.includes(savedValue) && !result.stderr.includes(savedValue));
     }

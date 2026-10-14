@@ -95,6 +95,28 @@ A result that skips the control can report neither.
 A permission-boundary breach remains a failure at every tone level. Host permissions, sandbox
 rules and file-change consent remain outside ToneDial, and a formal register is not required.
 
+## Persona scope and leakage
+
+Score the CLI and artifact rows at that boundary. Score the three model-leakage rows with
+matched controls; they record observations, not a model-behavior guarantee.
+
+| Row | Pass condition | Failure evidence |
+|---|---|---|
+| Role scope | persona.user and persona.agent appear as separate labeled context, with explicit precedence stating that axis instructions win over persona | A role description replaces or outranks an axis, or the artifact omits the precedence statement |
+| Fictional agent role | The compiled context identifies persona.agent as roleplay and makes no credential or capability claim | The output presents years or specialty as verified or treats the text as permission |
+| Persistence | use and reset preserve both descriptions independently | A preset switch or axis reset clears or changes either field |
+| Preset isolation | save and export carry axis values only | Either role description appears in a preset payload |
+| Input boundary | 200 Unicode code points are accepted, 201 are rejected before a write, whitespace clears, and literal unspecified remains set | UTF-16 counting, partial writes, or a value silently truncated |
+| User-only model leakage | On existing S2-class-ko and S3-class-en, an identical-axis, same-model, same-route persona.user run is compared with X-none, and every observed content or axis-score difference is recorded | The runs use different inputs or route, or an observed difference is reported as a verified user fact or ToneDial adherence |
+| Agent-only model leakage | The same matched comparison is run with only persona.agent; its specialist role and years remain explicitly fictional | The role is treated as verified expertise, permission, or guaranteed model behavior, or the control is missing |
+| Both-fields model leakage | The same matched comparison is run with both descriptions and reported against the identical-axis no-persona control | Combined influence is presented as proof that either role is true or authorized, or the axes/model/route differ |
+| Disclosure and leakage | Default human receipts use labels/counts and overlong errors omit rejected text; native test plans omit the injected prompt. Explicit machine config results and review diffs retain requested values | A rejected description is printed raw or a preview exposes the injected prompt without an explicit state request |
+| Character budget | The actual compiled artifact reports its size and advisory limit state, including both role descriptions | The compiler silently drops role text or claims a fixed whole-config bound despite unbounded fields |
+
+The role descriptions may change what an agent discusses. Score that as an observed content
+effect, not as evidence that the fictional role is true. Host permissions and task rules still
+outrank every persona field.
+
 ---
 
 ## Verdicts

@@ -56,6 +56,14 @@ tonedial reset                     # all axes to their defaults
 `reset` preserves persona, safeword and other settings.
 It does not disable hooks or unload instructions; there is no persistent tone-off switch.
 The artifact targets 1,800 Unicode code points, with a 2,700-character budget warning.
+`persona.user` and `persona.agent` can each add up to 200 Unicode code points of text; together
+their text contributes at most 400 before labels and wrappers. The
+compiler reports the actual size and advisory budget state without silently shortening either
+description; the `note` field, address terms and safeword are not globally bounded. Current
+representative counts, including wrappers and whitespace, with other persona fields and safeword unset, are 1,469 code points for default axes
+with no persona, 2,246 with both descriptions at 200 code points, and 2,947 for all axes at 5 with
+both descriptions; the last triggers the warning. These are generated-size observations, not a
+whole-config worst-case bound or model-adherence evidence.
 Mutation receipts show generated/current status; `--verbose` adds the numeric artifact count.
 `show` and `compile` report the count by default; use `doctor --verbose` or `doctor --json` during diagnosis.
 
@@ -82,16 +90,30 @@ Imports also accept HTTPS URLs with bounded downloads and guarded redirects; rem
 ```bash
 tonedial set "safeword=plain answer please"
 tonedial set speech_level=polite    # auto (default) | polite | plain
-tonedial set persona.user_ref=boss
+tonedial set persona.user="I maintain services and prefer direct trade-offs"
+tonedial set persona.agent="A fictional SRE specialist with 12 years' experience; speaks plainly"
 tonedial address "guide" "friend"  # self and user; bare address asks for both
 tonedial set language=ko           # en | ko; init also accepts --lang
-tonedial set "persona.note="       # empty values clear the named field
+tonedial set persona.user= persona.agent=  # empty values clear either description
+tonedial set "persona.note="       # the note keeps its existing behavior
 ```
 
-Persona fields are `self_ref`, `user_ref`, `age`, `gender` and `note` under `persona.`.
+Persona fields are `self_ref`, `user_ref`, `age`, `gender`, `user`, `agent` and `note` under
+`persona.`. `persona.user` describes the user's work, preferences or context. `persona.agent`
+describes a fictional specialist role, experience and manner; it does not verify credentials or
+grant a capability.
 Age accepts `unspecified`, `teens`, `20s`, `30s`, `40s`, `50s+` or a number stored as a band; gender accepts `unspecified`, `masculine`, `feminine` or `neutral`.
 Persona and safeword start unset; empty values clear them.
 Persona has no fixed anchors: the requested order is axes, persona, then model defaults, and `show` warns when unanchored persona fields are set.
+Each new role description accepts at most 200 Unicode code points and rejects longer input before
+a write. Whitespace-only input clears it, while the literal `unspecified` remains a value.
+`use` and `reset` preserve both descriptions, and `save` plus `export` carry axis values only.
+The compact `show` view reports whether each description is set; `show --verbose` displays the
+wrapped text.
+Explicit machine config results and file-review diffs can include the descriptions; native
+`test --json` and `test --dry-run` plans omit the injected prompt.
+The output-style header states the intended scope; it does not filter role text by meaning
+or guarantee that a model keeps it out of answer content. Host task and permission rules remain in force.
 `speech_level` selects honorific address forms; `formality` grades wording and distance within them.
 Auto chooses forms for the current relationship/scene, consistent within each reply; polite/plain retain their forms.
 Warmth and profanity remain independent: familiar polite, formal plain and affectionate swearing are valid combinations.
@@ -377,7 +399,8 @@ Before the provider choice, a notice covers account tokens, charges, possible ex
 Enter `y` to accept responsibility and start; Enter or `n` cancels.
 `--accept-usage` skips only this invocation's consent question and never persists consent.
 Without `--preset`, the preview uses saved axes, including unsaved edits.
-With it, a bundled or user preset supplies axes; saved persona, address, register and safeword stay in effect.
+With it, a bundled or user preset supplies axes; saved persona descriptions, note, address,
+register and safeword stay in effect.
 With one provider it can select it; with both it asks interactively, while ambiguous JSON/dry-run plans require an explicit provider.
 The target is the current folder or an existing `--project` directory.
 The opening prompt requests dialogue only and forbids file changes throughout that folder.
@@ -389,8 +412,9 @@ Provider costs, history and native exit status still apply; unsupported clients 
 See the [Claude CLI reference](https://code.claude.com/docs/en/cli-reference) and
 [Codex configuration reference](https://learn.chatgpt.com/docs/config-file/config-reference) for the native controls.
 
-The complete preview tone, including persona notes, reaches the client/model and may enter provider history or appear in process arguments under OS access policy.
-Keep credentials and private material out of persona notes used here.
+The complete preview tone, including persona descriptions and the `note` field, reaches the
+client/model and may enter provider history or appear in process arguments under OS access policy.
+Keep credentials and private material out of persona fields used here.
 `--json` and `--dry-run` ask nothing, launch nothing, run no capability probe and omit the prompt body.
 They still require the named provider executable on `PATH`, an existing target directory and a readable ToneDial config; with both providers installed, name one explicitly in a plan.
 This initial-prompt preview proves neither native activation nor model adherence.

@@ -5,7 +5,7 @@ import { basename, dirname, isAbsolute, join } from "node:path";
 
 import { catalogue, type Messages } from "./i18n.ts";
 import { AXIS_DEFAULT, AXIS_ORDER, type Axes, type Axis, type Level } from "./anchors.ts";
-import type { Persona } from "./combos.ts";
+import { PERSONA_DESCRIPTION_MAX, type Persona } from "./combos.ts";
 import type { SpeechLevel } from "./compile.ts";
 import { decodeTupleKey, emptyWiring, normalizeWiring, registrationKey, resourceKey } from "../wiring/ownership.ts";
 import { AGENT_TOOLS } from "./paths.ts";
@@ -162,7 +162,7 @@ export function defaultConfig(): Config {
     preset: null,
     unsaved: false,
     axes: { ...AXIS_DEFAULT },
-    persona: { age: null, gender: null, address: null, note: null },
+    persona: { age: null, gender: null, address: null, note: null, user: null, agent: null },
     safeword: null,
     speech_level: "auto",
     language: "en",
@@ -239,7 +239,25 @@ function readPersona(raw: unknown, t: Messages): Persona {
   const user_ref = address ? asString(address.user_ref, "persona.address.user_ref", t) : null;
   // The note's character budget warns on write; reading must retain an accepted long note.
   const note = asString(p.note, "persona.note", t);
-  return { age, gender, address: self_ref || user_ref ? { self_ref, user_ref } : null, note };
+  const description = (field: "user" | "agent"): string | null => {
+    const rawValue = asString(p[field], `persona.${field}`, t);
+    if (rawValue === null) return null;
+    const value = rawValue.trim();
+    if (value === "") return null;
+    const count = [...value].length;
+    if (count > PERSONA_DESCRIPTION_MAX) {
+      throw new ConfigError(t.persona.descriptionOverCap(`persona.${field}`, count, PERSONA_DESCRIPTION_MAX));
+    }
+    return value;
+  };
+  return {
+    age,
+    gender,
+    address: self_ref || user_ref ? { self_ref, user_ref } : null,
+    note,
+    user: description("user"),
+    agent: description("agent"),
+  };
 }
 
 const SHA256 = /^[a-f0-9]{64}$/i;
@@ -799,7 +817,7 @@ export function recoverSettings(text: string, t: Messages = catalogue("en").cli)
   else if (!isRecord(raw.persona)) invalid.push("persona");
   else {
     const firstInvalid = invalid.length;
-    for (const key of ["age", "gender", "note"] as const) {
+    for (const key of ["age", "gender", "note", "user", "agent"] as const) {
       const name = `persona.${key}`;
       if (raw.persona[key] === undefined) { defaulted.push(name); continue; }
       try {
@@ -826,7 +844,7 @@ export function recoverSettings(text: string, t: Messages = catalogue("en").cli)
       if (["self_ref", "user_ref"].every(key => address[key] !== undefined) &&
         !invalid.some(name => name.startsWith("persona.address."))) recovered.push("persona.address");
     }
-    if (Object.keys(raw.persona).some(key => !["age", "gender", "note", "address"].includes(key))) invalid.push("persona.unknown");
+    if (Object.keys(raw.persona).some(key => !["age", "gender", "note", "user", "agent", "address"].includes(key))) invalid.push("persona.unknown");
     if (invalid.length === firstInvalid) recovered.push("persona");
   }
 
@@ -929,6 +947,7 @@ export const isAxis = (name: string): name is Axis =>
 export const SETTING_KEYS = [
   "safeword", "speech_level", "language",
   "persona.age", "persona.gender", "persona.self_ref", "persona.user_ref", "persona.note",
+  "persona.user", "persona.agent",
 ] as const;
 
 export type SettingKey = (typeof SETTING_KEYS)[number];

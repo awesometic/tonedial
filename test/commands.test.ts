@@ -393,7 +393,7 @@ test("persona gender is a closed set", async () => {
 test("setting any persona field warns that persona is ranked, not controlled", async () => {
   await initializeState();
   assert.equal(await cli("set", "persona.user_ref=선생님"), 0);
-  assert.match(stderr(), /ranks below the axes/);
+  assert.match(stderr(), /axes take precedence/);
 });
 
 test("the unanchored-persona warning is raised once per command, not once per field", async () => {
@@ -401,7 +401,7 @@ test("the unanchored-persona warning is raised once per command, not once per fi
   // Three fields used to print the same sentence three times, which reads as three problems
   // and buries the ones that are about this particular combination.
   assert.equal(await cli("set", "persona.age=40s", "persona.gender=masculine", "persona.note=x"), 0);
-  const hits = stderr().split("ranks below the axes").length - 1;
+  const hits = stderr().split("axes take precedence").length - 1;
   assert.equal(hits, 1, "one warning for one fact");
 });
 
@@ -557,7 +557,7 @@ test("a persona key that does not exist is refused by naming the ones that do", 
   // The stored shape nests the address terms, so `persona.address.user` is the first thing
   // someone who has read config.json reaches for.
   assert.equal(await cli("set", "persona.address.user=선생님"), 1);
-  for (const field of ["age", "gender", "self_ref", "user_ref", "note"]) {
+  for (const field of ["age", "gender", "self_ref", "user_ref", "note", "user", "agent"]) {
     assert.match(stderr(), new RegExp(field), field);
   }
 });
@@ -654,6 +654,35 @@ test("a note over 200 characters warns without blocking", async () => {
   assert.equal([...config().persona.note!].length, 201, "stored anyway");
 });
 
+test("user and agent role descriptions trim, clear, and reject overlong Unicode input atomically", async () => {
+  await initializeState();
+  const user = "Builds small tools and likes careful reviews.";
+  const agent = "A TypeScript specialist with ten years of experience who speaks plainly.";
+  assert.equal(await cli("set", `persona.user=  ${user}  `, `persona.agent=  ${agent}  `, "--json"), 0, stderr());
+  const receipt = JSON.parse(stdout()) as { config: { persona: { user: string; agent: string } } };
+  assert.deepEqual([receipt.config.persona.user, receipt.config.persona.agent], [user, agent],
+    "explicit machine mutation results retain the chosen settings");
+  assert.equal(config().persona.user, user);
+  assert.equal(config().persona.agent, agent);
+
+  assert.equal(await cli("set", "persona.user=   "), 0, stderr());
+  assert.equal(config().persona.user, null, "whitespace clears a role description");
+  assert.equal(await cli("set", "persona.agent=   "), 0, stderr());
+  assert.equal(config().persona.agent, null, "whitespace clears the fictional role");
+
+  const astral = "😀".repeat(200);
+  assert.equal(await cli("set", `persona.user=${astral}`), 0, stderr());
+  assert.equal([...config().persona.user!].length, 200, "the boundary counts Unicode code points");
+  const beforeConfig = readFileSync(paths().config, "utf8");
+  const beforeTone = tone();
+  assert.equal(await cli("set", "persona.user=would-be-changed", `persona.agent=${"😀".repeat(201)}`), 1);
+  assert.match(stderr(), /persona\.agent/);
+  assert.doesNotMatch(stderr(), /😀{20}/u, "the rejected role value is not echoed");
+  assert.equal(readFileSync(paths().config, "utf8"), beforeConfig, "a rejected role leaves config untouched");
+  assert.equal(tone(), beforeTone, "a rejected role leaves the artifact untouched");
+  assert.equal(config().persona.user, astral, "a rejected pair does not partially apply the other role");
+});
+
 test("retired guards assignments fail clearly without committing any changes", async () => {
   await initializeState();
   const beforeConfig = readFileSync(paths().config, "utf8");
@@ -681,10 +710,13 @@ test("a forbidden combination warns and still applies", async () => {
 
 test("use applies axis values and never touches persona or safeword", async () => {
   await initializeState();
-  assert.equal(await cli("set", "safeword=연기 그만", "persona.user_ref=선생님"), 0);
+  assert.equal(await cli("set", "safeword=연기 그만", "persona.user_ref=선생님",
+    "persona.user=likes small tools", "persona.agent=plain-speaking reviewer"), 0);
   assert.equal(await cli("use", "eager-sycophant"), 0);
   assert.equal(config().safeword, "연기 그만", "a preset switch does not rename the user");
   assert.deepEqual(config().persona.address, { self_ref: null, user_ref: "선생님" });
+  assert.equal(config().persona.user, "likes small tools");
+  assert.equal(config().persona.agent, "plain-speaking reviewer");
   assert.deepEqual(config().axes, applyPreset(BUNDLED.find((p) => p.slug === "eager-sycophant")!));
 });
 
@@ -735,7 +767,8 @@ test("a misspelled flag fails rather than being ignored", async () => {
 
 test("save captures the axes that moved, and never the persona or safeword", async () => {
   await initializeState();
-  assert.equal(await cli("set", "safeword=연기 그만", "persona.age=40s"), 0);
+  assert.equal(await cli("set", "safeword=연기 그만", "persona.age=40s",
+    "persona.user=likes small tools", "persona.agent=plain-speaking reviewer"), 0);
   assert.equal(await cli("use", "terse-operator"), 0);
   assert.equal(await cli("save", "My Operator"), 0);
   const saved = JSON.parse(readFileSync(join(customPresetDir(paths().presets), "my-operator.json"), "utf8")) as {
@@ -744,6 +777,8 @@ test("save captures the axes that moved, and never the persona or safeword", asy
   assert.deepEqual(Object.keys(saved.values).sort(), ["care", "conviction", "playfulness", "verbosity", "warmth"]);
   assert.ok(!JSON.stringify(saved).includes("연기 그만"), "no safeword in a preset");
   assert.ok(!JSON.stringify(saved).includes("40s"), "no persona in a preset");
+  assert.ok(!JSON.stringify(saved).includes("likes small tools"), "user context stays out of a preset");
+  assert.ok(!JSON.stringify(saved).includes("plain-speaking reviewer"), "agent role stays out of a preset");
 });
 
 test("save refuses to shadow a bundled slug", async () => {
@@ -767,13 +802,16 @@ test("slugs are lowercase Latin letters, digits, and dashes", async () => {
 
 test("export and import move a preset without carrying anything user-level", async () => {
   await initializeState();
-  assert.equal(await cli("set", "safeword=연기 그만", "persona.note=A senior engineer."), 0);
+  assert.equal(await cli("set", "safeword=연기 그만", "persona.note=A senior engineer.",
+    "persona.user=likes small tools", "persona.agent=plain-speaking reviewer"), 0);
   assert.equal(await cli("use", "bratty-kid"), 0);
   assert.equal(await cli("save", "Portable"), 0);
   out = [];
   assert.equal(await cli("export", "portable"), 0);
   const exported = stdout();
   assert.ok(!exported.includes("연기 그만") && !exported.includes("senior engineer"));
+  assert.ok(!exported.includes("likes small tools"), "user context stays out of an exported preset");
+  assert.ok(!exported.includes("plain-speaking reviewer"), "agent role stays out of an exported preset");
 
   const sourceDirectory = join(home, `input files with spaces${" source".repeat(15)}`);
   mkdirSync(sourceDirectory);
@@ -882,12 +920,15 @@ test("show refusing a preset name lists the ones it would have taken", async () 
 
 test("reset with no argument clears the axes and leaves persona and safeword alone", async () => {
   await initializeState();
-  assert.equal(await cli("set", "safeword=연기 그만", "persona.age=40s"), 0);
+  assert.equal(await cli("set", "safeword=연기 그만", "persona.age=40s",
+    "persona.user=likes small tools", "persona.agent=plain-speaking reviewer"), 0);
   assert.equal(await cli("use", "eager-sycophant"), 0);
   assert.equal(await cli("reset"), 0);
   assert.deepEqual(config().axes, AXIS_DEFAULT);
   assert.equal(config().safeword, "연기 그만");
   assert.equal(config().persona.age, "40s");
+  assert.equal(config().persona.user, "likes small tools");
+  assert.equal(config().persona.agent, "plain-speaking reviewer");
 });
 
 test("a malformed config is refused by field rather than silently defaulted", async () => {
@@ -1743,6 +1784,24 @@ test("an edit that lands the state a warning covers still raises the warning", a
     `no combination warning: ${JSON.stringify(payload.warnings)}`,
   );
 });
+
+for (const field of ["user", "agent"] as const) {
+  test(`editing only persona.${field} discloses unanchored context without echoing it`, async () => {
+    await initializeState();
+    const edited = config();
+    const value = `Dummy private ${field} description`;
+    edited.persona[field] = value;
+    out = [];
+    err = [];
+    assert.equal(await cliWith(fakeEditor(JSON.stringify(edited)), "edit", "--json"), 0, stderr());
+    const receipt = stdout();
+    const payload = JSON.parse(receipt) as { warnings: string[] };
+    assert.equal(payload.warnings.filter(warning => warning === EN.notice.personaUnanchored).length, 1);
+    assert.equal(receipt.includes(value), false);
+    assert.equal(config().persona[field], value);
+    assert.ok(tone().includes(value));
+  });
+}
 
 test("a whitespace-only VISUAL does not mask a usable EDITOR", () => {
   // `(VISUAL || EDITOR || "").trim()` — the trim ran after the fallback, so "  " won the `||`

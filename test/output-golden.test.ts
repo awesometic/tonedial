@@ -137,6 +137,24 @@ for (const language of selectedGoldenLanguages()) {
     }
   });
 
+  test(`persona show output golden · ${language}`, async () => {
+    const workspace = createGoldenWorkspace(language);
+    try {
+      await init(workspace, language);
+      const chosen = await captureCli(workspace, ["set",
+        "persona.user=Developer who likes concise technical answers",
+        "persona.agent=Fictional database specialist with ten years of experience",
+      ]);
+      assert.equal(chosen.status, 0, chosen.stderr);
+      const capture = await captureCli(workspace, ["show"]);
+      assert.equal(capture.status, 0, capture.stderr);
+      assertGolden(goldenPath(language, "commands", "show-persona"),
+        formatCapture(normalizeCapture(capture, workspace)));
+    } finally {
+      workspace.dispose();
+    }
+  });
+
   test(`command output goldens · ${language}`, async () => {
     for (const command of COMMAND_NAMES) {
       const workspace = createGoldenWorkspace(language);

@@ -56,7 +56,7 @@ ToneDial · init
 
   <ROOT>/state/config.json
   → <ROOT>/state/config.json
-  (새 파일)  71줄
+  (새 파일)  73줄
   +   "schema": 2,
   +   "preset": "caring-brother",
 

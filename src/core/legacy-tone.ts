@@ -154,11 +154,44 @@ function readPersonaSection(body: string, config: Config): string[] | null {
   let rest = body.slice(0, -close.length - 1);
   const unknown: string[] = [];
   const notePrefix = `- ${PERSONA.noteWrapper}\n  > `;
-  if (!rest.startsWith(notePrefix)) {
+  const descriptionPrefixes = [
+    ["user", `- ${PERSONA.userWrapper}\n  > `],
+    ["agent", `- ${PERSONA.agentWrapper}\n  > `],
+  ] as const;
+  const seen = new Set<string>();
+  let identitySeen = false;
+
+  while (rest !== "") {
+    const description = descriptionPrefixes.find(([, prefix]) => rest.startsWith(prefix));
+    if (description !== undefined) {
+      const [field, prefix] = description;
+      if (seen.has(field)) return null;
+      const payload = rest.slice(prefix.length);
+      const newline = payload.indexOf("\n");
+      const value = newline === -1 ? payload : payload.slice(0, newline);
+      if (value === "" || value.trim() !== value) return null;
+      config.persona[field] = value;
+      seen.add(field);
+      rest = newline === -1 ? "" : payload.slice(newline + 1);
+      continue;
+    }
+
+    if (rest.startsWith(notePrefix)) {
+      if (seen.has("note")) return null;
+      const note = rest.slice(notePrefix.length);
+      if (note === "" || note.includes("\n") || note.trim() !== note) return null;
+      config.persona.note = note;
+      seen.add("note");
+      rest = "";
+      continue;
+    }
+
+    if (identitySeen) return null;
     const newline = rest.indexOf("\n");
     const line = newline === -1 ? rest : rest.slice(0, newline);
     rest = newline === -1 ? "" : rest.slice(newline + 1);
-    if (!line.startsWith("- ")) return null;
+    if (!line.startsWith("- ") || line === "- ") return null;
+    identitySeen = true;
     let identity = line.slice(2);
     for (const age of AGE_BANDS) {
       if (age === "unspecified") continue;
@@ -190,13 +223,6 @@ function readPersonaSection(body: string, config: Config): string[] | null {
           : { self_ref: null, user_ref: value };
       }
     }
-    if (line === "- ") return null;
-  }
-  if (rest !== "") {
-    if (!rest.startsWith(notePrefix)) return null;
-    const note = rest.slice(notePrefix.length);
-    if (note === "" || note.includes("\n") || note.trim() !== note) return null;
-    config.persona.note = note;
   }
   return unknown;
 }
@@ -286,6 +312,8 @@ export function recoverLegacyTone(text: string, t: Messages): SettingsRecovery |
   const parsed = recoverSettings(JSON.stringify(config), t);
   if (parsed === null) return null;
   const absent = ["language", "unsaved", "active-history", ...unknown,
+    ...(config.persona.user === null ? ["persona.user"] : []),
+    ...(config.persona.agent === null ? ["persona.agent"] : []),
     ...(marker[1] === "unsaved" ? ["preset"] : [])];
   return {
     ...parsed,

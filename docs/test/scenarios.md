@@ -62,7 +62,28 @@ requested answer in depth without volunteering a wider task. Functional emoji or
 not count as warmth; emotional emoji remains a warmth observation. Required code blocks, tables and
 JSON keep their task-appropriate format.
 
----
+## Persona boundary checks
+
+Run the CLI and artifact rows without a model. The three model-leakage rows use matched
+controls and record observations without claiming adherence. Keep them separate because persona.user and persona.agent are free-text
+context and the agent profile is fictional roleplay rather than a credential claim.
+
+| Check | Setup | Evidence |
+|---|---|---|
+| Scope | Set one or both role descriptions, compile, and read the artifact through its normal loader | Each labeled description reaches the compiled prompt, which states that axis instructions take precedence over persona |
+| Persistence | Set both descriptions, then use <slug> and reset one or all axes | Both descriptions survive each axis or preset mutation |
+| Preset isolation | Save and export a preset after setting both descriptions | The saved and exported payloads carry axis values only |
+| Boundary | Try 200 and 201 Unicode code points, plus empty, whitespace and literal unspecified values | The 200-point value is accepted, the 201-point value is rejected before a write, empty input clears and unspecified remains a value |
+| User-only model leakage | On existing S2-class-ko and S3-class-en, run identical axes, model, effort and delivery route with only persona.user, beside the matched X-none control | Record any content or axis-score difference that appears only with the user description; do not treat the difference as a credential or adherence claim |
+| Agent-only model leakage | On the same existing scenarios and matched controls, run only persona.agent with a fictional specialist role and years | Record any content or axis-score difference that appears only with the agent description; keep the years fictional and adherence unqualified |
+| Both-fields model leakage | On the same existing scenarios and matched controls, run both descriptions together | Record the combined difference against the identical-axis no-persona control; do not infer that either role is true or authorized |
+| Leakage | Inspect an ordinary receipt, a rejected overlong value, a JSON or dry-run preview and a native test plan | Default human receipts show labels/counts and overlong errors omit the rejected text; native test plans omit the injected prompt. Explicit machine config results and file-review diffs retain requested values |
+
+Use one representative user description and one representative fictional agent description in
+these checks. A Unicode astral character belongs to the same code-point boundary as any other
+character; do not substitute UTF-16 code units for the limit. The two descriptions can add up to
+400 code points before wrappers, so record the actual compiled size and any advisory budget
+state rather than assuming a fixed total prompt length.
 
 ## `S1-fn-ko` — small function, Korean
 

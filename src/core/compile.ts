@@ -3,7 +3,7 @@ import {
   REGISTER_COMPOSITION, SCOPE_HEADER, SPEECH_LEVEL, STYLE_MARKER, TARGET_CHARS,
   type Axes,
 } from "./anchors.ts";
-import { composites, type Persona } from "./combos.ts";
+import { composites, PERSONA_DESCRIPTION_MAX, type Persona } from "./combos.ts";
 
 export type SpeechLevel = keyof typeof SPEECH_LEVEL;
 
@@ -21,8 +21,11 @@ const UNSPECIFIED = "unspecified";
 const isSet = (v: string | null | undefined): v is string =>
   typeof v === "string" && v.trim() !== "" && v !== UNSPECIFIED;
 
+const hasDescription = (v: string | null | undefined): v is string =>
+  typeof v === "string" && v.trim() !== "";
+
 // Keep free-form persona values inside their prose/block-quote wrapper.
-const oneLine = (s: string) => s.replace(/\s*\r?\n\s*/g, " ").trim();
+const oneLine = (s: string) => s.replace(/\s*[\r\n]+\s*/g, " ").trim();
 
 function personaLines(p: Persona): string[] {
   const self = isSet(p.address?.self_ref) ? oneLine(p.address!.self_ref!) : null;
@@ -36,6 +39,12 @@ function personaLines(p: Persona): string[] {
 
   const lines: string[] = [];
   if (identity.length) lines.push(`- ${identity.join(" ")}`);
+  if (hasDescription(p.user)) {
+    lines.push(`- ${PERSONA.userWrapper}\n  > ${oneLine(p.user)}`);
+  }
+  if (hasDescription(p.agent)) {
+    lines.push(`- ${PERSONA.agentWrapper}\n  > ${oneLine(p.agent)}`);
+  }
   if (isSet(p.note)) lines.push(`- ${PERSONA.noteWrapper}\n  > ${oneLine(p.note)}`);
   if (lines.length) lines.push(`- ${PERSONA.precedence}`);
   return lines;
@@ -50,6 +59,17 @@ function validate(config: Config): void {
   }
   if (!(config.speech_level in SPEECH_LEVEL)) {
     throw new RangeError(`speech_level is ${config.speech_level}, not auto, polite, or plain`);
+  }
+  if (config.persona !== null) {
+    for (const field of ["user", "agent"] as const) {
+      const value = config.persona[field];
+      if (value !== null && typeof value !== "string") {
+        throw new RangeError(`persona.${field} must be a string or null`);
+      }
+      if (typeof value === "string" && [...value.trim()].length > PERSONA_DESCRIPTION_MAX) {
+        throw new RangeError(`persona.${field} exceeds ${PERSONA_DESCRIPTION_MAX} Unicode code points`);
+      }
+    }
   }
   // An empty safeword would match every message and release the tone permanently.
   if (config.safeword !== null && config.safeword.trim() === "") {

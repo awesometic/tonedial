@@ -341,7 +341,9 @@ test("approved journal-free rebuilding retains settings and raw modes across sep
   const current = parseConfig(readFileSync(paths.config, "utf8"));
   assert.ok(isConfigV2(current));
   for (const key of ["axes", "preset", "unsaved", "persona", "safeword", "speech_level", "language"] as const) {
-    assert.deepEqual(current[key], raw[key], key);
+    // Absent role descriptions normalize to null without changing older saved values.
+    const expected = key === "persona" ? { ...raw.persona, user: null, agent: null } : raw[key];
+    assert.deepEqual(current[key], expected, key);
   }
   assert.equal(Object.hasOwn(JSON.parse(readFileSync(paths.config, "utf8")), "fixed_width"), false);
   assert.equal(Object.hasOwn(JSON.parse(readFileSync(paths.config, "utf8")), "guards"), false);
@@ -525,7 +527,8 @@ for (const variant of ["uppercase", "guide", "seed", "edited", "link", "unrecord
     assert.equal(readFileSync(paths.tone, "utf8"), artifact);
     if (variant !== "uppercase") assertCompatibleArtifact(paths, artifact);
     for (const key of ["axes", "preset", "unsaved", "persona", "safeword", "speech_level", "language"] as const) {
-      assert.deepEqual(parseConfig(readFileSync(paths.config, "utf8"))[key], raw[key], key);
+      const expected = key === "persona" ? { ...raw.persona, user: null, agent: null } : raw[key];
+      assert.deepEqual(parseConfig(readFileSync(paths.config, "utf8"))[key], expected, key);
     }
     assert.equal(Object.hasOwn(JSON.parse(readFileSync(paths.config, "utf8")), "fixed_width"), false);
     assert.equal(Object.hasOwn(JSON.parse(readFileSync(paths.config, "utf8")), "guards"), false);

@@ -361,6 +361,44 @@ test("show and explain stack cleanly at 60 columns without changing saved state"
   assert.deepEqual([readFileSync(configPath, "utf8"), readFileSync(tonePath, "utf8")], before);
 });
 
+for (const language of LANGUAGES) {
+  test(`show keeps role descriptions compact by default and exposes wrapped text in ${language}`, async () => {
+    await initializeState();
+    assert.equal(await cli("set", `language=${language}`), 0, err.join(""));
+    out = [];
+    err = [];
+    const user = "Builds small tools and likes careful reviews.";
+    const agent = "A TypeScript specialist with ten years of experience who speaks plainly.";
+    await cli("set", `persona.user=${user}`, `persona.agent=${agent}`);
+    const env = { HOME: home, TONEDIAL_HOME: join(home, "state"), PATH: "", COLUMNS: "60" };
+    const copy = catalogue(language).cli;
+    const visible = (text: string) => text.replace(/\s+/g, " ");
+
+    out = [];
+    assert.equal(await run(["show"], env, join(home, "project"), false), 0);
+    const compact = out.join("");
+    assert.ok(visible(compact).includes(copy.persona.descriptionChars("user", [...user].length)));
+    assert.ok(visible(compact).includes(copy.persona.descriptionChars("agent", [...agent].length)));
+    assert.equal(compact.includes(user), false);
+    assert.equal(compact.includes(agent), false);
+    for (const line of compact.trimEnd().split("\n")) assert.ok(maxCells(line) <= 59 || isUnbreakable(line), line);
+
+    out = [];
+    assert.equal(await run(["show", "--verbose"], env, join(home, "project"), false), 0);
+    const verbose = out.join("");
+    const visibleVerbose = visible(verbose);
+    assert.equal(visibleVerbose.includes(user), true);
+    assert.equal(visibleVerbose.includes(agent), true);
+    for (const line of verbose.trimEnd().split("\n")) assert.ok(maxCells(line) <= 59 || isUnbreakable(line), line);
+
+    out = [];
+    assert.equal(await run(["show", "--json"], env, join(home, "project"), false), 0);
+    const json = JSON.parse(out.join("")) as { persona: { user: string; agent: string } };
+    assert.equal(json.persona.user, user);
+    assert.equal(json.persona.agent, agent);
+  });
+}
+
 test("the retired fullscreen flag is absent from help and refuses without writes", async () => {
   await initializeState();
   out = [];
@@ -785,6 +823,7 @@ test("--explain names every settable key, and every one of them is settable", as
     safeword: "just tell me", speech_level: "plain",
     "persona.age": "30s", "persona.gender": "unspecified",
     "persona.self_ref": "I", "persona.user_ref": "boss", "persona.note": "a build engineer",
+    "persona.user": "a careful builder", "persona.agent": "a plain-speaking reviewer",
     language: "en",
   };
   for (const key of SETTING_KEYS) {

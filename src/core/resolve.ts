@@ -4,7 +4,7 @@ import type { Config as CompileInput } from "./compile.ts";
 export function toCompileInput(stored: StoredConfig): CompileInput {
   const p = stored.persona;
   const hasPersona =
-    p.age !== null || p.gender !== null || p.note !== null || p.address !== null;
+    p.age !== null || p.gender !== null || p.note !== null || p.user !== null || p.agent !== null || p.address !== null;
 
   return {
     // The slug rides in the generation comment, so the model reads it. `unsaved` is what the

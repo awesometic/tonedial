@@ -1,0 +1,31 @@
+status: 0
+--- stdout --- [bytes=941; endsWithNewline=true]
+  ToneDial · show · Caring Brother                      TONE.md 2,218 / 2,700
+
+                         Current   ToneDial default · ! risky tone
+  form      formality    ▮▯▯▯▯  1   *3
+            verbosity    ▮▮▮▮▯  4   *3
+            profanity    ▮▮▯▯▯  2   *1
+            playfulness  ▮▮▮▯▯  3    3
+  target    critique     ▮▮▯▯▯  2   *3
+            flattery     ▮▯▯▯▯  1    1
+            warmth       ▮▮▮▮▮  5   *3
+  behaviour conviction   ▮▮▮▮▯  4   *3
+            care         ▮▮▮▮▮  5   *3
+            compliance   ▮▮▮▯▯  3    3
+            refusal      ▮▯▯▯▯  1    1
+            bravado      ▮▯▯▯▯  1    1
+
+  Settings
+  user context · 45 chars · fictional agent role · 58 chars
+  no safeword · register auto
+  Interface en
+  Connections: none
+
+  * differs from ToneDial's default
+  tonedial show --explain
+--- stderr --- [bytes=252; endsWithNewline=true]
+  ⚠ persona has no fixed anchors; axes take precedence. Text may affect
+    content. Roleplay does not verify credentials or grant permissions.
+  ⚠ The model may not produce the tone you expect.
+  ⚠ TONE.md: 2,218 characters · over 1,800 target

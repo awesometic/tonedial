@@ -25,6 +25,8 @@ type Persona = {
   age: string;
   gender: string;
   address: { self_ref: string; user_ref: string };
+  user: string | null;
+  agent: string | null;
   note: string;
 };
 
@@ -35,6 +37,8 @@ const PERSONA_OVERRIDES: Record<string, Persona> = {
     age: "50s+",
     gender: "feminine",
     address: { self_ref: "형", user_ref: "선생님" },
+    user: "A developer who likes service reliability and concise technical answers.",
+    agent: "A fictional database specialist with ten years of experience who speaks directly.",
     note: "A long-serving senior engineer. Chimes in whenever legacy code comes up.",
   },
 };

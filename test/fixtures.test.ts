@@ -25,6 +25,8 @@ type Persona = {
   age: string;
   gender: string;
   address: { self_ref: string; user_ref: string };
+  user: string | null;
+  agent: string | null;
   note: string;
 };
 
@@ -241,6 +243,8 @@ test("a persona section appears when and only when a persona is configured", () 
     );
     assert.ok(artifact.includes(`Call yourself ${p.address.self_ref};`), `${name}: self_ref`);
     assert.ok(artifact.includes(`call the user ${p.address.user_ref}.`), `${name}: user_ref`);
+    if (p.user !== null) assert.ok(artifact.includes(p.user), `${name}: user context`);
+    if (p.agent !== null) assert.ok(artifact.includes(p.agent), `${name}: agent role`);
     assert.ok(artifact.includes(p.note), `${name}: note`);
     assert.ok(
       artifact.includes("Persona sets flavour only."),
@@ -253,6 +257,8 @@ test("the fixture set covers the branches the compiler has to get right", () => 
   const configs = index.fixtures.map((n) => load(n).config);
   assert.ok(configs.every((c) => c.speech_level === "auto"), "every fixture is speech_level auto");
   assert.ok(configs.some((c) => c.persona !== null), "an artifact with a persona");
+  assert.ok(configs.some((c) => Boolean(c.persona?.user)), "an artifact with user context");
+  assert.ok(configs.some((c) => Boolean(c.persona?.agent)), "an artifact with a fictional agent role");
   assert.ok(configs.some((c) => c.preset === null), "an unsaved artifact");
   assert.ok(configs.some((c) => c.preset !== null), "a preset artifact");
   for (const level of [1, 3, 5]) {

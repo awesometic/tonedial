@@ -193,6 +193,10 @@ export type Messages = {
     callsYou: (term: string) => string;
     callsItself: (term: string) => string;
     noteChars: (count: number) => string;
+    /** Hard-bounded role descriptions are rejected before a config mutation. */
+    descriptionOverCap: (field: string, given: number, cap: number) => string;
+    descriptionChars: (field: "user" | "agent", count: number) => string;
+    descriptionFull: (field: "user" | "agent", value: string) => string;
   };
   settings: {
     guardsRetired: string;
@@ -669,6 +673,9 @@ const enMessages: Messages = {
     callsYou: (term) => `user name ${term}`,
     callsItself: (term) => `self name ${term}`,
     noteChars: (count) => `note ${count} chars`,
+    descriptionOverCap: (field, given, cap) => `${field}: ${given} characters · maximum ${cap}`,
+    descriptionChars: (field, count) => `${field === "user" ? "user context" : "fictional agent role"} · ${count} chars`,
+    descriptionFull: (field, value) => `${field === "user" ? "user context" : "fictional agent role"}: ${value}`,
   },
   settings: {
     guardsRetired: "guards is retired. ToneDial no longer adds guard requests. No settings were changed.",
@@ -910,8 +917,8 @@ const enMessages: Messages = {
       axes.some(axis => axis === "compliance" || axis === "refusal") ? "hasty action or refusal" : null,
     ].filter(Boolean).join("; ")}`,
     personaUnanchored:
-      "persona has no anchors and ranks below the axes. Age, gender, and note change output " +
-      "through model associations; names appear only where the axes leave room.",
+      "persona has no fixed anchors; axes take precedence. Text may affect content. " +
+      "Roleplay does not verify credentials or grant permissions.",
     risk: "for fun, and not recommended for production use",
   },
   update: {
@@ -1183,6 +1190,8 @@ const en: Catalogue = {
     "persona.self_ref": "agent's self-name",
     "persona.user_ref": "agent's name for the user",
     "persona.note": "role the axes cannot express · over 200 characters warns",
+    "persona.user": "user context · maximum 200 characters",
+    "persona.agent": "fictional agent role · maximum 200 characters · credentials are unverified; grants no capability or permission",
   },
   cli: enMessages,
   safewords: {
@@ -1322,6 +1331,9 @@ const koMessages: Messages = {
     callsYou: (term) => `사용자 호칭 ${term}`,
     callsItself: (term) => `자칭 ${term}`,
     noteChars: (count) => `노트 ${count}자`,
+    descriptionOverCap: (field, given, cap) => `${field}: ${given}자 · 최대 ${cap}자`,
+    descriptionChars: (field, count) => `${field === "user" ? "사용자 배경" : "가상 에이전트 역할"} · ${count}자`,
+    descriptionFull: (field, value) => `${field === "user" ? "사용자 배경" : "가상 에이전트 역할"}: ${value}`,
   },
   settings: {
     guardsRetired: "guards 설정은 더 이상 쓰지 않습니다. ToneDial은 가드 요청을 넣지 않습니다. 설정은 바꾸지 않았습니다.",
@@ -1562,8 +1574,8 @@ const koMessages: Messages = {
       axes.some(axis => axis === "compliance" || axis === "refusal") ? "성급한 실행·거절" : null,
     ].filter(Boolean).join(" · ")}`,
     personaUnanchored:
-      "페르소나에는 앵커가 없어 축보다 우선순위가 낮습니다. 나이·성별·노트는 모델의 연상에 " +
-      "따라 출력을 바꾸며 호칭은 축이 허용하는 답변에만 나타납니다.",
+      "페르소나에는 고정된 행동 규칙이 없으며 축 설정이 우선합니다. 설명은 내용에도 영향을 줄 수 있습니다. " +
+      "역할극은 자격이나 권한을 주지 않습니다.",
     risk: "재미를 위한 도구이며 실무 사용은 권장하지 않습니다",
   },
   update: {
@@ -1838,6 +1850,8 @@ const ko: Catalogue = {
     "persona.self_ref": "에이전트의 자칭",
     "persona.user_ref": "에이전트가 쓰는 사용자 호칭",
     "persona.note": "축으로 표현할 수 없는 역할 · 200자 초과 시 경고",
+    "persona.user": "사용자 배경 설명 · 최대 200자",
+    "persona.agent": "가상 에이전트 역할 · 최대 200자 · 경력은 확인하지 않으며 능력·권한을 부여하지 않음",
   },
   cli: koMessages,
   safewords: {

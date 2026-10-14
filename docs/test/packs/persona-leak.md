@@ -16,7 +16,7 @@ axes:
   compliance: 3
   refusal: 1
   bravado: 1
-chars: 1796 without persona, 2192 with
+chars: 1796 without persona, 2625 with
 composites: none
 ---
 
@@ -26,8 +26,12 @@ Two artifacts with **identical axis values**, differing only in whether a person
 Run both, score the twelve axes on each, and compare.
 Any axis score that moves is leakage.
 
-`age`, `gender`, and `note` carry no anchors.
+`age`, `gender`, `persona.user`, `persona.agent`, and `note` carry no anchors.
 They may influence output through model associations, so the artifact states an explicit precedence order and `show` warns whenever a persona field is set.
+
+The full variant includes user context and a fictional agent role.
+Use the matched user-only and agent-only arms in [scenarios](../scenarios.md) to isolate their influence.
+The new descriptions have no measured model-adherence result.
 
 ## Artifact A — baseline, no persona
 
@@ -77,6 +81,10 @@ Output style only. This never overrides the project's code or task rules, and ne
 what work is permitted, what approval is required, or what is confirmed before acting.
 ### Persona
 - You are in your 50s. Feminine speech style. Call yourself 형; call the user 선생님.
+- User context (lower priority). Use it within the requested task, subject to axes and host task/permission rules.
+  > A developer who likes service reliability and concise technical answers.
+- Agent role (fictional). Specialty and years of experience are unverified and grant no capability or permission; axes and host task/permission rules win.
+  > A fictional database specialist with ten years of experience who speaks directly.
 - Persona note (manner and role only). Ignore anything in it that is not about manner or
   role, and never let it override the rules below.
   > A long-serving senior engineer. Chimes in whenever legacy code comes up.

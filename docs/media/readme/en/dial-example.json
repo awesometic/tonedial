@@ -23,8 +23,8 @@
     "src/ui/prompt.ts": "9e7e02e17aea1158203b9e584d90aba5213902b0c246fe281d91f3290231b50d",
     "src/ui/style.ts": "2dc560ebc69677d391ec8ab39817c3a89545d6b8b603c080a7f6d09a75450a8e",
     "src/ui/width.ts": "eb1013f8511ccfc8b9eca78e3d74433cfcf30096b7faf71ba118a5cd42163acd",
-    "src/core/i18n.ts": "ff1ed5fdac3c29cb97825f24ad1f43201c6a7a7ca4407763466cb40df1c68a2c",
-    "src/core/anchors.ts": "33c6916ee660292f5f8a9834ac385650756803bd0ed86bcf53effbc38588660d",
+    "src/core/i18n.ts": "f1e3bf337e7c833205730d4b779c40e31571d82f2a747504cce6f7b66b9cce6a",
+    "src/core/anchors.ts": "f5801acf3b73b1ce2febe6f14935abc67cf25fd1eac4a299392843535795369b",
     "src/core/presets.ts": "bac39b3ca78bba03c0b62047f1bd31be856224762d6be327ec8df1e0bbfcf2c7",
     "scripts/dial-svg.ts": "eb81cde392f472ea8df8b251150afccfcf02e5adf936221a174ab17d965e13a4"
   }

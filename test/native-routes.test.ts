@@ -824,6 +824,8 @@ test("installed explicit-setting examples use the CLI without changing neighbour
     (config) => { config.persona.address = { self_ref: "assistant", user_ref: "reader" }; },
     (config) => { config.persona.age = "30s"; },
     (config) => { config.persona.gender = "neutral"; },
+    (config) => { config.persona.user = "Developer who likes concise technical answers"; },
+    (config) => { config.persona.agent = "Database specialist with ten years of experience; speaks directly"; },
     (config) => { config.persona.note = "Patient guide"; },
     (config) => { config.safeword = "plain answer please"; },
     (config) => { config.speech_level = "polite"; },
@@ -885,10 +887,10 @@ test("approved native refresh updates stale skill seeds and the selected optiona
   assert.equal(refreshed.code, 0, JSON.stringify(refreshed.value));
   const after = parseConfig(readFileSync(paths.config, "utf8"));
   assert.ok(isConfigV2(after));
-  assert.equal(after.seedVersion, 11);
+  assert.equal(after.seedVersion, 12);
   assert.deepEqual(Object.fromEntries(Object.entries(after.managedSeeds).filter(([id]) => !id.startsWith("skill/"))), retainedRecords);
   for (const seed of skills) {
-    assert.equal(after.managedSeeds[seed.id]?.version, seed.id === "skill/body" ? 11 : 5, seed.id);
+    assert.equal(after.managedSeeds[seed.id]?.version, seed.id === "skill/body" ? 12 : 6, seed.id);
     assert.equal(readFileSync(seed.path, "utf8"), seed.contents, seed.id);
     assert.equal(after.managedSeeds[seed.id]?.sha256, createHash("sha256").update(seed.contents).digest("hex"), seed.id);
   }
@@ -900,7 +902,7 @@ test("approved native refresh updates stale skill seeds and the selected optiona
   ]);
   assert.equal(readFileSync(agent.command("tone"), "utf8"), currentCommand);
   const refreshedCommand = Object.values(after.wiring.resources).find((resource) => resource.kind === "command");
-  assert.equal(refreshedCommand?.managed.version, 4);
+  assert.equal(refreshedCommand?.managed.version, 5);
   assert.equal(refreshedCommand?.expected.sha256, createHash("sha256").update(currentCommand).digest("hex"));
   assert.equal(Object.values(after.managedSeeds).some((seed) => seed.path === agent.command("tone")), false,
     "the optional command is a wiring resource, not a seed");

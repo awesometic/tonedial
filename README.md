@@ -50,12 +50,16 @@ Connections default globally; `--here` or `--project <path>` chooses a project, 
 ```bash
 tonedial use tough-love
 tonedial set warmth=5 critique=5
+tonedial set persona.user="I maintain services and prefer direct trade-offs" \
+  persona.agent="A fictional SRE specialist with 12 years' experience; speaks plainly"
 tonedial save "My Tone"
 tonedial show
 tonedial export my-tone > my-tone.json
 ```
 
 Five presets are bundled. Saved presets carry axes only; persona, address, register and safeword stay separate.
+`persona.user` and `persona.agent` are optional role descriptions capped at 200 Unicode code points each; empty input clears one.
+The agent description is fictional roleplay context, not a verified credential or permission grant.
 The interface is English or Korean.
 Choose it during `init` with `--lang en` or `--lang ko`.
 After setup, change it with `tonedial set language=ko`.
@@ -72,7 +76,7 @@ tonedial test claude --json # inspect a plan; launch nothing
 The opening prompt requests dialogue only and no edits. Invocation-only controls request a preview without earlier tone hooks or automatic instructions.
 Managed policy and native-client support remain independent; this is not OS-level isolation.
 Normal account usage and history apply. Enter `y` after the usage notice to start; `--accept-usage` accepts usage and charges for this launch only.
-The complete preview tone may be visible in process arguments; keep credentials and private material out of persona notes.
+The complete preview tone may be visible in process arguments; keep credentials and private material out of persona descriptions and notes.
 
 ## Know the limits
 

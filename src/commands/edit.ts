@@ -234,7 +234,7 @@ function stateWarnings(ctx: Ctx, config: Config, size: SizeReport): string[] {
   const p = config.persona;
   return [
     ...checkCombos(config.axes, p, config.speech_level).map((w) => combination(w, ctx.t)),
-    ...(p.age || p.gender || p.note || p.address ? [ctx.t.notice.personaUnanchored] : []),
+    ...(p.age || p.gender || p.note || p.address || p.user || p.agent ? [ctx.t.notice.personaUnanchored] : []),
     ...riskWarnings(config.axes, ctx.t),
     ...sizeWarning(size, ctx.t),
   ];

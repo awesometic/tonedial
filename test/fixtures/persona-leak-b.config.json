@@ -1,6 +1,6 @@
 {
   "name": "persona-leak-b",
-  "chars": 2192,
+  "chars": 2625,
   "config": {
     "preset": null,
     "axes": {
@@ -25,6 +25,8 @@
         "self_ref": "형",
         "user_ref": "선생님"
       },
+      "user": "A developer who likes service reliability and concise technical answers.",
+      "agent": "A fictional database specialist with ten years of experience who speaks directly.",
       "note": "A long-serving senior engineer. Chimes in whenever legacy code comes up."
     },
     "safeword": "진심으로 부탁할게"

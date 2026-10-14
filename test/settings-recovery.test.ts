@@ -86,6 +86,7 @@ test("old saved settings keep unsaved axes and optional-field defaults without p
   assert.deepEqual(result.config.persona, {
     age: "40s", gender: "neutral", note: "Dummy private role",
     address: { self_ref: "Dummy Agent", user_ref: "Dummy Reader" },
+    user: null, agent: null,
   });
   assert.equal(result.config.safeword, "dummy plain answer");
   assert.equal(Object.hasOwn(result.config, "guards"), false);
@@ -93,6 +94,8 @@ test("old saved settings keep unsaved axes and optional-field defaults without p
   assert.equal(result.config.language, "ko");
   assert.equal(Object.hasOwn(result.config, "fixed_width"), false);
   assert.ok(!result.defaulted!.includes("fixed_width"));
+  assert.ok(result.defaulted!.includes("persona.user"));
+  assert.ok(result.defaulted!.includes("persona.agent"));
   assert.equal(result.metadataLost, true);
   assert.deepEqual(result.config.wiring, { registrations: {}, resources: {} });
   assert.deepEqual(result.legacy!.wiring, { claude: { created: true, createdDir: false } });
@@ -150,6 +153,8 @@ test("damage in one setting preserves independently valid axes, persona fields a
   damaged.axes.PRIVATE_AXIS_KEY = "DO_NOT_ECHO_AXIS_VALUE";
   damaged.persona.age = "DO_NOT_ECHO_AGE_VALUE";
   damaged.persona.note = { value: "DO_NOT_ECHO_NOTE_VALUE" };
+  damaged.persona.user = "😀".repeat(201);
+  damaged.persona.agent = "Dummy fictional role";
   damaged.persona.address.self_ref = 123;
   damaged.persona.PRIVATE_PERSONA_KEY = "DO_NOT_ECHO_PERSONA_VALUE";
   damaged.safeword = 'DO_NOT_ECHO_SAFEWORD"';
@@ -165,9 +170,11 @@ test("damage in one setting preserves independently valid axes, persona fields a
   assert.deepEqual(result.config.persona.address, { self_ref: null, user_ref: "Dummy Reader" });
   assert.equal(result.config.persona.age, null);
   assert.equal(result.config.persona.note, null);
+  assert.equal(result.config.persona.user, null);
+  assert.equal(result.config.persona.agent, "Dummy fictional role");
   assert.equal(result.config.safeword, null);
   assert.equal(Object.hasOwn(result.config, "guards"), false);
-  for (const field of ["axes.verbosity", "axes.care", "axes.unknown", "persona.age", "persona.note",
+  for (const field of ["axes.verbosity", "axes.care", "axes.unknown", "persona.age", "persona.note", "persona.user",
     "persona.address.self_ref", "persona.unknown", "safeword", "language", "unknown-fields"]) {
     assert.ok(result.invalid.includes(field), field);
   }
@@ -222,6 +229,7 @@ test("literal original artifact text recovers its rendered data and exposes sett
   assert.deepEqual(result.config.persona, {
     age: "50s+", gender: "feminine", address: { self_ref: null, user_ref: "Dummy Reader" },
     note: 'Dummy private role with "quoted" words.',
+    user: null, agent: null,
   });
   assert.equal(result.config.preset, "tough-love");
   assert.equal(Object.hasOwn(result.config, "guards"), false);
@@ -243,7 +251,10 @@ test("current controls and composites decode exactly, while altered or duplicate
   config.safeword = null;
   config.speech_level = "plain";
   config.unsaved = true;
-  config.persona = { age: null, gender: null, address: { self_ref: "Dummy Agent", user_ref: null }, note: null };
+  config.persona = {
+    age: null, gender: null, address: { self_ref: "Dummy Agent", user_ref: null }, note: null,
+    user: "Dummy user context", agent: "Dummy fictional role",
+  };
   const artifact = compile(toCompileInput(config));
   const result = recoverLegacyTone(artifact, EN)!;
   assert.deepEqual(result.config.axes, config.axes);

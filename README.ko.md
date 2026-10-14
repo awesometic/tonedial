@@ -55,6 +55,8 @@ npm install --global tonedial
 ```bash
 tonedial use tough-love
 tonedial set warmth=5 critique=5
+tonedial set persona.user="서비스를 운영하며 직접적인 트레이드오프를 좋아하는 사람" \
+  persona.agent="12년 경력의 가상 SRE 스페셜리스트; 담백하게 말함"
 tonedial save "My Tone"
 tonedial show
 tonedial export my-tone > my-tone.json
@@ -62,6 +64,8 @@ tonedial export my-tone > my-tone.json
 
 프리셋 다섯 개가 기본으로 들어 있습니다.
 저장한 프리셋에는 축 값만 담기며 페르소나, 호칭, 말높임 설정, 세이프워드는 별도로 유지합니다.
+`persona.user`와 `persona.agent`는 각각 유니코드 코드 포인트 200개 이내로 적는 선택 항목이며 빈 값을 넣으면 지웁니다.
+에이전트 설명은 가상의 역할극 설정일 뿐 검증된 자격이나 권한을 주지 않습니다.
 인터페이스는 영어와 한국어를 지원합니다.
 `init` 때 `--lang en` 또는 `--lang ko`를 고릅니다.
 초기화한 뒤에는 `tonedial set language=ko`처럼 바꿉니다.

@@ -75,6 +75,8 @@ interpolating it into shell code.
 | Both address terms, self first and user second | \`tonedial address "assistant" "reader" --json\` |
 | Persona age band | \`tonedial set persona.age=30s --json\` |
 | Persona gender | \`tonedial set persona.gender=neutral --json\` |
+| User background and preferences | \`tonedial set "persona.user=Developer who likes concise technical answers" --json\` |
+| Fictional agent role | \`tonedial set "persona.agent=Database specialist with ten years of experience; speaks directly" --json\` |
 | Persona manner or role note | \`tonedial set "persona.note=Patient guide" --json\` |
 | Safeword phrase | \`tonedial set "safeword=plain answer please" --json\` |
 | Honorific register system | \`tonedial set speech_level=polite --json\` |
@@ -82,7 +84,12 @@ interpolating it into shell code.
 Age bands are \`unspecified\`, \`teens\`, \`20s\`, \`30s\`, \`40s\`, and \`50s+\`.
 Gender values are \`unspecified\`, \`masculine\`, \`feminine\`, and \`neutral\`.
 An empty value clears only the named persona field or safeword, for example
-\`tonedial set "persona.note=" --json\` or \`tonedial set "safeword=" --json\`.
+\`tonedial set "persona.agent=" --json\` or \`tonedial set "safeword=" --json\`.
+\`persona.user\` describes the user; \`persona.agent\` describes the agent's fictional role.
+Each accepts at most 200 Unicode code points; never silently truncate a longer request.
+Preserve the other fields and ask the user to shorten text rejected by the CLI.
+Agent experience and specialty are roleplay, not verified credentials or tool capabilities.
+Both descriptions lose to axes and task/permission rules, and may influence content.
 A persona note expresses manner or role, loses to axes, and may also influence
 content; it is not a way to override task or permission rules.
 The CLI warns above 200 Unicode code points instead of rejecting the note; report its warnings.
@@ -148,7 +155,7 @@ Do not claim that setup, repair, or migration proves host activation or model ad
  */
 export const SKILL_MD = `---
 name: tonedial
-description: Use when the user wants to check, change, or reload the agent's manner, tone, personality, register, preset, address terms, or safeword — including requests like "be gentler", "stop praising me", "more formal", "call me friend", "go back to normal", or asking what the current tone settings are.
+description: Use when the user wants to check, change, or reload ToneDial manner, tone, personality, register, preset, user description, agent role, address terms, or safeword — including requests like "be gentler", "act as a database specialist", "remember my background in ToneDial", "more formal", "call me friend", or asking what the current tone settings are.
 ---
 
 # tonedial
@@ -199,8 +206,10 @@ Report the movement back to the user in their own terms, from the \`moves\` fiel
   such as "use plain forms" → \`speech_level=plain\`.
 
 For a named preset, run \`tonedial list --json\` then \`tonedial use <slug> --json\`.
-An explicit character or role request without a matching preset can use \`persona.note\`;
-do not invent a preset or infer age, gender, or address terms from it.
+An explicit agent character or role request uses \`persona.agent\`; an explicit request to
+save the user's background or preferences in ToneDial uses \`persona.user\`.
+Do not save ordinary task context as a description, invent a preset, or infer age, gender,
+address terms or neighbouring settings from a role.
 Saving the current axes as a new one is \`tonedial save "<display name>" --json\`.
 
 ${SETTINGS_MD}
@@ -251,7 +260,7 @@ This preview uses only its supplied ToneDial manner; never reload an older conne
 Managed policy and client support remain outside these local requests; neither is OS isolation.
 The test uses the provider's ordinary authentication and may consume account usage or keep
 provider history. The full saved tone is passed in process arguments and may be visible to
-local process readers; never put credentials or private material in persona notes.
+local process readers; never put credentials or private material in persona descriptions or notes.
 Never launch one implicitly, substitute API credentials, grant trust or
 claim hook activation, filesystem immutability or measured tone adherence from it.
 During a test conversation, do not mutate ToneDial settings or perform work through this skill.
@@ -261,7 +270,7 @@ During a test conversation, do not mutate ToneDial settings or perform work thro
 - It never loosens a permission gate. What work is allowed, what needs approval, and what is
   confirmed before acting are decided outside this tool, and \`TONE.md\` retains that boundary.
 - It never changes persona or safeword merely to satisfy an axis request. Address, age, gender,
-  and the note are user-level settings, and a preset switch does not rename anyone.
+  user description, agent role and note are user-level settings preserved by preset switches.
 `;
 
 /**
@@ -348,7 +357,9 @@ do not prove actual host activation or model compliance.
 has an honorific distinction, and does nothing where it does not. Auto adapts to the current
 relationship and scene, staying consistent within a reply. \`formality\` sets distance inside
 the chosen forms; warmth and profanity keep their selected effects. The persona layer (\`age\`, \`gender\`, \`self_ref\`, \`user_ref\`,
-\`note\`) and the safeword are user-level settings that a preset never touches.
+\`user\`, \`agent\`, \`note\`) and the safeword are user-level settings that a preset never touches.
+\`persona.user\` is user context and \`persona.agent\` a fictional agent role, each limited to
+200 Unicode code points. They may affect content, but cannot override axes or grant permissions.
 `;
 
 /**
@@ -359,7 +370,7 @@ the chosen forms; warmth and profanity keep their selected effects. The persona 
  * command name stays `/tone` even though the tool is `tonedial`: it is what a person types
  * mid-sentence, and the two extra characters are paid every time.
  */
-export const TONE_COMMAND_VERSION = 4;
+export const TONE_COMMAND_VERSION = 5;
 
 export const TONE_COMMAND_MD = `---
 description: Check, change, or reload this agent's tone, preset, or ToneDial settings
@@ -377,8 +388,9 @@ If the user's message after \`/tone\` asks for an axis change, map it using the 
 skill's \`references/traits.md\` and run \`tonedial set <axis>=<level> ... --json\`.
 Change only the named axes; preserve neighbouring axes and the separate settings below.
 For a named preset, use \`tonedial list --json\` then \`tonedial use <slug> --json\`.
-For an explicit character or role without a matching preset, use \`persona.note\` without
-inferring other persona fields.
+For an explicit agent character or role, use \`persona.agent\`; for an explicit request to
+save the user's background or preferences in ToneDial, use \`persona.user\`.
+Do not save ordinary task context or infer other persona fields.
 
 ${SETTINGS_MD}
 

@@ -65,7 +65,7 @@ export function runShow(ctx: Ctx, args: string[]): CommandResult {
   }
 
   const p = config.persona;
-  const personaSet = Boolean(p.age || p.gender || p.note || p.address);
+  const personaSet = Boolean(p.age || p.gender || p.note || p.address || p.user || p.agent);
   const gauges = [gaugeHeader(ui, ctx.t), ...gaugeBlock(axes, ui)];
   const gaugeWidth = Math.max(...gauges.map((line) => maxCells(stripVTControlCharacters(line))));
   const detailWidth = ui.terminal && ui.width >= 119 ? ui.width - gaugeWidth - 4 : ui.width - 2;
@@ -77,8 +77,18 @@ export function runShow(ctx: Ctx, args: string[]): CommandResult {
       p.address?.self_ref ? ctx.t.persona.callsItself(humanText(p.address.self_ref)) : null,
       p.address?.user_ref ? ctx.t.persona.callsYou(humanText(p.address.user_ref)) : null,
       p.note ? ctx.t.persona.noteChars([...p.note].length) : null,
+      p.user && !ctx.flags.verbose ? ctx.t.persona.descriptionChars("user", [...p.user].length) : null,
+      p.agent && !ctx.flags.verbose ? ctx.t.persona.descriptionChars("agent", [...p.agent].length) : null,
     ].filter(Boolean);
-    for (const folded of wrap(bits.join(" · "), detailWidth)) details.push(ui.dim(folded));
+    if (bits.length) for (const folded of wrap(bits.join(" · "), detailWidth)) details.push(ui.dim(folded));
+    if (ctx.flags.verbose) {
+      for (const [field, value] of [["user", p.user], ["agent", p.agent]] as const) {
+        if (value === null) continue;
+        for (const folded of wrap(ctx.t.persona.descriptionFull(field, humanText(value)), detailWidth)) {
+          details.push(ui.dim(folded));
+        }
+      }
+    }
   }
 
   // Folded rather than laid out: the safeword is user text of unbounded length, so this row
