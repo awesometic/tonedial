@@ -1,7 +1,7 @@
 status: 2
 --- stdout --- [bytes=0; endsWithNewline=false]
 
---- stderr --- [bytes=177; endsWithNewline=true]
+--- stderr --- [bytes=185; endsWithNewline=true]
 not-a-command: 명령이 아닙니다. 사용 가능: set, test, address, reset, show,
-save, list, edit, update, use, compile, export, import, wire, unwire, init,
-doctor, eject
+create, save, list, edit, update, use, compile, export, import, wire, unwire,
+init, doctor, eject

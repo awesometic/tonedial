@@ -57,9 +57,14 @@ tonedial show
 tonedial export my-tone > my-tone.json
 ```
 
-Five presets are bundled. Saved presets carry axes only; persona, address, register and safeword stay separate.
+Five axis-only presets are bundled. Saved custom profiles carry axes, persona, address, register and safeword together.
+`use` restores a custom profile's complete settings; older axis-only presets keep the current separate settings.
+Use `tonedial create` for guided creation with a name, separate slug, tone settings and the twelve-axis dial.
+`show` reports current settings and offers a save command when the tone differs from the saved profile;
+`show <slug>` previews the saved profile.
 `persona.user` and `persona.agent` are optional role descriptions capped at 200 Unicode code points each; empty input clears one.
 The agent description is fictional roleplay context, not a verified credential or permission grant.
+`set persona.agent="..."` adds or changes the current role immediately while preserving the axes; use `save` to update the selected profile.
 The interface is English or Korean.
 Choose it during `init` with `--lang en` or `--lang ko`.
 After setup, change it with `tonedial set language=ko`.

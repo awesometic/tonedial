@@ -9,6 +9,7 @@ import { contextArtifactTargets } from "../core/seeds.ts";
 import type { Messages } from "../core/i18n.ts";
 import { budget, humanText, nextStep, num } from "../ui/format.ts";
 import { wrap } from "../ui/width.ts";
+import { confirm } from "../ui/prompt.ts";
 import { captureRawEntry, gate, planChange, rawReadChange, type Change } from "../wiring/apply.ts";
 
 type ArtifactChange = Change & { contextCompanions?: Change[] };
@@ -37,11 +38,13 @@ export function planArtifact(ctx: Ctx, config: Config): { change: Change; artifa
   return { change, artifact, size };
 }
 
-/** Shared direct-command gate settings: no prompt or diff is emitted by the command itself. */
+/** Shared mutation gate, including file review before profile creation. */
 export async function applyPlanned(
   ctx: Ctx,
   changes: Change[],
   finalChanges: Change[] = [],
+  review = false,
+  reviewLines: string[] = [],
 ): Promise<Awaited<ReturnType<typeof gate>>> {
   const artifact = changes.find((change) => (change as ArtifactChange).contextCompanions !== undefined) as ArtifactChange | undefined;
   const synchronized = [...changes];
@@ -50,16 +53,25 @@ export async function applyPlanned(
       if (!synchronized.some((change) => change.path === companion.path)) synchronized.push(companion);
     }
   }
-  return gate([...(ctx.contextChecks ?? []), ...synchronized], {
+  const result = await gate([...(ctx.contextChecks ?? []), ...synchronized], {
     paths: ctx.paths,
     finalChanges,
     interactive: () => ctx.canPrompt,
-    out: () => {},
+    out: review && !ctx.asJson ? (text) => { process.stdout.write(text); } : () => {},
     dryRun: ctx.flags.dryRun,
     t: ctx.t,
-    auto: true,
+    auto: !review || ctx.flags.auto,
+    verbose: review && ctx.flags.verbose,
+    ...(review && !ctx.asJson && reviewLines.length ? { ask: async (question: string) => {
+      process.stdout.write(`\n${reviewLines.join("\n")}\n`);
+      return confirm(question);
+    } } : {}),
     ui: ctx.ui,
   });
+  if (review && !ctx.asJson && (ctx.flags.auto || ctx.flags.dryRun) && reviewLines.length) {
+    result.lines.push("", ...reviewLines);
+  }
+  return result;
 }
 
 export function sizeWarning(size: SizeReport, t: Messages): string[] {

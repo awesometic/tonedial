@@ -3,9 +3,10 @@
 import type { CommandResult, Ctx } from "../cli.ts";
 import { AXIS_DEFAULT, AXIS_ORDER, type Axes, type Level } from "../core/anchors.ts";
 import { ConfigError, serializeConfig } from "../core/config.ts";
-import { BUNDLED, SLUG_PATTERN, preparePresetWrite, slugify, type Preset } from "../core/presets.ts";
+import { BUNDLED, PRESET_SCHEMA, SLUG_PATTERN, preparePresetWrite, presetSettings, resolvePreset, slugify, type Preset, type PresetEntry } from "../core/presets.ts";
 import { budget, humanText, nextStep } from "../ui/format.ts";
-import { cells, truncate } from "../ui/width.ts";
+import { cells, truncate, wrap } from "../ui/width.ts";
+import { PERSONA_DESCRIPTION_MAX } from "../core/combos.ts";
 import { applyPlanned, planArtifact, planConfig, sizeWarning } from "./compile.ts";
 import { planChange, rawReadChange, rawReadCheck } from "../wiring/apply.ts";
 
@@ -20,18 +21,32 @@ function movedValues(axes: Axes): Preset["values"] {
 
 export async function runSave(ctx: Ctx, args: string[]): Promise<CommandResult> {
   const displayName = args.join(" ").trim();
+  const state = planConfig(ctx);
+  const selected = ctx.flags.slug ?? state.config.preset;
+  const existing = !displayName && selected ? resolvePreset(ctx.paths.presets, selected, ctx.t) : null;
+  return savePreset(ctx, displayName || existing?.preset.displayName || "", state,
+    existing ? { slug: existing.preset.slug, existing } : {});
+}
+
+/** Save and create share one preset/config/artifact transaction. */
+export async function savePreset(
+  ctx: Ctx,
+  displayName: string,
+  state: ReturnType<typeof planConfig>,
+  options: { slug?: string; create?: boolean; existing?: PresetEntry } = {},
+): Promise<CommandResult> {
   if (!displayName) throw new ConfigError(ctx.t.preset.needsDisplayName);
 
-  const slug = slugify(displayName, ctx.t);
-  if (!SLUG_PATTERN.test(slug)) throw new ConfigError(ctx.t.preset.invalidSlugFor(displayName));
+  const slug = options.slug ?? ctx.flags.slug ?? slugify(displayName, ctx.t);
+  if (!SLUG_PATTERN.test(slug)) throw new ConfigError(ctx.t.preset.noSlug(slug));
   if (BUNDLED.some((p) => p.slug === slug)) {
     throw new ConfigError(ctx.t.preset.bundledSlug(slug));
   }
 
-  const { change: configChange, config } = planConfig(ctx);
+  const { change: configChange, config } = state;
   const values = movedValues(config.axes);
-  const preset = { schema: 1, slug, displayName, values } satisfies Preset;
-  const prepared = preparePresetWrite(ctx.paths.presets, preset, ctx.t);
+  const preset = { schema: PRESET_SCHEMA, slug, displayName, values, settings: presetSettings(config) } satisfies Preset;
+  const prepared = preparePresetWrite(ctx.paths.presets, preset, ctx.t, options.existing ? { existing: options.existing } : {});
   const presetBaseline = prepared.capture === null
     ? planChange(prepared.path, (before) => before, ctx.t, undefined, ctx.paths.root)
     : rawReadChange(prepared.capture, ctx.t);
@@ -39,6 +54,7 @@ export async function runSave(ctx: Ctx, args: string[]): Promise<CommandResult> 
   const selectionReads = prepared.selectionReads.filter((capture) => capture.path !== prepared.path)
     .map((capture) => rawReadCheck(capture, ctx.t));
   const replaced = presetChange.before !== null;
+  if (options.create && replaced) throw new ConfigError(ctx.t.create.exists(slug));
 
   config.preset = slug;
   config.unsaved = false;
@@ -46,7 +62,25 @@ export async function runSave(ctx: Ctx, args: string[]): Promise<CommandResult> 
   // the config named a preset that `tone.md` still called `unsaved`.
   const { change: toneChange, size } = planArtifact(ctx, config);
   const finalConfig = { ...configChange, after: serializeConfig(config, ctx.t) };
-  await applyPlanned(ctx, [...selectionReads, presetChange, toneChange], [finalConfig]);
+  const review: string[] = [];
+  if (options.create && !ctx.asJson) {
+    const address = config.persona.address;
+    const details = [
+      `${ctx.t.create.reviewHeading} · ${humanText(displayName)} (${slug})`,
+      [address?.self_ref ? ctx.t.persona.callsItself(humanText(address.self_ref)) : "",
+        address?.user_ref ? ctx.t.persona.callsYou(humanText(address.user_ref)) : ""].filter(Boolean).join(" · "),
+      ...(["user", "agent"] as const).map((field) =>
+        `${ctx.t.persona.descriptionFull(field, humanText(config.persona[field] ?? ""))} (${ctx.t.create.descriptionCount([...(config.persona[field] ?? "")].length, PERSONA_DESCRIPTION_MAX)})`),
+      `${(config.safeword ? ctx.t.settings.safewordSet(humanText(config.safeword)) : ctx.t.settings.noSafeword).split(" — ")[0]} · ${ctx.t.settings.register(config.speech_level)}`,
+    ];
+    for (const detail of details.filter(Boolean)) review.push(...wrap(detail, ctx.ui.width - 2).map((line) => `  ${line}`));
+  }
+  const result = await applyPlanned(ctx, [...selectionReads, presetChange, toneChange], [finalConfig], options.create === true, review);
+
+  if (options.create && !result.applied) return {
+    lines: [...result.lines, `  ${ctx.t.create.notCreated}`],
+    json: { slug, displayName, created: false, reason: result.reason, diff: result.diff },
+  };
 
   const count = Object.keys(values).length;
   const countLabel = ctx.t.preset.nonDefault(count);
@@ -57,12 +91,12 @@ export async function runSave(ctx: Ctx, args: string[]): Promise<CommandResult> 
   if (count < 3 || count > 7) {
     warnings.push(ctx.t.preset.sparsity(slug, count));
   }
-  warnings.push(ctx.t.preset.userLevelNotCaptured);
 
   return {
     // Truncated, not folded. A display name has no length cap, and folding one across two lines
     // makes the slug beside it harder to read than losing the tail does.
     lines: [
+      ...(options.create ? result.lines : []),
       `  ${ctx.ui.success(ctx.ui.bold(ctx.t.preset.savedTarget(slug)))}`,
       `  ${truncate(
         humanText(displayName),
@@ -72,7 +106,8 @@ export async function runSave(ctx: Ctx, args: string[]): Promise<CommandResult> 
       ...(ctx.flags.verbose ? [`  ${ctx.ui.dim(budget(size, ctx.t))}`] : []),
       ...nextStep("tonedial list", ctx.ui),
     ],
-    json: { slug, displayName, values, nonDefaultAxes: count, replaced, chars: size.chars },
+    json: { slug, displayName, values, settings: preset.settings, nonDefaultAxes: count, replaced, chars: size.chars,
+      ...(options.create ? { created: true, diff: result.diff, operationId: result.operationId } : {}) },
     warnings,
   };
 }

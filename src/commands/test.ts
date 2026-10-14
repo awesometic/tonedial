@@ -8,7 +8,7 @@ import { resolve } from "node:path";
 import { createInterface } from "node:readline/promises";
 
 import type { CommandResult, Ctx } from "../cli.ts";
-import { applyPreset, inspectPresetLibrary, readDisplayName, resolvePreset, type Preset } from "../core/presets.ts";
+import { withPreset, inspectPresetLibrary, readDisplayName, resolvePreset, type Preset } from "../core/presets.ts";
 import { compile } from "../core/compile.ts";
 import { riskyAxes } from "../core/anchors.ts";
 import { ConfigError } from "../core/config.ts";
@@ -47,7 +47,7 @@ export async function runTest(ctx: Ctx, args: string[]): Promise<CommandResult> 
   }
   const { change, config } = saved;
   if (change.before === null) throw new ConfigError(copy.missingConfig);
-  const input = toCompileInput(config);
+  let input = toCompileInput(config);
   let preview: Preset | null = null;
   if (ctx.flags.preset != null) {
     const library = inspectPresetLibrary(ctx.paths.presets, ctx.t);
@@ -55,8 +55,7 @@ export async function runTest(ctx: Ctx, args: string[]): Promise<CommandResult> 
     if (preview === null) {
       throw new ConfigError(ctx.t.preset.unknown(ctx.asJson ? ctx.flags.preset : humanText(ctx.flags.preset), library.entries.map((entry) => entry.preset.slug)));
     }
-    input.axes = applyPreset(preview);
-    input.preset = preview.slug;
+    input = toCompileInput(withPreset(config, preview));
   }
   const tone = compile(input);
 

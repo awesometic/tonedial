@@ -51,6 +51,7 @@ const scenarios: Record<string, Scenario> = {
   },
   show: initialized(() => ["show"]),
   save: initialized(() => ["save", "Example"]),
+  create: initialized(() => ["create", "Example", "--slug", "example", "warmth=2", "--auto"]),
   list: initialized(() => ["list"]),
   edit: initialized(() => ["edit", "--dry-run"]),
   update: initialized(() => ["update", "--dry-run"]),
@@ -116,6 +117,19 @@ test("formatted captures preserve empty, newline, and missing-trailing-newline s
 });
 
 for (const language of selectedGoldenLanguages()) {
+  test(`unsaved preset show output golden · ${language}`, async () => {
+    const workspace = createGoldenWorkspace(language);
+    try {
+      await init(workspace, language);
+      assert.equal((await captureCli(workspace, ["save", "Example", "--slug", "example"])).status, 0);
+      assert.equal((await captureCli(workspace, ["set", "warmth=2"])).status, 0);
+      const capture = await captureCli(workspace, ["show"]);
+      assert.equal(capture.status, 0);
+      assertGolden(goldenPath(language, "commands", "show-unsaved"), formatCapture(normalizeCapture(capture, workspace)));
+    } finally {
+      workspace.dispose();
+    }
+  });
   test(`global help and version goldens · ${language}`, async () => {
     for (const [name, args] of [["global-help", ["--help"]], ["global-version", ["--version"]]] as const) {
       const workspace = createGoldenWorkspace(language);

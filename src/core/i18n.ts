@@ -130,7 +130,6 @@ export type Messages = {
     noLatin: (name: string) => string;
     nameTooLong: (given: number, cap: number) => string;
     sparsity: (slug: string, count: number) => string;
-    userLevelNotCaptured: string;
     replaced: (slug: string) => string;
     imported: (slug: string, replaced: boolean) => string;
     unreadable: (path: string, reason: string) => string;
@@ -149,6 +148,21 @@ export type Messages = {
     nonDefault: (count: number) => string;
     preview: string;
     unsaved: string;
+    changesNotSaved: string;
+  };
+  create: {
+    introduction: string;
+    name: string;
+    slug: string;
+    user: string;
+    agent: string;
+    register: string;
+    safeword: string;
+    needsName: string;
+    exists: (slug: string) => string;
+    notCreated: string;
+    descriptionCount: (count: number, cap: number) => string;
+    reviewHeading: string;
   };
   recovery: {
     heading: string;
@@ -448,8 +462,8 @@ export type Messages = {
     /** The two commands someone who has just installed this should run. */
     firstSteps: string;
     examples: string;
-    commands: { init: string; set: string; address: string; reset: string; show: string; save: string; list: string; edit: string; use: string; compile: string; export: string; import: string; wire: string; unwire: string; doctor: string; update: string; eject: string; test: string };
-    flags: { global: string; here: string; project: string; migrateLegacy: string; auto: string; dryRun: string; lang: string; commands: string; tools: string; fix: string; rollback: string; fromOperation: string; fromPreset: string; restorePreset: string; preset: string; acceptUsage: string; explain: string; check: string; json: string; verbose: string; color: string; version: string; help: string };
+    commands: { init: string; set: string; address: string; reset: string; show: string; create: string; save: string; list: string; edit: string; use: string; compile: string; export: string; import: string; wire: string; unwire: string; doctor: string; update: string; eject: string; test: string };
+    flags: { global: string; here: string; project: string; migrateLegacy: string; auto: string; dryRun: string; lang: string; commands: string; tools: string; fix: string; rollback: string; fromOperation: string; fromPreset: string; restorePreset: string; preset: string; slug: string; acceptUsage: string; explain: string; check: string; json: string; verbose: string; color: string; version: string; help: string };
   };
   combos: {
     /** The two framings around a rule's sentence. */
@@ -604,8 +618,8 @@ const enMessages: Messages = {
       `Run tonedial use ${slug}, then save it under a new name.`,
     editSaved: (slug) => `${slug} saved`,
     editAxesKept: (unsaved) => unsaved
-      ? "Live axes kept; they differ from the saved preset."
-      : "Live axes kept; they match the saved preset.",
+      ? "Current tone settings kept; they differ from the saved profile."
+      : "Current tone settings kept; they match the saved profile.",
     slugNotEditable: (was, tried) =>
       `The slug cannot be edited. The active preset and connection record point to ${was}. ` +
       `Run tonedial use ${was}, then save it as ${tried}.`,
@@ -613,7 +627,6 @@ const enMessages: Messages = {
     nameTooLong: (given, cap) => `display name: ${given} characters · maximum ${cap}`,
     sparsity: (slug, count) =>
       `${slug}: ${count} changed axes · recommended 3–7 (5±2). Fewer extremes reduce conflicts`,
-    userLevelNotCaptured: "persona and safeword are user settings, so presets do not save them",
     replaced: (slug) => `${slug}: existing preset replaced`,
     imported: (slug, replaced) => `${slug}: ${replaced ? "replaced" : "imported"}`,
     unreadable: (path, reason) => `${path}\ncannot read: ${reason}`,
@@ -621,7 +634,7 @@ const enMessages: Messages = {
     notJsonRemote: (url) => `${url}: response is not valid JSON`,
     notAPreset: (name) => `${name}: not a preset object`,
     slugTooLong: (given, cap) => `slug: ${given} characters · maximum ${cap}`,
-    needsDisplayName: "save needs an English display name. Slugs use Latin characters only",
+    needsDisplayName: "save needs a display name. Use --slug for a name without Latin letters or digits.",
     needsSlugArg: "a preset slug is required. List: tonedial list",
     invalidSlugFor: (name) => `"${name}": cannot make a valid slug`,
     noSlug: (path) => `${path}: no valid slug. Use lowercase letters, digits, and dashes`,
@@ -631,7 +644,22 @@ const enMessages: Messages = {
     yours: "user preset",
     nonDefault: (count) => `${count} non-default axes`,
     preview: "preview",
-    unsaved: "custom axes",
+    unsaved: "unsaved changes",
+    changesNotSaved: "Not saved to a profile.",
+  },
+  create: {
+    introduction: "Choose the profile name, slug, address and role, then adjust all twelve axes. Enter keeps the shown value. Final approval saves and applies the whole profile.",
+    name: "Display name",
+    slug: "Slug (lowercase letters, digits, dashes)",
+    user: "Your background or preferences (up to 200 characters)",
+    agent: "Agent role (up to 200 characters)",
+    register: "Register (auto, polite, plain)",
+    safeword: "Safeword",
+    needsName: "create needs a display name. Run tonedial create in a terminal, or supply a name and optional key=value settings with --auto.",
+    exists: (slug) => `${slug}: a preset already exists. Choose another slug, or use save to update it.`,
+    notCreated: "No preset created; current settings unchanged.",
+    descriptionCount: (count, cap) => `${count}/${cap} characters`,
+    reviewHeading: "Profile to save",
   },
   recovery: {
     heading: "Application recovery",
@@ -954,18 +982,19 @@ const enMessages: Messages = {
     examples: "Examples",
     commands: {
       init: "set up and refresh bundled files",
-      set: "change an axis or setting · bare opens dial",
+      set: "change axes, role or settings · bare opens dial",
       address: "set names for each party · bare prompts",
       reset: "reset an axis · bare resets all axes",
-      show: "the gauges and the state summary",
+      show: "current settings · slug previews saved axes",
       test: "try saved settings or a preset in a new conversation",
-      save: "save current axes as a preset",
+      save: "save the current tone as a profile",
+      create: "create and apply a preset · bare guides setup",
       list: "bundled and user presets",
       edit: "open settings or a preset in $EDITOR",
       use: "apply a preset and compile",
-      compile: "recompile current state",
-      export: "export a preset as JSON",
-      import: "import a JSON preset",
+      compile: "rebuild TONE.md for repair · tone changes do this automatically",
+      export: "back up a profile, including address and role, as JSON",
+      import: "import a profile from JSON · use applies it",
       wire: "connect an agent here · bare prompts",
       unwire: "remove a managed connection",
       doctor: "check connections · repair with --fix",
@@ -988,7 +1017,8 @@ const enMessages: Messages = {
       fromOperation: "doctor --fix: select saved settings from an operation",
       fromPreset: "doctor --fix: preset for unavailable settings",
       restorePreset: "doctor --fix: restore one missing or damaged user preset",
-      preset: "test: preview a preset · keep saved settings",
+      preset: "test: preview a saved profile · current state kept",
+      slug: "create/save: choose a preset slug",
       acceptUsage: "test: accept account usage and charges for this launch",
       explain: "show: explain axes, settings, risky levels",
       check: "compile: report size · write nothing",
@@ -1259,8 +1289,8 @@ const koMessages: Messages = {
       `tonedial use ${slug} 명령을 실행한 뒤 새 이름으로 저장하세요.`,
     editSaved: (slug) => `${slug} 저장됨`,
     editAxesKept: (unsaved) => unsaved
-      ? "현재 축 값은 유지했습니다. 저장한 프리셋과 다릅니다."
-      : "현재 축 값은 유지했습니다. 저장한 프리셋과 같습니다.",
+      ? "현재 말투 설정은 유지했습니다. 저장한 프로필과 다릅니다."
+      : "현재 말투 설정은 유지했습니다. 저장한 프로필과 같습니다.",
     slugNotEditable: (was, tried) =>
       `슬러그를 직접 바꿀 수 없습니다. 활성 프리셋과 연결 기록의 대상: ${was}. ` +
       `tonedial use ${was} 명령을 실행한 뒤 저장할 새 이름을 지정하세요: ${tried}`,
@@ -1268,7 +1298,6 @@ const koMessages: Messages = {
     nameTooLong: (given, cap) => `표시 이름: ${given}자 · 최대 ${cap}자`,
     sparsity: (slug, count) =>
       `${slug}: 변경 축 ${count}개 · 권장 3~7개(5±2). 극단값이 적으면 충돌도 줄어듭니다`,
-    userLevelNotCaptured: "페르소나와 세이프워드는 사용자 설정이므로 프리셋에 저장하지 않습니다",
     replaced: (slug) => `${slug}: 기존 프리셋 교체됨`,
     imported: (slug, replaced) => `${slug}: ${replaced ? "교체됨" : "가져옴"}`,
     unreadable: (path, reason) => `${path}\n읽을 수 없습니다: ${reason}`,
@@ -1276,7 +1305,7 @@ const koMessages: Messages = {
     notJsonRemote: (url) => `${url}: 응답이 올바른 JSON이 아닙니다`,
     notAPreset: (name) => `${name}: 프리셋 객체가 아닙니다`,
     slugTooLong: (given, cap) => `슬러그: ${given}자 · 최대 ${cap}자`,
-    needsDisplayName: "save에는 영어 표시 이름이 필요합니다. 슬러그는 라틴 문자만 받습니다",
+    needsDisplayName: "save에는 표시 이름이 필요합니다. 이름에 영문자나 숫자가 없으면 --slug를 지정하세요.",
     needsSlugArg: "프리셋 슬러그가 필요합니다. 목록: tonedial list",
     invalidSlugFor: (name) => `"${name}": 올바른 슬러그를 만들 수 없습니다`,
     noSlug: (path) => `${path}: 올바른 슬러그가 없습니다. 소문자·숫자·붙임표만 쓸 수 있습니다`,
@@ -1286,7 +1315,22 @@ const koMessages: Messages = {
     yours: "사용자 프리셋",
     nonDefault: (count) => `기본값과 다른 축 ${count}개`,
     preview: "미리보기",
-    unsaved: "직접 조절한 축",
+    unsaved: "저장하지 않은 변경",
+    changesNotSaved: "프로필에 저장되지 않았습니다.",
+  },
+  create: {
+    introduction: "프로필 이름·슬러그·호칭·역할을 입력한 뒤 열두 축을 조절합니다. Enter를 누르면 표시된 값을 유지합니다. 마지막 확인에서 전체 프로필을 저장하고 적용합니다.",
+    name: "표시 이름",
+    slug: "슬러그(영문 소문자·숫자·붙임표)",
+    user: "사용자 배경이나 선호(최대 200자)",
+    agent: "에이전트 역할(최대 200자)",
+    register: "말씨(auto, polite, plain)",
+    safeword: "세이프워드",
+    needsName: "create에는 표시 이름이 필요합니다. 터미널에서 tonedial create를 실행하거나, 이름과 필요한 키=값 설정을 --auto와 함께 지정하세요.",
+    exists: (slug) => `${slug}: 이미 있는 프리셋입니다. 다른 슬러그를 쓰거나 save로 갱신하세요.`,
+    notCreated: "프리셋을 만들지 않았습니다. 현재 설정을 유지했습니다.",
+    descriptionCount: (count, cap) => `${count}/${cap}자`,
+    reviewHeading: "저장할 프로필",
   },
   recovery: {
     heading: "앱 복구",
@@ -1611,18 +1655,19 @@ const koMessages: Messages = {
     examples: "사용 예",
     commands: {
       init: "초기 설정과 기본 파일 갱신",
-      set: "축이나 설정 변경 · 인자 없으면 다이얼",
+      set: "축·역할·설정 변경 · 인자 없으면 다이얼",
       address: "서로 부르는 말 · 인자 없으면 질문",
       reset: "축을 기본값으로 · 축을 안 주면 전부",
-      show: "게이지와 현재 상태",
+      show: "현재 설정 · 슬러그를 주면 저장한 축",
       test: "저장된 설정이나 프리셋으로 새 대화 시작",
-      save: "현재 축을 프리셋으로 저장",
+      save: "현재 말투를 프로필로 저장",
+      create: "프리셋 생성·적용 · 인자 없으면 안내",
       list: "기본 제공·사용자 프리셋",
       edit: "설정이나 프리셋을 $EDITOR로 열기",
       use: "프리셋 적용 후 컴파일",
-      compile: "현재 상태 다시 컴파일",
-      export: "프리셋을 JSON으로 내보내기",
-      import: "JSON 프리셋 가져오기",
+      compile: "복구용 TONE.md 재생성 · 말투 변경 시 자동 처리",
+      export: "호칭·역할을 포함한 프로필을 JSON으로 백업",
+      import: "JSON에서 프로필 가져오기 · use로 적용",
       wire: "현재 범위에 에이전트 연결 · 인자 없으면 질문",
       unwire: "관리 중인 연결 해제",
       doctor: "연결 점검 · 복구는 --fix",
@@ -1645,7 +1690,8 @@ const koMessages: Messages = {
       fromOperation: "doctor --fix: 작업 기록에서 설정 선택",
       fromPreset: "doctor --fix: 없는 설정에 사용할 프리셋",
       restorePreset: "doctor --fix: 없거나 손상된 사용자 프리셋 하나 복원",
-      preset: "test: 프리셋 미리보기 · 저장된 설정 유지",
+      preset: "test: 저장한 프로필 미리보기 · 현재 상태 유지",
+      slug: "create/save: 프리셋 슬러그 지정",
       acceptUsage: "test: 이번 실행의 계정 사용량·비용 부담에 동의",
       explain: "show: 축·설정·주의할 레벨 설명",
       check: "compile: 크기만 확인 · 기록하지 않음",

@@ -2,14 +2,15 @@
 
 import { lstatSync, readdirSync } from "node:fs";
 import { createHash } from "node:crypto";
+import { isDeepStrictEqual } from "node:util";
 import { basename, dirname, join } from "node:path";
 
 import { AXIS_DEFAULT, AXIS_ORDER, type Axes, type Level } from "./anchors.ts";
-import { ConfigError, nearestAxis } from "./config.ts";
+import { ConfigError, nearestAxis, parseConfig, type Config } from "./config.ts";
 import type { Messages } from "./i18n.ts";
 import { captureRawEntry, type RawEntryCapture } from "../wiring/apply.ts";
 
-export const PRESET_SCHEMA = 1;
+export const PRESET_SCHEMA = 2;
 export const PRESET_MAX_BYTES = 64 * 1024;
 
 export const customPresetDir = (presetsDir: string): string => join(presetsDir, "custom");
@@ -57,14 +58,21 @@ export type Preset = {
   displayName: string;
   values: Partial<Record<keyof Axes, Level>>;
   bundled?: boolean;
+  settings?: PresetSettings;
 };
+
+export type PresetSettings = Pick<Config, "persona" | "safeword" | "speech_level">;
+
+export function presetSettings(config: Config): PresetSettings {
+  return structuredClone({ persona: config.persona, safeword: config.safeword, speech_level: config.speech_level });
+}
 
 /**
  * Only the axes a preset moves are listed; the rest take their default at resolve time. That
  * is sparsity as storage, not as a compile rule — every axis is still emitted.
  */
 const bundled = (slug: string, displayName: string, values: Preset["values"]): Preset => ({
-  schema: PRESET_SCHEMA,
+  schema: 1,
   slug,
   displayName,
   values,
@@ -133,7 +141,7 @@ export function parsePreset(text: string, slug: string, t: Messages): Preset {
     throw new ConfigError(t.preset.notJson(slug, (cause as Error).message));
   }
   const raw = presetObject(parsed, slug, t);
-  if (raw.schema !== undefined && raw.schema !== PRESET_SCHEMA) {
+  if (raw.schema !== undefined && raw.schema !== 1 && raw.schema !== PRESET_SCHEMA) {
     throw new ConfigError(t.preset.schemaMismatch(slug, JSON.stringify(raw.schema), PRESET_SCHEMA));
   }
   const values: Preset["values"] = {};
@@ -150,11 +158,21 @@ export function parsePreset(text: string, slug: string, t: Messages): Preset {
     }
     values[axis as keyof Axes] = value as Level;
   }
+  let settings: PresetSettings | undefined;
+  if (raw.schema === PRESET_SCHEMA) {
+    const fields = presetObject(raw.settings, slug, t);
+    const keys = ["persona", "safeword", "speech_level"];
+    const unknown = Object.keys(fields).filter((key) => !keys.includes(key));
+    if (unknown.length) throw new ConfigError(t.config.unknownKey(unknown.join(", "), keys));
+    if (keys.some((key) => !Object.hasOwn(fields, key))) throw new ConfigError(t.preset.notAPreset(slug));
+    settings = presetSettings(parseConfig(JSON.stringify({ schema: 1, ...fields }), t));
+  }
   return {
-    schema: PRESET_SCHEMA,
+    schema: raw.schema === PRESET_SCHEMA ? PRESET_SCHEMA : 1,
     slug,
     displayName: readDisplayName(raw.displayName, slug),
     values,
+    ...(settings === undefined ? {} : { settings }),
   };
 }
 
@@ -165,7 +183,8 @@ export function serializePreset(preset: Preset): string {
     if (v !== undefined) values[axis] = v;
   }
   return (
-    JSON.stringify({ schema: PRESET_SCHEMA, slug: preset.slug, displayName: preset.displayName, values }, null, 2) +
+    JSON.stringify({ schema: preset.schema, slug: preset.slug, displayName: preset.displayName, values,
+      ...(preset.settings === undefined ? {} : { settings: preset.settings }) }, null, 2) +
     "\n"
   );
 }
@@ -196,11 +215,11 @@ export function readPresetSnapshot(presetsDir: string, path: string, t: Messages
   }
 }
 
-/** Preset semantics are axes; a display label and sparse default spelling do not change them. */
+/** Labels and sparse defaults do not change a profile's tone settings. */
 export function equivalentPresets(left: Preset, right: Preset): boolean {
   const a = applyPreset(left);
   const b = applyPreset(right);
-  return AXIS_ORDER.every((axis) => a[axis] === b[axis]);
+  return AXIS_ORDER.every((axis) => a[axis] === b[axis]) && isDeepStrictEqual(left.settings, right.settings);
 }
 
 function recoveryCopy(
@@ -209,7 +228,8 @@ function recoveryCopy(
   occupied: Map<string, PresetEntry | null>,
 ): PresetRecoveryCopy {
   const axes = applyPreset(source.preset);
-  const hash = createHash("sha256").update(JSON.stringify(AXIS_ORDER.map((axis) => axes[axis]))).digest("hex").slice(0, 8);
+  const values = AXIS_ORDER.map((axis) => axes[axis]);
+  const hash = createHash("sha256").update(JSON.stringify(source.preset.settings ? [values, source.preset.settings] : values)).digest("hex").slice(0, 8);
   for (let attempt = 0; ; attempt++) {
     const suffix = `-recovered-${hash}${attempt === 0 ? "" : `-${attempt}`}`;
     const base = source.preset.slug.slice(0, SLUG_MAX - suffix.length).replace(/-+$/, "");
@@ -356,10 +376,24 @@ export function preparePresetWrite(
     catch { throw new ConfigError(t.preset.unavailable(preset.slug, "invalid-data")); }
   }
   const capture = existing?.capture ?? (read !== null && "capture" in read ? read.capture : null);
-  return { path, contents: serializePreset(preset), capture, selectionReads: existing?.selectionReads ?? [] };
+  const contents = serializePreset(preset);
+  if (Buffer.byteLength(contents) > PRESET_MAX_BYTES) throw new ConfigError(t.config.tooLarge(PRESET_MAX_BYTES));
+  return { path, contents, capture, selectionReads: existing?.selectionReads ?? [] };
 }
 
 /** A preset's values over the defaults. Every axis ends up set, because every axis is emitted. */
 export function applyPreset(preset: Preset): Axes {
   return { ...AXIS_DEFAULT, ...preset.values };
+}
+
+/** Schema 1 keeps the current separate settings; schema 2 replaces its complete tone snapshot. */
+export function withPreset(config: Config, preset: Preset): Config {
+  return { ...config, ...(preset.settings === undefined ? {} : structuredClone(preset.settings)),
+    axes: applyPreset(preset), preset: preset.slug, unsaved: false };
+}
+
+export function matchesPreset(config: Config, preset: Preset): boolean {
+  const axes = applyPreset(preset);
+  return AXIS_ORDER.every((axis) => axes[axis] === config.axes[axis]) &&
+    (preset.settings === undefined || isDeepStrictEqual(presetSettings(config), preset.settings));
 }

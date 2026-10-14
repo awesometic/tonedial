@@ -1,6 +1,6 @@
 status: 0
---- stdout --- [bytes=967; endsWithNewline=true]
-  ToneDial · show · Caring Brother                      TONE.md 2,218 / 2,700
+--- stdout --- [bytes=1022; endsWithNewline=true]
+  ToneDial · show · Caring Brot… (저장하지 않은 변경)  TONE.md 2,211 / 2,700
 
                          현재      ToneDial 기본값 · ! 위험 말투
   form      formality    ▮▯▯▯▯  1   *3
@@ -22,10 +22,10 @@ status: 0
   화면 언어 ko
   연결: 없음
 
-  * ToneDial 기본값과 다름
-  tonedial show --explain
+  * ToneDial 기본값과 다름 · 프로필에 저장되지 않았습니다.
+  tonedial save "My Tone"
 --- stderr --- [bytes=350; endsWithNewline=true]
   ⚠ 페르소나에는 고정된 행동 규칙이 없으며 축 설정이 우선합니다. 설명은
     내용에도 영향을 줄 수 있습니다. 역할극은 자격이나 권한을 주지 않습니다.
   ⚠ 사용하는 모델에 따라 기대한 말투가 나오지 않을 수 있습니다.
-  ⚠ TONE.md: 2,218자 · 목표 1,800자 초과
+  ⚠ TONE.md: 2,211자 · 목표 1,800자 초과

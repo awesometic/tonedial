@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=3303; endsWithNewline=true]
+--- stdout --- [bytes=3556; endsWithNewline=true]
 tonedial — 코딩 에이전트의 말투를 한 번 정하고 계속 씁니다
 
 tonedial <command> [options]
@@ -9,18 +9,19 @@ tonedial <command> [options]
   tonedial show
 
 말투
-  set <axis>=<level> …   축이나 설정 변경 · 인자 없으면 다이얼
+  set <axis>=<level> …  축·역할·설정 변경 · 인자 없으면 다이얼
   address [self user]    서로 부르는 말 · 인자 없으면 질문
   reset [axis]           축을 기본값으로 · 축을 안 주면 전부
-  show [slug]            게이지와 현재 상태
+  show [slug]            현재 설정 · 슬러그를 주면 저장한 축
   test [claude|codex]    저장된 설정이나 프리셋으로 새 대화 시작
 
 프리셋 보관함
+  create [name] …       프리셋 생성·적용 · 인자 없으면 안내
   use <slug>             프리셋 적용 후 컴파일
-  save <display name>    현재 축을 프리셋으로 저장
+  save [display name]    현재 말투를 프로필로 저장
   list                   기본 제공·사용자 프리셋
-  export <slug>          프리셋을 JSON으로 내보내기
-  import <file>          JSON 프리셋 가져오기
+  export <slug>          호칭·역할을 포함한 프로필을 JSON으로 백업
+  import <file>          JSON에서 프로필 가져오기 · use로 적용
   edit [preset <slug>]   설정이나 프리셋을 $EDITOR로 열기
 
 연결
@@ -31,7 +32,7 @@ tonedial <command> [options]
   eject                  모든 연결 해제 · 프리셋 유지
 
 관리
-  compile                현재 상태 다시 컴파일
+  compile                복구용 TONE.md 재생성 · 말투 변경 시 자동 처리
   update                 현재 설치 업데이트
 
 옵션
@@ -49,7 +50,8 @@ tonedial <command> [options]
   --from-operation=ID    doctor --fix: 작업 기록에서 설정 선택
   --from-preset=SLUG     doctor --fix: 없는 설정에 사용할 프리셋
   --restore-preset=SLUG  doctor --fix: 없거나 손상된 사용자 프리셋 하나 복원
-  --preset=SLUG          test: 프리셋 미리보기 · 저장된 설정 유지
+  --preset=SLUG          test: 저장한 프로필 미리보기 · 현재 상태 유지
+  --slug=SLUG            create/save: 프리셋 슬러그 지정
   --accept-usage         test: 이번 실행의 계정 사용량·비용 부담에 동의
   --explain              show: 축·설정·주의할 레벨 설명
   --check                compile: 크기만 확인 · 기록하지 않음

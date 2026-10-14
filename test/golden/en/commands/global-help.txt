@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=2990; endsWithNewline=true]
+--- stdout --- [bytes=3269; endsWithNewline=true]
 tonedial — set a coding agent's manner once and keep using it
 
 tonedial <command> [options]
@@ -9,18 +9,19 @@ Set up your tone, then inspect it:
   tonedial show
 
 Tone
-  set <axis>=<level> …   change an axis or setting · bare opens dial
+  set <axis>=<level> …  change axes, role or settings · bare opens dial
   address [self user]    set names for each party · bare prompts
   reset [axis]           reset an axis · bare resets all axes
-  show [slug]            the gauges and the state summary
+  show [slug]            current settings · slug previews saved axes
   test [claude|codex]    try saved settings or a preset in a new conversation
 
 Preset library
+  create [name] …       create and apply a preset · bare guides setup
   use <slug>             apply a preset and compile
-  save <display name>    save current axes as a preset
+  save [display name]    save the current tone as a profile
   list                   bundled and user presets
-  export <slug>          export a preset as JSON
-  import <file>          import a JSON preset
+  export <slug>          back up a profile, including address and role, as JSON
+  import <file>          import a profile from JSON · use applies it
   edit [preset <slug>]   open settings or a preset in $EDITOR
 
 Connections
@@ -31,7 +32,8 @@ Connections
   eject                  disconnect everything · keep presets
 
 Maintenance
-  compile                recompile current state
+  compile                rebuild TONE.md for repair · tone changes do this
+                         automatically
   update                 update this install
 
 Options
@@ -50,7 +52,8 @@ Options
   --from-preset=SLUG     doctor --fix: preset for unavailable settings
   --restore-preset=SLUG  doctor --fix: restore one missing or damaged user
                          preset
-  --preset=SLUG          test: preview a preset · keep saved settings
+  --preset=SLUG          test: preview a saved profile · current state kept
+  --slug=SLUG            create/save: choose a preset slug
   --accept-usage         test: accept account usage and charges for this launch
   --explain              show: explain axes, settings, risky levels
   --check                compile: report size · write nothing

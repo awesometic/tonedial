@@ -9,4 +9,4 @@ ToneDial · address
 --- stderr --- [bytes=199; endsWithNewline=true]
   ⚠ persona has no fixed anchors; axes take precedence. Text may affect
     content. Roleplay does not verify credentials or grant permissions.
-  ⚠ TONE.md: 1,877 characters · over 1,800 target
+  ⚠ TONE.md: 1,870 characters · over 1,800 target

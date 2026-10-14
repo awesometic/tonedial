@@ -7,5 +7,5 @@ ToneDial · save
   TONE.md generated
 
   tonedial list
---- stderr --- [bytes=74; endsWithNewline=true]
-  ⚠ persona and safeword are user settings, so presets do not save them
+--- stderr --- [bytes=0; endsWithNewline=false]
+

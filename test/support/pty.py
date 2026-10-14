@@ -552,6 +552,70 @@ def init_case(root: Path, language: str, node: str, binary: Path, approve: bool)
         shutil.rmtree(scratch, ignore_errors=True)
 
 
+def create_case(root: Path, language: str, node: str, binary: Path, outcome: str) -> dict[str, Any]:
+    scratch = Path(tempfile.mkdtemp(prefix=f"tonedial-pty-create-{outcome}-"))
+    try:
+        initialize(root, scratch, language, node, binary)
+        state = scratch / "state"
+        before = snapshot(state)
+        with run_session(scratch, language, node, binary, ["create"]) as session:
+            session.wait_for([b"  > "])
+            if outcome == "interrupt":
+                session.send(b"\x03")
+                if session.wait() != 130:
+                    raise ScenarioError("create interview: Ctrl+C did not interrupt")
+            else:
+                answers = [b"PTY Jarvis\n", b"pty-jarvis\n", b"guide\n", b"friend\n",
+                           b"Maintains services\n", b"Fictional reviewer\n", b"polite\n", b"plain answer please\n"]
+                for index, answer in enumerate(answers):
+                    if outcome == "retry" and index == 4:
+                        start = session.mark()
+                        session.send(("x" * 201 + "\n").encode())
+                        session.wait_for([b"  > "], since=start)
+                        if b"201" not in session.output[start:] or snapshot(state) != before:
+                            raise ScenarioError("create role retry lost its error or wrote state")
+                    start = session.mark()
+                    session.send(answer)
+                    session.wait_for([title(language)] if index == len(answers) - 1 else [b"  > "], since=start)
+                if snapshot(state) != before:
+                    raise ScenarioError("create interview wrote files before approval")
+                if outcome == "cancel":
+                    session.send(b"\x1b")
+                else:
+                    approval_start = session.mark()
+                    session.send(b"1\r")
+                    session.wait_for([b"[y/N]"])
+                    review = session.output[approval_start:]
+                    heading = "저장할 프로필".encode() if language == "ko" else b"Profile to save"
+                    if heading not in review or b"Fictional reviewer" not in review or b"18/200" not in review:
+                        raise ScenarioError("create approval omitted the profile role summary")
+                    if snapshot(state) != before:
+                        raise ScenarioError("create dial wrote files before approval")
+                    session.send(b"\x03" if outcome == "approval-interrupt" else b"y\n" if outcome in {"approve", "retry"} else b"n\n")
+                if session.wait(8) != (130 if outcome == "approval-interrupt" else 0):
+                    raise ScenarioError(f"create {outcome}: unsuccessful exit")
+                require_cursor(session, f"create {outcome}")
+            require_termios(session, f"create {outcome}")
+        if outcome in {"approve", "retry"}:
+            config = json.loads((state / "config.json").read_text())
+            preset = json.loads((state / "presets" / "custom" / "pty-jarvis.json").read_text())
+            if config["preset"] != "pty-jarvis" or config["axes"]["formality"] != 1:
+                raise ScenarioError("create approval did not apply the selected axes")
+            if config["persona"]["agent"] != "Fictional reviewer" or config["persona"]["user"] != "Maintains services" or config["persona"]["address"]["user_ref"] != "friend":
+                raise ScenarioError("create approval did not keep shared settings")
+            if set(preset) != {"schema", "slug", "displayName", "values", "settings"} or preset["schema"] != 2:
+                raise ScenarioError("create approval did not save the complete profile")
+            if preset["settings"]["persona"] != config["persona"]:
+                raise ScenarioError("create approval lost the profile's personal settings")
+            if "Fictional reviewer" not in (state / "TONE.md").read_text():
+                raise ScenarioError("create approval did not compile the shared role")
+        elif snapshot(state) != before:
+            raise ScenarioError(f"create {outcome}: state changed")
+        return {"written": outcome in {"approve", "retry"}, "termiosRestored": True}
+    finally:
+        shutil.rmtree(scratch, ignore_errors=True)
+
+
 def run_all(root: Path, language: str, node: str, binary: Path) -> dict[str, Any]:
     global last_transcript
     cases = {
@@ -562,6 +626,12 @@ def run_all(root: Path, language: str, node: str, binary: Path) -> dict[str, Any
         "error": lambda: error_case(root, language, node, binary),
         "init-approve": lambda: init_case(root, language, node, binary, True),
         "init-cancel": lambda: init_case(root, language, node, binary, False),
+        "create-approve": lambda: create_case(root, language, node, binary, "approve"),
+        "create-role-retry": lambda: create_case(root, language, node, binary, "retry"),
+        "create-decline": lambda: create_case(root, language, node, binary, "decline"),
+        "create-cancel": lambda: create_case(root, language, node, binary, "cancel"),
+        "create-interrupt": lambda: create_case(root, language, node, binary, "interrupt"),
+        "create-approval-interrupt": lambda: create_case(root, language, node, binary, "approval-interrupt"),
     }
     results: dict[str, Any] = {}
     for name, run_case in cases.items():

@@ -15,7 +15,7 @@ import { isLanguage, LANGUAGES, type Messages } from "../core/i18n.ts";
 import { recoverLegacyTone } from "../core/legacy-tone.ts";
 import { exportAliasesState, stateOverlapsInstructions } from "../core/paths.ts";
 import {
-  applyPreset, assertPresetSelection, BUNDLED, customPresetDir, inspectPresetLibrary, parsePreset, PRESET_MAX_BYTES,
+  applyPreset, matchesPreset, assertPresetSelection, BUNDLED, customPresetDir, inspectPresetLibrary, parsePreset, PRESET_MAX_BYTES,
   resolvePreset, serializePreset, SLUG_PATTERN, type PresetEntry, type PresetLibrary,
 } from "../core/presets.ts";
 import {
@@ -54,6 +54,7 @@ function capturedText(capture: RawEntryCapture): string | null {
 /** Copy independently validated leaves, so a damaged neighbor cannot reset surviving data. */
 function mergeSettings(config: ConfigV2, source: SettingsRecovery, kept: Set<string>): void {
   const valid = new Set(source.recovered.filter((field) => !source.invalid.includes(field)));
+  const defaulted = new Set(source.defaulted ?? []);
   for (const field of scalarFields) {
     if (!kept.has(field) && valid.has(field)) {
       Object.assign(config, { [field]: source.config[field] });
@@ -69,14 +70,15 @@ function mergeSettings(config: ConfigV2, source: SettingsRecovery, kept: Set<str
   }
   for (const key of personaFields) {
     const field = `persona.${key}`;
-    if (!kept.has(field) && (valid.has(field) || valid.has("persona"))) {
+    if (!kept.has(field) && !defaulted.has(field) && (valid.has(field) || valid.has("persona"))) {
       config.persona[key] = source.config.persona[key];
       kept.add(field);
     }
   }
   for (const key of ["self_ref", "user_ref"] as const) {
     const field = `persona.address.${key}`;
-    if (!kept.has(field) && (valid.has(field) || valid.has("persona.address") || valid.has("persona"))) {
+    if (!kept.has(field) && !defaulted.has(field) && !defaulted.has("persona.address") &&
+      (valid.has(field) || valid.has("persona.address") || valid.has("persona"))) {
       const address = config.persona.address ?? { self_ref: null, user_ref: null };
       address[key] = source.config.persona.address?.[key] ?? null;
       config.persona.address = address.self_ref || address.user_ref ? address : null;
@@ -306,8 +308,19 @@ export async function runAppRebuild(ctx: Ctx): Promise<AppRebuildResult> {
       for (const capture of chosenPreset.selectionReads) addRead(capture);
       const axes = applyPreset(chosenPreset.preset);
       for (const axis of AXIS_ORDER) if (!kept.has(`axes.${axis}`)) { config.axes[axis] = axes[axis]; defaulted.add(`axes.${axis}`); }
+      const settings = chosenPreset.preset.settings;
+      if (settings !== undefined) {
+        if (!kept.has("safeword")) config.safeword = settings.safeword;
+        if (!kept.has("speech_level")) config.speech_level = settings.speech_level;
+        for (const key of personaFields) if (!kept.has(`persona.${key}`)) config.persona[key] = settings.persona[key];
+        const address = { self_ref: config.persona.address?.self_ref ?? null, user_ref: config.persona.address?.user_ref ?? null };
+        for (const key of ["self_ref", "user_ref"] as const) {
+          if (!kept.has(`persona.address.${key}`)) address[key] = settings.persona.address?.[key] ?? null;
+        }
+        config.persona.address = address.self_ref || address.user_ref ? address : null;
+      }
       if (!kept.has("preset")) config.preset = chosenPreset.preset.slug;
-      if (!kept.has("unsaved")) config.unsaved = false;
+      if (!kept.has("unsaved")) config.unsaved = settings === undefined ? false : !matchesPreset(config, chosenPreset.preset);
     }
     for (const field of scalarFields) if (!kept.has(field)) defaulted.add(field);
     for (const key of personaFields) if (!kept.has(`persona.${key}`)) defaulted.add(`persona.${key}`);

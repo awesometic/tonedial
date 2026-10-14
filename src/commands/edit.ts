@@ -8,10 +8,9 @@ import { isDeepStrictEqual } from "node:util";
 
 import type { CommandResult, Ctx } from "../cli.ts";
 import { CONFIG_SCHEMA, ConfigError, parseConfig, serializeConfig, type Config } from "../core/config.ts";
-import { AXIS_ORDER, type Axes } from "../core/anchors.ts";
 import {
-  BUNDLED, SLUG_PATTERN, applyPreset, assertPresetSelection, customPresetDir, inspectPresetLibrary, parsePreset,
-  preparePresetWrite, resolvePreset, type PresetEntry,
+  BUNDLED, SLUG_PATTERN, matchesPreset, withPreset, assertPresetSelection, customPresetDir, inspectPresetLibrary, parsePreset,
+  preparePresetWrite, resolvePreset, type Preset, type PresetEntry,
 } from "../core/presets.ts";
 import { applyPlanned, planArtifact, planConfig, sizeWarning } from "./compile.ts";
 import { check as checkCombos } from "../core/combos.ts";
@@ -180,23 +179,22 @@ export async function runEdit(ctx: Ctx, args: string[]): Promise<CommandResult> 
     const warnings: string[] = [];
     let applied = false;
     if (config.preset === preset.slug && !target.ambiguous) {
-      const axes = applyPreset(preset);
-      let baselineAxes: Axes | null = null;
+      let baselinePreset: Preset | null = null;
       if (!config.unsaved && before !== null) {
         try {
-          baselineAxes = applyPreset(parsePreset(before, preset.slug, ctx.t));
+          baselinePreset = parsePreset(before, preset.slug, ctx.t);
         } catch (cause) {
           if (!(cause instanceof ConfigError)) throw cause;
           // A repaired invalid preset has no clean baseline that could authorize replacing
           // live axes. Keep them and reconcile their divergence from the repaired file.
         }
       }
-      if (baselineAxes !== null && AXIS_ORDER.every((axis) => config.axes[axis] === baselineAxes[axis])) {
-        config.axes = axes;
+      if (baselinePreset !== null && matchesPreset(config, baselinePreset)) {
+        Object.assign(config, withPreset(config, preset));
         applied = true;
       }
       const wasUnsaved = config.unsaved;
-      config.unsaved = !AXIS_ORDER.every((axis) => config.axes[axis] === axes[axis]);
+      config.unsaved = !matchesPreset(config, preset);
       if (applied || config.unsaved !== wasUnsaved) {
         const { change: toneChange, size } = planArtifact(ctx, config);
         const finalConfig = { ...configRead.change, after: serializeConfig(config, ctx.t) };

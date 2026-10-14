@@ -803,6 +803,14 @@ test("both windows onto the CLI carry one reload procedure, and it reads the gui
   const guide = procedure.indexOf("agentsPath");
   const artifact = procedure.indexOf("`path`");
   assert.ok(guide >= 0 && artifact > guide, `the artifact is read before the guide:\n${procedure}`);
+  const presetSection = (lines: string[]) => /^## Current settings and saved presets\n([\s\S]*?)(?=\n## |\nFirst distinguish)/m.exec(lines.join("\n"))?.[1];
+  const presets = presetSection(skill);
+  assert.ok(presets);
+  assert.equal(presetSection(command), presets, "the two control entry points disagree about preset creation");
+  assert.match(presets, /created: true/);
+  const created = await invoke(["create", "Skill Example", "--slug", "skill-example", "warmth=2", "--auto"]);
+  assert.equal(created.code, 0, JSON.stringify(created.value));
+  assert.equal(created.value.created, true);
 });
 
 test("installed explicit-setting examples use the CLI without changing neighbouring settings", async () => {
@@ -839,6 +847,7 @@ test("installed explicit-setting examples use the CLI without changing neighbour
     assert.equal(changed.code, 0, JSON.stringify(changed.value));
     assert.equal(changed.value.ok, true);
     changes[index]!(expected);
+    expected.unsaved = true;
     assert.deepEqual(parseConfig(readFileSync(paths.config, "utf8")), expected, example);
   }
 });
@@ -887,10 +896,10 @@ test("approved native refresh updates stale skill seeds and the selected optiona
   assert.equal(refreshed.code, 0, JSON.stringify(refreshed.value));
   const after = parseConfig(readFileSync(paths.config, "utf8"));
   assert.ok(isConfigV2(after));
-  assert.equal(after.seedVersion, 12);
+  assert.equal(after.seedVersion, 13);
   assert.deepEqual(Object.fromEntries(Object.entries(after.managedSeeds).filter(([id]) => !id.startsWith("skill/"))), retainedRecords);
   for (const seed of skills) {
-    assert.equal(after.managedSeeds[seed.id]?.version, seed.id === "skill/body" ? 12 : 6, seed.id);
+    assert.equal(after.managedSeeds[seed.id]?.version, seed.id === "skill/body" ? 13 : 7, seed.id);
     assert.equal(readFileSync(seed.path, "utf8"), seed.contents, seed.id);
     assert.equal(after.managedSeeds[seed.id]?.sha256, createHash("sha256").update(seed.contents).digest("hex"), seed.id);
   }
@@ -902,7 +911,7 @@ test("approved native refresh updates stale skill seeds and the selected optiona
   ]);
   assert.equal(readFileSync(agent.command("tone"), "utf8"), currentCommand);
   const refreshedCommand = Object.values(after.wiring.resources).find((resource) => resource.kind === "command");
-  assert.equal(refreshedCommand?.managed.version, 5);
+  assert.equal(refreshedCommand?.managed.version, 6);
   assert.equal(refreshedCommand?.expected.sha256, createHash("sha256").update(currentCommand).digest("hex"));
   assert.equal(Object.values(after.managedSeeds).some((seed) => seed.path === agent.command("tone")), false,
     "the optional command is a wiring resource, not a seed");

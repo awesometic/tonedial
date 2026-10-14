@@ -7,5 +7,5 @@ ToneDial · save
   TONE.md 생성됨
 
   tonedial list
---- stderr --- [bytes=106; endsWithNewline=true]
-  ⚠ 페르소나와 세이프워드는 사용자 설정이므로 프리셋에 저장하지 않습니다
+--- stderr --- [bytes=0; endsWithNewline=false]
+

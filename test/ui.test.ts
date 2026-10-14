@@ -341,7 +341,7 @@ test("default show keeps axes before settings and fits an 80 by 24 viewport", as
   const withPersona = out.join("");
   assert.ok(withPersona.trimEnd().split("\n").length <= 24, withPersona);
   assert.ok(withPersona.includes("guide") && withPersona.includes("friend"), "the viewport hid the persona");
-  assert.ok(withPersona.includes("bravado") && withPersona.includes("tonedial show --explain"), "the viewport hid an axis or action");
+  assert.ok(withPersona.includes("bravado") && withPersona.includes('tonedial save "My Tone"'), "the viewport hid an axis or save action");
 });
 
 test("show and explain stack cleanly at 60 columns without changing saved state", async () => {
@@ -893,6 +893,7 @@ test("a Korean install speaks Korean where a user actually reads", async () => {
     // are Latin-only by design, so anything longer would put English in the output that the
     // tool did not choose and that the gate cannot tell from English the tool did choose.
     ["save", "x"],
+    ["save"],
     // `--help` is the largest block of copy in the tool. It is written straight to stdout
     // rather than returned as a CommandResult, which is how it stayed English through an
     // entire migration named after making the output speak the user's language.
@@ -928,7 +929,7 @@ test("a Korean install speaks Korean where a user actually reads", async () => {
   // Errors too — they are what a user hits when something has already gone wrong.
   for (const argv of [
     ["set", "warmth=9"], ["set", "warmthh=3"], ["use", "nosuch"], ["edit", "traits"],
-    ["save"], ["import", "/nonexistent.json"], ["wire", "--here", "nosuchtool"], ["edit", "preset"],
+    ["save", "--slug", "missing-preset"], ["import", "/nonexistent.json"], ["wire", "--here", "nosuchtool"], ["edit", "preset"],
   ]) {
     err = [];
     assert.equal(await cli(...argv), 1, argv.join(" "));

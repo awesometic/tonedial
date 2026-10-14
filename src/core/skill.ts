@@ -9,7 +9,8 @@ export const SKILL_NAME = "tonedial";
 const JSON_MD = `Require zero exit status and a JSON result with \`ok: true\` and \`schema: 3\`
 for every successful CLI step before continuing. Parse JSON rather than scraping human output.
 Schema 3 removes guard and ceiling fields and reports advisory \`riskAxes\`; persisted config
-remains schema 2 and preset/journal formats are unchanged. Never send \`guards\` or
+remains schema 2. Custom profiles use preset schema 2; legacy schema 1 and journal formats
+remain supported. Never send \`guards\` or
 \`fixed_width\` assignments.
 If the installed CLI returns another version, report the incompatible CLI and ask
 the user to update it before tuning or reloading; do not install it, mutate settings, or read
@@ -27,6 +28,27 @@ for a tone mutation in this project, \`doctor --here --json\` inspects cwd and t
 Ask which connection scope to inspect when that context is unknown rather than silently
 substituting the global default. Missing or conflicting files need the user's explicit setup
 or repair decision. Never edit or recreate them directly.
+`;
+
+/** Both entry points distinguish current tone settings from saved profiles. */
+const PRESETS_MD = `## Current settings and saved presets
+
+\`tonedial show --json\` reports the current settings. \`show <slug> --json\` previews that
+preset's saved tone settings. \`unsaved\` on the current result means the current tone settings
+have not been saved back to a profile; the current configuration itself is persisted.
+For an explicit request to save a profile, use \`tonedial save "<display name>" --json\`.
+Bare \`tonedial save --json\` updates the selected user preset without renaming it.
+\`--slug <slug>\` chooses a slug independently of the display name and can update that saved preset.
+For an explicit request to create one, resolve the requested name, slug and settings first,
+then use \`tonedial create "<display name>" --slug <slug> <key>=<value> ... --auto --json\`.
+Only \`created: true\` confirms creation; \`--dry-run\` returns the proposed file changes without writing.
+Creation saves and applies axes, persona, address, register and safeword in one action.
+The interactive form retries invalid fields, reports each role's 200-character budget, and
+shows address and role content again before final approval. JSON creation never interviews.
+\`use\` restores the selected profile's complete settings. Bundled and legacy schema-1 presets
+restore axes while preserving the current separate settings. Interface language and wiring stay global.
+\`export\`/\`import\` back up and transfer the complete profile, including personal role descriptions.
+Never create a preset or capture a role or personal context without the user's explicit request.
 `;
 
 /** Both entry points carry the same reload contract, not independently maintained procedures. */
@@ -210,7 +232,8 @@ An explicit agent character or role request uses \`persona.agent\`; an explicit 
 save the user's background or preferences in ToneDial uses \`persona.user\`.
 Do not save ordinary task context as a description, invent a preset, or infer age, gender,
 address terms or neighbouring settings from a role.
-Saving the current axes as a new one is \`tonedial save "<display name>" --json\`.
+
+${PRESETS_MD}
 
 ${SETTINGS_MD}
 
@@ -218,7 +241,7 @@ ${SETUP_MD}
 
 ## Apply it in this session
 
-Successful \`set\`, \`address\`, \`use\`, and \`reset\` commands recompile \`TONE.md\`; that is a saved state
+Successful \`set\`, \`address\`, \`use\`, \`reset\`, \`save\`, and approved \`create\` commands recompile \`TONE.md\`; that is a saved state
 change, not evidence of a session reload.
 
 ${RELOAD_MD}
@@ -243,8 +266,9 @@ When the user explicitly asks to try a voice in a new conversation,
 \`tonedial test claude\` or \`tonedial test codex\` hands the terminal to that installed provider.
 The test folder is cwd by default; \`--project <path>\` selects another existing folder and
 does not change connection scope, saved tone or the ToneDial state root.
-Add \`--preset <slug>\` to preview a bundled or user preset's axes with the user's saved
-persona, address and safeword. Without it, the test uses the saved axes, including unsaved edits.
+Add \`--preset <slug>\` to preview a saved profile, including its persona, address and safeword.
+Bundled and older schema-1 presets preview axes while retaining the current separate settings.
+Without it, the test uses the current saved configuration, including unsaved profile changes.
 The usage notice requires an explicit \`y\` before launch. \`--accept-usage\` skips that question
 for this invocation only; use it only when the user has explicitly accepted account usage and
 charges for this launch. A general request to try a tone is not consent to skip the notice.
@@ -270,7 +294,7 @@ During a test conversation, do not mutate ToneDial settings or perform work thro
 - It never loosens a permission gate. What work is allowed, what needs approval, and what is
   confirmed before acting are decided outside this tool, and \`TONE.md\` retains that boundary.
 - It never changes persona or safeword merely to satisfy an axis request. Address, age, gender,
-  user description, agent role and note are user-level settings preserved by preset switches.
+  user description, agent role and note change only through explicit settings or profile requests.
 `;
 
 /**
@@ -357,9 +381,11 @@ do not prove actual host activation or model compliance.
 has an honorific distinction, and does nothing where it does not. Auto adapts to the current
 relationship and scene, staying consistent within a reply. \`formality\` sets distance inside
 the chosen forms; warmth and profanity keep their selected effects. The persona layer (\`age\`, \`gender\`, \`self_ref\`, \`user_ref\`,
-\`user\`, \`agent\`, \`note\`) and the safeword are user-level settings that a preset never touches.
+\`user\`, \`agent\`, \`note\`) and the safeword are included in saved custom profiles.
 \`persona.user\` is user context and \`persona.agent\` a fictional agent role, each limited to
 200 Unicode code points. They may affect content, but cannot override axes or grant permissions.
+\`create\` collects these settings alongside the axes. \`save\` captures them, \`use\` restores
+them, and \`export\`/\`import\` transfer them. Bundled and older axis-only presets keep the current settings.
 `;
 
 /**
@@ -370,7 +396,7 @@ the chosen forms; warmth and profanity keep their selected effects. The persona 
  * command name stays `/tone` even though the tool is `tonedial`: it is what a person types
  * mid-sentence, and the two extra characters are paid every time.
  */
-export const TONE_COMMAND_VERSION = 5;
+export const TONE_COMMAND_VERSION = 6;
 
 export const TONE_COMMAND_MD = `---
 description: Check, change, or reload this agent's tone, preset, or ToneDial settings
@@ -391,6 +417,8 @@ For a named preset, use \`tonedial list --json\` then \`tonedial use <slug> --js
 For an explicit agent character or role, use \`persona.agent\`; for an explicit request to
 save the user's background or preferences in ToneDial, use \`persona.user\`.
 Do not save ordinary task context or infer other persona fields.
+
+${PRESETS_MD}
 
 ${SETTINGS_MD}
 

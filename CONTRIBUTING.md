@@ -61,7 +61,8 @@ a documentation check does not prove runtime behavior.
 
 Compilation uses no LLM or external state and produces identical bytes for identical inputs.
 All twelve axes use one English anchor set at levels 1–5; risk notices are advisory and tone never changes permission or approval requirements.
-Presets carry axes only; persona, address, register and safeword remain user settings.
+Custom profiles carry axes, persona, address, register and safeword together.
+Legacy and bundled axis-only presets preserve the current separate settings; interface language and wiring remain global.
 All ordinary tone changes recompile the artifact, while project scope chooses connections to the shared state.
 Preserve user data and foreign settings/handlers; generated files and ownership markers do not authorize overwriting unrelated content.
 Generated configuration, observed host activation, delivered context and model adherence are separate claims.

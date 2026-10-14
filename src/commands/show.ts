@@ -10,7 +10,7 @@ import { AXIS_DEFAULT, AXIS_GROUP, AXIS_KIND, AXIS_RISK_FROM, riskyAxes } from "
 import { check as checkCombos } from "../core/combos.ts";
 import { ConfigError, isConfigV2, type Config } from "../core/config.ts";
 import { compile, measure } from "../core/compile.ts";
-import { applyPreset, inspectPresetLibrary, resolvePreset } from "../core/presets.ts";
+import { withPreset, matchesPreset, inspectPresetLibrary, resolvePreset } from "../core/presets.ts";
 import { toCompileInput } from "../core/resolve.ts";
 import { inspectContextLayout } from "../core/seeds.ts";
 import { catalogue, isLanguage, type Messages } from "../core/i18n.ts";
@@ -34,11 +34,10 @@ export function runShow(ctx: Ctx, args: string[]): CommandResult {
   if (slug && !preview) {
     throw new ConfigError(ctx.t.preset.unknown(slug, library.entries.map((entry) => entry.preset.slug)));
   }
-  const axes = preview ? applyPreset(preview) : config.axes;
+  const shown = preview ? withPreset(config, preview) : config;
+  const axes = shown.axes;
 
-  const input = preview
-    ? { ...toCompileInput(config), axes, preset: preview.slug }
-    : toCompileInput(config);
+  const input = toCompileInput(shown);
   const artifact = compile(input);
   const size = measure(artifact);
   const artifactOnDisk = artifactExists(ctx);
@@ -48,7 +47,13 @@ export function runShow(ctx: Ctx, args: string[]): CommandResult {
     : config.preset
       ? activeConflict ? config.preset : resolvePreset(ctx.paths.presets, config.preset, ctx.t, library)?.preset.displayName ?? config.preset
       : `(${ctx.t.preset.unsaved})`;
-  const status = preview ? ` (${ctx.t.preset.preview})` : config.preset && config.unsaved ? ` (${ctx.t.preset.unsaved})` : "";
+  const activePreset = config.preset && !activeConflict ? resolvePreset(ctx.paths.presets, config.preset, ctx.t, library)?.preset : null;
+  const needsSave = preview === null && configChange.before !== null &&
+    (config.unsaved || activePreset == null || !matchesPreset(config, activePreset));
+  const status = preview ? ` (${ctx.t.preset.preview})` : config.preset && needsSave ? ` (${ctx.t.preset.unsaved})` : "";
+  const saveCommand = activePreset && !activePreset.bundled
+    ? "tonedial save"
+    : 'tonedial save "My Tone"';
 
   const lines: string[] = [];
   const budget = budgetLine(size, ctx.t);
@@ -64,7 +69,7 @@ export function runShow(ctx: Ctx, args: string[]): CommandResult {
     for (const folded of wrap(budget, ui.width - 2)) lines.push(`  ${(size.overCap ? ui.error : ui.dim)(folded)}`);
   }
 
-  const p = config.persona;
+  const p = shown.persona;
   const personaSet = Boolean(p.age || p.gender || p.note || p.address || p.user || p.agent);
   const gauges = [gaugeHeader(ui, ctx.t), ...gaugeBlock(axes, ui)];
   const gaugeWidth = Math.max(...gauges.map((line) => maxCells(stripVTControlCharacters(line))));
@@ -97,7 +102,7 @@ export function runShow(ctx: Ctx, args: string[]): CommandResult {
     ? [...new Set(Object.values(config.wiring.registrations).map((record) => `${record.target} (${record.scope})`))]
     : Object.keys(config.wiring);
   for (const text of [
-    stateRow(config, ctx.t), ctx.t.artifact.displaySettings(config.language),
+    stateRow(shown, ctx.t), ctx.t.artifact.displaySettings(config.language),
     ctx.t.artifact.connectionRecords(records.map(humanText)),
   ]) for (const folded of wrap(text, detailWidth)) details.push(folded);
   // The config's presence cannot distinguish a prepared root from a legacy one. Use the same
@@ -138,13 +143,19 @@ export function runShow(ctx: Ctx, args: string[]): CommandResult {
     // The hints are per-language and the language is a user setting, so `--explain` is the one
     // screen whose content depends on the catalogue. Nothing here reaches `tone.md`.
     lines.push(...explainBlock(ui, catalogue(isLanguage(config.language) ? config.language : "en")));
+    if (needsSave) {
+      lines.push("", ...wrap(ctx.t.preset.changesNotSaved, ui.width - 2).map((line) => `  ${ui.warn(line)}`),
+        ...nextStep(saveCommand, ui).slice(1));
+    }
   } else {
     // Keep the short legend and action together so a one-row persona still fits 80×24.
-    lines.push(`  ${ui.accent("*")} ${ui.dim(ctx.t.artifact.movedFromDefault)}`,
-      ...nextStep(preview ? `tonedial use ${preview.slug}` : "tonedial show --explain", ui).slice(1));
+    const legend = ctx.t.artifact.movedFromDefault + (needsSave ? ` · ${ctx.t.preset.changesNotSaved}` : "");
+    const [first, ...rest] = wrap(legend, ui.width - 4);
+    lines.push(`  ${ui.accent("*")} ${ui.dim(first!)}`, ...rest.map((line) => `    ${ui.dim(line)}`),
+      ...nextStep(preview ? `tonedial use ${preview.slug}` : needsSave ? saveCommand : "tonedial show --explain", ui).slice(1));
   }
 
-  const combinations = checkCombos(axes, config.persona, config.speech_level);
+  const combinations = checkCombos(axes, shown.persona, shown.speech_level);
   const warnings = combinations.map((w) => combination(w, ctx.t));
   if (personaSet) {
     warnings.push(ctx.t.notice.personaUnanchored);
@@ -164,16 +175,16 @@ export function runShow(ctx: Ctx, args: string[]): CommandResult {
       // Layered rather than flattened: the skill has to tell a forbidden contradiction from a
       // cosmetic one, and a joined string cannot carry that.
       combinations,
-      unsaved: config.unsaved,
+      unsaved: preview === null ? needsSave : false,
       axes,
       defaults: AXIS_DEFAULT,
       kinds: AXIS_KIND,
       groups: AXIS_GROUP,
       riskAxes: riskyAxes(axes),
       riskThresholds: AXIS_RISK_FROM,
-      persona: config.persona,
-      safeword: config.safeword,
-      speech_level: config.speech_level,
+      persona: shown.persona,
+      safeword: shown.safeword,
+      speech_level: shown.speech_level,
       // Interface language never changes the compiled tone.
       language: config.language,
       chars: size.chars,

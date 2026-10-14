@@ -8,7 +8,7 @@ export function toCompileInput(stored: StoredConfig): CompileInput {
 
   return {
     // The slug rides in the generation comment, so the model reads it. `unsaved` is what the
-    // artifact says once the axes have moved away from the preset that named them.
+    // artifact says once tone settings have moved away from the profile that named them.
     preset: stored.unsaved ? null : stored.preset,
     axes: stored.axes,
     speech_level: stored.speech_level,

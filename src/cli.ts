@@ -12,7 +12,7 @@ import { RegionError } from "./wiring/region.ts";
 import { connectionScopeFlag, installShape, resolveAgentPaths, resolvePaths, type AgentPaths } from "./core/paths.ts";
 import { messages, type Messages } from "./core/i18n.ts";
 import { isColourMode, palette, type Palette } from "./ui/style.ts";
-import { cells, padEnd, resolveBudget, wrap } from "./ui/width.ts";
+import { cells, maxCells, resolveBudget, wrap } from "./ui/width.ts";
 import { interactive } from "./ui/prompt.ts";
 import { humanText } from "./ui/format.ts";
 import type { Change } from "./wiring/apply.ts";
@@ -23,6 +23,7 @@ import { runList } from "./commands/list.ts";
 import { runEdit } from "./commands/edit.ts";
 import { runUpdate } from "./commands/update.ts";
 import { runSave } from "./commands/save.ts";
+import { runCreate } from "./commands/create.ts";
 import { runAddress, runSet, runReset } from "./commands/set.ts";
 import { runShow } from "./commands/show.ts";
 import { runUse } from "./commands/use.ts";
@@ -71,6 +72,8 @@ export type Flags = {
   restorePreset?: string | null;
   /** Test only: preview preset axes without changing saved settings. */
   preset?: string | null;
+  /** Create/save: choose a slug independently of the display name. */
+  slug?: string | null;
   /** Test only: accept account usage for this invocation. */
   acceptUsage?: boolean;
   /** On init: the interface language, stated rather than detected. */
@@ -81,7 +84,7 @@ export type Flags = {
   tools: string | null;
 };
 
-const FLAG_NAMES = ["project", "check", "explain", "global", "here", "migrateLegacy", "auto", "dryRun", "fix", "rollback", "fromOperation", "fromPreset", "restorePreset", "preset", "acceptUsage", "lang", "commands", "tools"] as const;
+const FLAG_NAMES = ["project", "check", "explain", "global", "here", "migrateLegacy", "auto", "dryRun", "fix", "rollback", "fromOperation", "fromPreset", "restorePreset", "preset", "slug", "acceptUsage", "lang", "commands", "tools"] as const;
 
 /** Command-line spelling for each flag, where it differs from the field name. */
 const FLAG_SPELLING: Record<(typeof FLAG_NAMES)[number], string> = {
@@ -89,7 +92,7 @@ const FLAG_SPELLING: Record<(typeof FLAG_NAMES)[number], string> = {
   global: "global", auto: "auto", dryRun: "dry-run", fix: "fix", lang: "lang", commands: "commands",
   tools: "tools", rollback: "rollback", here: "here", migrateLegacy: "migrate-legacy",
   fromOperation: "from-operation", fromPreset: "from-preset", restorePreset: "restore-preset",
-  preset: "preset", acceptUsage: "accept-usage",
+  preset: "preset", slug: "slug", acceptUsage: "accept-usage",
 };
 
 /** What a command returns: lines a person reads, and the object a program reads. */
@@ -144,7 +147,8 @@ const COMMANDS: Record<
   address: { run: runAddress, flags: [], max: 2, context: "state" },
   reset: { run: runReset, flags: [], max: 1, context: "state" },
   show: { run: runShow, flags: ["explain"], max: 1 },
-  save: { run: runSave, flags: [], max: null, context: "state" },
+  create: { run: runCreate, flags: ["slug", "auto", "dryRun"], max: null, context: "state" },
+  save: { run: runSave, flags: ["slug"], max: null, context: "state" },
   list: { run: runList, flags: [], max: 0 },
   edit: { run: runEdit, flags: ["dryRun"], max: 2, context: "state" },
   update: { run: runUpdate, flags: ["global", "auto", "dryRun"], max: 0 },
@@ -184,8 +188,9 @@ const COMMAND_GROUPS: [keyof Messages["help"]["groups"], CommandRow[]][] = [
     ["test", "test [claude|codex]"],
   ]],
   ["presets", [
+    ["create", "create [name] …"],
     ["use", "use <slug>"],
-    ["save", "save <display name>"],
+    ["save", "save [display name]"],
     ["list", "list"],
     ["export", "export <slug>"],
     ["import", "import <file>"],
@@ -207,12 +212,13 @@ const COMMAND_GROUPS: [keyof Messages["help"]["groups"], CommandRow[]][] = [
 const COMMAND_SYNTAX: CommandRow[] = COMMAND_GROUPS.flatMap(([, rows]) => rows);
 
 const COMMAND_EXAMPLES: Record<keyof Messages["help"]["commands"], readonly string[]> = {
-  set: ["tonedial set", "tonedial set warmth=5 critique=4"],
+  set: ["tonedial set", "tonedial set warmth=5 critique=4", "tonedial set persona.agent=reviewer"],
   test: ["tonedial test codex --dry-run", "tonedial test claude --project .", "tonedial test codex --preset my-tone --accept-usage"],
   address: ['tonedial address "assistant" "friend"'],
   reset: ["tonedial reset", "tonedial reset warmth"],
   show: ["tonedial show", "tonedial show --explain"],
-  save: ['tonedial save "My Tone"'],
+  create: ["tonedial create", 'tonedial create "Jarvis" --slug jarvis care=3 --auto'],
+  save: ["tonedial save", 'tonedial save "My Tone"'],
   list: ["tonedial list"],
   edit: ["tonedial edit", "tonedial edit preset my-tone"],
   update: ["tonedial update --dry-run"],
@@ -243,6 +249,7 @@ const FLAG_SYNTAX: [keyof Messages["help"]["flags"], string][] = [
   ["fromPreset", "--from-preset=SLUG"],
   ["restorePreset", "--restore-preset=SLUG"],
   ["preset", "--preset=SLUG"],
+  ["slug", "--slug=SLUG"],
   ["acceptUsage", "--accept-usage"],
   ["explain", "--explain"],
   ["check", "--check"],
@@ -260,8 +267,9 @@ function helpRows(pairs: [string, string][], width: number, ui: Palette): string
       return [`  ${ui.accent(syntax)}`, ...wrap(description, ui.width - 4).map(line => `    ${line}`)];
     }
     const [first, ...rest] = wrap(description, ui.width - width - 4);
+    const label = syntax + " ".repeat(width - maxCells(syntax));
     return [
-      `  ${ui.accent(padEnd(syntax, width))}  ${first ?? ""}`,
+      `  ${ui.accent(label)}  ${first ?? ""}`,
       ...rest.map((line) => `  ${" ".repeat(width)}  ${line}`),
     ];
   });
@@ -274,8 +282,8 @@ function helpRows(pairs: [string, string][], width: number, ui: Palette): string
  */
 function expandedUsage(t: Messages, ui: Palette): string {
   const width = Math.max(
-    ...COMMAND_SYNTAX.map(([, syntax]) => cells(syntax)),
-    ...FLAG_SYNTAX.map(([, syntax]) => cells(syntax)),
+    ...COMMAND_SYNTAX.map(([, syntax]) => maxCells(syntax)),
+    ...FLAG_SYNTAX.map(([, syntax]) => maxCells(syntax)),
   );
   return [
     ...wrap(`tonedial — ${t.help.tagline}`, ui.width).map(ui.bold),
@@ -400,6 +408,7 @@ export async function run(
     "from-preset": { type: "string" },
     "restore-preset": { type: "string" },
     preset: { type: "string" },
+    slug: { type: "string" },
     "accept-usage": { type: "boolean", default: false },
     lang: { type: "string" },
     commands: { type: "boolean", default: false },
@@ -510,6 +519,7 @@ export async function run(
     fromPreset: typeof parsed.values["from-preset"] === "string" ? parsed.values["from-preset"] : null,
     restorePreset: typeof parsed.values["restore-preset"] === "string" ? parsed.values["restore-preset"] : null,
     preset: typeof parsed.values.preset === "string" ? parsed.values.preset : null,
+    slug: typeof parsed.values.slug === "string" ? parsed.values.slug : null,
     acceptUsage: parsed.values["accept-usage"] === true,
     lang: typeof parsed.values.lang === "string" ? parsed.values.lang : null,
     commands: parsed.values.commands === true,

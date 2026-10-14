@@ -18,7 +18,9 @@ Keep changes within the requested boundary and preserve unrelated edits.
   Keep address forms separate from formality's wording/distance, warmth and profanity; familiar polite and formal plain are valid combinations.
   Risk metadata and combination notices are advisory: they never clamp values, add tone approval or change host permissions.
   The safeword requests one plain answer and authorizes nothing; `reset` restores axes rather than disabling delivery.
-- Keep presets limited to axes. Persona, address, register and safeword belong to user settings.
+- Custom profiles save axes, persona, address, register and safeword together.
+  Applying a profile restores its full tone settings; legacy and bundled axis-only presets preserve the current separate settings.
+  Interface language and wiring remain outside profiles.
   State belongs to the shared state root; project scope chooses wiring, not a separate tone library.
   Tone-changing mutations recompile in the same action.
 - Separate generated configuration, observed native activation, delivered context and model adherence in output and documentation.

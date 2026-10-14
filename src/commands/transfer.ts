@@ -1,4 +1,4 @@
-// Import and export axis presets without persona or safeword settings.
+// Import and export complete profiles, retaining support for older axis-only presets.
 
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -9,7 +9,7 @@ import { decodeUtf8, getBounded, urlIdentity } from "../core/net.ts";
 import { truncate } from "../ui/width.ts";
 import { humanText, nextStep } from "../ui/format.ts";
 import {
-  BUNDLED, SLUG_PATTERN, inspectPresetLibrary, parsePreset, presetObject, preparePresetWrite, resolvePreset, serializePreset,
+  BUNDLED, PRESET_MAX_BYTES, SLUG_PATTERN, inspectPresetLibrary, parsePreset, presetObject, preparePresetWrite, resolvePreset, serializePreset,
 } from "../core/presets.ts";
 import { applyPlanned } from "./compile.ts";
 import { planChange, rawReadChange, rawReadCheck } from "../wiring/apply.ts";
@@ -35,7 +35,7 @@ export function runExport(ctx: Ctx, args: string[]): CommandResult {
  * The most a preset may weigh. Ten hand-written ones run under a kilobyte; this is three orders
  * of magnitude of headroom and still small enough that nothing unbounded is ever buffered.
  */
-export const IMPORT_MAX_BYTES = 64 * 1024;
+export const IMPORT_MAX_BYTES = PRESET_MAX_BYTES;
 
 /** How long to wait for a preset that is not on this machine. */
 export const IMPORT_TIMEOUT_MS = 10_000;

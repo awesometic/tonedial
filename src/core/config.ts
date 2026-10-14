@@ -121,9 +121,9 @@ export type ConfigWiring = {
 
 export type Config = {
   schema: number;
-  /** The preset the current values came from, or null once they diverge or none was used. */
+  /** Last applied or saved profile; retained when current tone settings diverge. */
   preset: string | null;
-  /** True when the axes have been changed since the preset was applied. */
+  /** True when tone settings have changed since the profile was applied or saved. */
   unsaved: boolean;
   axes: Axes;
   persona: Persona;

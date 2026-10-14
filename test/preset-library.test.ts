@@ -11,10 +11,10 @@ import { join } from "node:path";
 
 import { run } from "../src/cli.ts";
 import { AXIS_DEFAULT } from "../src/core/anchors.ts";
-import { parseConfig } from "../src/core/config.ts";
+import { defaultConfig, parseConfig } from "../src/core/config.ts";
 import { catalogue } from "../src/core/i18n.ts";
 import {
-  applyPreset, customPresetDir, inspectPresetLibrary, PRESET_MAX_BYTES, resolvePreset,
+  applyPreset, customPresetDir, inspectPresetLibrary, parsePreset, presetSettings, PRESET_MAX_BYTES, resolvePreset,
   serializePreset,
 } from "../src/core/presets.ts";
 import { assertFresh, gate, rawReadChange, rawReadCheck } from "../src/wiring/apply.ts";
@@ -355,3 +355,20 @@ for (const preferred of ["parent-link", "file-link", "oversized"] as const) {
     } finally { f.dispose(); }
   });
 }
+
+test("profiles with identical axes and different roles remain distinct recovery sources", () => {
+  const f = fixture();
+  try {
+    const config = defaultConfig();
+    config.persona.agent = "Custom role";
+    const profile = { schema: 2, slug: "shared", displayName: "Shared", values: { warmth: 2 as const }, settings: presetSettings(config) };
+    writeFileSync(join(f.custom, "shared.json"), serializePreset(profile));
+    config.persona.agent = "Older role";
+    writeFileSync(join(f.presets, "shared.json"), serializePreset({ ...profile, settings: presetSettings(config) }));
+    const library = inspectPresetLibrary(f.presets, EN);
+    assert.equal(library.conflicts.length, 1);
+    assert.equal(library.recoveryCopies[0]!.preset.settings?.persona.agent, "Older role");
+    const invalid = { ...profile, settings: { ...profile.settings, speech_level: "invalid" } };
+    assert.throws(() => parsePreset(JSON.stringify(invalid), "shared", EN), /auto, polite, plain/);
+  } finally { f.dispose(); }
+});

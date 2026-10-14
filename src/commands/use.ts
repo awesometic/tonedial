@@ -1,4 +1,4 @@
-// Activate a preset and compile. Persona and safeword are untouched.
+// Activate a profile and compile. Schema-1 presets retain the current separate settings.
 
 import type { CommandResult, Ctx } from "../cli.ts";
 import { existsSync } from "node:fs";
@@ -8,7 +8,7 @@ import { riskyAxes } from "../core/anchors.ts";
 import { ConfigError, serializeConfig } from "../core/config.ts";
 import { exportAliasesState, projectTonePath } from "../core/paths.ts";
 import { check as checkCombos } from "../core/combos.ts";
-import { applyPreset, assertPresetSelection, inspectPresetLibrary, resolvePreset } from "../core/presets.ts";
+import { withPreset, assertPresetSelection, inspectPresetLibrary, resolvePreset } from "../core/presets.ts";
 import { applyPlanned, planArtifact, planConfig, sizeWarning } from "./compile.ts";
 import { planChange, rawReadCheck } from "../wiring/apply.ts";
 import { budget, combination, humanText, nextStep } from "../ui/format.ts";
@@ -31,9 +31,7 @@ export async function runUse(ctx: Ctx, args: string[]): Promise<CommandResult> {
   const presetReads = selected.selectionReads.map((capture) => rawReadCheck(capture, ctx.t));
 
   const { change: configChange, config } = planConfig(ctx);
-  config.axes = applyPreset(preset);
-  config.preset = preset.slug;
-  config.unsaved = false;
+  Object.assign(config, withPreset(config, preset));
 
   const { change: toneChange, size } = planArtifact(ctx, config);
   const changes = [toneChange];

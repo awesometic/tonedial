@@ -632,3 +632,27 @@ test("spawn failure reports a safe installation error without exposing the injec
   assert.deepEqual(nativeCalls(), []);
   assert.deepEqual(snapshot(scratch), before);
 });
+
+test("schema-2 preview uses the selected profile's role without exposing it in JSON or changing state", () => {
+  install("codex");
+  const config = defaultConfig();
+  config.persona.agent = "ROLE_FROM_SELECTED_PROFILE";
+  config.persona.address = { self_ref: "profile guide", user_ref: "profile reader" };
+  config.safeword = "profile plain reply";
+  const custom = join(state, "presets", "custom");
+  mkdirSync(custom, { recursive: true });
+  writeFileSync(join(custom, "whole-profile.json"), JSON.stringify({ schema: 2, slug: "whole-profile", displayName: "Whole Profile",
+    values: { warmth: 1 }, settings: { persona: config.persona, safeword: config.safeword, speech_level: "polite" } }));
+  const before = snapshot(state);
+  const plan = invoke(["codex", "--preset", "whole-profile", "--json"]);
+  assert.equal(plan.status, 0, plan.stderr);
+  assert.ok(!plan.stdout.includes("ROLE_FROM_SELECTED_PROFILE"));
+  assert.equal(nativeCalls().length, 0);
+  const preview = invoke(["codex", "--preset", "whole-profile", "--accept-usage"], true);
+  assert.equal(preview.status, 0, preview.stderr);
+  const prompt = nativeCalls()[0]!.argv.at(-1)!;
+  assert.ok(prompt.includes("ROLE_FROM_SELECTED_PROFILE"));
+  assert.ok(prompt.includes("profile guide") && prompt.includes("profile plain reply"));
+  assert.ok(!prompt.includes(PRIVATE_AGENT));
+  assert.deepEqual(snapshot(state), before);
+});

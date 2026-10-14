@@ -13,7 +13,7 @@ import {
 } from "../core/config.ts";
 import { toCompileInput } from "../core/resolve.ts";
 import { LANGUAGES, catalogue, isLanguage, type Messages } from "../core/i18n.ts";
-import { resolvePreset } from "../core/presets.ts";
+import { presetSettings, resolvePreset } from "../core/presets.ts";
 import { dial } from "../ui/dial.ts";
 import { budget, combination, humanText, riskWarnings } from "../ui/format.ts";
 import { interactive } from "../ui/prompt.ts";
@@ -245,6 +245,7 @@ type Applied = {
  * `warmth 3 → 5`, and a second copy of it would be a second answer to what counts as a change.
  */
 function applyPairs(config: Config, pairs: readonly (readonly [string, string])[], t: Messages, asJson: boolean): Applied {
+  const settingsBefore = JSON.stringify(presetSettings(config));
   const warnings: string[] = [];
   const changed: string[] = [];
   const moves: Applied["moves"] = [];
@@ -263,8 +264,19 @@ function applyPairs(config: Config, pairs: readonly (readonly [string, string])[
     }
   }
 
+  if (settingsBefore !== JSON.stringify(presetSettings(config))) config.unsaved = true;
   if (personaTouched) warnings.push(t.notice.personaUnanchored);
   return { warnings, changed, moves };
+}
+
+/** The same assignments and validation for direct tuning and preset creation. */
+export function applyAssignments(config: Config, args: string[], t: Messages, asJson: boolean): Applied {
+  const pairs = args.map((arg) => {
+    const eq = arg.indexOf("=");
+    if (eq < 1) throw new ConfigError(t.axis.needsPair(asJson ? arg : humanText(arg)));
+    return [arg.slice(0, eq), arg.slice(eq + 1)] as const;
+  });
+  return applyPairs(config, pairs, t, asJson);
 }
 
 /** Recompile, write, and leave the receipt shared by set, address, and the dial. */
@@ -303,12 +315,7 @@ export async function runSet(ctx: Ctx, args: string[]): Promise<CommandResult> {
     result = await runDial(ctx);
   } else {
     const { change: configChange, config } = planConfig(ctx);
-    const pairs = args.map((arg) => {
-      const eq = arg.indexOf("=");
-      if (eq < 1) throw new ConfigError(ctx.t.axis.needsPair(ctx.asJson ? arg : humanText(arg)));
-      return [arg.slice(0, eq), arg.slice(eq + 1)] as const;
-    });
-    result = await commit(ctx, configChange, config, applyPairs(config, pairs, ctx.t, ctx.asJson));
+    result = await commit(ctx, configChange, config, applyAssignments(config, args, ctx.t, ctx.asJson));
   }
   return { ...result, warnings: [...(result.warnings ?? []), ctx.t.notice.modelExpectation] };
 }

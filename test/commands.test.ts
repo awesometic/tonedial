@@ -610,6 +610,7 @@ test("saved names and settings cannot forge human notices while storage and JSON
   assert.equal(config().persona.address?.user_ref, current);
   assert.equal(config().persona.note, current);
   assert.equal(config().safeword, current);
+  assert.equal(await cli("save"), 0);
   const artifact = tone();
   for (const args of [["show"], ["use", slug]]) {
     out = [];
@@ -765,20 +766,18 @@ test("a misspelled flag fails rather than being ignored", async () => {
   assert.match(stderr(), /jsonn/);
 });
 
-test("save captures the axes that moved, and never the persona or safeword", async () => {
+test("save captures axes and the complete profile settings, excluding interface and wiring", async () => {
   await initializeState();
   assert.equal(await cli("set", "safeword=연기 그만", "persona.age=40s",
     "persona.user=likes small tools", "persona.agent=plain-speaking reviewer"), 0);
   assert.equal(await cli("use", "terse-operator"), 0);
   assert.equal(await cli("save", "My Operator"), 0);
-  const saved = JSON.parse(readFileSync(join(customPresetDir(paths().presets), "my-operator.json"), "utf8")) as {
-    values: Record<string, number>;
-  };
+  const saved = JSON.parse(readFileSync(join(customPresetDir(paths().presets), "my-operator.json"), "utf8"));
   assert.deepEqual(Object.keys(saved.values).sort(), ["care", "conviction", "playfulness", "verbosity", "warmth"]);
-  assert.ok(!JSON.stringify(saved).includes("연기 그만"), "no safeword in a preset");
-  assert.ok(!JSON.stringify(saved).includes("40s"), "no persona in a preset");
-  assert.ok(!JSON.stringify(saved).includes("likes small tools"), "user context stays out of a preset");
-  assert.ok(!JSON.stringify(saved).includes("plain-speaking reviewer"), "agent role stays out of a preset");
+  assert.equal(saved.schema, 2);
+  assert.deepEqual(saved.settings, { persona: config().persona, safeword: "연기 그만", speech_level: "auto" });
+  assert.equal(Object.hasOwn(saved, "language"), false);
+  assert.equal(Object.hasOwn(saved, "wiring"), false);
 });
 
 test("save refuses to shadow a bundled slug", async () => {
@@ -800,7 +799,7 @@ test("slugs are lowercase Latin letters, digits, and dashes", async () => {
   assert.throws(() => slugify("한국어만", EN), /no Latin letters or digits/);
 });
 
-test("export and import move a preset without carrying anything user-level", async () => {
+test("export and import round-trip full profiles without activating them", async () => {
   await initializeState();
   assert.equal(await cli("set", "safeword=연기 그만", "persona.note=A senior engineer.",
     "persona.user=likes small tools", "persona.agent=plain-speaking reviewer"), 0);
@@ -809,9 +808,8 @@ test("export and import move a preset without carrying anything user-level", asy
   out = [];
   assert.equal(await cli("export", "portable"), 0);
   const exported = stdout();
-  assert.ok(!exported.includes("연기 그만") && !exported.includes("senior engineer"));
-  assert.ok(!exported.includes("likes small tools"), "user context stays out of an exported preset");
-  assert.ok(!exported.includes("plain-speaking reviewer"), "agent role stays out of an exported preset");
+  assert.equal(JSON.parse(exported).schema, 2);
+  assert.deepEqual(JSON.parse(exported).settings, { persona: config().persona, safeword: "연기 그만", speech_level: "auto" });
 
   const sourceDirectory = join(home, `input files with spaces${" source".repeat(15)}`);
   mkdirSync(sourceDirectory);
@@ -906,6 +904,105 @@ test("show previews a preset without activating it", async () => {
   assert.equal(json.preview, true);
   assert.equal(json.axes.verbosity, 1, "the previewed values are shown");
   assert.equal(config().preset, "tough-love", "the active preset is unchanged");
+});
+
+test("current show guides saving changed axes to the named preset, while slug previews stay unchanged", async () => {
+  await initializeState();
+  assert.equal(await cli("save", "Jarvis Helper", "--slug", "my-jarvis"), 0, stderr());
+  assert.equal(await cli("set", "warmth=2"), 0);
+  const before = readFileSync(paths().config);
+  out = [];
+  assert.equal(await cli("show"), 0);
+  assert.ok(flat().includes(EN.preset.changesNotSaved));
+  assert.ok(stdout().includes("tonedial save"));
+  assert.deepEqual(readFileSync(paths().config), before);
+  out = [];
+  assert.equal(await cli("show", "my-jarvis"), 0);
+  assert.ok(!flat().includes(EN.preset.changesNotSaved));
+  assert.ok(stdout().includes("tonedial use my-jarvis"));
+  assert.equal(await cli("save"), 0);
+  out = [];
+  assert.equal(await cli("show"), 0);
+  assert.ok(!flat().includes(EN.preset.changesNotSaved));
+  assert.equal(config().axes.warmth, 2);
+  assert.equal(JSON.parse(readFileSync(join(customPresetDir(paths().presets), "my-jarvis.json"), "utf8")).displayName, "Jarvis Helper");
+});
+
+test("create saves and switches complete profiles while interface language stays global", async () => {
+  await initializeState();
+  out = [];
+  assert.equal(await cli("create", "내 자비스", "--slug", "my-jarvis", "warmth=2",
+    "persona.self_ref=저", "persona.user_ref=사용자님", "persona.user=Maintains services",
+    "persona.agent=A fictional reviewer", "speech_level=polite", "--auto", "--json"), 0, stderr());
+  const result = JSON.parse(stdout());
+  assert.equal(result.created, true);
+  assert.ok(result.diff.some((entry: { path: string }) => entry.path === paths().config));
+  assert.ok(result.diff.some((entry: { path: string }) => entry.path === paths().tone));
+  const preset = JSON.parse(readFileSync(join(customPresetDir(paths().presets), "my-jarvis.json"), "utf8"));
+  const saved = config();
+  assert.deepEqual(preset, { schema: 2, slug: "my-jarvis", displayName: "내 자비스", values: { warmth: 2 },
+    settings: { persona: saved.persona, safeword: saved.safeword, speech_level: saved.speech_level } });
+  assert.equal(saved.preset, "my-jarvis");
+  assert.equal(saved.unsaved, false);
+  assert.equal(saved.persona.agent, "A fictional reviewer");
+  assert.equal(saved.persona.user, "Maintains services");
+  assert.deepEqual(saved.persona.address, { self_ref: "저", user_ref: "사용자님" });
+  assert.equal(tone(), compile(toCompileInput(saved)));
+  assert.equal(await cli("use", "tough-love"), 0);
+  assert.deepEqual(config().persona, saved.persona, "a legacy bundled preset must preserve settings");
+  assert.equal(await cli("set", "language=ko"), 0);
+  assert.equal(await cli("create", "Alternate", "--slug", "alternate", "persona.agent=Another reviewer",
+    "persona.self_ref=", "persona.user_ref=", "safeword=alternate reply", "speech_level=plain", "--auto"), 0);
+  assert.equal(await cli("use", "my-jarvis"), 0);
+  assert.deepEqual(config().persona, saved.persona);
+  assert.equal(config().safeword, saved.safeword);
+  assert.equal(config().speech_level, "polite");
+  assert.equal(config().language, "ko");
+  assert.equal(await cli("use", "alternate"), 0);
+  assert.equal(config().persona.agent, "Another reviewer");
+  assert.equal(config().persona.address, null);
+  assert.equal(config().safeword, "alternate reply");
+  assert.equal(config().speech_level, "plain");
+  assert.equal(await cli("set", "persona.agent=Edited reviewer"), 0);
+  assert.equal(config().unsaved, true);
+  out = [];
+  assert.equal(await cli("show", "alternate", "--json"), 0);
+  assert.equal(JSON.parse(stdout()).persona.agent, "Another reviewer", "preview must use the saved role");
+  assert.equal(config().persona.agent, "Edited reviewer", "preview must not activate the profile");
+  assert.equal(await cli("save"), 0);
+  assert.equal(config().unsaved, false);
+});
+
+test("create previews without writes and refuses missing approval, unsafe input and existing slugs", async () => {
+  await initializeState();
+  const before = readFileSync(paths().config);
+  const artifact = tone();
+  out = [];
+  assert.equal(await cli("create", "Preview", "warmth=2", "persona.agent=Draft role", "--dry-run", "--json"), 0);
+  const preview = JSON.parse(stdout());
+  assert.equal(preview.created, false);
+  assert.equal(preview.reason, "dry-run");
+  assert.ok(preview.diff.length >= 3);
+  for (const args of [
+    ["create"],
+    ["create", "Missing Approval"],
+    ["create", "Invalid Role", "persona.agent=" + "x".repeat(201), "--auto"],
+    ["create", "Unsafe Slug", "--slug", "../outside", "--auto"],
+    ["create", "Oversized Profile", "persona.note=" + "x".repeat(64 * 1024), "--auto"],
+  ]) {
+    out = []; err = [];
+    assert.equal(await cli(...args, "--json"), 1, args.join(" "));
+    assert.equal(JSON.parse(stdout()).ok, false);
+    assert.deepEqual(readFileSync(paths().config), before);
+    assert.equal(tone(), artifact);
+    assert.equal(existsSync(customPresetDir(paths().presets)), false, "failed creation left a preset directory");
+  }
+  assert.equal(await cli("save", "Existing"), 0);
+  const preset = readFileSync(join(customPresetDir(paths().presets), "existing.json"));
+  const existingConfig = readFileSync(paths().config);
+  assert.equal(await cli("create", "Existing", "warmth=5", "--auto"), 1);
+  assert.deepEqual(readFileSync(paths().config), existingConfig);
+  assert.deepEqual(readFileSync(join(customPresetDir(paths().presets), "existing.json")), preset);
 });
 
 test("show refusing a preset name lists the ones it would have taken", async () => {
@@ -1309,13 +1406,14 @@ test("an edit to the settings reaches tone.md without a second command", async (
   assert.notEqual(tone, compile(toCompileInput(defaultConfig())), "tone.md is still the default");
 });
 
-test("editing a clean active user preset synchronizes axes and artifact in one operation", async () => {
+test("editing a clean active profile synchronizes axes, role and artifact in one operation", async () => {
   await initializeState();
   assert.equal(await cli("set", "warmth=4", "persona.age=40s", "safeword=plain reply", "speech_level=polite"), 0);
   assert.equal(await cli("save", "Mine"), 0);
   const presetPath = join(customPresetDir(paths().presets), "mine.json");
   const edited = JSON.parse(readFileSync(presetPath, "utf8"));
   edited.values = { warmth: 5 };
+  edited.settings.persona.agent = "Edited profile role";
   const beforeConfig = config();
   const beforeTone = tone();
   const beforeOperations = new Set(inspectOperations(paths()).journals.map((entry) => entry.operationId));
@@ -1327,7 +1425,7 @@ test("editing a clean active user preset synchronizes axes and artifact in one o
   assert.deepEqual(saved.axes, { ...AXIS_DEFAULT, warmth: 5 });
   assert.equal(saved.preset, "mine");
   assert.equal(saved.unsaved, false);
-  assert.deepEqual(saved.persona, beforeConfig.persona);
+  assert.deepEqual(saved.persona, { ...beforeConfig.persona, agent: "Edited profile role" });
   assert.equal(saved.safeword, beforeConfig.safeword);
   assert.equal(saved.speech_level, beforeConfig.speech_level);
   assert.equal(Object.hasOwn(saved, "guards"), false);

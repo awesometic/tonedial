@@ -359,3 +359,29 @@ test("selected dead mutation retires without certifying its writes, and new rebu
     assert.equal(fs.existsSync(f.ctx.paths.operationsLock), false);
   } finally { f.dispose(); }
 });
+
+test("profile recovery supplies missing settings while preserving surviving role and safeword", async () => {
+  const f = fixture();
+  try {
+    const config = defaultConfig();
+    config.persona.agent = "Backup role";
+    config.persona.address = { self_ref: "guide", user_ref: "operator" };
+    config.speech_level = "polite";
+    config.safeword = "backup reply";
+    const custom = join(f.ctx.paths.presets, "custom");
+    fs.mkdirSync(custom, { recursive: true });
+    fs.writeFileSync(join(custom, "backup.json"), JSON.stringify({ schema: 2, slug: "backup", displayName: "Backup",
+      values: { warmth: 2 }, settings: { persona: config.persona, safeword: config.safeword, speech_level: config.speech_level } }));
+    fs.writeFileSync(f.ctx.paths.config, JSON.stringify({ schema: 1, axes: { warmth: 9 },
+      persona: { agent: "Current role" }, safeword: "current reply" }));
+    f.ctx.flags.fromPreset = "backup";
+    await runAppRebuild(f.ctx);
+    const recovered = parseConfig(fs.readFileSync(f.ctx.paths.config, "utf8"));
+    assert.equal(recovered.persona.agent, "Current role");
+    assert.equal(recovered.safeword, "current reply");
+    assert.deepEqual(recovered.persona.address, config.persona.address);
+    assert.equal(recovered.speech_level, "polite");
+    assert.equal(recovered.axes.warmth, 2);
+    assert.equal(recovered.unsaved, true);
+  } finally { f.dispose(); }
+});

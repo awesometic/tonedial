@@ -71,7 +71,11 @@ Mutation receipts show generated/current status; `--verbose` adds the numeric ar
 
 Five bundled presets provide starting points.
 `list` marks the active preset and custom entries; `list --verbose` adds non-default axis values.
-`show <slug>` previews a preset without applying it.
+`show <slug>` previews a saved profile without applying it.
+Bare `show` reports the current settings, including changes made with `set`.
+When those tone settings have not been saved to a profile, it says so and shows a copyable `save` command.
+The settings and `TONE.md` are already saved; this notice concerns the preset library.
+Running `use <slug>` again replaces the current axes with the profile's saved values.
 
 ```bash
 tonedial list
@@ -82,7 +86,35 @@ tonedial import my-tone.json
 tonedial use my-tone
 ```
 
-A preset carries axes only; applying or saving one never captures or changes persona, safeword, speech level or interface language.
+`create` guides you through a display name, a separate slug, address terms, user context,
+agent role, register and safeword, followed by the existing twelve-axis dial.
+It starts from the current settings; Enter keeps a displayed value.
+User context and agent role each accept up to 200 Unicode code points, including internal spaces and punctuation.
+The guided form reports each accepted count and retries an invalid field without discarding earlier answers.
+Review the file changes after the dial, then approve to save and apply the preset in one transaction.
+The final approval also shows the profile name, address terms and both role descriptions.
+Esc in the dial or declining the final approval leaves the preset library and current settings unchanged.
+An existing slug is refused; `save` updates an existing user preset.
+Bare `save` updates the selected user preset while keeping its display name and slug.
+When a bundled preset or no preset is selected, provide a new display name.
+Use `--slug` with either command when the display name and slug should differ, including Korean names.
+
+```bash
+tonedial create
+tonedial create "My Jarvis" --slug my-jarvis warmth=3 \
+  persona.agent="A fictional SRE specialist; speaks plainly" --auto
+tonedial save "My Jarvis" --slug my-jarvis
+tonedial create "Another Jarvis" --slug another-jarvis warmth=3 --dry-run --json
+```
+
+JSON and dry-run creation never ask questions; provide the name and any desired `key=value` settings.
+`--auto` supplies approval while retaining the file preview; `created: true` confirms the write.
+Creation saves address, role, register and safeword with the axes. `use` restores the whole profile.
+
+Custom profiles use preset schema 2 and carry axes, persona, address, safeword and speech level.
+Bundled and older schema-1 presets carry axes only and keep the current separate settings when applied.
+Interface language and wiring stay global and are never part of a profile.
+`export` and `import` back up or move the whole profile, including address, role descriptions and persona notes.
 `import` writes the custom preset but does not activate it; follow it with `use <slug>` when you want to apply the imported axes.
 Use `export <slug> --json` when a schema 3 envelope is more useful than the raw preset object.
 Imports also accept HTTPS URLs with bounded downloads and guarded redirects; remote receipts identify only scheme, host and port, while the request uses the complete URL.
@@ -107,7 +139,10 @@ Persona and safeword start unset; empty values clear them.
 Persona has no fixed anchors: the requested order is axes, persona, then model defaults, and `show` warns when unanchored persona fields are set.
 Each new role description accepts at most 200 Unicode code points and rejects longer input before
 a write. Whitespace-only input clears it, while the literal `unspecified` remains a value.
-`use` and `reset` preserve both descriptions, and `save` plus `export` carry axis values only.
+`use` restores descriptions saved in a schema-2 profile, including unset values; `reset` preserves the current descriptions.
+`save` captures them and `export` includes them in the profile JSON.
+To add or change a role on the current tone, run `set persona.agent="..."`.
+It preserves all axes and recompiles `TONE.md` immediately; use `save` to update the selected profile.
 The compact `show` view reports whether each description is set; `show --verbose` displays the
 wrapped text.
 Explicit machine config results and file-review diffs can include the descriptions; native
@@ -316,7 +351,7 @@ tonedial list --json
 tonedial show --json
 ```
 
-Application rebuild preserves valid saved settings, unsaved axes and custom presets while replacing generated files.
+Application rebuild preserves valid saved settings, unsaved tone changes and custom profiles while replacing generated files.
 Healthy presets remain listable/exportable with a damaged config; one bad preset does not hide the others.
 Flat user presets remain loadable, and conflicting definitions receive a reported recovered copy without overwriting either original.
 Missing information requires a visible choice: `--from-preset <slug>` supplies missing axes, `--from-operation <id>` supplies available saved values from a validated same-root operation, and current valid fields win.
@@ -360,20 +395,23 @@ Successful tone mutations recompile in the same action.
 | `reset [axis]` | Restore one or all axes to defaults |
 | `show [slug]` | Inspect state or a preset; `--explain` describes settings and risks |
 | `use <slug>` | Apply a preset; `--project <dir>` also exports the artifact |
-| `save <display name>` | Save current axes as a custom preset |
+| `save [display name]` | Save the current tone profile; bare updates the selected user profile |
+| `create [display name] [key=value …]` | Guide preset creation; `--slug` chooses its identifier; save and apply after approval |
 | `list` | List presets; `--verbose` adds axis values |
-| `export <slug>` / `import <file-or-https-url>` | Exchange axis-only preset JSON |
+| `export <slug>` / `import <file-or-https-url>` | Back up or transfer full profile JSON |
 | `edit [preset <slug>]` | Open config/preset in the selected editor; `--dry-run` previews |
 | `init` | Set up state or rebuild generated app files; optionally select native tools |
 | `wire [tool]` / `unwire [tool]` | Connect/disconnect a tool in the selected scope |
 | `doctor` | Diagnose; `--fix` rebuilds, `--fix --rollback <id>` restores an operation |
 | `eject` | Disconnect the selected scope, preserving shared state |
-| `compile` | Generate the artifact; `--check` inspects without writes |
+| `compile` | Rebuild `TONE.md` from saved settings for repair; `--check` inspects without writes |
 | `test [claude|codex]` | Fresh conversation; `--preset <slug>` previews preset axes; JSON/dry-run launch nothing |
 | `update` | Update curl installs; report npm's update command for npm installs |
 
 Every command accepts `--json` and returns integer `schema: 3` envelopes, including version and errors.
-Persisted config stays schema 2; preset and operation formats are separate.
+Ordinary tone changes already compile automatically; `compile` is for a missing or stale artifact,
+and `compile --check --json` supplies the paths used by the skill's explicit session reload.
+Persisted config stays schema 2; custom profiles use preset schema 2; older schema 1 remains supported and operation formats are separate.
 `show` includes `riskAxes` and `riskThresholds`, omitting unsupported guard, ceiling and width fields.
 JSON stdout has no terminal escapes; JSON mode has no ToneDial-owned prompt or after-receipt provider handoff.
 An explicitly requested editor in `edit --json` still runs with live output on stderr.
@@ -399,8 +437,8 @@ Before the provider choice, a notice covers account tokens, charges, possible ex
 Enter `y` to accept responsibility and start; Enter or `n` cancels.
 `--accept-usage` skips only this invocation's consent question and never persists consent.
 Without `--preset`, the preview uses saved axes, including unsaved edits.
-With it, a bundled or user preset supplies axes; saved persona descriptions, note, address,
-register and safeword stay in effect.
+With it, a schema-2 profile supplies axes, persona, note, address, register and safeword.
+Bundled and older schema-1 presets supply axes while keeping the current separate settings.
 With one provider it can select it; with both it asks interactively, while ambiguous JSON/dry-run plans require an explicit provider.
 The target is the current folder or an existing `--project` directory.
 The opening prompt requests dialogue only and forbids file changes throughout that folder.

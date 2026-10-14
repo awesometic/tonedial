@@ -1,6 +1,6 @@
 status: 0
---- stdout --- [bytes=941; endsWithNewline=true]
-  ToneDial · show · Caring Brother                      TONE.md 2,218 / 2,700
+--- stdout --- [bytes=968; endsWithNewline=true]
+  ToneDial · show · Caring Brother (unsaved changes)    TONE.md 2,211 / 2,700
 
                          Current   ToneDial default · ! risky tone
   form      formality    ▮▯▯▯▯  1   *3
@@ -22,10 +22,10 @@ status: 0
   Interface en
   Connections: none
 
-  * differs from ToneDial's default
-  tonedial show --explain
+  * differs from ToneDial's default · Not saved to a profile.
+  tonedial save "My Tone"
 --- stderr --- [bytes=252; endsWithNewline=true]
   ⚠ persona has no fixed anchors; axes take precedence. Text may affect
     content. Roleplay does not verify credentials or grant permissions.
   ⚠ The model may not produce the tone you expect.
-  ⚠ TONE.md: 2,218 characters · over 1,800 target
+  ⚠ TONE.md: 2,211 characters · over 1,800 target
