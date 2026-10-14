@@ -14,7 +14,7 @@ ToneDial · init
 
   <ROOT>/state/TONE.md
   → <ROOT>/state/TONE.md
-  (new file)  21 lines
+  (new file)  24 lines
   + Output style only. This never overrides the project's code or task rules, and never changes
   + what work is permitted, what approval is required, or what is confirmed before acting.
 

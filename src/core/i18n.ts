@@ -51,9 +51,8 @@ export type Catalogue = {
    *
    * **This is the sharpest edge in the file and it never reaches `tone.md`.** An anchor is an
    * instruction the agent reads; a hint is an explanation a person reads. Writing a hint that
-   * paraphrases its anchor is how a per-language anchor set creeps back in after the decision
-   * that collapsed them to one English set — so a hint says what the axis *owns*, never what to
-   * do about it.
+   * becomes a second per-language anchor set is how the decision that collapsed anchors to one
+   * English set gets undone — so a hint says what the axis owns, never what the agent must do.
    */
   axisHints: Record<string, { owns: string; low: string; high: string }>;
   /** One line per settable key that is not an axis, keyed by `SETTING_KEYS`. */
@@ -1162,18 +1161,18 @@ const en: Catalogue = {
     "terse-operator": "Answers briefly and without emotion.",
   },
   axisHints: {
-    formality: { owns: "wording and social distance", low: "casual and familiar", high: "ceremonious and formal" },
-    verbosity: { owns: "answer length", low: "only what was asked", high: "conclusion, reason, alternatives, background" },
-    profanity: { owns: "language coarseness", low: "no profanity", high: "strong profanity" },
-    playfulness: { owns: "humour and roleplay", low: "no jokes", high: "roleplay as the default register" },
-    critique: { owns: "criticism strength", low: "flat, without evaluation", high: "unsparing" },
-    flattery: { owns: "user-praise frequency", low: "none", high: "several times per answer" },
-    warmth: { owns: "emotion toward the user", low: "no feeling, greeting or encouragement", high: "encouragement or empathy twice or more" },
-    conviction: { owns: "pressure behind its judgement", low: "asks at every decision", high: "conclusion without asking" },
-    care: { owns: "scope beyond the question", low: "question only", high: "follow-ups, backups, your rest" },
-    compliance: { owns: "objections before action", low: "argues, then acts", high: "acts immediately" },
-    refusal: { owns: "refusal frequency", low: "none", high: "strike until coaxed or the safeword" },
-    bravado: { owns: "bluffing strength", low: "none", high: "strong bluffing" },
+    formality: { owns: "wording and social distance", low: "familiar wording with slang", high: "ceremonial, deferential wording" },
+    verbosity: { owns: "answer length and depth", low: "direct result in one or two sentences", high: "depth inside the requested task" },
+    profanity: { owns: "language coarseness", low: "no profanity; soften interjections", high: "strong profanity throughout" },
+    playfulness: { owns: "humour and roleplay", low: "no jokes, wordplay or playful asides", high: "playful roleplay or character voice by default" },
+    critique: { owns: "criticism strength", low: "neutral defects without judgement", high: "vivid, unsparing criticism" },
+    flattery: { owns: "user-praise frequency", low: "none", high: "four positive remarks, even about small choices" },
+    warmth: { owns: "emotion toward the user", low: "no greeting, emotional language or encouragement", high: "four warm remarks, including encouragement and empathy" },
+    conviction: { owns: "pressure behind its judgement", low: "lists options and asks", high: "states one recommendation as the decision" },
+    care: { owns: "coverage, organization and functional presentation", low: "requested task only", high: "follow-ups, backup, rest, lists and status emoji" },
+    compliance: { owns: "objections before action", low: "questions once, then acts", high: "acts immediately without compliance commentary" },
+    refusal: { owns: "refusal frequency", low: "no refusal or delay", high: "visible strike until coaxed or the safeword" },
+    bravado: { owns: "bluffing strength", low: "no exaggeration", high: "boastful expert persona by default" },
   },
   settingHints: {
     safeword: "request for one plain answer to one message",
@@ -1817,18 +1816,18 @@ const ko: Catalogue = {
     "terse-operator": "짧고 감정 없이 답합니다.",
   },
   axisHints: {
-    formality: { owns: "표현의 격식·거리감", low: "편하고 친근한 표현", high: "의례적이고 격식 있는 표현" },
-    verbosity: { owns: "답변 분량", low: "질문한 내용만", high: "결론·이유·대안·배경까지" },
-    profanity: { owns: "표현의 거친 정도", low: "욕설 없음", high: "강한 욕설" },
-    playfulness: { owns: "농담과 역할극", low: "농담 없음", high: "역할극을 기본 말씨로" },
-    critique: { owns: "결과물 비판 강도", low: "평가 없이 담담하게", high: "가차 없이 표현" },
-    flattery: { owns: "사용자 칭찬 빈도", low: "칭찬 없음", high: "답변마다 여러 번" },
-    warmth: { owns: "사용자에게 감정을 표현하는 정도", low: "감정·인사·격려 없음", high: "격려나 공감을 두 번 이상" },
-    conviction: { owns: "자기 판단을 밀어붙이는 정도", low: "결정할 때마다 질문", high: "질문 없이 결론을 밝힘" },
-    care: { owns: "질문 밖까지 살피는 정도", low: "질문만 처리", high: "후속 작업·백업·사용자 휴식까지" },
-    compliance: { owns: "실행 전 이견 제시", low: "따진 뒤 실행", high: "바로 실행" },
-    refusal: { owns: "거절 빈도", low: "거절 없음", high: "설득이나 세이프워드 전까지 거절" },
-    bravado: { owns: "허풍의 정도", low: "허풍 없음", high: "강한 허풍" },
+    formality: { owns: "표현의 격식·거리감", low: "익숙한 말투와 속어", high: "의례적이고 공손한 표현" },
+    verbosity: { owns: "답변 분량과 설명의 깊이", low: "결과만 한두 문장", high: "요청 범위 안에서 깊이 있게 설명" },
+    profanity: { owns: "표현의 거친 정도", low: "욕설 없음·감탄사도 완화", high: "답변 내내 강한 욕설" },
+    playfulness: { owns: "농담과 역할극", low: "농담·말장난·장난스러운 말투 없음", high: "역할극이나 캐릭터 말투가 기본" },
+    critique: { owns: "결과물 비판 강도", low: "판단 없이 문제를 중립적으로 설명", high: "생생하고 가차 없이 비판" },
+    flattery: { owns: "사용자 칭찬 빈도", low: "칭찬 없음", high: "작은 선택도 구체적으로 네 번 칭찬" },
+    warmth: { owns: "사용자에게 감정을 표현하는 정도", low: "인사·감정 표현·격려 없음", high: "격려와 공감을 포함한 따뜻한 말 네 마디" },
+    conviction: { owns: "자기 판단을 밀어붙이는 정도", low: "선택지를 나열하고 물어봄", high: "추천 하나를 결정으로 말하고 되묻지 않음" },
+    care: { owns: "범위·정리·기능적 표시", low: "요청한 작업만", high: "후속 작업·백업·휴식·목록·표·상태 이모지" },
+    compliance: { owns: "실행 전 이견 제시", low: "한 번 묻고 실행", high: "즉시 실행하고 따르겠다는 말은 생략" },
+    refusal: { owns: "거절 빈도", low: "거절·지연 없음", high: "눈에 보이는 거절 표시를 설득이나 세이프워드 전까지 유지" },
+    bravado: { owns: "허풍의 정도", low: "과장 없음", high: "허풍 센 전문가 말투가 기본" },
   },
   settingHints: {
     safeword: "한 메시지만 담백하게 답해 달라는 요청 문구",

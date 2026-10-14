@@ -143,6 +143,17 @@ function cloneManaged(source: ManagedResource["managed"]): ManagedResource["mana
     managed.matchers = [...source.matchers];
     delete managed.matcher;
   }
+  if (source.events !== undefined) {
+    managed.events = source.events.map((event) => ({
+      event: event.event,
+      matchers: [...event.matchers],
+      command: event.command,
+      ...(event.args === undefined ? {} : { args: [...event.args] }),
+      ...(event.statusMessage === undefined ? {} : { statusMessage: event.statusMessage }),
+      ...(event.name === undefined ? {} : { name: event.name }),
+      ...(event.description === undefined ? {} : { description: event.description }),
+    }));
+  }
   return managed;
 }
 

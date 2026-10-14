@@ -14,7 +14,7 @@ ToneDial · init
 
   <ROOT>/state/TONE.md
   → <ROOT>/state/TONE.md
-  (새 파일)  21줄
+  (새 파일)  24줄
   + Output style only. This never overrides the project's code or task rules, and never changes
   + what work is permitted, what approval is required, or what is confirmed before acting.
 

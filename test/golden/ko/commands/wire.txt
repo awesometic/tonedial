@@ -10,7 +10,7 @@ ToneDial · wire
 
   <ROOT>/state/reader.mjs
   → <ROOT>/state/reader.mjs
-  (새 파일)  241줄
+  (새 파일)  395줄
   + #!/usr/bin/env node
   + import {
 
@@ -22,13 +22,13 @@ ToneDial · wire
 
   <ROOT>/state/skill/tonedial/references/traits.md
   → <ROOT>/state/skill/tonedial/references/traits.md
-  (새 파일)  69줄
+  (새 파일)  80줄
   + Twelve axes, each 1 to 5. Read the live values with `tonedial show --json`; this file says what
   + each one **owns**, which is what tells you which axis a request is actually about.
 
   <ROOT>/project/.codex/hooks.json
   → <ROOT>/project/.codex/hooks.json
-  (새 파일)  17줄
+  (새 파일)  39줄
   +   "description": "ToneDial: load saved response tone",
   +   "hooks": {
 
@@ -37,7 +37,7 @@ ToneDial · wire
 
   <ROOT>/state/config.json
   → <ROOT>/state/config.json
-  (수정)  +129 -39
+  (수정)  +157 -39
   -     "registrations": {},
   -     "resources": {}
   +     "registrations": {

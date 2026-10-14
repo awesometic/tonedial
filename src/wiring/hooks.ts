@@ -31,14 +31,25 @@ export type HookHandler = {
   [key: string]: unknown;
 };
 
+export type HookEvent = "SessionStart" | "UserPromptSubmit" | "Stop" | "PreInvocation";
+
+/** One native event in a multi-event delivery. */
+export type HookEventSpec = {
+  event: HookEvent;
+  matchers: readonly string[];
+  handler: HookHandler;
+};
+
 /** SessionStart uses lifecycle matchers; Antigravity's PreInvocation runs the handler directly. */
 export type HookSpec = {
-  /** Antigravity runs a named hook before each model invocation, without matchers. */
-  event?: "PreInvocation";
+  /** The primary event; omitted means the historical SessionStart event. */
+  event?: HookEvent;
   matchers: readonly string[];
   handler: HookHandler;
   /** Separately owned file-level metadata; never part of a handler fingerprint. */
   documentDescription?: string;
+  /** Additional managed events sharing this registration and physical settings file. */
+  events?: readonly HookEventSpec[];
 };
 
 type HookEntry = {
@@ -105,7 +116,14 @@ const isPlainObject = (value: unknown): value is Record<string, unknown> =>
 /** Two-space indent and a trailing newline, which is what an editor and a diff both expect. */
 const serialize = (doc: Document): string => `${JSON.stringify(doc, null, 2)}\n`;
 
-const entriesOf = (doc: Document): Matcher[] => doc.hooks?.SessionStart ?? [];
+const eventOf = (spec: HookSpec): HookEvent => spec.event ?? "SessionStart";
+
+const partsOf = (spec: HookSpec): HookEventSpec[] => [
+  { event: eventOf(spec), matchers: spec.matchers, handler: spec.handler },
+  ...(spec.events ?? []),
+];
+
+const entriesOf = (doc: Document, event: HookEvent = "SessionStart"): Matcher[] => doc.hooks?.[event] ?? [];
 
 function namedDefinition(doc: Document, path: string, t: Messages): Record<string, unknown> | null {
   if (doc.tonedial === undefined) return null;
@@ -143,16 +161,18 @@ function sameJsonValue(left: unknown, right: unknown): boolean {
 }
 
 /** Native ownership includes the matcher set and the complete handler shape, including absent args. */
-const ownsNativeHandler = (block: Matcher, handler: HookEntry, spec: HookSpec): boolean =>
-  typeof block.matcher === "string" && spec.matchers.includes(block.matcher) &&
+const ownsNativeHandler = (block: Matcher, handler: HookEntry, spec: HookEventSpec): boolean =>
+  (spec.matchers.length === 0
+    ? block.matcher === undefined
+    : typeof block.matcher === "string" && spec.matchers.includes(block.matcher)) &&
   sameJsonValue(handler, spec.handler);
 
 /** Select a legacy command by its historical identity, or a native entry by its full shape. */
-const ownsHandler = (block: Matcher, handler: HookEntry, selector: string | HookSpec): boolean =>
+const ownsHandler = (block: Matcher, handler: HookEntry, selector: string | HookEventSpec): boolean =>
   typeof selector === "string" ? ownsLegacyHandler(handler, selector) : ownsNativeHandler(block, handler, selector);
 
 /** Remove only our handlers from one matcher block, preserving its siblings and unknown fields. */
-const withoutOurs = (block: Matcher, selector: string | HookSpec): Matcher | null => {
+const withoutOurs = (block: Matcher, selector: string | HookEventSpec): Matcher | null => {
   if (block.hooks === undefined) return block;
   const kept = block.hooks.filter((h) => !ownsHandler(block, h, selector));
   if (kept.length === block.hooks.length) return block;
@@ -162,7 +182,7 @@ const withoutOurs = (block: Matcher, selector: string | HookSpec): Matcher | nul
 };
 
 /** Remove our handlers from every SessionStart block, retaining blocks that still have siblings. */
-const withoutOursFromEntries = (entries: Matcher[], selector: string | HookSpec): Matcher[] =>
+const withoutOursFromEntries = (entries: Matcher[], selector: string | HookEventSpec): Matcher[] =>
   entries.flatMap((block) => {
     const kept = withoutOurs(block, selector);
     return kept ? [kept] : [];
@@ -175,21 +195,27 @@ const withoutOursFromEntries = (entries: Matcher[], selector: string | HookSpec)
  * of them are, because that is what the fingerprint means and what removal would take away.
  */
 export function hasHook(before: string | null, selector: string | HookSpec, path: string, t: Messages): boolean {
-  if (typeof selector !== "string" && selector.event === "PreInvocation") {
+  if (typeof selector !== "string" && eventOf(selector) === "PreInvocation") {
     return ownedHook(before, selector, path, t) !== null;
   }
-  const entries = entriesOf(parse(before, path, t));
-  const present = (matcher: string | undefined) => entries.some((block) =>
-    (matcher === undefined || block.matcher === matcher) &&
-    (block.hooks?.some((handler) => ownsHandler(block, handler, selector)) ?? false));
-  return typeof selector === "string" ? present(undefined) : selector.matchers.every(present);
+  const document = parse(before, path, t);
+  if (typeof selector === "string") return entriesOf(document).some((block) =>
+    block.hooks?.some((handler) => ownsHandler(block, handler, selector)) ?? false);
+  return partsOf(selector).every((part) => {
+    const entries = entriesOf(document, part.event);
+    const present = (matcher: string | undefined) => entries.some((block) =>
+      (matcher === undefined ? block.matcher === undefined : block.matcher === matcher) &&
+      (block.hooks?.some((handler) => ownsHandler(block, handler, part)) ?? false));
+    return part.matchers.length ? part.matchers.every(present) : present(undefined);
+  });
 }
 
 /** Positions of exact managed handlers in the host's unfiltered matcher/handler arrays. */
 export function ownedHookLocations(before: string | null, selector: HookSpec, path: string, t: Messages): readonly (readonly [number, number])[] {
-  if (selector.event === "PreInvocation") return [];
-  return entriesOf(parse(before, path, t)).flatMap((block, matcher) =>
-    (block.hooks ?? []).flatMap((handler, index) => ownsHandler(block, handler, selector) ? [[matcher, index] as const] : []));
+  const primary = partsOf(selector)[0]!;
+  if (primary.event !== "SessionStart") return [];
+  return entriesOf(parse(before, path, t), primary.event).flatMap((block, matcher) =>
+    (block.hooks ?? []).flatMap((handler, index) => ownsHandler(block, handler, primary) ? [[matcher, index] as const] : []));
 }
 
 /**
@@ -202,22 +228,32 @@ export function ownedHookLocations(before: string | null, selector: HookSpec, pa
  * reasoning that keeps object key order out of ownership one level down.
  */
 export function ownedHook(before: string | null, selector: string | HookSpec, path: string, t: Messages): string | null {
-  if (typeof selector !== "string" && selector.event === "PreInvocation") {
+  if (typeof selector !== "string" && eventOf(selector) === "PreInvocation") {
     const definition = namedDefinition(parse(before, path, t, true), path, t);
     const selected = invocationHandlers(definition).filter(handler => sameJsonValue(handler, selector.handler));
     return selected.length ? serialize({ tonedial: { PreInvocation: selected } }) : null;
   }
-  const selected = entriesOf(parse(before, path, t)).flatMap((block) => {
-    const hooks = block.hooks?.filter((handler) => ownsHandler(block, handler, selector)) ?? [];
-    return hooks.length ? [{ ...block, hooks }] : [];
-  });
-  // Code-unit order, not `localeCompare`: this sort exists so identity does not depend on the
-  // environment, and a locale collation is the one comparator that does.
-  selected.sort((left, right) => {
-    const [a, b] = [String(left.matcher ?? ""), String(right.matcher ?? "")];
-    return a < b ? -1 : a > b ? 1 : 0;
-  });
-  return selected.length ? serialize({ hooks: { SessionStart: selected } }) : null;
+  const document = parse(before, path, t);
+  const selected: Record<string, Matcher[]> = {};
+  const parts: HookEventSpec[] = typeof selector === "string"
+    ? [{ event: "SessionStart", matchers: [], handler: { type: "command", command: selector } }]
+    : partsOf(selector);
+  for (const part of parts) {
+    const entries = entriesOf(document, part.event).flatMap((block) => {
+      const hooks = block.hooks?.filter((handler) => ownsHandler(block, handler, typeof selector === "string" ? selector : part)) ?? [];
+      return hooks.length ? [{ ...block, hooks }] : [];
+    });
+    if (entries.length) {
+      // Code-unit order, not localeCompare: identity must not depend on the environment.
+      entries.sort((left, right) => {
+        const [a, b] = [String(left.matcher ?? ""), String(right.matcher ?? "")];
+        return a < b ? -1 : a > b ? 1 : 0;
+      });
+      selected[part.event] = [...(selected[part.event] ?? []), ...entries];
+    }
+  }
+  const hooks = Object.fromEntries(Object.entries(selected).sort(([left], [right]) => left < right ? -1 : left > right ? 1 : 0));
+  return Object.keys(hooks).length ? serialize({ hooks }) : null;
 }
 
 /**
@@ -228,24 +264,28 @@ export function ownedHook(before: string | null, selector: string | HookSpec, pa
  * beside its older self.
  */
 export function withHook(before: string | null, selector: string | HookSpec, path: string, t: Messages): string {
-  if (typeof selector !== "string" && selector.event === "PreInvocation") {
+  if (typeof selector !== "string" && eventOf(selector) === "PreInvocation") {
     const doc = parse(before, path, t, true);
     const definition = namedDefinition(doc, path, t);
     const kept = invocationHandlers(definition).filter(handler => !sameJsonValue(handler, selector.handler));
     return serialize({ ...doc, tonedial: { enabled: true, ...definition, PreInvocation: [...kept, { ...selector.handler }] } });
   }
   const doc = parse(before, path, t);
-  const ours: Matcher[] = typeof selector === "string"
-    ? [{
-        matcher: MATCHER,
-        hooks: [{ type: "command", command: selector, additionalContextLimit: CONTEXT_LIMIT }],
-      }]
-    : selector.matchers.map((matcher) => ({ matcher, hooks: [{ ...selector.handler }] }));
-  const kept = withoutOursFromEntries(entriesOf(doc), selector);
+  const parts: HookEventSpec[] = typeof selector === "string"
+    ? [{ event: "SessionStart", matchers: [MATCHER], handler: { type: "command", command: selector, additionalContextLimit: CONTEXT_LIMIT } }]
+    : partsOf(selector);
+  const hooks: Record<string, Matcher[]> = { ...doc.hooks };
+  for (const part of parts) {
+    const kept = withoutOursFromEntries(entriesOf(doc, part.event), typeof selector === "string" ? selector : part);
+    const ours = part.matchers.length
+      ? part.matchers.map((matcher) => ({ matcher, hooks: [{ ...part.handler }] }))
+      : [{ hooks: [{ ...part.handler }] }];
+    hooks[part.event] = [...kept, ...ours];
+  }
   if (typeof selector !== "string" && selector.documentDescription !== undefined && doc.description === undefined) {
     doc.description = selector.documentDescription;
   }
-  return serialize({ ...doc, hooks: { ...doc.hooks, SessionStart: [...kept, ...ours] } });
+  return serialize({ ...doc, hooks });
 }
 
 /**
@@ -262,7 +302,7 @@ export function withoutHook(
   t: Messages,
   empty: "content" | "document" = "content",
 ): string {
-  if (typeof selector !== "string" && selector.event === "PreInvocation") {
+  if (typeof selector !== "string" && eventOf(selector) === "PreInvocation") {
     const doc = parse(before, path, t, true);
     const definition = namedDefinition(doc, path, t);
     const handlers = invocationHandlers(definition);
@@ -276,13 +316,20 @@ export function withoutHook(
     return Object.keys(doc).length === 0 && empty === "content" ? "" : serialize(doc);
   }
   const doc = parse(before, path, t);
-  if (!entriesOf(doc).some((block) => block.hooks?.some((handler) => ownsHandler(block, handler, selector)))) {
-    return before;
-  }
-  const kept = withoutOursFromEntries(entriesOf(doc), selector);
+  const parts: HookEventSpec[] = typeof selector === "string"
+    ? [{ event: "SessionStart", matchers: [], handler: { type: "command", command: selector } }]
+    : partsOf(selector);
   const hooks: Record<string, Matcher[]> = { ...doc.hooks };
-  if (kept.length) hooks.SessionStart = kept;
-  else delete hooks.SessionStart;
+  let changed = false;
+  for (const part of parts) {
+    const entries = entriesOf(doc, part.event);
+    if (!entries.some((block) => block.hooks?.some((handler) => ownsHandler(block, handler, typeof selector === "string" ? selector : part)))) continue;
+    changed = true;
+    const kept = withoutOursFromEntries(entries, typeof selector === "string" ? selector : part);
+    if (kept.length) hooks[part.event] = kept;
+    else delete hooks[part.event];
+  }
+  if (!changed) return before;
 
   const rest: Document = { ...doc };
   if (Object.keys(hooks).length) rest.hooks = hooks;

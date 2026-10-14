@@ -18,8 +18,8 @@
             bravado      ▮▯▯▯▯  1    1
 
   warmth  emotion toward the user
-  1  no feeling, greeting or encouragement
-  5  encouragement or empathy twice or more
+  1  no greeting, emotional language or encouragement
+  5  four warm remarks, including encouragement and empathy
 
   ↑↓ axis   ←→ level   1-5 set
   Enter apply   Esc discard   ? help
@@ -84,9 +84,9 @@
 <text x="60" y="524" fill="#edf3f6" font-weight="700" opacity="1">warmth</text>
 <text x="172" y="524" fill="#edf3f6" font-weight="700" opacity="1">emotion toward the user</text>
 <text x="60" y="552" fill="#edf3f6" font-weight="400" opacity="1">1</text>
-<text x="102" y="552" fill="#edf3f6" font-weight="400" opacity="1">no feeling, greeting or encouragement</text>
+<text x="102" y="552" fill="#edf3f6" font-weight="400" opacity="1">no greeting, emotional language or encouragement</text>
 <text x="60" y="580" fill="#edf3f6" font-weight="400" opacity="1">5</text>
-<text x="102" y="580" fill="#edf3f6" font-weight="400" opacity="1">encouragement or empathy twice or more</text>
+<text x="102" y="580" fill="#edf3f6" font-weight="400" opacity="1">four warm remarks, including encouragement and empathy</text>
 <text x="60" y="636" fill="#edf3f6" font-weight="400" opacity="0.65">↑↓ axis</text>
 <text x="200" y="636" fill="#edf3f6" font-weight="400" opacity="0.65">←→ level</text>
 <text x="354" y="636" fill="#edf3f6" font-weight="400" opacity="0.65">1-5 set</text>

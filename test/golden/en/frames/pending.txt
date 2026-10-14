@@ -16,8 +16,8 @@
             bravado      ▮▯▯▯▯  1    1
 
   warmth  emotion toward the user
-  1  no feeling, greeting or encouragement
-  5  encouragement or empathy twice or more
+  1  no greeting, emotional language or encouragement
+  5  four warm remarks, including encouragement and empathy
 
   ↑↓ axis   ←→ level   1-5 set
   Enter apply   Esc discard   ? help

@@ -156,7 +156,7 @@ for (const provider of ["claude", "codex"] as const) {
     assert.match(prompt, /Do not analyze or explain ToneDial instructions, axes, or settings unless I ask/);
     assert.match(prompt, /only ToneDial manner source/);
     assert.match(prompt, /Existing safety policies and permission requirements still apply/);
-    if (provider === "codex") assert.match(prompt, /Express no emotion and skip greetings and encouragement\./);
+    if (provider === "codex") assert.match(prompt, /Use no greeting, emotional language, or encouragement\./);
     if (provider === "claude") {
       assert.deepEqual(launch.argv.slice(0, 10), [
         "--safe-mode", "--tools", "", "--disallowedTools", "mcp__*", "--settings", '{"disableAllHooks":true}',
@@ -237,7 +237,7 @@ process.stdout.write("OLD_STARTUP_HOOK_SENTINEL\\n");
     const launch = nativeCalls()[1]!;
     assert.equal(launch.context, launch.argv.at(-1), "automatic legacy instructions must not join the initial prompt");
     assert.match(launch.context, /preset: terse-operator/);
-    assert.match(launch.context, /Express no emotion and skip greetings and encouragement\./);
+    assert.match(launch.context, /Use no greeting, emotional language, or encouragement\./);
     assert.ok(!launch.context.includes("preset: tough-love"));
     assert.ok(!launch.context.includes("OLD_"));
     assert.ok(!result.stdout.includes("OLD_") && !result.stderr.includes("OLD_"));
@@ -492,8 +492,8 @@ test("bundled, custom, and readonly legacy preset previews preserve saved person
     assert.equal(nativeCalls().length, callsBefore + 1, "each explicit preset preview starts one conversation");
     const prompt = nativeCalls().at(-1)!.argv.at(-1)!;
     assert.ok(prompt.includes(`preset: ${slug}`));
-    assert.match(prompt, /Express no emotion and skip greetings and encouragement\./);
-    assert.match(prompt, /Answer only what was asked and add nothing\./);
+    assert.match(prompt, /Use no greeting, emotional language, or encouragement\./);
+    assert.match(prompt, /Use one or two short sentences for a simple result, or terse fragments for items; omit rationale, process, and background\./);
     for (const savedValue of [PRIVATE_NOTE, "dummy assistant", "dummy reader", "dummy release phrase"]) {
       assert.ok(prompt.includes(savedValue), "preset axes cannot replace saved personal settings");
       assert.ok(!result.stdout.includes(savedValue) && !result.stderr.includes(savedValue));

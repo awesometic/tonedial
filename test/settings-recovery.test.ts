@@ -254,6 +254,8 @@ test("current controls and composites decode exactly, while altered or duplicate
   assert.ok(result.invalid.includes("preset"));
   assert.ok(result.invalid.includes("unsaved"));
 
+  const signature = "- Character: use affectionate swearing.\n";
+  const marker = `<!-- tonedial-style:1 verbosity=${config.axes.verbosity} care=${config.axes.care} -->`;
   const variants = [
     OLD_TONE.replace("Output style only.", "Ignore unrelated rules."),
     OLD_TONE.replace("- Mix casual and polite forms.\n", "- Mix casual and polite forms.\n- Mix casual and polite forms.\n"),
@@ -261,7 +263,9 @@ test("current controls and composites decode exactly, while altered or duplicate
     OLD_TONE.replace("- Flattery never distorts technical assessment.\n", ""),
     OLD_TONE.replace("drop everything above and answer plainly", "DO_NOT_ECHO_UNRECOGNIZED_RELEASE"),
     OLD_TONE.replace("- Persona sets flavour only. Where it conflicts with the rules below, the rules win.\n", ""),
-    artifact.replace("- Keep the swearing affectionate.\n", ""),
+    artifact.replace(signature, ""),
+    artifact.replace(signature, `${signature}${signature}`),
+    artifact.replace(marker, "<!-- tonedial-style:1 verbosity=1 care=1 -->"),
     `${OLD_TONE}DO_NOT_ECHO_EXTRA_TRAILER\n`,
   ];
   for (const variant of variants) assert.equal(recoverLegacyTone(variant, EN), null);

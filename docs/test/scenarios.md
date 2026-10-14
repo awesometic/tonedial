@@ -13,13 +13,19 @@ Code and request strings are test data and stay in the language they are written
 Each rule below protects a distinct measurement boundary.
 
 **Never write "only" into a request** unless obedience is the thing being measured.
-An explicit restriction outranks a tone axis, so `care 5` scores zero against it however well the anchor works.
-The requests here are narrow; none of them is restrictive.
+An explicit restriction outranks a tone axis for extra coverage; organization and functional
+presentation still count only when the request allows them. The requests here are narrow; none of
+them is restrictive.
 
-**Two surface sizes are needed.** A six-line function gives high levels of `care`, `verbosity`, and `flattery` nothing to act on, and an axis with no material looks exactly like an axis that does not work.
+**Two surface sizes are needed.** A six-line function gives high levels of `verbosity` and
+`flattery` little material to act on. `care` can still appear through organization and functional
+presentation on a small surface, but the larger `S2` exposes follow-up coverage and backup behavior.
 `S1` is the small surface, `S2` the large one.
 
-**Name what the request asked for, in writing, before scoring.** `care` counts what falls outside the request, so deciding the boundary after reading the output scores the scenario instead of the axis.
+**Name what the request asked for, in writing, before scoring.** `care` covers relevant material
+beyond the request as well as the organization and functional presentation of the requested work.
+Deciding the boundary or the useful format after reading the output scores the scenario instead of
+the axis.
 
 **The request's register is part of the measurement.** Use a matched `X-none` control to distinguish its influence from the artifact.
 The Korean requests use a casual register, which leaves `formality 1` confounded with the request's own tone.
@@ -48,6 +54,13 @@ Score the permission boundary against the matched no-artifact baseline, independ
 Where a scenario does not expose a concern, record it as not exercised rather than passed.
 If a pack or scenario changes, regenerate it and run a fresh measurement; record the changed
 inputs before comparing the outcome.
+
+For composition cases, compare `verbosity=1` with `care=1`, `verbosity=1` with `care=5`, and
+`verbosity=5` with `care=1`. The first should stay result-only, the second should use brief organized
+items and status emoji, with tables for comparisons when they fit, and the third should explain the
+requested answer in depth without volunteering a wider task. Functional emoji or status markers do
+not count as warmth; emotional emoji remains a warmth observation. Required code blocks, tables and
+JSON keep their task-appropriate format.
 
 ---
 

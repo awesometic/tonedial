@@ -43,6 +43,17 @@ export type ResourceExpected = {
   files?: Record<string, string>;
 };
 
+/** Additional native events sharing one managed hook resource. */
+export type ManagedHookEvent = {
+  event: string;
+  matchers: string[];
+  command: string;
+  args?: string[];
+  statusMessage?: string;
+  name?: string;
+  description?: string;
+};
+
 /** The lexical access path a registration used for a physically shared text resource. */
 export type ResourceAccess = {
   path: string;
@@ -79,6 +90,8 @@ export type ManagedResource = {
     name?: string;
     description?: string;
     regionId?: string;
+    /** Additional event handlers in the same provider document. */
+    events?: ManagedHookEvent[];
   };
 };
 
@@ -335,9 +348,32 @@ function readExpected(raw: unknown, field: string, t: Messages): ResourceExpecte
   return expected;
 }
 
+function readManagedEvent(raw: unknown, field: string, t: Messages): ManagedHookEvent {
+  const source = requiredObject(raw, field, t);
+  rejectUnknown(source, ["event", "matchers", "command", "args", "statusMessage", "name", "description"], field, t);
+  const event = requiredString(source.event, `${field}.event`, t);
+  if (event !== "UserPromptSubmit" && event !== "Stop") invalidValue(`${field}.event`, t);
+  const matchers = source.matchers === undefined ? [] : stringArray(source.matchers, `${field}.matchers`, t);
+  if (matchers.length !== 0) invalidValue(`${field}.matchers`, t);
+  const result: ManagedHookEvent = { event, matchers, command: requiredString(source.command, `${field}.command`, t) };
+  if (result.command.includes("\0")) invalidValue(`${field}.command`, t);
+  if (source.args !== undefined) {
+    const args = stringArray(source.args, `${field}.args`, t);
+    if (args.some((arg) => arg.includes("\0"))) invalidValue(`${field}.args`, t);
+    result.args = args;
+  }
+  for (const key of ["statusMessage", "name", "description"] as const) {
+    if (source[key] === undefined) continue;
+    const value = requiredString(source[key], `${field}.${key}`, t);
+    if (value.includes("\0")) invalidValue(`${field}.${key}`, t);
+    result[key] = value;
+  }
+  return result;
+}
+
 function readManaged(raw: unknown, field: string, t: Messages): ManagedResource["managed"] {
   const source = requiredObject(raw, field, t);
-  rejectUnknown(source, ["version", "event", "matcher", "matchers", "handlerSha256", "command", "runtime", "args", "statusMessage", "name", "description", "regionId"], field, t);
+  rejectUnknown(source, ["version", "event", "matcher", "matchers", "handlerSha256", "command", "runtime", "args", "statusMessage", "name", "description", "regionId", "events"], field, t);
   const managed: ManagedResource["managed"] = {
     version: requiredInteger(source.version, `${field}.version`, t),
   };
@@ -372,6 +408,13 @@ function readManaged(raw: unknown, field: string, t: Messages): ManagedResource[
       invalidValue(`${field}.args`, t);
     }
     managed.args = [...source.args as string[]];
+  }
+  if (source.events !== undefined) {
+    if (!Array.isArray(source.events) || source.events.length === 0) invalidValue(`${field}.events`, t);
+    managed.events = source.events.map((event, index) => readManagedEvent(event, `${field}.events.${index}`, t));
+    if (new Set(managed.events.map((event) => event.event)).size !== managed.events.length) {
+      invalidValue(`${field}.events`, t);
+    }
   }
   return managed;
 }
@@ -456,9 +499,14 @@ function readWiringV2(raw: unknown, t: Messages): WiringV2 {
         }
         managedByRegistration[id] = readManaged(metadata, `wiring.resources.${key}.managedByRegistration.${id}`, t);
         const managed = managedByRegistration[id]!;
+        const completeRegularEvents = managed.events === undefined ||
+          (managed.events.length === 2 && new Set(managed.events.map((event) => event.event)).size === 2 &&
+            managed.events.some((event) => event.event === "UserPromptSubmit") &&
+            managed.events.some((event) => event.event === "Stop"));
         const validEvent = registration.target === "antigravity"
-          ? managed.event === "PreInvocation" && managed.matchers?.length === 0
-          : managed.event === "SessionStart" && !!managed.matchers?.length;
+          ? managed.event === "PreInvocation" && managed.matchers?.length === 0 && managed.events === undefined
+          : managed.event === "SessionStart" && !!managed.matchers?.length &&
+            completeRegularEvents;
         if (kind !== "hook" || managed.version !== 2 || !validEvent
           || !managed.command || managed.command.includes("\0") || !managed.handlerSha256
           || !managed.runtime || !isAbsolute(managed.runtime) || managed.runtime.includes("\0")) {

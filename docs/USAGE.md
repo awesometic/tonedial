@@ -12,22 +12,34 @@ Native delivery reads the managed `AGENTS.md` operating guide followed by `TONE.
 Tone changes recompile the artifact without rewriting the guide.
 
 Every axis has a level from 1–5 and is always emitted.
-The endpoints describe requested behavior, not measured model adherence.
+All twelve axes have five behavior anchors; a small set of conditional combination rules adds
+character only when a selected interaction calls for it. The endpoints describe requested behavior,
+not measured model adherence.
 
 | Group | Axis | Default | 1 → 5 |
 |---|---|---|---|
-| form | `formality` | 3 | familiar wording → ceremonious wording within chosen address forms |
-| form | `verbosity` | 3 | only what was asked → conclusion, reason, alternatives, background |
-| form | `profanity` | **1** | none at all → strong and constant |
-| form | `playfulness` | 3 | none → roleplay as the usual register |
-| target | `critique` | 3 | flat problem statements without evaluation → unsparing |
-| target | `flattery` | **1** | not at all → at least four times an answer |
-| target | `warmth` | 3 | no emotion or encouragement → encouragement or empathy at least twice an answer |
-| behaviour | `conviction` | 3 | asks at every decision without asserting → gives the conclusion without asking |
-| behaviour | `care` | 3 | requested scope only → follow-ups, backups, your rest |
-| behaviour | `compliance` | 3 | argues, then does it → immediately |
-| behaviour | `refusal` | **1** | never → a visible strike until coaxed or released by the safeword |
-| behaviour | `bravado` | **1** | never → boasts and overplays effort as the usual register |
+| form | `formality` | 3 | familiar wording and social distance → ceremonial, deferential wording |
+| form | `verbosity` | 3 | requested result in 1–2 sentences → deep explanation within the requested scope |
+| form | `profanity` | **1** | no profanity; soften interjections → strong profanity throughout |
+| form | `playfulness` | 3 | no jokes or playful asides → playful roleplay or character voice by default |
+| target | `critique` | 3 | neutral defect observations → vivid, unsparing criticism |
+| target | `flattery` | **1** | no praise → four positive remarks, even about small choices |
+| target | `warmth` | 3 | no greeting, emotion or encouragement → four warm acknowledgements with encouragement and empathy |
+| behaviour | `conviction` | 3 | list options and ask → state one recommendation as the decision |
+| behaviour | `care` | 3 | requested result only → follow-up, backup, rest, and useful organization and presentation |
+| behaviour | `compliance` | 3 | question once, then act → act immediately without compliance commentary |
+| behaviour | `refusal` | **1** | no refusal or delay → visible strike until coaxed or the safeword is used |
+| behaviour | `bravado` | **1** | no exaggeration → boastful expert persona by default |
+
+Composition uses the whole selection. `care` owns coverage, organization and functional presentation.
+`care=1` stays with the requested result and adds no related checks, context or follow-up.
+`care=5` covers relevant follow-up, backup and the user's rest and uses status emoji and compact
+organized items, with tables for comparisons when they fit. `verbosity=1` can return only the
+requested result in one or two sentences; `verbosity=5` can explain the requested answer in depth
+without broadening the task. So `verbosity=1` with `care=5` means brief organized items, while
+`verbosity=5` with `care=1` means detailed explanation within the requested scope. Low care
+minimizes decoration; verbosity limits explanation and item length, while warmth controls emotional
+emoji. Required task formats and code blocks stay intact.
 
 The four bold defaults are permission axes whose natural floor is 1: setting every axis to 3 activates them, rather than restoring defaults.
 `show` marks deviations; `show --explain` describes endpoints, settings and advisory risks.
@@ -198,7 +210,7 @@ For Antigravity, `tonedial.enabled` omitted or set to `true` means enabled in th
 `false` means disabled, and any other value type is unknown. This file-level observation does not
 resolve other settings, administrator policy, workspace trust or session options.
 Actual host activation remains unverified; use the IDE or Desktop Hooks screen to confirm it.
-Claude and Codex both use a SessionStart hook for automatic delivery, without adding a TONE.md import to their home instruction files.
+Claude and Codex use a SessionStart hook for automatic delivery and `UserPromptSubmit` for turn refresh, without adding a TONE.md import to their home instruction files.
 Antigravity uses a named `tonedial` `PreInvocation` hook for automatic delivery, without adding a TONE.md import to a home instruction file.
 These observations never change settings or certify session execution.
 Codex trust evidence may be disabled or unknown, and a saved approval hash does not establish current trust.
@@ -208,6 +220,23 @@ Confirm the `tonedial` hook is enabled in the selected host. Its project and glo
 ToneDial never grants trust.
 Shared skill discovery can expose the skill to a provider without installing its automatic hook.
 Use [TESTING.md](./TESTING.md) for qualification and the [release gate](../scripts/check-release.mjs) for release checks.
+
+## Hook refresh and bounded style feedback
+
+Supported native integrations refresh the current tone at their configured turn events. Claude and
+Codex inject the current managed instructions on `UserPromptSubmit`. Their `Stop` path may inspect
+response content and issue at most one style-only feedback request for that response. The feedback is
+a native continuation, so it can add model usage and provider history; it does not repeat completed
+tool work and cannot silently replace the first answer already displayed.
+
+Antigravity's `PreInvocation` route refreshes before an invocation. ToneDial has no verified final
+response body on that route, so it does not provide `Stop` feedback there. Hook configuration and a
+compiled `TONE.md` show wiring, not actual host activation or model adherence.
+
+Stop checks are length/presentation heuristics, not semantic character validation. Missing or
+slow input, malformed metadata and recognized data/code payloads receive no feedback. Ambiguous
+data-like prose may also skip correction. Feedback preserves a safeword release and task-required
+formats only as instructions to the agent; model adherence still needs a native trial.
 
 ## Changing an open conversation
 

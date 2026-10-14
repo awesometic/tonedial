@@ -13,9 +13,9 @@
   "personalStateRead": false,
   "font": "Menlo",
   "fontRedistributed": false,
-  "renderer": "rasterized ANSI including weight with a fixed palette; actual terminal appearance varies",
-  "frameSha256": "14a21f0d21216f760e280a37c8c92284d0fe9c4adb207203d01a407b3bd53b11",
-  "imageSha256": "47f47f21ee2b56aa66a0403de85fff84eda00956cd6d62d6e64cac862f06fdfe",
+  "renderer": "rasterized current dial SVG text at its cell positions with Menlo 22px, regular/bold weights and fixed palette; actual terminal appearance varies",
+  "frameSha256": "ebf881fd62c15f1efad0718a8229ac9f7406fb6e24ac9ca5cbe9f560e4799605",
+  "imageSha256": "e5004de46f01786284c33c0c21b66f041d99fced7fd3f032cf2c2c83956de41f",
   "inputs": {
     "scripts/dial-frame.ts": "297de2a29a475a4b114e5035c151f563934a5e1e2270fa617cb52ee70446da0c",
     "src/ui/dial.ts": "89be03aa196219d24ce36b286287f1cd586e58b6417eff433f82c1c3fd70f98c",
@@ -23,8 +23,9 @@
     "src/ui/prompt.ts": "9e7e02e17aea1158203b9e584d90aba5213902b0c246fe281d91f3290231b50d",
     "src/ui/style.ts": "2dc560ebc69677d391ec8ab39817c3a89545d6b8b603c080a7f6d09a75450a8e",
     "src/ui/width.ts": "eb1013f8511ccfc8b9eca78e3d74433cfcf30096b7faf71ba118a5cd42163acd",
-    "src/core/i18n.ts": "2790f3ee8ce916d9468c3ecb3dff3776a5a1d77bbd6bd7039b3e227d071597ae",
-    "src/core/anchors.ts": "61f90129757a60fd7bc81d1710815bf609998422dad533b3714fb9f3620704d9",
-    "src/core/presets.ts": "bac39b3ca78bba03c0b62047f1bd31be856224762d6be327ec8df1e0bbfcf2c7"
+    "src/core/i18n.ts": "ff1ed5fdac3c29cb97825f24ad1f43201c6a7a7ca4407763466cb40df1c68a2c",
+    "src/core/anchors.ts": "33c6916ee660292f5f8a9834ac385650756803bd0ed86bcf53effbc38588660d",
+    "src/core/presets.ts": "bac39b3ca78bba03c0b62047f1bd31be856224762d6be327ec8df1e0bbfcf2c7",
+    "scripts/dial-svg.ts": "eb81cde392f472ea8df8b251150afccfcf02e5adf936221a174ab17d965e13a4"
   }
 }

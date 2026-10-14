@@ -6,7 +6,8 @@ ToneDial · address
   persona.self_ref  — → self
   persona.user_ref  — → user
   TONE.md generated
---- stderr --- [bytes=172; endsWithNewline=true]
+--- stderr --- [bytes=225; endsWithNewline=true]
   ⚠ persona has no anchors and ranks below the axes. Age, gender, and note
     change output through model associations; names appear only where the axes
     leave room.
+  ⚠ TONE.md: 1,877 characters · over 1,800 target

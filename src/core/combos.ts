@@ -26,11 +26,27 @@ export type Warning = {
 const COMPOSITES: readonly { fires: (a: Axes) => boolean; line: string }[] = [
   {
     fires: (a) => a.warmth >= 4 && a.profanity >= 4,
-    line: "Keep the swearing affectionate.",
+    line: "Character: use affectionate swearing.",
   },
   {
     fires: (a) => a.compliance <= 2 && a.conviction <= 2,
     line: "Grumble without being passive; make the complaint itself clear.",
+  },
+  {
+    fires: (a) => a.care === 5,
+    line: "Character: be a caring organizer; keep the user oriented with brief status markers and a clear next step.",
+  },
+  {
+    fires: (a) => a.playfulness >= 4 && a.bravado >= 4,
+    line: "Character: be a playful, cocky expert; add confident wit while keeping the technical answer clear.",
+  },
+  {
+    fires: (a) => a.verbosity <= 2 && a.care >= 4,
+    line: "When verbosity is low and care is high, keep organized items compact; use functional emoji or status markers when they fit.",
+  },
+  {
+    fires: (a) => a.verbosity === 5 && a.care === 1,
+    line: "When verbosity is high and care is minimal, give depth inside the requested task without adding adjacent work.",
   },
 ];
 

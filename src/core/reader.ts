@@ -5,7 +5,7 @@ import {
   CONTEXT_GUIDE_FILENAME,
 } from "./paths.ts";
 
-export const READER_PROTOCOL_VERSION = 1 as const;
+export const READER_PROTOCOL_VERSION = 2 as const;
 export const GUIDE_FORMAT_VERSION = 1 as const;
 export const GUIDE_FORMAT_MARKER = `<!-- tonedial-guide:${GUIDE_FORMAT_VERSION} -->`;
 
@@ -28,6 +28,10 @@ export const READER_REPAIR_HINTS = {
   changed: "retry after the context files are stable",
   "pair-changed": "retry after the context pair is stable",
   utf8: "rewrite the context file as UTF-8",
+  event: "use a supported hook event",
+  input: "retry the hook with a valid event payload",
+  response: "retry the hook when the response is available",
+  "style-marker": "regenerate the tone artifact",
   unreadable: "run tonedial doctor and resolve the reported path",
 } as const;
 
@@ -55,6 +59,8 @@ const LOCK_FILENAME = "operations.lock";
 const GUIDE_MARKER = ${JSON.stringify(GUIDE_FORMAT_MARKER)};
 const REPAIR_HINTS = ${JSON.stringify(READER_REPAIR_HINTS)};
 const PROVIDERS = new Set(["codex", "claude", "antigravity"]);
+const EVENTS = new Set(["SessionStart", "UserPromptSubmit", "Stop", "PreInvocation"]);
+const MAX_HOOK_INPUT = 128 * 1024;
 const NO_FOLLOW = constants.O_NOFOLLOW ?? 0;
 const NON_BLOCKING = constants.O_NONBLOCK ?? 0;
 
@@ -76,11 +82,13 @@ function providerHint(args) {
 function parseArgs(args) {
   let provider = null;
   let state = null;
+  let event = null;
+  let eventProvided = false;
   for (let index = 0; index < args.length; index += 1) {
     const argument = args[index];
     let name = argument;
     let value = null;
-    if (argument === "--provider" || argument === "--state") {
+    if (argument === "--provider" || argument === "--state" || argument === "--event") {
       value = args[index + 1] ?? null;
       index += 1;
     } else if (argument?.startsWith("--provider=")) {
@@ -89,6 +97,9 @@ function parseArgs(args) {
     } else if (argument?.startsWith("--state=")) {
       name = "--state";
       value = argument.slice("--state=".length);
+    } else if (argument?.startsWith("--event=")) {
+      name = "--event";
+      value = argument.slice("--event=".length);
     }
     if (name === "--provider") {
       if (provider !== null || value === null || value === "") throw new ReaderFailure("arguments");
@@ -96,6 +107,10 @@ function parseArgs(args) {
     } else if (name === "--state") {
       if (state !== null || value === null || value === "") throw new ReaderFailure("arguments");
       state = value;
+    } else if (name === "--event") {
+      if (eventProvided || value === null || value === "") throw new ReaderFailure("arguments");
+      eventProvided = true;
+      event = value;
     } else {
       throw new ReaderFailure("arguments");
     }
@@ -104,7 +119,18 @@ function parseArgs(args) {
     throw new ReaderFailure(provider !== null && !PROVIDERS.has(provider) ? "provider" : "arguments");
   }
   if (!isAbsolute(state) || state.includes("\0")) throw new ReaderFailure("state");
-  return { provider, state: resolve(state) };
+  event ??= provider === "antigravity" ? "PreInvocation" : "SessionStart";
+  if (!EVENTS.has(event) || (provider === "antigravity" && event !== "PreInvocation") ||
+      (provider !== "antigravity" && event === "PreInvocation")) throw new ReaderFailure("event");
+  return { provider, state: resolve(state), event };
+}
+
+function eventHint(args) {
+  for (let index = 0; index < args.length; index += 1) {
+    if (args[index] === "--event") return args[index + 1] ?? null;
+    if (args[index]?.startsWith("--event=")) return args[index].slice("--event=".length);
+  }
+  return null;
 }
 
 function sameIdentity(left, right) {
@@ -246,33 +272,165 @@ function readPair(state) {
     throw new ReaderFailure("pair-changed");
   }
   assertRoot(root, state);
-  return guideRead.text + "\n\n" + artifactRead.text;
+  return { body: guideRead.text + "\n\n" + artifactRead.text, artifact: artifactRead.text };
 }
 
-function empty(provider) {
+function empty(provider, event) {
   if (provider === "antigravity") {
     process.stdout.write(JSON.stringify({ injectSteps: [] }) + "\n");
+  } else if (event === "Stop") {
+    // Stop has a JSON-only stdout contract. An empty object is an explicit no-op and never
+    // asks the host to continue a task when the response or marker cannot be trusted.
+    process.stdout.write("{}\n");
   }
 }
 
-function fail(provider, code) {
-  empty(provider);
+function fail(provider, event, code) {
+  empty(provider, event);
   process.stderr.write("tonedial-reader:" + code + " " + (REPAIR_HINTS[code] ?? "run tonedial doctor") + "\n");
 }
 
-function main() {
+function hookInput() {
+  if (process.stdin.isTTY) return Promise.resolve({ value: null, diagnostic: "input" });
+  return new Promise((resolve) => {
+    const chunks = [];
+    let total = 0;
+    let finished = false;
+    const finish = (result) => {
+      if (finished) return;
+      finished = true;
+      clearTimeout(timer);
+      process.stdin.removeAllListeners("data");
+      process.stdin.removeAllListeners("end");
+      process.stdin.removeAllListeners("error");
+      process.stdin.destroy();
+      resolve(result);
+    };
+    // shortcut: slow native input fails open after 250ms; widen only for measured host latency.
+    const timer = setTimeout(() => finish({ value: null, diagnostic: "input" }), 250);
+    process.stdin.on("data", (chunk) => {
+      total += chunk.length;
+      if (total > MAX_HOOK_INPUT) return finish({ value: null, diagnostic: "input" });
+      chunks.push(chunk);
+    });
+    process.stdin.once("error", () => finish({ value: null, diagnostic: "input" }));
+    process.stdin.once("end", () => finish(parseHookInput(chunks, total)));
+  });
+}
+
+function parseHookInput(chunks, total) {
+  if (total === 0) return { value: null, diagnostic: "response" };
+  let parsed;
+  try {
+    const text = new TextDecoder("utf-8", { fatal: true }).decode(Buffer.concat(chunks));
+    parsed = JSON.parse(text);
+  } catch {
+    return { value: null, diagnostic: "input" };
+  }
+  if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) return { value: null, diagnostic: "input" };
+  if (Object.hasOwn(parsed, "stop_hook_active") && typeof parsed.stop_hook_active !== "boolean") {
+    return { value: null, diagnostic: "input" };
+  }
+  if (Object.hasOwn(parsed, "last_assistant_message") && parsed.last_assistant_message !== null &&
+      typeof parsed.last_assistant_message !== "string") return { value: null, diagnostic: "input" };
+  return { value: parsed, diagnostic: null };
+}
+
+function styleMarker(artifact) {
+  const lines = artifact.split(/\r?\n/);
+  const generation = lines[0] ?? "";
+  if (!generation.startsWith("<!-- generated by tonedial · preset: ") || !generation.endsWith(" -->")) return null;
+  const line = lines[1];
+  const match = /^<!-- tonedial-style:1 verbosity=([1-5]) care=([1-5]) -->$/.exec(line ?? "");
+  return match === null ? null : { verbosity: Number(match[1]), care: Number(match[2]) };
+}
+
+// shortcut: ambiguous data-like prose skips feedback; refine only with verified host format metadata.
+function literalPayload(text) {
+  const value = text.trim();
+  if (value === "") return true;
+  const fence = String.fromCharCode(96).repeat(3);
+  if (value.startsWith(fence) && value.endsWith(fence)) return true;
+  try {
+    JSON.parse(value);
+    return true;
+  } catch {}
+  if (value.startsWith("<") || /^(?:---\s*$|[\p{L}\p{N}_-]+\s*:)/um.test(value)) return true;
+  const lines = value.split(/\r?\n/).filter((line) => line.trim() !== "");
+  if (lines.some((line) => /[;{}]\s*$/.test(line))) return true;
+  if (lines.length >= 2 && [",", ";", "\t"].some((separator) =>
+      lines.every((line) => line.split(separator).length >= 2))) return true;
+  if (lines.length >= 2 && lines.every((line) => /^\s*\|/.test(line) || /^\s*[-+|:]+\s*$/.test(line))) return true;
+  const fenced = value.includes(fence);
+  const outside = value.split(fence).filter((_part, index) => index % 2 === 0).join("").trim();
+  return fenced && outside.length < 240;
+}
+
+function organized(text) {
+  const lines = text.split(/\r?\n/);
+  const labeled = lines.filter((line) => /^\s*(?:[-*•]|\d+[.)]|#{1,6}\s)/.test(line));
+  return labeled.length >= 2;
+}
+
+function functionalEmoji(text) {
+  return /(?:✅|❌|⚠️?|ℹ️?|✔️?|☑️?|⚙️?|🔹|🔸|📌|📝|🔧|🧪|📊|🟢|🟡|🔴)/u.test(text);
+}
+
+function styleFeedback(pair, input) {
+  const marker = styleMarker(pair.artifact);
+  if (marker === null) return { feedback: null, diagnostic: "style-marker" };
+  if (input.diagnostic !== null) return { feedback: null, diagnostic: input.diagnostic };
+  const response = input.value?.last_assistant_message;
+  if (typeof response !== "string" || response.trim() === "") {
+    return { feedback: null, diagnostic: "response" };
+  }
+  // Only an explicit false authorizes one bounded continuation. An omitted flag is a
+  // provider-version or payload-shape gap; treating it as active avoids a feedback loop.
+  if (input.value.stop_hook_active !== false || literalPayload(response)) return { feedback: null, diagnostic: null };
+  const substantial = [...response].length >= 160;
+  const overlong = marker.verbosity === 1 && [...response].length > 600;
+  const careCheck = marker.care === 5 && substantial;
+  const missingOrganization = careCheck && !organized(response);
+  const missingEmoji = careCheck && !functionalEmoji(response);
+  const missingCareShape = missingOrganization || missingEmoji;
+  if (!overlong && !missingCareShape) return { feedback: null, diagnostic: null };
+  const adjustment = [
+    overlong ? "Compress unnecessary prose while preserving the requested detail." : null,
+    missingOrganization ? "Use concise organized items." : null,
+    missingEmoji ? "Add a functional emoji where useful." : null,
+  ].filter(Boolean).join(" ");
+  return { feedback: "Review and rewrite the response for the saved tone. If this turn uses the safeword or a task-required output format, preserve that request; revise only where the saved tone still applies. Preserve every task-required detail and requested format. " + adjustment + " Do not rerun tools or change permissions.", diagnostic: null };
+}
+
+async function main() {
   const args = process.argv.slice(2);
   const hint = providerHint(args);
   try {
-    const { provider, state } = parseArgs(args);
-    const body = readPair(state);
-    if (provider === "antigravity") {
-      process.stdout.write(JSON.stringify({ injectSteps: [{ ephemeralMessage: body }] }) + "\n");
+    const { provider, state, event } = parseArgs(args);
+    const input = event === "Stop" ? await hookInput() : null;
+    const pair = readPair(state);
+    if (event === "Stop") {
+      const result = styleFeedback(pair, input);
+      if (result.diagnostic !== null) {
+        fail(provider, event, result.diagnostic);
+        return;
+      }
+      const feedback = result.feedback;
+      if (feedback === null) {
+        empty(provider, event);
+      } else if (provider === "claude") {
+        process.stdout.write(JSON.stringify({ hookSpecificOutput: { hookEventName: "Stop", additionalContext: feedback } }) + "\n");
+      } else {
+        process.stdout.write(JSON.stringify({ decision: "block", reason: feedback }) + "\n");
+      }
+    } else if (provider === "antigravity") {
+      process.stdout.write(JSON.stringify({ injectSteps: [{ ephemeralMessage: pair.body }] }) + "\n");
     } else {
-      process.stdout.write(body);
+      process.stdout.write(pair.body);
     }
   } catch (cause) {
-    fail(hint, cause instanceof ReaderFailure ? cause.code : "unreadable");
+    const event = eventHint(args) === "Stop" ? "Stop" : "SessionStart";
+    fail(hint, event, cause instanceof ReaderFailure ? cause.code : "unreadable");
   }
 }
 

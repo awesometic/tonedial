@@ -50,11 +50,27 @@ type Axes = Record<string, number>;
 const COMPOSITES: { fires: (a: Axes) => boolean; line: string }[] = [
   {
     fires: (a: Axes) => a.warmth! >= 4 && a.profanity! >= 4,
-    line: "- Keep the swearing affectionate.",
+    line: "- Character: use affectionate swearing.",
   },
   {
     fires: (a: Axes) => a.compliance! <= 2 && a.conviction! <= 2,
     line: "- Grumble without being passive; make the complaint itself clear.",
+  },
+  {
+    fires: (a: Axes) => a.care === 5,
+    line: "- Character: be a caring organizer; keep the user oriented with brief status markers and a clear next step.",
+  },
+  {
+    fires: (a: Axes) => a.playfulness! >= 4 && a.bravado! >= 4,
+    line: "- Character: be a playful, cocky expert; add confident wit while keeping the technical answer clear.",
+  },
+  {
+    fires: (a: Axes) => a.verbosity! <= 2 && a.care! >= 4,
+    line: "- When verbosity is low and care is high, keep organized items compact; use functional emoji or status markers when they fit.",
+  },
+  {
+    fires: (a: Axes) => a.verbosity === 5 && a.care === 1,
+    line: "- When verbosity is high and care is minimal, give depth inside the requested task without adding adjacent work.",
   },
 ];
 
@@ -64,10 +80,11 @@ function checkComposites(name: string, axes: Axes, artifact: string): void {
   if (!rules) throw new Error(`${name}: artifact has no rules section`);
   const lines = rules.trimEnd().split("\n").filter((l) => l.startsWith("- "));
 
-  let expected = 14; // Twelve axes, register composition and the selected speech-level rule.
-  if (!lines.some(line => line.includes("formality changes distance within them")) ||
+  let expected = 15; // Twelve axes, format/register composition and the selected speech-level rule.
+  if (!lines.at(-3)?.startsWith("- Choose format from the whole selection:") ||
+      !lines.some(line => line.includes("formality changes distance within them")) ||
       !lines.at(-1)?.startsWith("- In languages with honorifics,")) {
-    throw new Error(`${name}: register composition or speech-level rule missing`);
+    throw new Error(`${name}: format/register composition or speech-level rule missing`);
   }
   for (const { fires, line } of COMPOSITES) {
     const should = fires(axes);

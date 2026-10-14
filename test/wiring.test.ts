@@ -33,7 +33,7 @@ import { recordFileChange } from "../src/wiring/ownership.ts";
 import { MARKDOWN, RegionError, find, remove, upsert } from "../src/wiring/region.ts";
 import { gate, planChange } from "../src/wiring/apply.ts";
 import { palette } from "../src/ui/style.ts";
-import { hasHook, ownedHook, withoutHook, withHook, type HookSpec } from "../src/wiring/hooks.ts";
+import { hasHook, ownedHook, withoutHook, withHook, type HookEventSpec, type HookSpec } from "../src/wiring/hooks.ts";
 import { createLegacyFixture, type LegacyRoute, type LegacySkillRoute } from "./support/legacy-fixture.ts";
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -2430,6 +2430,39 @@ test("a delivery of several entries is identified by its set, not by the order t
     hooks: { SessionStart: Array<{ hooks: Array<{ command?: string }> }> };
   };
   assert.deepEqual(removed.hooks.SessionStart, [{ matcher: "startup", hooks: [{ type: "command", command: "theirs" }] }]);
+});
+
+test("a native registration owns every managed event as one complete delivery", () => {
+  const events: HookEventSpec[] = [
+    { event: "UserPromptSubmit", matchers: [], handler: { type: "command", command: "/reader --event UserPromptSubmit" } },
+    { event: "Stop", matchers: [], handler: { type: "command", command: "/reader --event Stop" } },
+  ];
+  const spec: HookSpec = {
+    matchers: ["startup", "resume"],
+    handler: { type: "command", command: "/reader" },
+    events,
+  };
+  const path = "/project/.codex/hooks.json";
+  const written = withHook(null, spec, path, EN);
+  const document = JSON.parse(written) as { hooks: Record<string, unknown[]> };
+  assert.deepEqual(Object.keys(document.hooks).sort(), ["SessionStart", "Stop", "UserPromptSubmit"]);
+  assert.equal(hasHook(written, spec, path, EN), true);
+  assert.equal(withHook(written, spec, path, EN), written, "a repeat run duplicated one event");
+
+  const partial = JSON.parse(written) as { hooks: Record<string, unknown[]> };
+  delete partial.hooks.Stop;
+  const missing = `${JSON.stringify(partial, null, 2)}\n`;
+  assert.equal(hasHook(missing, spec, path, EN), false, "a main hook without Stop was treated as complete");
+  assert.notEqual(ownedHook(missing, spec, path, EN), ownedHook(written, spec, path, EN));
+
+  const withForeign = withHook(JSON.stringify({ hooks: {
+    SessionStart: [{ matcher: "startup", hooks: [{ type: "command", command: "foreign-start" }] }],
+    Stop: [{ hooks: [{ type: "command", command: "foreign-stop" }] }],
+  } }, null, 2) + "\n", spec, path, EN);
+  const removed = JSON.parse(withoutHook(withForeign, spec, path, EN)) as { hooks: Record<string, unknown[]> };
+  assert.deepEqual(removed.hooks.SessionStart, [{ matcher: "startup", hooks: [{ type: "command", command: "foreign-start" }] }]);
+  assert.deepEqual(removed.hooks.Stop, [{ hooks: [{ type: "command", command: "foreign-stop" }] }]);
+  assert.equal(removed.hooks.UserPromptSubmit, undefined);
 });
 
 test("approval previews escape path and content controls before asking while structured diffs keep raw text", async () => {

@@ -194,7 +194,7 @@ Report the movement back to the user in their own terms, from the \`moves\` fiel
 
 - "gentler" → usually \`critique\` down, sometimes \`warmth\` up. Not \`compliance\`.
 - "stop flattering me" → \`flattery=1\`. Not \`warmth\`, which is a different observable.
-- "be brief" → \`verbosity\` down. Not \`care\`, unless they also asked for less scope.
+- "be brief" → \`verbosity\` down. Change \`care\` only for requested coverage or organization changes.
 - "more casual" → \`formality\` down. Change the register system only on an explicit request,
   such as "use plain forms" → \`speech_level=plain\`.
 
@@ -274,17 +274,18 @@ export const SKILL_TRAITS_MD = `# Axes
 Twelve axes, each 1 to 5. Read the live values with \`tonedial show --json\`; this file says what
 each one **owns**, which is what tells you which axis a request is actually about.
 
-Axes are orthogonal by observable. If a request could be satisfied by editing the same sentence
-two axes both govern, one of them is the wrong choice — pick the one whose observable the user
-named.
+Axes name distinct aspects of a reply. Map the aspect the user named rather than changing
+neighbouring axes just because several aspects can appear in the same sentence.
+The agent composes ordinary emoji, lists, tables and code blocks from all selected axes and
+the task; small conditional character instructions reinforce only distinctive combinations.
 
 ## form — how a sentence is built
 
 | Axis | Owns | 1 | 5 |
 |---|---|---|---|
 | \`formality\` | wording and social distance within chosen forms | casual and familiar | ceremonious |
-| \`verbosity\` | how much comes back | only what was asked | conclusion, reason, alternatives, background |
-| \`profanity\` | how coarse the language gets | none at all | strong profanity constantly |
+| \`verbosity\` | explanation length and depth | compressed result | reasoning, alternatives and background |
+| \`profanity\` | how coarse the language gets | none at all | strong profanity throughout |
 | \`playfulness\` | how much humour or roleplay it uses | none | roleplay as the usual register |
 
 ## target — who or what an observation lands on
@@ -292,8 +293,8 @@ named.
 | Axis | Owns | 1 | 5 |
 |---|---|---|---|
 | \`critique\` | how hard it is on the work | flat problem statements without evaluation | unsparing |
-| \`flattery\` | how much it praises the person | not at all | several times an answer |
-| \`warmth\` | how much it attends to the person | not at all | encouragement or empathy at least twice per answer |
+| \`flattery\` | how much it praises the person | not at all | four positive remarks per answer |
+| \`warmth\` | how much it attends to the person | not at all | four warm remarks, including encouragement and empathy |
 
 \`critique\` and \`warmth\` are the pair that makes "savage about the code, warm about me" work in
 one answer. They are not opposites and setting one does not imply the other.
@@ -302,11 +303,11 @@ one answer. They are not opposites and setting one does not imply the other.
 
 | Axis | Owns | 1 | 5 |
 |---|---|---|---|
-| \`conviction\` | how far it pushes its own judgement | asks at every decision, without asserting | gives the conclusion without asking |
-| \`care\` | how far past the question it looks | requested scope only | follow-ups, backups, the user's rest |
-| \`compliance\` | whether it does the thing or argues first | argues, then does it | immediately |
+| \`conviction\` | how far it pushes its own judgement | lists viable options and asks the user to choose | gives the conclusion without asking |
+| \`care\` | coverage and organization | requested result without extras | organized follow-ups with functional emoji and structure |
+| \`compliance\` | whether it does the thing or argues first | questions once, then acts | acts immediately without compliance commentary |
 | \`refusal\` | how it resists for effect | never | a strike until coaxed or released by the safeword |
-| \`bravado\` | how much it bluffs | never | boasting, credit-claiming, and overplayed suffering |
+| \`bravado\` | how much it bluffs | never | boastful expert voice with credit-claiming and dramatic effort |
 
 ## Defaults are not all the same
 
@@ -326,10 +327,20 @@ depends on the host and model.
 
 ## Combinations worth knowing
 
+- \`verbosity\` 1 with \`care\` 1 can return only the result, without a work narrative.
+- Low \`verbosity\` with high \`care\` uses terse organized items, not longer explanations.
+- Functional status emoji can accompany low \`warmth\`; they are structure, not affection.
+- Required task formats take precedence: a code or JSON result must not become decorative prose.
 - \`refusal\` ≥ 4 with \`compliance\` ≥ 4 contradicts itself. The CLI warns and does not block.
 - \`formality\` ≥ 4 with \`profanity\` ≥ 4 holds but reads oddly.
 - \`warmth\` ≥ 4 with \`profanity\` ≥ 4, and \`compliance\` ≤ 2 with \`conviction\` ≤ 2, each get a
   composite sentence in the artifact rather than being left to collide.
+- Care 5 adds a caring organizer signature; high playfulness with high bravado adds a cocky expert signature. These are static instructions selected by the combination layer.
+
+Supported native hooks refresh tone at their configured events. Claude/Codex can inspect a
+completed response and request one style correction; that request does not repeat completed
+tool work or silently replace an answer already shown. Hook setup and compiled instructions
+do not prove actual host activation or model compliance.
 
 ## Settings that are not axes
 

@@ -14,8 +14,8 @@
   "font": "browser-installed monospace and CJK fallback",
   "fontRedistributed": false,
   "renderer": "state-free ANSI serialized as natural text runs at SVG column positions with bold and fixed palette; visual font fallback varies",
-  "frameSha256": "f6f084edb7c86827d75ede3a601a3e133b30c92689bf76be6cb3176fe9d62c6a",
-  "imageSha256": "4b059531a6b504c1d97046212a49443c34e9f235dcc8b26748405003b9f077bb",
+  "frameSha256": "a15a12e7149ec9f83d6e5fbb2797a66c80d2f7beaf6f618b81fdc516a2c45d3f",
+  "imageSha256": "610cf8f48e48d5a6af1872a530a49a1c7fc8a693ebe048702f696e6cfea98675",
   "inputs": {
     "scripts/dial-frame.ts": "297de2a29a475a4b114e5035c151f563934a5e1e2270fa617cb52ee70446da0c",
     "src/ui/dial.ts": "89be03aa196219d24ce36b286287f1cd586e58b6417eff433f82c1c3fd70f98c",
@@ -23,8 +23,8 @@
     "src/ui/prompt.ts": "9e7e02e17aea1158203b9e584d90aba5213902b0c246fe281d91f3290231b50d",
     "src/ui/style.ts": "2dc560ebc69677d391ec8ab39817c3a89545d6b8b603c080a7f6d09a75450a8e",
     "src/ui/width.ts": "eb1013f8511ccfc8b9eca78e3d74433cfcf30096b7faf71ba118a5cd42163acd",
-    "src/core/i18n.ts": "2790f3ee8ce916d9468c3ecb3dff3776a5a1d77bbd6bd7039b3e227d071597ae",
-    "src/core/anchors.ts": "61f90129757a60fd7bc81d1710815bf609998422dad533b3714fb9f3620704d9",
+    "src/core/i18n.ts": "ff1ed5fdac3c29cb97825f24ad1f43201c6a7a7ca4407763466cb40df1c68a2c",
+    "src/core/anchors.ts": "33c6916ee660292f5f8a9834ac385650756803bd0ed86bcf53effbc38588660d",
     "src/core/presets.ts": "bac39b3ca78bba03c0b62047f1bd31be856224762d6be327ec8df1e0bbfcf2c7",
     "scripts/dial-svg.ts": "eb81cde392f472ea8df8b251150afccfcf02e5adf936221a174ab17d965e13a4"
   },

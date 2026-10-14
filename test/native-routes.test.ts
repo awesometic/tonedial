@@ -93,6 +93,27 @@ for (const tool of ["codex", "claude", "antigravity"] as const) {
         ? execFileSync(hook.command, hook.args, { env, encoding: "utf8", timeout: 5000 })
         : execFileSync("/bin/sh", ["-c", hook.command], { env, encoding: "utf8", timeout: 5000 });
       assert.equal(run(), `${readFileSync(paths.agents, "utf8")}\n\n${readFileSync(paths.tone, "utf8")}`);
+      for (const event of ["UserPromptSubmit", "Stop"] as const) {
+        const eventBlocks = document.hooks[event];
+        assert.equal(eventBlocks.length, 1, `${event} has one managed entry`);
+        assert.equal((eventBlocks[0] as { matcher?: string }).matcher, undefined, `${event} has no lifecycle matcher`);
+        const eventHandler = (eventBlocks[0] as { hooks: Array<{ command: string; args?: string[] }> }).hooks[0]!;
+        if (tool === "claude") {
+          assert.deepEqual(eventHandler.args?.slice(-2), ["--event", event]);
+        } else {
+          assert.match(eventHandler.command, new RegExp(`--event[ \\\"']+${event}`));
+        }
+      }
+    }
+
+    if (!isAntigravity) {
+      const damaged = JSON.parse(readFileSync(paths.config, "utf8"));
+      const managed = Object.values(damaged.wiring.resources as Record<string, any>)
+        .find((resource) => resource.kind === "hook").managedByRegistration;
+      const event = Object.values(managed as Record<string, any>)[0].events[0];
+      event.matchers = ["\0"];
+      assert.throws(() => parseConfig(JSON.stringify(damaged)), /events\.0\.matchers/,
+        "invalid event matchers reached native ownership");
     }
 
     const repeated = await invoke(args);
@@ -864,10 +885,10 @@ test("approved native refresh updates stale skill seeds and the selected optiona
   assert.equal(refreshed.code, 0, JSON.stringify(refreshed.value));
   const after = parseConfig(readFileSync(paths.config, "utf8"));
   assert.ok(isConfigV2(after));
-  assert.equal(after.seedVersion, 10);
+  assert.equal(after.seedVersion, 11);
   assert.deepEqual(Object.fromEntries(Object.entries(after.managedSeeds).filter(([id]) => !id.startsWith("skill/"))), retainedRecords);
   for (const seed of skills) {
-    assert.equal(after.managedSeeds[seed.id]?.version, seed.id === "skill/body" ? 10 : 4, seed.id);
+    assert.equal(after.managedSeeds[seed.id]?.version, seed.id === "skill/body" ? 11 : 5, seed.id);
     assert.equal(readFileSync(seed.path, "utf8"), seed.contents, seed.id);
     assert.equal(after.managedSeeds[seed.id]?.sha256, createHash("sha256").update(seed.contents).digest("hex"), seed.id);
   }

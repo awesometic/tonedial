@@ -8,6 +8,9 @@ Choose twelve tone levels, save a preset, and turn it into `TONE.md`.
 Compilation uses static behavioral anchors: no model API, no API key, and identical bytes for identical settings.
 Your preset library stays in one place while connections can be global or project-specific.
 
+Native integrations refresh the compiled tone at their configured turn events. Claude and Codex can request one bounded, style-only correction after a completed response; it does not repeat tool work or silently replace an answer already shown.
+See [refresh and bounded style feedback](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#hook-refresh-and-bounded-style-feedback).
+
 > [!NOTE]
 > This is an unreleased `0.1.0` candidate. npm and curl release channels are not live.
 > Codex, Claude Code and Antigravity IDE/Desktop configuration is implemented; actual host activation, skill discovery and one-day acceptance remain unverified.

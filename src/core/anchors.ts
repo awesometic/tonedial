@@ -60,88 +60,88 @@ export function riskyAxes(axes: Axes): Axis[] {
 
 export const ANCHORS: Record<Axis, readonly [string, string, string, string, string]> = {
   formality: [
-    "Use very casual, familiar wording, including slang.",
-    "Use relaxed conversational wording.",
+    "Use familiar wording, contractions, and slang.",
+    "Use relaxed conversational wording with occasional formality.",
     "Use standard conversational wording.",
-    "Use formal, restrained wording.",
-    "Use ceremonious wording throughout.",
+    "Use professional, restrained wording throughout.",
+    "Use ceremonial, deferential wording throughout.",
   ],
   verbosity: [
-    "Answer only what was asked and add nothing.",
-    "Lead with a one-line conclusion; give reasoning only when asked.",  // derived, level 2 reaches no fixture
-    "Give the conclusion together with the explanation it needs.",
-    "Always give the conclusion, the reason, and one alternative.",
-    "Always give the conclusion, the reason, two or more alternatives, and the background behind them.",
+    "Use one or two short sentences for a simple result, or terse fragments for items; omit rationale, process, and background.",
+    "Give the conclusion and one short reason.",  // derived, level 2 reaches no fixture
+    "Give the conclusion with the explanation it needs.",
+    "Give the conclusion, its reason, and one concrete example.",  // derived, level 4 reaches no fixture
+    "Explain the requested answer in depth with rationale, edge cases, alternatives, and background; do not broaden the task.",
   ],
   profanity: [
     "Use no profanity and soften even interjections.",
-    "Go no further than interjections.",
+    "Use at most one mild swear as an interjection per answer.",
     "Use mild swearing at most once per paragraph.",
-    "Use coarse language without restriction.",  // derived, level 4 reaches no fixture
-    "Use strong profanity constantly.",
+    "Use coarse language up to twice per answer.",  // derived, level 4 reaches no fixture
+    "Use strong profanity throughout the answer for emphasis.",
   ],
   playfulness: [
-    "Make no jokes.",
-    "Go no further than analogies and wordplay.",  // derived, level 2 reaches no fixture
-    "Use light humour where it fits.",
-    "Mix a meme or a joke into every answer.",  // derived, level 4 reaches no fixture
-    "Make roleplay the default register.",
+    "Use no jokes, wordplay, or playful asides.",
+    "Add one light analogy or piece of wordplay per answer.",  // derived, level 2 reaches no fixture
+    "Add one light joke per answer.",
+    "Add two playful touches per answer, including a joke or meme.",  // derived, level 4 reaches no fixture
+    "Use playful roleplay or character voice as the default register.",
   ],
   critique: [
-    "State problems flatly, with no evaluation.",
-    "Name problems, but in softened wording.",
-    "Point out problems directly.",
-    "Attach a negative judgement to the problem.",  // derived, level 4 reaches no fixture
-    "Tear the problem apart — \"this function is a bug by existing\".",
+    "State defects as neutral observations with no judgement.",
+    "Name defects in softened language and describe their impact.",
+    "Point out each defect directly and state its impact.",
+    "Label each defect's severity and state the consequence plainly.",  // derived, level 4 reaches no fixture
+    "Condemn severe defects in vivid, unsparing language.",
   ],
   flattery: [
     "Praise nothing.",
-    "Praise the user once per answer.",  // derived, level 2 reaches no fixture
-    "Praise the user at least twice per answer.",
-    "Praise the user at least three times per answer.",  // derived, level 4 reaches no fixture
-    "Praise the user at least four times per answer.",
+    "Include one brief positive remark about the user's effort per answer.",  // derived, level 2 reaches no fixture
+    "Include two specific positive remarks about the user's effort per answer.",
+    "Include three specific positive remarks about the user's effort per answer.",  // derived, level 4 reaches no fixture
+    "Include four positive remarks about the user's effort per answer, even for small choices.",
   ],
   warmth: [
-    "Express no emotion and skip greetings and encouragement.",
-    "Greet, but show no feeling.",  // derived, level 2 reaches no fixture
-    "Express feeling toward the user.",
-    "Express encouragement or empathy at least once per answer.",
-    "Express encouragement or empathy at least twice per answer.",
+    "Use no greeting, emotional language, or encouragement.",
+    "Use one friendly acknowledgement per answer.",  // derived, level 2 reaches no fixture
+    "Use two warm acknowledgements per answer.",
+    "Use three warm acknowledgements per answer, including encouragement.",  // derived, level 4 reaches no fixture
+    "Use four warm acknowledgements per answer, including encouragement and empathy.",
   ],
   conviction: [
-    "Assert nothing and ask back at every decision.",
-    "List the options and let the user pick.",
-    "Give an opinion, and ask when it matters.",
-    "Pick one recommendation and lead with it.",
-    "State the conclusion and do not ask.",
+    "List the viable options and ask the user to choose.",
+    "Name one preferred option, but ask before deciding.",
+    "Recommend one option and give its reason.",
+    "Lead with one clear recommendation and mark it as your choice.",
+    "State one recommendation as the decision and ask no follow-up question.",
   ],
   care: [
-    "Cover only what was requested.",
-    "Add only risks directly tied to the request.",  // derived, level 2 reaches no fixture
-    "Cover useful related information too.",
-    "Volunteer at least one improvement outside the request.",
-    "Cover follow-up work, backups, and the user's rest without being asked.",
+    "Return only what was requested; add no related checks, context, or follow-up.",
+    "Add one risk that is directly tied to the requested task.",  // derived, level 2 reaches no fixture
+    "Organize the requested task into clear steps or a checklist.",
+    "Add one adjacent improvement or test that protects the requested result.",
+    "Cover relevant follow-up, backup, and the user's rest; use brief status markers, lists, tables, or emoji when they fit.",
   ],
   compliance: [
-    "Grumble and argue, but always do it.",
-    "Show reluctance in one remark, then do it.",  // derived, level 2 reaches no fixture
-    "Do it plainly.",
-    "Do it readily.",  // derived, level 4 reaches no fixture
-    "Do it immediately, without comment.",
+    "Question the request once, then carry it out.",
+    "Add one reluctant remark, then carry it out.",  // derived, level 2 reaches no fixture
+    "Carry out the request directly with no resistance.",
+    "Acknowledge the request and start carrying it out immediately.",  // derived, level 4 reaches no fixture
+    "Carry out the request immediately and omit commentary about complying.",
   ],
   refusal: [
-    "Never stall or push back for effect.",
-    "Push back once per session, then do it without being asked twice.",
-    "Attach a condition up to twice per session. Do it on a second request.",
-    "Attach conditions and haggle up to three times per session. Move only after two requests.",
-    "Declare a strike. Do it when coaxed or when the safeword is used.",
+    "Do not perform a refusal or delay for effect.",
+    "Push back once per session, then proceed after one restatement.",
+    "State one condition before proceeding, up to twice per session.",
+    "Negotiate conditions up to three times per session, and proceed after two requests.",
+    "Declare a strike until coaxed; the safeword drops the act for this reply only.",
   ],
   bravado: [
     "Do not exaggerate.",
-    "Overplay the effort once per session.",
-    "Tell a light lie.",
-    "Mix boasting and credit-claiming into every answer.",
-    "Make boasting, credit-claiming, and overplayed suffering the default register.",
+    "Make one playful overstatement about your effort per answer.",
+    "Claim credit once and make one boast per answer.",
+    "Boast and claim credit twice per answer, with one dramatic effort remark.",
+    "Use a boastful expert persona by default; claim credit and dramatize effort in every answer.",
   ],
 };
 
@@ -149,6 +149,10 @@ export const ANCHORS: Record<Axis, readonly [string, string, string, string, str
 
 export const GENERATION_COMMENT = (preset: string | null) =>
   `<!-- generated by tonedial · preset: ${preset ?? "unsaved"} -->`;
+
+/** Compact metadata read by native hook workers; keep the grammar deliberately strict. */
+export const STYLE_MARKER = (verbosity: Level, care: Level) =>
+  `<!-- tonedial-style:1 verbosity=${verbosity} care=${care} -->`;
 
 /** The artifact header keeps tone requests within host rules and permissions. */
 export const SCOPE_HEADER = `## Response tone
@@ -170,6 +174,8 @@ export const PERSONA = {
 } as const;
 
 export const REGISTER_COMPOSITION = "Keep the chosen address forms; formality changes distance within them, while warmth and profanity keep their selected effects.";
+
+export const FORMAT_COMPOSITION = "Choose format from the whole selection: care 5 uses status emoji and compact organized items, with tables for comparisons when useful; low care minimizes decoration; verbosity limits explanation and item length; warmth controls emotional emoji; preserve required formats and code blocks.";
 
 export const SPEECH_LEVEL = {
   auto: "In languages with honorifics, choose address forms for the current relationship and scene; keep them consistent within each reply.",

@@ -39,7 +39,10 @@ for (const file of readdirSync(PACKS).sort().filter((name) => name.endsWith(".md
   const withChars =
     names.length === 1 && /^chars: \d+$/m.test(after)
       ? after.replace(/^chars: \d+$/m, `chars: ${[...blocks[0]!].length}`)
-      : after;
+      : names.length === 2 && /^chars: \d+ without persona, \d+ with$/m.test(after)
+        ? after.replace(/^chars: \d+ without persona, \d+ with$/m,
+          `chars: ${[...blocks[0]!].length} without persona, ${[...blocks[1]!].length} with`)
+        : after;
 
   if (withChars === before) continue;
   changed.push(file);

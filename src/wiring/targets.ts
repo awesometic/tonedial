@@ -5,12 +5,12 @@
 import { homedir } from "node:os";
 import { isAbsolute, join } from "node:path";
 
-import { ConfigError, isConfigV2, type Config, type ManagedResource, type WiringV2 } from "../core/config.ts";
+import { ConfigError, isConfigV2, type Config, type ManagedHookEvent, type ManagedResource, type WiringV2 } from "../core/config.ts";
 import { AGENT_TOOLS, LEGACY_CONTEXT_ARTIFACT_FILENAME, canonicalDestination, readerPath, resolveAgentPaths, shellQuote, type AgentPaths, type AgentTool, type Paths } from "../core/paths.ts";
 import type { ContextConsumerCheck, ContextInspectionFailure } from "../core/seeds.ts";
 import { planChange, type Change } from "./apply.ts";
 import { MARKDOWN, RegionError, find, remove, upsert } from "./region.ts";
-import { hasHook, hookCommand, hookDocumentDescription, ownedHook, withHook, withoutHook, type HookSpec } from "./hooks.ts";
+import { hasHook, hookCommand, hookDocumentDescription, ownedHook, withHook, withoutHook, type HookEvent, type HookEventSpec, type HookHandler, type HookSpec } from "./hooks.ts";
 import type { Messages } from "../core/i18n.ts";
 import { assertRecordedTextAccess, normalizeWiring, contentHash, recordFileChange, registrationKey, resourceKey } from "./ownership.ts";
 
@@ -60,30 +60,63 @@ export function orderedHook(tool: AgentTool, stateRoot: string, runtime: string)
   const matchers = LIFECYCLE[tool];
   // Claude documents a command plus an argument vector; the other two document one shell string,
   // so their arguments are quoted into it rather than handed over separately.
-  if (tool === "claude") return { matchers, handler: { type: "command", command: runtime, args, statusMessage: HOOK_DESCRIPTION } };
-  const command = [runtime, ...args].map((part) => `"${shellQuote(part)}"`).join(" ");
-  return tool === "codex"
-    ? { matchers, handler: { type: "command", command, statusMessage: HOOK_DESCRIPTION }, documentDescription: HOOK_DESCRIPTION }
-    : { event: "PreInvocation", matchers, handler: { type: "command", command } };
+  const handler = (event?: HookEvent): HookHandler => {
+    const eventArgs = event === undefined ? args : [...args, "--event", event];
+    if (tool === "claude") return { type: "command", command: runtime, args: eventArgs, statusMessage: HOOK_DESCRIPTION };
+    const command = [runtime, ...eventArgs].map((part) => `"${shellQuote(part)}"`).join(" ");
+    return { type: "command", command, ...(tool === "codex" ? { statusMessage: HOOK_DESCRIPTION } : {}) };
+  };
+  if (tool === "antigravity") return { event: "PreInvocation", matchers: [], handler: handler("PreInvocation") };
+  const events: HookEventSpec[] = (["UserPromptSubmit", "Stop"] as const).map((event) => ({
+    event,
+    matchers: [],
+    handler: handler(event),
+  }));
+  return {
+    matchers,
+    handler: handler(),
+    ...(tool === "codex" ? { documentDescription: HOOK_DESCRIPTION } : {}),
+    events,
+  };
 }
 
 /** Version 2 identifies an ordered-pair hook, not an arbitrary legacy provider registration. */
 export function recordedHook(resource: ManagedResource, registrationId: string): HookSpec | null {
   const metadata = resource.managedByRegistration?.[registrationId];
   if (!metadata) return null;
-  const { version, event, matchers, command, args, statusMessage, name, description } = metadata;
+  const { version, event, matchers, command, args, statusMessage, name, description, events } = metadata;
+  const completeRegularEvents = events === undefined ||
+    (events.length === 2 && new Set(events.map((part) => part.event)).size === 2 &&
+      events.some((part) => part.event === "UserPromptSubmit") && events.some((part) => part.event === "Stop"));
   if (resource.kind !== "hook" || version !== 2 || !command ||
-      (event === "PreInvocation" ? matchers?.length !== 0 : event !== "SessionStart" || !matchers?.length)) return null;
-  return {
-    ...(event === "PreInvocation" ? { event } : {}),
-    matchers: matchers!,
+      (event === "PreInvocation" ? matchers?.length !== 0 || events !== undefined
+        : event !== "SessionStart" || !matchers?.length ||
+          !completeRegularEvents)) return null;
+  const eventSpec = (part: { event: string; matchers: string[]; command: string; args?: string[]; statusMessage?: string; name?: string; description?: string }): HookEventSpec => ({
+    event: part.event as HookEvent,
+    matchers: part.matchers,
     handler: {
-      type: "command", command,
-      ...(args === undefined ? {} : { args }),
-      ...(statusMessage === undefined ? {} : { statusMessage }),
-      ...(name === undefined ? {} : { name }),
-      ...(description === undefined ? {} : { description }),
+      type: "command", command: part.command,
+      ...(part.args === undefined ? {} : { args: part.args }),
+      ...(part.statusMessage === undefined ? {} : { statusMessage: part.statusMessage }),
+      ...(part.name === undefined ? {} : { name: part.name }),
+      ...(part.description === undefined ? {} : { description: part.description }),
     },
+  });
+  const primary = eventSpec({
+    event: event ?? "SessionStart",
+    matchers: matchers!,
+    command,
+    ...(args === undefined ? {} : { args }),
+    ...(statusMessage === undefined ? {} : { statusMessage }),
+    ...(name === undefined ? {} : { name }),
+    ...(description === undefined ? {} : { description }),
+  });
+  return {
+    ...(primary.event === "SessionStart" ? {} : { event: primary.event }),
+    matchers: primary.matchers,
+    handler: primary.handler,
+    ...(events === undefined ? {} : { events: events.map((part) => eventSpec(part)) }),
     ...(resource.documentDescription === undefined ? {} : { documentDescription: resource.documentDescription }),
   };
 }
@@ -97,8 +130,12 @@ export function recordedHook(resource: ManagedResource, registrationId: string):
  * is something people reorder.
  */
 export function sameDelivery(left: HookSpec | null, right: HookSpec | null): boolean {
-  const canonical = (spec: HookSpec | null) =>
-    spec === null ? null : JSON.stringify({ event: spec.event ?? "SessionStart", matchers: [...spec.matchers].sort(), handler: spec.handler });
+  const canonical = (spec: HookSpec | null) => spec === null ? null : JSON.stringify({
+    parts: [
+      { event: spec.event ?? "SessionStart", matchers: [...spec.matchers].sort(), handler: spec.handler },
+      ...(spec.events ?? []).map((part) => ({ event: part.event, matchers: [...part.matchers].sort(), handler: part.handler }))
+    ].sort((left, right) => left.event < right.event ? -1 : left.event > right.event ? 1 : 0),
+  });
   return canonical(left) === canonical(right);
 }
 
@@ -107,7 +144,13 @@ function sameDeliveryCommand(left: HookSpec | null, right: HookSpec | null): boo
   const commandOnly = (spec: HookSpec | null): HookSpec | null => {
     if (spec === null) return null;
     const { statusMessage: _status, name: _name, description: _description, ...handler } = spec.handler;
-    return { ...(spec.event ? { event: spec.event } : {}), matchers: spec.matchers, handler };
+    return {
+      ...(spec.event ? { event: spec.event } : {}), matchers: spec.matchers, handler,
+      ...(spec.events === undefined ? {} : { events: spec.events.map((part) => {
+        const { statusMessage: _partStatus, name: _partName, description: _partDescription, ...partHandler } = part.handler;
+        return { event: part.event, matchers: part.matchers, handler: partHandler };
+      }) }),
+    };
   };
   return sameDelivery(commandOnly(left), commandOnly(right));
 }
@@ -232,6 +275,17 @@ export function planOrderedDelivery(
     ...(desired.handler.statusMessage === undefined ? {} : { statusMessage: desired.handler.statusMessage }),
     ...(desired.handler.name === undefined ? {} : { name: desired.handler.name }),
     ...(desired.handler.description === undefined ? {} : { description: desired.handler.description }),
+    ...(desired.events === undefined ? {} : {
+      events: desired.events.map((part): ManagedHookEvent => ({
+        event: part.event,
+        matchers: [...part.matchers],
+        command: part.handler.command,
+        ...(part.handler.args === undefined ? {} : { args: [...part.handler.args] }),
+        ...(part.handler.statusMessage === undefined ? {} : { statusMessage: part.handler.statusMessage }),
+        ...(part.handler.name === undefined ? {} : { name: part.handler.name }),
+        ...(part.handler.description === undefined ? {} : { description: part.handler.description }),
+      })),
+    }),
     handlerSha256: orderedFingerprint(desired, path, t),
   };
   const next = recordFileChange(wiring, { target: tool, scope, destination, context: "pair" }, change, "hook", managed, t);

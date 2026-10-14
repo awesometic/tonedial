@@ -1,6 +1,6 @@
 import {
-  ANCHORS, AXIS_ORDER, CAP_CHARS, CONTROLS, GENERATION_COMMENT, PERSONA, REGISTER_COMPOSITION, SCOPE_HEADER,
-  SPEECH_LEVEL, TARGET_CHARS,
+  ANCHORS, AXIS_ORDER, CAP_CHARS, CONTROLS, FORMAT_COMPOSITION, GENERATION_COMMENT, PERSONA,
+  REGISTER_COMPOSITION, SCOPE_HEADER, SPEECH_LEVEL, STYLE_MARKER, TARGET_CHARS,
   type Axes,
 } from "./anchors.ts";
 import { composites, type Persona } from "./combos.ts";
@@ -59,7 +59,11 @@ function validate(config: Config): void {
 
 export function compile(config: Config): string {
   validate(config);
-  const out: string[] = [GENERATION_COMMENT(config.preset), SCOPE_HEADER];
+  const out: string[] = [
+    GENERATION_COMMENT(config.preset),
+    STYLE_MARKER(config.axes.verbosity, config.axes.care),
+    SCOPE_HEADER,
+  ];
 
   if (config.persona) {
     const lines = personaLines(config.persona);
@@ -69,7 +73,7 @@ export function compile(config: Config): string {
   const rules = AXIS_ORDER.map((axis) => `- ${ANCHORS[axis][config.axes[axis] - 1]}`);
   rules.push(...composites(config.axes).map((line) => `- ${line}`));
 
-  rules.push(`- ${REGISTER_COMPOSITION}`, `- ${SPEECH_LEVEL[config.speech_level]}`);
+  rules.push(`- ${FORMAT_COMPOSITION}`, `- ${REGISTER_COMPOSITION}`, `- ${SPEECH_LEVEL[config.speech_level]}`);
 
   out.push("### Rules", ...rules);
 

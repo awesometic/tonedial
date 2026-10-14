@@ -1,6 +1,7 @@
 // Decode known current and historical English artifact bodies. Unknown prose is never a data source.
 import {
-  ANCHORS, AXIS_ORDER, CONTROLS, PERSONA, REGISTER_COMPOSITION, SCOPE_HEADER, SPEECH_LEVEL, type Axis, type Level,
+  ANCHORS, AXIS_ORDER, CONTROLS, FORMAT_COMPOSITION, PERSONA, REGISTER_COMPOSITION, SCOPE_HEADER,
+  SPEECH_LEVEL, type Axis, type Level,
 } from "./anchors.ts";
 import {
   AGE_BANDS, GENDERS, defaultConfig, recoverSettings, safewordRejection,
@@ -10,8 +11,97 @@ import { composites } from "./combos.ts";
 import type { Messages } from "./i18n.ts";
 
 // Historical producer text is decoder evidence only, never a current tone instruction.
+// Keep the finite pre-redesign body set so an older TONE.md can still recover its values after
+// the current anchor wording changes.
+const LEGACY_CURRENT_ANCHORS: Record<Axis, readonly string[]> = {
+  formality: [
+    "Use very casual, familiar wording, including slang.",
+    "Use relaxed conversational wording.",
+    "Use standard conversational wording.",
+    "Use formal, restrained wording.",
+    "Use ceremonious wording throughout.",
+  ],
+  verbosity: [
+    "Answer only what was asked and add nothing.",
+    "Lead with a one-line conclusion; give reasoning only when asked.",
+    "Give the conclusion together with the explanation it needs.",
+    "Always give the conclusion, the reason, and one alternative.",
+    "Always give the conclusion, the reason, two or more alternatives, and the background behind them.",
+  ],
+  profanity: [
+    "Use no profanity and soften even interjections.",
+    "Go no further than interjections.",
+    "Use mild swearing at most once per paragraph.",
+    "Use coarse language without restriction.",
+    "Use strong profanity constantly.",
+  ],
+  playfulness: [
+    "Make no jokes.",
+    "Go no further than analogies and wordplay.",
+    "Use light humour where it fits.",
+    "Mix a meme or a joke into every answer.",
+    "Make roleplay the default register.",
+  ],
+  critique: [
+    "State problems flatly, with no evaluation.",
+    "Name problems, but in softened wording.",
+    "Point out problems directly.",
+    "Attach a negative judgement to the problem.",
+    "Tear the problem apart — \"this function is a bug by existing\".",
+  ],
+  flattery: [
+    "Praise nothing.",
+    "Praise the user once per answer.",
+    "Praise the user at least twice per answer.",
+    "Praise the user at least three times per answer.",
+    "Praise the user at least four times per answer.",
+  ],
+  warmth: [
+    "Express no emotion and skip greetings and encouragement.",
+    "Greet, but show no feeling.",
+    "Express feeling toward the user.",
+    "Express encouragement or empathy at least once per answer.",
+    "Express encouragement or empathy at least twice per answer.",
+  ],
+  conviction: [
+    "Assert nothing and ask back at every decision.",
+    "List the options and let the user pick.",
+    "Give an opinion, and ask when it matters.",
+    "Pick one recommendation and lead with it.",
+    "State the conclusion and do not ask.",
+  ],
+  care: [
+    "Cover only what was requested.",
+    "Add only risks directly tied to the request.",
+    "Cover useful related information too.",
+    "Volunteer at least one improvement outside the request.",
+    "Cover follow-up work, backups, and the user's rest without being asked.",
+  ],
+  compliance: [
+    "Grumble and argue, but always do it.",
+    "Show reluctance in one remark, then do it.",
+    "Do it plainly.",
+    "Do it readily.",
+    "Do it immediately, without comment.",
+  ],
+  refusal: [
+    "Never stall or push back for effect.",
+    "Push back once per session, then do it without being asked twice.",
+    "Attach a condition up to twice per session. Do it on a second request.",
+    "Attach conditions and haggle up to three times per session. Move only after two requests.",
+    "Declare a strike. Do it when coaxed or when the safeword is used.",
+  ],
+  bravado: [
+    "Do not exaggerate.",
+    "Overplay the effort once per session.",
+    "Tell a light lie.",
+    "Mix boasting and credit-claiming into every answer.",
+    "Make boasting, credit-claiming, and overplayed suffering the default register.",
+  ],
+};
+
 const OLD_ANCHORS: Record<Axis, readonly string[]> = {
-  ...ANCHORS,
+  ...LEGACY_CURRENT_ANCHORS,
   formality: [
     "Use the most casual register the language offers, including slang.",
     "Mix casual and polite forms.",
@@ -19,8 +109,8 @@ const OLD_ANCHORS: Record<Axis, readonly string[]> = {
     "Use the formal register, mixing in deferential forms.",
     "Use the most formal register consistently.",
   ],
-  warmth: [...ANCHORS.warmth.slice(0, 2), "Express feeling at a courteous level.", ...ANCHORS.warmth.slice(3)],
-  profanity: [...ANCHORS.profanity.slice(0, 4),
+  warmth: [...LEGACY_CURRENT_ANCHORS.warmth.slice(0, 2), "Express feeling at a courteous level.", ...LEGACY_CURRENT_ANCHORS.warmth.slice(3)],
+  profanity: [...LEGACY_CURRENT_ANCHORS.profanity.slice(0, 4),
     "Use strong profanity constantly, aimed at code and situations and never at the person."],
   refusal: [
     "Never stall or push back for effect.",
@@ -37,6 +127,10 @@ const OLD_ANCHORS: Record<Axis, readonly string[]> = {
     "Make boasting, credit-claiming, and overplayed suffering the default register. Keep bluffs to feeling, effort, and elapsed time.",
   ],
 };
+const LEGACY_CURRENT_COMPOSITES = [
+  "Keep the swearing affectionate.",
+  "Grumble without being passive; make the complaint itself clear.",
+] as const;
 const OLD_SPEECH_LEVEL = {
   auto: null,
   polite: "Address the user with the language's polite forms.",
@@ -112,7 +206,10 @@ export function recoverLegacyTone(text: string, t: Messages): SettingsRecovery |
   if (source.includes("\r")) return null;
   const marker = /^<!-- generated by tonedial · preset: ([a-z0-9]+(?:-[a-z0-9]+)*) -->\n/.exec(source);
   if (marker === null) return null;
-  const prefix = `${marker[0]}${SCOPE_HEADER}\n`;
+  const afterGeneration = source.slice(marker[0].length);
+  const styleMarker = /^<!-- tonedial-style:1 verbosity=([1-5]) care=([1-5]) -->\n/.exec(afterGeneration);
+  if (afterGeneration.startsWith("<!-- tonedial-style:") && styleMarker === null) return null;
+  const prefix = `${marker[0]}${styleMarker?.[0] ?? ""}${SCOPE_HEADER}\n`;
   if (!source.startsWith(prefix)) return null;
   let body = source.slice(prefix.length);
   const config = defaultConfig();
@@ -131,7 +228,10 @@ export function recoverLegacyTone(text: string, t: Messages): SettingsRecovery |
   const controlsAt = body.indexOf(heading);
   if (controlsAt === -1) return null;
   const rules = body.slice("### Rules\n".length, controlsAt).split("\n");
-  const anchors = historical ? OLD_ANCHORS : ANCHORS;
+  const anchorCandidates = historical ? [OLD_ANCHORS] : styleMarker ? [ANCHORS] : [ANCHORS, LEGACY_CURRENT_ANCHORS];
+  const anchors = anchorCandidates.find((candidate) => AXIS_ORDER.every((axis, position) =>
+    candidate[axis].some((anchor) => rules[position] === `- ${anchor}`)));
+  if (anchors === undefined) return null;
   const speechLevels = historical ? OLD_SPEECH_LEVEL : SPEECH_LEVEL;
   for (const [position, axis] of AXIS_ORDER.entries()) {
     const matches = anchors[axis].map((anchor, index) => ({ anchor, level: index + 1 }))
@@ -139,6 +239,9 @@ export function recoverLegacyTone(text: string, t: Messages): SettingsRecovery |
     if (matches.length !== 1) return null;
     config.axes[axis] = matches[0]!.level as Level;
   }
+  if (styleMarker && (
+    Number(styleMarker[1]) !== config.axes.verbosity || Number(styleMarker[2]) !== config.axes.care
+  )) return null;
   const speech = rules.at(-1);
   config.speech_level = speech === `- ${speechLevels.polite}` ? "polite"
     : speech === `- ${speechLevels.plain}` ? "plain" : "auto";
@@ -150,10 +253,20 @@ export function recoverLegacyTone(text: string, t: Messages): SettingsRecovery |
       ...(config.axes.compliance <= 2 && config.axes.conviction <= 2
         ? ["Grumble without being passive; make the complaint itself clear."] : []),
     ] : composites(config.axes)).map((line) => `- ${line}`),
-    ...(historical ? [] : [`- ${REGISTER_COMPOSITION}`]),
+    ...(historical ? [] : [`- ${FORMAT_COMPOSITION}`, `- ${REGISTER_COMPOSITION}`]),
     ...(speechLevels[config.speech_level] === null ? [] : [`- ${speechLevels[config.speech_level]}`]),
   ];
-  if (rules.length !== expectedRules.length || rules.some((line, index) => line !== expectedRules[index])) return null;
+  const legacyExpectedRules = [
+    ...AXIS_ORDER.map((axis) => `- ${LEGACY_CURRENT_ANCHORS[axis][config.axes[axis] - 1]}`),
+    ...LEGACY_CURRENT_COMPOSITES.filter((_line, index) => index === 0
+      ? config.axes.warmth >= 4 && config.axes.profanity >= 4
+      : config.axes.compliance <= 2 && config.axes.conviction <= 2).map((line) => `- ${line}`),
+    `- ${REGISTER_COMPOSITION}`,
+    ...(speechLevels[config.speech_level] === null ? [] : [`- ${speechLevels[config.speech_level]}`]),
+  ];
+  const acceptedRules = historical || styleMarker ? [expectedRules] : [expectedRules, legacyExpectedRules];
+  if (!acceptedRules.some((candidate) => rules.length === candidate.length &&
+    rules.every((line, index) => line === candidate[index]))) return null;
 
   const controls = body.slice(controlsAt + heading.length).replace(/\n$/, "");
   const remaining = historical && controls.startsWith(OLD_GUARD_BUNDLE)
