@@ -450,7 +450,7 @@ function summary(ctx: Ctx, reason: string, tools: AgentTool[], action: "connect"
   const named = tools.map((t) => TARGETS[t].label).join(", ");
   if (reason === "nothing") return receiptLines(action === "disconnect" ? ctx.t.wiring.alreadyDisconnected(named) : ctx.t.wiring.alreadyMatch(named), ctx.ui.width - 2)
     .map((line) => `  ${ctx.ui.bold(line)}`);
-  if (reason === "dry-run") return [`  ${ctx.ui.warn(ctx.t.wiring.dryRun)}`];
+  if (reason === "dry-run") return [`  ${ctx.ui.dim(ctx.t.wiring.dryRun)}`];
   if (reason === "declined") return [`  ${ctx.t.wiring.declined}`];
   return [
     ...receiptLines(action === "disconnect" ? ctx.t.wiring.disconnected(named) : ctx.t.wiring.wroteInto(named), ctx.ui.width - 2)

@@ -155,6 +155,5 @@ export async function runImport(ctx: Ctx, args: string[]): Promise<CommandResult
       ...nextStep(`tonedial show ${slug}`, ctx.ui),
     ],
     json: { slug, displayName: preset.displayName, replaced: existed, source },
-    warnings: existed ? [ctx.t.preset.replaced(slug)] : [],
   };
 }

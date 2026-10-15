@@ -4,13 +4,14 @@ import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { isAbsolute, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { gunzipSync } from "node:zlib";
 
 import { ConfigError } from "./config.ts";
 import type { Messages } from "./i18n.ts";
 import { decodeUtf8, getBounded, urlIdentity } from "./net.ts";
-import type { Paths } from "./paths.ts";
+import { fileIdentity, onPath, type Paths } from "./paths.ts";
 
 /** Where releases come from. Overridable for tests, exactly as `install.sh` overrides it. */
 export const REGISTRY = "https://registry.npmjs.org";
@@ -31,13 +32,55 @@ const METADATA_BOUNDS = { maxBytes: 1024 * 1024, timeoutMs: RELEASE_TIMEOUT_MS }
 export type Release = { version: string; tarball: string; integrity: string };
 
 /** The version the package on disk declares, or `null` where it cannot be read. */
-export function installedVersion(paths: Paths): string | null {
+export function installedVersion(paths: Pick<Paths, "lib">): string | null {
   try {
-    const raw = JSON.parse(readFileSync(join(paths.lib, "package.json"), "utf8")) as { version?: unknown };
-    return typeof raw.version === "string" ? raw.version : null;
+    const raw = JSON.parse(readFileSync(join(paths.lib, "package.json"), "utf8")) as { name?: unknown; version?: unknown };
+    return raw.name === "tonedial" && typeof raw.version === "string" && /^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.+-]+)?$/.test(raw.version)
+      ? raw.version : null;
   } catch {
     return null;
   }
+}
+
+export type NpmInstall = { entry: string; prefix: string; root: string; version: string };
+
+/** Bind npm's global target to this running copy before allowing package-manager writes. */
+export function inspectNpmInstall(env: NodeJS.ProcessEnv, t: Messages): NpmInstall {
+  const executable = onPath("npm", env);
+  if (executable === null) throw new ConfigError(t.update.npmMissing);
+  const entry = resolve(executable);
+  const query = (args: string[]): string => {
+    const result = spawnSync(entry, args, { env, encoding: "utf8", timeout: RELEASE_TIMEOUT_MS, maxBuffer: 1024 * 1024, stdio: ["ignore", "pipe", "pipe"] });
+    const value = result.stdout?.trim();
+    if (result.status !== 0 || !value || !isAbsolute(value) || /[\r\n\0]/.test(value)) throw new ConfigError(t.update.npmScopeUnknown);
+    return resolve(value);
+  };
+  const prefix = query(["prefix", "-g"]);
+  const root = join(query(["root", "-g", "--prefix", prefix]), "tonedial");
+  try {
+    const own = fileURLToPath(new URL("../../", import.meta.url));
+    const current = fileIdentity(own);
+    const target = fileIdentity(root);
+    const version = installedVersion({ lib: root });
+    if (lstatSync(root, { throwIfNoEntry: false })?.isSymbolicLink() || current === null || target === null || current.dev !== target.dev || current.ino !== target.ino || version === null) {
+      throw new ConfigError(t.update.npmScopeMismatch);
+    }
+    return { entry, prefix, root, version };
+  } catch {
+    throw new ConfigError(t.update.npmScopeMismatch);
+  }
+}
+
+/** npm owns replacement; captured output cannot corrupt JSON or disclose npm configuration. */
+export function updateNpmInstall(install: NpmInstall, env: NodeJS.ProcessEnv, t: Messages): string {
+  const current = inspectNpmInstall(env, t);
+  if (current.entry !== install.entry || current.prefix !== install.prefix || current.root !== install.root || current.version !== install.version) throw new ConfigError(t.update.npmScopeMismatch);
+  const result = spawnSync(install.entry, ["update", "-g", "tonedial", "--prefix", install.prefix, "--json"],
+    { env, encoding: "utf8", timeout: 120_000, maxBuffer: RELEASE_MAX_BYTES, stdio: ["ignore", "pipe", "pipe"] });
+  if (result.status !== 0) throw new ConfigError(t.update.npmFailed);
+  const version = installedVersion({ lib: install.root });
+  if (version === null) throw new ConfigError(t.update.versionUnknown);
+  return version;
 }
 
 /** Whether the one external tool this needs is here. Checked before anything is downloaded. */

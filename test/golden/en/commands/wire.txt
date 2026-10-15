@@ -19,7 +19,7 @@ ToneDial · wire
   + name: tonedial
 
   <ROOT>/state/skill/tonedial/references/traits.md
-  (new file)  88 lines
+  (new file)  87 lines
   + Twelve axes, each 1 to 5. Read the live values with `tonedial show --json`; this file says what
   + each one **owns**, which is what tells you which axis a request is actually about.
 

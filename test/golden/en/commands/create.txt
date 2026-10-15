@@ -40,7 +40,5 @@ ToneDial · create
   TONE.md generated
 
   tonedial list
---- stderr --- [bytes=200; endsWithNewline=true]
-  ⚠ address set while warmth≤2 or verbosity≤2: Brief or unemotional replies
-    may omit names; strong roleplay may make them more frequent.
-  ⚠ The model may not produce the tone you expect.
+--- stderr --- [bytes=0; endsWithNewline=false]
+

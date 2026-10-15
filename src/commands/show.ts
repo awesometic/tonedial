@@ -154,13 +154,9 @@ export function runShow(ctx: Ctx, args: string[]): CommandResult {
       ...nextStep(preview ? `tonedial use ${preview.slug}` : needsSave ? saveCommand : "tonedial show --explain", ui).slice(1));
   }
 
-  const combinations = checkCombos(axes, shown.persona, shown.speech_level);
+  const combinations = checkCombos(axes);
   const warnings = combinations.map((w) => combination(w, ctx.t));
-  if (personaSet) {
-    warnings.push(ctx.t.notice.personaUnanchored);
-  }
   warnings.push(...riskWarnings(axes, ctx.t));
-  warnings.push(ctx.t.notice.modelExpectation);
   if (activeConflict && preview === null) warnings.push(ctx.t.preset.activeConflict(config.preset!));
 
   return {

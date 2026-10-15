@@ -1,0 +1,19 @@
+status: 0
+--- stdout --- [bytes=250; endsWithNewline=true]
+ToneDial · update
+
+  tonedial <VERSION>
+
+  패키지 업데이트:
+    npm update -g tonedial
+  --dry-run · 변경 없음
+
+  ToneDial 공통 상태 디렉터리:
+  <ROOT>/state
+
+  문제가 있는 앱 파일을 검사하려면:
+    tonedial doctor
+--- stderr --- [bytes=126; endsWithNewline=true]
+  ⚠ 직접 수정한 파일 · 교체 전 확인 필요
+    skill/tonedial/SKILL.md
+    skill/tonedial/references/traits.md

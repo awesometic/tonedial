@@ -4,5 +4,5 @@ ToneDial · set
 
   Settings unchanged
   TONE.md current
---- stderr --- [bytes=53; endsWithNewline=true]
-  ⚠ The model may not produce the tone you expect.
+--- stderr --- [bytes=0; endsWithNewline=false]
+

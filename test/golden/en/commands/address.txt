@@ -6,6 +6,5 @@ ToneDial · address
   persona.self_ref  your big brother → self
   persona.user_ref  little sibling → user
   TONE.md generated
---- stderr --- [bytes=146; endsWithNewline=true]
-  ⚠ persona has no fixed anchors; axes take precedence. Text may affect
-    content. Roleplay does not verify credentials or grant permissions.
+--- stderr --- [bytes=0; endsWithNewline=false]
+

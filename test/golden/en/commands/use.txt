@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=219; endsWithNewline=true]
+--- stdout --- [bytes=169; endsWithNewline=true]
 ToneDial · use
 
   Ego Sword active
@@ -7,12 +7,7 @@ ToneDial · use
 
   no safeword — request a plain answer through the skill only
   ! critique · harsh language
-  for fun, and not recommended for production use
 
   tonedial show
---- stderr --- [bytes=376; endsWithNewline=true]
-  ⚠ High playfulness requests frequent, exaggerated role idioms and slang, such
-    as 'your lowly servant' or 'take that function off the books'. They may
-    sound rude or violent; ToneDial does not filter these expressions.
-  ⚠ address set while warmth≤2 or verbosity≤2: Brief or unemotional replies
-    may omit names; strong roleplay may make them more frequent.
+--- stderr --- [bytes=0; endsWithNewline=false]
+

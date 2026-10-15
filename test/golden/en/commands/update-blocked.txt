@@ -1,0 +1,19 @@
+status: 0
+--- stdout --- [bytes=222; endsWithNewline=true]
+ToneDial · update
+
+  tonedial <VERSION>
+
+  Package update:
+    npm update -g tonedial
+  --dry-run · nothing written
+
+  Shared ToneDial state:
+  <ROOT>/state
+
+  Inspect the affected application files:
+    tonedial doctor
+--- stderr --- [bytes=117; endsWithNewline=true]
+  ⚠ Not owned by ToneDial · preserved
+    presets/builtin/caring-brother.json
+    presets/builtin/bratty-kid.json

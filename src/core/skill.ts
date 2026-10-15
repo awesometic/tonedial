@@ -93,7 +93,7 @@ Persona, address, safeword, and \`speech_level\` are separate from the axes.
 \`playfulness\` increases the frequency and exaggeration of the chosen role's expressions:
 literal wording at 1, one restrained touch at 2, two recognizable touches at 3,
 frequent theatrical idioms at 4, and a character voice throughout at 5.
-Role slang and figurative language are not filtered; the CLI warns about rude or violent idioms.
+Role slang and figurative language are not filtered.
 \`profanity\` still grades actual swearing; \`bravado\` grades claims about effort.
 Change one only when the user explicitly asks for that setting; preserve every other setting.
 Use the user's chosen text and values, not the illustrative values below.
@@ -128,7 +128,7 @@ Agent experience and specialty are roleplay, not verified credentials or tool ca
 Both descriptions lose to axes and task/permission rules, and may influence content.
 A persona note expresses manner or role, loses to axes, and may also influence
 content; it is not a way to override task or permission rules.
-The CLI warns above 200 Unicode code points instead of rejecting the note; report its warnings.
+Persona notes have no length limit.
 
 ToneDial has no guard toggle or automatic emergency register. All axis levels 1–5 are choices
 the user can request. Report advisory \`riskAxes\` and combination notices without lowering
@@ -379,7 +379,6 @@ depends on the host and model.
 - Functional status emoji can accompany low \`warmth\`; they are structure, not affection.
 - Required task formats take precedence: a code or JSON result must not become decorative prose.
 - \`refusal\` ≥ 4 with \`compliance\` ≥ 4 contradicts itself. The CLI warns and does not block.
-- \`formality\` ≥ 4 with \`profanity\` ≥ 4 holds but reads oddly.
 - \`warmth\` ≥ 4 with \`profanity\` ≥ 4, and \`compliance\` ≤ 2 with \`conviction\` ≤ 2, each get a
   composite sentence in the artifact rather than being left to collide.
 - Care 5 adds a caring organizer signature; high playfulness with high bravado adds a cocky expert signature. These are static instructions selected by the combination layer.
@@ -403,7 +402,7 @@ them, and \`export\`/\`import\` transfer them. Older axis-only presets keep the 
 The seven bundled profiles supply localized role and address defaults; custom text remains literal.
 Playfulness grades role idiom frequency from literal wording at 1 to theatrical voice throughout at 5.
 Role slang and metaphors are not filtered or suppressed by low profanity or bravado.
-Profanity grades actual swearing; bravado grades effort claims. The CLI carries advisory examples.
+Profanity grades actual swearing; bravado grades effort claims.
 `;
 
 /**
@@ -414,7 +413,7 @@ Profanity grades actual swearing; bravado grades effort claims. The CLI carries 
  * command name stays `/tone` even though the tool is `tonedial`: it is what a person types
  * mid-sentence, and the two extra characters are paid every time.
  */
-export const TONE_COMMAND_VERSION = 8;
+export const TONE_COMMAND_VERSION = 9;
 
 export const TONE_COMMAND_MD = `---
 description: Check, change, or reload this agent's tone, preset, or ToneDial settings

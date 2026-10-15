@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="470" height="260" viewBox="0 0 470 260" role="img" aria-labelledby="title description">
+<title id="title">ToneDial screen (en · update-current)</title>
+<desc id="description">ToneDial · update
+
+  tonedial &lt;VERSION&gt;
+
+  Package update:
+    npm update -g tonedial
+  --dry-run · nothing written
+</desc>
+<rect width="100%" height="100%" rx="16" fill="#171b20"/>
+<g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, system-ui" font-size="22"><text x="32" y="48" fill="#edf3f6" font-weight="400" opacity="1">ToneDial · update</text>
+<text x="60" y="104" fill="#edf3f6" font-weight="400" opacity="1">tonedial &lt;VERSION&gt;</text>
+<text x="60" y="160" fill="#edf3f6" font-weight="400" opacity="1">Package update:</text>
+<text x="88" y="188" fill="#edf3f6" font-weight="400" opacity="1">npm update -g tonedial</text>
+<text x="60" y="216" fill="#edf3f6" font-weight="400" opacity="1">--dry-run · nothing written</text></g>
+</svg>

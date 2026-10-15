@@ -6,6 +6,5 @@ ToneDial · persona
   persona.agent  fictional agent role · 151… → fictional agent role · 18 …
   persona.user   user context · 57 chars → user context · 9 chars
   TONE.md generated
---- stderr --- [bytes=146; endsWithNewline=true]
-  ⚠ persona has no fixed anchors; axes take precedence. Text may affect
-    content. Roleplay does not verify credentials or grant permissions.
+--- stderr --- [bytes=0; endsWithNewline=false]
+

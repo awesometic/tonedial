@@ -18,6 +18,7 @@ import {
   type GoldenLanguage,
   type GoldenWorkspace,
 } from "./support/golden.ts";
+import { captureMaintenance, UPDATE_SCENARIOS } from "./support/maintenance.ts";
 
 type Scenario = {
   expected: number;
@@ -118,6 +119,17 @@ test("formatted captures preserve empty, newline, and missing-trailing-newline s
 });
 
 for (const language of selectedGoldenLanguages()) {
+  test(`update maintenance states retain clear output and stream boundaries · ${language}`, async (t) => {
+    for (const scenario of UPDATE_SCENARIOS.filter(scenario => scenario !== "update-current")) {
+      await t.test(scenario, async () => {
+        const capture = await captureMaintenance(language, scenario);
+        assert.equal(capture.status, 0, capture.stderr);
+        assert.ok(capture.stdout.length > 0 || capture.stderr.length > 0, `${scenario}: empty capture`);
+        assertGolden(goldenPath(language, "commands", scenario), formatCapture(capture));
+      });
+    }
+  });
+
   test(`unsaved preset show output golden · ${language}`, async () => {
     const workspace = createGoldenWorkspace(language);
     try {
@@ -170,22 +182,24 @@ for (const language of selectedGoldenLanguages()) {
     }
   });
 
-  test(`command output goldens · ${language}`, async () => {
+  test(`command output goldens · ${language}`, async (t) => {
     for (const command of COMMAND_NAMES) {
-      const workspace = createGoldenWorkspace(language);
-      try {
-        const scenario = scenarios[command]!;
-        await scenario.setup?.(workspace, language);
-        const capture = await captureCli(workspace, scenario.args(workspace, language));
-        assert.equal(capture.status, scenario.expected, `${language} ${command}: unexpected exit status`);
-        assert.ok(capture.stdout.length > 0 || capture.stderr.length > 0, `${language} ${command}: empty capture cannot be a golden`);
-        assertGolden(
-          goldenPath(language, "commands", command),
-          formatCapture(normalizeCapture(capture, workspace)),
-        );
-      } finally {
-        workspace.dispose();
-      }
+      await t.test(command, async () => {
+        const workspace = createGoldenWorkspace(language);
+        try {
+          const scenario = scenarios[command]!;
+          await scenario.setup?.(workspace, language);
+          const capture = await captureCli(workspace, scenario.args(workspace, language));
+          assert.equal(capture.status, scenario.expected, `${language} ${command}: unexpected exit status`);
+          assert.ok(capture.stdout.length > 0 || capture.stderr.length > 0, `${language} ${command}: empty capture cannot be a golden`);
+          assertGolden(
+            goldenPath(language, "commands", command),
+            formatCapture(normalizeCapture(capture, workspace)),
+          );
+        } finally {
+          workspace.dispose();
+        }
+      });
     }
   });
 }

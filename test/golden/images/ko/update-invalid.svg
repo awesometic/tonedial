@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="568" height="372" viewBox="0 0 568 372" role="img" aria-labelledby="title description">
+<title id="title">ToneDial screen (ko · update-invalid)</title>
+<desc id="description">ToneDial · update
+
+  tonedial &lt;VERSION&gt;
+
+  패키지 업데이트:
+    npm update -g tonedial
+  --dry-run · 변경 없음
+
+  앱 파일을 업데이트하려면:
+    tonedial doctor --fix
+  ⚠ 저장된 설정이 올바르지 않습니다.
+</desc>
+<rect width="100%" height="100%" rx="16" fill="#171b20"/>
+<g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, system-ui" font-size="22"><text x="32" y="48" fill="#edf3f6" font-weight="400" opacity="1">ToneDial · update</text>
+<text x="60" y="104" fill="#edf3f6" font-weight="400" opacity="1">tonedial &lt;VERSION&gt;</text>
+<text x="60" y="160" fill="#edf3f6" font-weight="400" opacity="1">패키지 업데이트:</text>
+<text x="88" y="188" fill="#edf3f6" font-weight="400" opacity="1">npm update -g tonedial</text>
+<text x="60" y="216" fill="#edf3f6" font-weight="400" opacity="1">--dry-run · 변경 없음</text>
+<text x="60" y="272" fill="#edf3f6" font-weight="400" opacity="1">앱 파일을 업데이트하려면:</text>
+<text x="88" y="300" fill="#edf3f6" font-weight="400" opacity="1">tonedial doctor --fix</text>
+<text x="60" y="328" fill="#edf3f6" font-weight="400" opacity="1">⚠ 저장된 설정이 올바르지 않습니다.</text></g>
+</svg>

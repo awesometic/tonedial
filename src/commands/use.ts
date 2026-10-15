@@ -77,7 +77,7 @@ export async function runUse(ctx: Ctx, args: string[]): Promise<CommandResult> {
     risk: ctx.t.notice.risk,
     roleplay: config.axes.playfulness >= 4 ? ctx.t.notice.roleplay : null,
   };
-  const notices = [notice.safeword, ...(notice.riskAxes ? [notice.riskAxes] : []), notice.risk];
+  const notices = [notice.safeword, ...(notice.riskAxes ? [notice.riskAxes] : [])];
 
   const lines = [
     ...wrap(ctx.t.preset.active(truncate(humanText(preset.displayName), ui.width - 12)), ui.width - 2)
@@ -87,7 +87,7 @@ export async function runUse(ctx: Ctx, args: string[]): Promise<CommandResult> {
     // Folded here rather than at the printer: `lines` are laid out by the command that built
     // them, and a printer that reflowed them would break every column in the gauge block.
     "",
-    ...notices.flatMap((n) => wrap(humanText(n), ui.width - 2).map((folded) => `  ${n === notice.riskAxes ? ui.risk(folded) : n === notice.risk ? ui.warn(folded) : folded}`)),
+    ...notices.flatMap((n) => wrap(humanText(n), ui.width - 2).map((folded) => `  ${n === notice.riskAxes ? ui.risk(folded) : folded}`)),
     ...project,
     ...nextStep("tonedial show", ui),
   ];
@@ -107,8 +107,7 @@ export async function runUse(ctx: Ctx, args: string[]): Promise<CommandResult> {
       project: projectPath,
     },
     warnings: [
-      ...(notice.roleplay ? [notice.roleplay] : []),
-      ...checkCombos(config.axes, config.persona, config.speech_level).map((w) => combination(w, ctx.t)),
+      ...checkCombos(config.axes).map((w) => combination(w, ctx.t)),
     ],
   };
 }

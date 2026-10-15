@@ -1,0 +1,19 @@
+status: 0
+--- stdout --- [bytes=222; endsWithNewline=true]
+ToneDial · update
+
+  tonedial <VERSION>
+
+  Package update:
+    npm update -g tonedial
+  --dry-run · nothing written
+
+  Shared ToneDial state:
+  <ROOT>/state
+
+  Inspect the affected application files:
+    tonedial doctor
+--- stderr --- [bytes=120; endsWithNewline=true]
+  ⚠ Locally modified · review before replacement
+    skill/tonedial/SKILL.md
+    skill/tonedial/references/traits.md

@@ -84,20 +84,13 @@ export async function savePreset(
 
   const count = Object.keys(values).length;
   const countLabel = ctx.t.preset.nonDefault(count);
-  const warnings: string[] = [];
-  if (replaced) warnings.push(ctx.t.preset.replaced(slug));
-  // Sparsity survives on one reason after the omit-defaults rule fell: fewer extremes mean
-  // fewer internal collisions. It is guidance, so it warns and never blocks.
-  if (count < 3 || count > 7) {
-    warnings.push(ctx.t.preset.sparsity(slug, count));
-  }
-
   return {
     // Truncated, not folded. A display name has no length cap, and folding one across two lines
     // makes the slug beside it harder to read than losing the tail does.
     lines: [
       ...(options.create ? result.lines : []),
-      `  ${ctx.ui.success(ctx.ui.bold(ctx.t.preset.savedTarget(slug)))}`,
+      ...wrap(replaced ? ctx.t.preset.replaced(slug) : ctx.t.preset.savedTarget(slug), ctx.ui.width - 2)
+        .map((line) => `  ${ctx.ui.success(ctx.ui.bold(line))}`),
       `  ${truncate(
         humanText(displayName),
         Math.max(1, ctx.ui.width - cells(`    ${countLabel}`)),
@@ -108,6 +101,5 @@ export async function savePreset(
     ],
     json: { slug, displayName, values, settings: preset.settings, nonDefaultAxes: count, replaced, chars: size.chars,
       ...(options.create ? { created: true, diff: result.diff, operationId: result.operationId } : {}) },
-    warnings,
   };
 }

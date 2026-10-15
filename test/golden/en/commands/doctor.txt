@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=777; endsWithNewline=true]
+--- stdout --- [bytes=396; endsWithNewline=true]
 ToneDial · doctor
 
   Inspection scope: project
@@ -7,23 +7,15 @@ ToneDial · doctor
 
   Application: healthy
 
-  Connections
-  Connection files: no issues in selected scope
-  Hook status is read from the inspected settings file only; host overrides and
-  session delivery are unverified.
-
   Checks
   · Agent hooks
-    Hook enablement could not be confirmed for: Claude Code, Antigravity
-    IDE/Desktop, Codex CLI.
-    No managed ToneDial hook is registered for these agents in this scope.
-    To connect ToneDial, run init in this scope and select these agents.
+    Not connected: Claude Code, Antigravity IDE/Desktop, Codex CLI.
 
   ! tonedial on PATH
     tonedial is not on PATH. The skill and fallback line cannot run it. Find
     the global prefix: npm prefix -g
     Add its bin directory (macOS/Linux) to PATH.
 
-  1 need attention · --fix repairs what it can
+  1 check needs attention
 --- stderr --- [bytes=0; endsWithNewline=false]
 

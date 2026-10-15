@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 
 import { compile, measure, type Config } from "../src/core/compile.ts";
 import { ANCHORS, AXIS_DEFAULT, AXIS_ORDER, PERSONA, riskyAxes, type Axes, type Level } from "../src/core/anchors.ts";
-import { check, nonDefaultAxes, type Persona } from "../src/core/combos.ts";
+import { check, nonDefaultAxes } from "../src/core/combos.ts";
 import { BUNDLED } from "../src/core/presets.ts";
 
 const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), "fixtures");
@@ -178,7 +178,7 @@ test("speech_level selects forms while preserving familiarity, warmth and strong
     assert.match(out, /Use four warm acknowledgements per answer/);
     assert.match(out, /Character: use affectionate swearing/);
     assert.match(out, formality === 1 ? /familiar wording, contractions/ : /ceremonial, deferential wording throughout/);
-    assert.ok(!check(config.axes, null, level).some(w => /formality|speech_level/.test(w.rule)));
+    assert.deepEqual(check(config.axes), []);
   }
 });
 
@@ -238,66 +238,21 @@ test("an input the compiler cannot honour throws rather than emitting nonsense",
   assert.throws(bad({ safeword: "   " }), RangeError, "a blank safeword would match everything");
 });
 
-test("the combination layers warn on the pairs the design names", () => {
+test("only conflicting axis instructions produce combination warnings", () => {
   const axes = (over: Partial<Axes>): Axes => ({ ...AXIS_DEFAULT, ...over });
-
-  const forbidden = check(axes({ refusal: 5, compliance: 5 }), null, "auto");
-  assert.equal(forbidden.filter((w) => w.layer === "forbidden").length, 1);
-
-  const awkward = check(axes({ formality: 5, profanity: 5 }), null, "auto");
-  assert.deepEqual(awkward, [], "ceremonious language can still be coarse");
-
-  const speech = check(axes({ formality: 5 }), null, "plain");
-  assert.deepEqual(speech, [], "plain forms can still be formal");
-
-  const persona = { age: null, gender: null, address: { self_ref: null, user_ref: "선생님" }, note: null, user: null, agent: null };
-  const ineffective = check(axes({ warmth: 1, verbosity: 1 }), persona, "auto");
-  assert.ok(ineffective.some((w) => w.layer === "ineffective"), "a terse reply has no slot for an address");
-
-  assert.deepEqual(check(axes({}), null, "auto"), [], "the all-default configuration is quiet");
-});
-
-test("every rule combos.ts implements has a case that fires it", () => {
-  const axes = (over: Partial<Axes>): Axes => ({ ...AXIS_DEFAULT, ...over });
-  const p = (over: Partial<Persona>): Persona =>
-    ({ age: null, gender: null, address: null, note: null, user: null, agent: null, ...over });
-  const fired = (ws: { rule: string }[]) => ws.map((w) => w.rule);
-
-  assert.deepEqual(check(axes({ formality: 1 }), null, "polite"), [], "familiar polite wording is valid");
-  assert.ok(fired(check(axes({ formality: 5 }), p({ address: { self_ref: "형", user_ref: null } }), "auto"))
-    .includes("formality 5 × informal self_ref"));
-  assert.ok(fired(check(axes({ formality: 2 }), p({ address: { self_ref: null, user_ref: "팀장님" } }), "plain"))
-    .includes("formality≤2 × deferential user_ref"), "the honorific suffix, not a fixed list");
-  for (const speech of ["auto", "polite"] as const) {
-    assert.deepEqual(check(axes({ formality: 1 }), p({ address: { self_ref: null, user_ref: "팀장님" } }), speech), []);
+  const contradiction = [{ layer: "forbidden", rule: "refusal≥4 × compliance≥4", id: "refusalCompliance" }];
+  for (const refusal of [3, 4, 5] as const) {
+    for (const compliance of [3, 4, 5] as const) {
+      assert.deepEqual(check(axes({ refusal, compliance })), refusal >= 4 && compliance >= 4 ? contradiction : []);
+    }
   }
-  assert.ok(fired(check(axes({ formality: 5 }), p({ age: "teens" }), "auto")).includes("age: teens × formality 5"));
-  assert.ok(fired(check(axes({}), p({ age: "50s+", address: { self_ref: "형", user_ref: null } }), "auto"))
-    .includes("age: 50s+ with a junior self_ref"));
-
-  // Naming the set rather than counting it: adding a rule without a case that fires it now
-  // fails here, and so does deleting one.
-  const reachable = new Set([
-    ...fired(check(axes({ refusal: 5, compliance: 5 }), null, "auto")),
-    ...fired(check(axes({ formality: 5, profanity: 5 }), null, "plain")),
-    ...fired(check(axes({ formality: 1 }), null, "polite")),
-    ...fired(check(axes({ formality: 5, warmth: 1 }), p({ age: "teens", address: { self_ref: "형", user_ref: "선생님" } }), "auto")),
-    ...fired(check(axes({ formality: 2, warmth: 1 }), p({ age: "50s+", address: { self_ref: "형", user_ref: "선생님" } }), "plain")),
-  ]);
-  assert.deepEqual([...reachable].sort(), [
-    "address set while warmth≤2 or verbosity≤2",
-    "age: 50s+ with a junior self_ref",
-    "age: teens × formality 5",
-    "formality 5 × informal self_ref",
-    "formality≤2 × deferential user_ref",
-    "refusal≥4 × compliance≥4",
-  ].sort(), "every implemented rule remains reachable");
+  assert.deepEqual(check(axes({ formality: 5, profanity: 5 })), [], "ceremonious language can still be coarse");
+  assert.deepEqual(check(axes({ warmth: 1, verbosity: 1 })), [], "brief or unemotional wording is a valid selection");
+  assert.deepEqual(check(axes({})), [], "the all-default configuration is quiet");
 });
 
-test("the address heuristics do not fire outside Korean, and that is stated", () => {
-  const axes: Axes = { ...AXIS_DEFAULT, formality: 5 };
-  const english = check(axes, { age: null, gender: null, address: { self_ref: "dude", user_ref: "boss" }, note: null, user: null, agent: null }, "auto");
-  assert.deepEqual(english, [], "a deliberate ceiling: the layer is Korean-only and warns on nothing else");
+test("bundled profiles do not produce unsupported combination warnings", () => {
+  for (const preset of BUNDLED) assert.deepEqual(check(load(preset.slug).config.axes), [], preset.slug);
 });
 
 test("every bundled preset in the fixtures meets the 5±2 sparsity guidance", () => {

@@ -1,0 +1,14 @@
+status: 0
+--- stdout --- [bytes=174; endsWithNewline=true]
+ToneDial · update
+
+  tonedial <VERSION>
+
+  Package update:
+    npm update -g tonedial
+  --dry-run · nothing written
+
+  Refresh application files:
+    tonedial doctor --fix
+--- stderr --- [bytes=34; endsWithNewline=true]
+  ⚠ Saved settings are invalid.

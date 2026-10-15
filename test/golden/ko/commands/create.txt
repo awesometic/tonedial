@@ -38,7 +38,5 @@ ToneDial · create
   TONE.md 생성됨
 
   tonedial list
---- stderr --- [bytes=285; endsWithNewline=true]
-  ⚠ address set while warmth≤2 or verbosity≤2: 짧거나 감정 없는 답변에서는
-    호칭이 생략될 수 있습니다. 역할극이 강하면 더 자주 나올 수 있습니다.
-  ⚠ 사용하는 모델에 따라 기대한 말투가 나오지 않을 수 있습니다.
+--- stderr --- [bytes=0; endsWithNewline=false]
+

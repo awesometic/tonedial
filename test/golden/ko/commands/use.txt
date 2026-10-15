@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=268; endsWithNewline=true]
+--- stdout --- [bytes=193; endsWithNewline=true]
 ToneDial · use
 
   Ego Sword 적용됨
@@ -7,12 +7,7 @@ ToneDial · use
 
   세이프워드 없음 — 담백한 답은 스킬로만 요청할 수 있습니다
   ! critique · 거친 표현
-  재미를 위한 도구이며 실무 사용은 권장하지 않습니다
 
   tonedial show
---- stderr --- [bytes=496; endsWithNewline=true]
-  ⚠ playfulness가 높으면 '아뢰옵기 황송하오나', '이 함수, 장부에서 지울까요?'
-    같은 역할 어휘와 은어를 더 자주, 과장해서 쓰도록 요청합니다. 무례하거나
-    거칠게 들릴 수 있으며, ToneDial은 이런 표현을 걸러내지 않습니다.
-  ⚠ address set while warmth≤2 or verbosity≤2: 짧거나 감정 없는 답변에서는
-    호칭이 생략될 수 있습니다. 역할극이 강하면 더 자주 나올 수 있습니다.
+--- stderr --- [bytes=0; endsWithNewline=false]
+

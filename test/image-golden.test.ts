@@ -17,10 +17,11 @@ import {
   selectedGoldenLanguages,
   type GoldenLanguage,
 } from "./support/golden.ts";
+import { captureMaintenance, UPDATE_SCENARIOS, type MaintenanceScenario } from "./support/maintenance.ts";
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const artifactRoot = resolve(process.env.TONEDIAL_GOLDEN_ARTIFACT_DIR ?? join(root, "artifacts/golden"));
-type ImageScenario = "pending" | "help" | "doctor-global";
+type ImageScenario = "pending" | "help" | "doctor-global" | MaintenanceScenario | "doctor-seeds-narrow";
 
 function imageGoldenPath(language: GoldenLanguage, scenario: ImageScenario): string {
   return join(root, "test/golden/images", language, `${scenario}.svg`);
@@ -93,6 +94,11 @@ async function captureDoctor(language: GoldenLanguage): Promise<string> {
 
 async function captureImage(language: GoldenLanguage, scenario: ImageScenario): Promise<string> {
   if (scenario === "doctor-global") return renderDialSvg(await captureDoctor(language), language, `${language} · doctor --global`);
+  if (scenario !== "pending" && scenario !== "help") {
+    const capture = await captureMaintenance(language, scenario === "doctor-seeds-narrow" ? "doctor-seeds" : scenario,
+      scenario === "doctor-seeds-narrow" ? 60 : 80);
+    return renderDialSvg(capture.stdout + capture.stderr, language, `${language} · ${scenario}`);
+  }
   const frame = await captureDialFrame(language, scenario, 80);
   assert.ok(frame.visible.length > 0, `${language} ${scenario}: empty frame cannot be an image golden`);
   return renderDialSvg(frame.ansi, language, `${language} · dial ${scenario}`);
@@ -112,9 +118,11 @@ function assertImageGolden(language: GoldenLanguage, scenario: ImageScenario, ac
 }
 
 for (const language of selectedGoldenLanguages()) {
-  test(`representative ${language} screen images match their SVG goldens`, async () => {
-    for (const scenario of ["pending", "help", "doctor-global"] as const) {
-      assertImageGolden(language, scenario, await captureImage(language, scenario));
+  test(`representative ${language} screen images match their SVG goldens`, async (t) => {
+    for (const scenario of ["pending", "help", "doctor-global", ...UPDATE_SCENARIOS, "doctor-seeds", "doctor-seeds-narrow"] as const) {
+      await t.test(scenario, async () => {
+        assertImageGolden(language, scenario, await captureImage(language, scenario));
+      });
     }
   });
 }

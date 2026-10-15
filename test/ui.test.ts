@@ -613,6 +613,8 @@ async function everyLine(columns?: number, language = "en"): Promise<{ line: str
     ["reset"],
     ["compile"],
     ["compile", "--check"],
+    ["update"],
+    ["update", "--dry-run"],
     // Exercise diagnostic rows without the separate project-path footer width issue.
     ["doctor", "--global"],
     ["doctor", "--global", "--verbose"],
@@ -772,7 +774,7 @@ test("--explain renders the hints in the configured language, and stays in budge
   for (const line of lines) assert.ok(maxCells(line) <= UNKNOWN_WIDTH, `${maxCells(line)}: ${line}`);
 });
 
-test("init and --explain describe advisory risk in every language", async () => {
+test("normal setup stays quiet and --explain describes advisory risk in every language", async () => {
   // Assert the consumed catalogue and the concrete explanation at the CLI boundary.
   for (const language of LANGUAGES) {
     home = realpathSync(mkdtempSync(join(tmpdir(), "tonedial-ui-")));
@@ -782,8 +784,7 @@ test("init and --explain describe advisory risk in every language", async () => 
     assert.equal(await cli("init", "--here", "--tools", "none", "--lang", language, "--auto"), 0);
     const copy = catalogue(language);
     const flatten = (text: string) => text.replace(/\s+/g, language === "ja" || language === "zh" ? "" : " ");
-    assert.ok(flatten(out.join("")).includes(flatten(copy.cli.notice.riskIntro)), `${language}: init risk introduction missing`);
-    assert.equal(flatten(out.join("")).split(copy.cli.notice.modelExpectation).length - 1, 1, `${language}: init model notice appears once`);
+    assert.equal(err.join(""), "", `${language}: normal setup must not produce warnings`);
     out = [];
     assert.equal(await cli("show", "--explain"), 0);
     const section = out.join("").split(copy.cli.artifact.riskHeading)[1] ?? "";
@@ -800,17 +801,15 @@ test("init and --explain describe advisory risk in every language", async () => 
     assert.doesNotMatch(screen, /G[1-4]|guards|가드/);
     err = [];
     assert.equal(await cli("set", "refusal=2", "flattery=3"), 0);
-    assert.equal(flatten(err.join("")).split(copy.cli.notice.modelExpectation).length - 1, 1, `${language}: set model notice appears once`);
     out = [];
     err = [];
     assert.equal(await cli("show"), 0);
     assert.ok(flatten(err.join("")).includes(flatten(copy.cli.notice.riskAxes(["flattery", "refusal"]))), `${language}: selected risky axes missing`);
-    assert.equal(flatten(err.join("")).split(copy.cli.notice.modelExpectation).length - 1, 1, `${language}: show model notice appears once`);
     out = [];
     err = [];
     assert.equal(await cli("list"), 0);
     assert.doesNotMatch(out.join("") + err.join(""), /model response varies|모델 반응은 다릅니다/);
-    assert.ok(!flatten(out.join("") + err.join("")).includes(copy.cli.notice.modelExpectation), `${language}: list omits the model notice`);
+    assert.equal(err.join(""), "", `${language}: a valid library must not produce warnings`);
   }
 });
 

@@ -5,10 +5,10 @@
 // job is to say so. Every selected level remains unchanged, including contradictions.
 
 import type { CommandResult, Ctx } from "../cli.ts";
-import { AXIS_DEFAULT, AXIS_ORDER, riskyAxes, type Axes, type Axis, type Level } from "../core/anchors.ts";
+import { AXIS_DEFAULT, AXIS_ORDER, riskyAxes, type Axes, type Level } from "../core/anchors.ts";
 import { check as checkCombos, PERSONA_DESCRIPTION_MAX } from "../core/combos.ts";
 import {
-  AGE_BANDS, GENDERS, NOTE_MAX, SPEECH_LEVELS,
+  AGE_BANDS, GENDERS, SPEECH_LEVELS,
   ConfigError, SETTING_KEYS, isAxis, nearest, nearestAxis, serializeConfig, type Config,
 } from "../core/config.ts";
 import { toCompileInput } from "../core/resolve.ts";
@@ -36,39 +36,16 @@ function bucketAge(value: string, t: Messages, asJson: boolean): string {
 /** The settable persona keys, in the order `set --help` and the error message list them. */
 const PERSONA_FIELDS = ["age", "gender", "self_ref", "user_ref", "note", "user", "agent"] as const;
 
-const OBSERVABLE_WORDS: Record<string, Axis> = {
-  formal: "formality", polite: "formality", casual: "formality",
-  brief: "verbosity", concise: "verbosity", verbose: "verbosity", short: "verbosity",
-  swear: "profanity", profan: "profanity",
-  joke: "playfulness", funny: "playfulness", humour: "playfulness", humor: "playfulness",
-  harsh: "critique", critic: "critique", blunt: "critique",
-  praise: "flattery", compliment: "flattery", flatter: "flattery",
-  warm: "warmth", kind: "warmth", empath: "warmth",
-  opinion: "conviction", decisive: "conviction",
-  thorough: "care", proactive: "care",
-  obedient: "compliance", grumble: "compliance",
-  refuse: "refusal", boast: "bravado", brag: "bravado",
-};
-
-/** The note is a content channel, so `set` says what an axis would own better. It never edits. */
-function noteWarnings(note: string, t: Messages): string[] {
-  const out: string[] = [];
-  if ([...note].length > NOTE_MAX) {
-    out.push(t.persona.noteOverCap([...note].length, NOTE_MAX));
+/** Report limitations in the final settings, never superseded interview answers. */
+export function settingsWarnings(config: Config, t: Messages, asJson: boolean): string[] {
+  const warnings: string[] = [];
+  if (config.safeword && [...config.safeword].length < 4) {
+    warnings.push(t.settings.safewordShort(asJson ? config.safeword : humanText(config.safeword)));
   }
-  const lower = note.toLowerCase();
-  const named = [...new Set(Object.entries(OBSERVABLE_WORDS)
-    .filter(([word]) => lower.includes(word))
-    .map(([, axis]) => axis))];
-  if (named.length) {
-    out.push(t.persona.noteNamesAxis(named));
-  }
-  return out;
+  return warnings;
 }
 
-function assign(config: Config, key: string, value: string, t: Messages, asJson: boolean): string[] {
-  const warnings: string[] = [];
-
+function assign(config: Config, key: string, value: string, t: Messages, asJson: boolean): void {
   if (key === "guards") {
     throw new ConfigError(t.settings.guardsRetired);
   }
@@ -80,10 +57,7 @@ function assign(config: Config, key: string, value: string, t: Messages, asJson:
   if (key === "safeword") {
     const phrase = value.trim();
     config.safeword = phrase === "" ? null : phrase;
-    if (config.safeword && [...config.safeword].length < 4) {
-      warnings.push(t.settings.safewordShort(asJson ? config.safeword : humanText(config.safeword)));
-    }
-    return warnings;
+    return;
   }
 
   if (key === "speech_level") {
@@ -91,13 +65,13 @@ function assign(config: Config, key: string, value: string, t: Messages, asJson:
       throw new ConfigError(t.settings.speechLevel(SPEECH_LEVELS));
     }
     config.speech_level = value as Config["speech_level"];
-    return warnings;
+    return;
   }
 
   if (key === "language") {
     if (!isLanguage(value)) throw new ConfigError(t.errors.languageUnsupported(asJson ? value : humanText(value), LANGUAGES));
     config.language = value;
-    return warnings;
+    return;
   }
 
   if (key.startsWith("persona.")) {
@@ -121,7 +95,6 @@ function assign(config: Config, key: string, value: string, t: Messages, asJson:
         break;
       case "note":
         config.persona.note = empty ? null : value;
-        if (!empty) warnings.push(...noteWarnings(value, t));
         break;
       case "user":
       case "agent": {
@@ -143,7 +116,7 @@ function assign(config: Config, key: string, value: string, t: Messages, asJson:
         // first. An axis error already states its range; this one owed the same.
         throw new ConfigError(t.persona.unknownField(asJson ? field : humanText(field), PERSONA_FIELDS));
     }
-    return warnings;
+    return;
   }
 
   if (key.startsWith("subagent.")) {
@@ -167,11 +140,10 @@ function assign(config: Config, key: string, value: string, t: Messages, asJson:
     config.axes[key] = level as Level;
     config.unsaved = true;
   }
-  return warnings;
 }
 
 function comboWarnings(config: Config, t: Messages): string[] {
-  return checkCombos(config.axes, config.persona, config.speech_level).map((w) => combination(w, t));
+  return checkCombos(config.axes).map((w) => combination(w, t));
 }
 
 const UNSET = "—";
@@ -246,16 +218,13 @@ type Applied = {
  */
 function applyPairs(config: Config, pairs: readonly (readonly [string, string])[], t: Messages, asJson: boolean): Applied {
   const settingsBefore = JSON.stringify(presetSettings(config));
-  const warnings: string[] = [];
   const changed: string[] = [];
   const moves: Applied["moves"] = [];
-  let personaTouched = false;
 
   for (const [key, value] of pairs) {
     const before = readKey(config, key, t);
-    warnings.push(...assign(config, key, value, t, asJson));
+    assign(config, key, value, t, asJson);
     changed.push(key);
-    if (key.startsWith("persona.") && value.trim() !== "") personaTouched = true;
     const after = readKey(config, key, t);
     // Only a real move. `set formality=3` on an axis already at 3 was reporting `3 → 3`, which
     // is the misleading `from` this line exists to prevent.
@@ -265,8 +234,7 @@ function applyPairs(config: Config, pairs: readonly (readonly [string, string])[
   }
 
   if (settingsBefore !== JSON.stringify(presetSettings(config))) config.unsaved = true;
-  if (personaTouched) warnings.push(t.notice.personaUnanchored);
-  return { warnings, changed, moves };
+  return { warnings: settingsWarnings(config, t, asJson), changed, moves };
 }
 
 /** The same assignments and validation for direct tuning and preset creation. */
@@ -307,17 +275,14 @@ async function commit(
 }
 
 export async function runSet(ctx: Ctx, args: string[]): Promise<CommandResult> {
-  let result: CommandResult;
   if (!args.length) {
     if (!ctx.canPrompt || !interactive()) {
       throw new ConfigError(ctx.t.axis.needsArgument);
     }
-    result = await runDial(ctx);
-  } else {
-    const { change: configChange, config } = planConfig(ctx);
-    result = await commit(ctx, configChange, config, applyAssignments(config, args, ctx.t, ctx.asJson));
+    return runDial(ctx);
   }
-  return { ...result, warnings: [...(result.warnings ?? []), ctx.t.notice.modelExpectation] };
+  const { change: configChange, config } = planConfig(ctx);
+  return commit(ctx, configChange, config, applyAssignments(config, args, ctx.t, ctx.asJson));
 }
 
 /**

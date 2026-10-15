@@ -9,6 +9,7 @@ import { loadConfig } from "../src/core/config.ts";
 import { catalogue } from "../src/core/i18n.ts";
 import { readJournal } from "../src/core/operations.ts";
 import { resolvePaths } from "../src/core/paths.ts";
+import { toCompileInput } from "../src/core/resolve.ts";
 import { applyRollback, gate, planChange, previewRollback } from "../src/wiring/apply.ts";
 import { palette } from "../src/ui/style.ts";
 
@@ -161,6 +162,7 @@ test("existing init and doctor rebuild disclose selected risky tone without lowe
   const raw = JSON.parse(readFileSync(f.paths.config, "utf8"));
   raw.guards = true;
   writeFileSync(f.paths.config, `${JSON.stringify(raw)}\n\n`);
+  const expectedSettings = toCompileInput(loadConfig(f.paths.config, EN));
   const before = snapshot(f.paths.root);
   const expectedRisk = ["compliance", "refusal", "bravado"];
   const preview = await invoke(f, ["init", "--global", "--tools", "none", "--auto", "--dry-run"]);
@@ -170,13 +172,16 @@ test("existing init and doctor rebuild disclose selected risky tone without lowe
   assert.deepEqual(snapshot(f.paths.root), before);
   const humanPreview = await invoke(f, ["init", "--global", "--tools", "none", "--auto", "--dry-run"], false);
   assert.equal(humanPreview.code, 0, humanPreview.stderr);
-  assert.ok(humanPreview.stdout.replace(/\s+/g, " ").includes(EN.notice.riskIntro));
+  const humanOutput = (humanPreview.stdout + humanPreview.stderr).replace(/\s+/g, " ");
+  assert.ok(humanOutput.includes(EN.notice.riskAxes(expectedRisk)), "the selected risks remain visible in the preview");
+  assert.ok(!humanOutput.includes(EN.notice.riskIntro), "a preview must not repeat the generic product disclaimer");
   assert.deepEqual(snapshot(f.paths.root), before);
   for (const args of [["init", "--global", "--tools", "none", "--auto"], ["doctor", "--fix", "--global", "--tools", "none", "--auto"]]) {
     const result = await invoke(f, args);
     assert.equal(result.code, 0, result.stderr);
     assert.deepEqual(result.value.riskAxes, expectedRisk, args.join(" "));
     assert.ok(result.value.warnings.includes(EN.notice.riskAxes(expectedRisk)), args.join(" "));
-    assert.deepEqual(loadConfig(f.paths.config, EN).axes, raw.axes, "risk advice never clamps conflicting selected levels");
+    assert.deepEqual(toCompileInput(loadConfig(f.paths.config, EN)), expectedSettings,
+      "rebuild preserves all selected tone settings, including conflicting levels");
   }
 });

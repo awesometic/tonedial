@@ -10,7 +10,7 @@ import { runRebuildNative } from "./wire.ts";
 import { compile, measure } from "../core/compile.ts";
 import { ConfigError, defaultConfig, isConfigV2, parseConfig, type Config, type ManagedResource, type WiringScope } from "../core/config.ts";
 import { inspectOperations, inspectRollback } from "../core/operations.ts";
-import { join } from "node:path";
+import { join, relative } from "node:path";
 
 import { AGENT_TOOLS, CONTEXT_ARTIFACT_FILENAME, CONTEXT_GUIDE_FILENAME, UPDATE_COMMAND, connectionScopeFlag, onPath, readerPath, resolveAgentPaths, shimScript, installShape, type AgentTool, type InstallShape, canonicalDestination, shellQuote} from "../core/paths.ts";
 import { SKILL_NAME } from "../core/skill.ts";
@@ -820,10 +820,12 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true, showCodexActi
 
   const lines: string[] = [
     `  ${ctx.ui.bold((appHealthy ? ctx.ui.success : ctx.ui.warn)(ctx.t.doctor.applicationHealth(appHealthy)))}`,
-    ...section(ctx.t.doctor.connectionsHeading, ctx.ui),
-    ...wrap(ctx.t.doctor.connectionHealth(nativeAttention), ctx.ui.width - 2).map((line) =>
-      `  ${nativeAttention ? ctx.ui.warn(line) : line}`),
-    ...wrap(ctx.t.doctor.hookSettingScope, ctx.ui.width - 2).map(line => `  ${line}`),
+    ...(integrations.length || nativeAttention ? [
+      ...section(ctx.t.doctor.connectionsHeading, ctx.ui),
+      ...wrap(ctx.t.doctor.connectionHealth(nativeAttention), ctx.ui.width - 2).map((line) =>
+        `  ${nativeAttention ? ctx.ui.warn(line) : line}`),
+      ...wrap(ctx.t.doctor.hookSettingScope, ctx.ui.width - 2).map(line => `  ${line}`),
+    ] : []),
     ...section(ctx.t.doctor.checksHeading, ctx.ui),
     ...renderCheckBlocks(shownChecks, ctx.flags.verbose ? [] : hookSettings, integrations, ctx),
     // A repair receipt presents its new IDs once in native→app order. Standalone diagnosis
@@ -897,8 +899,7 @@ async function runRollback(ctx: Ctx, operationId: string): Promise<CommandResult
  * The seeds in home against the ones this package carries.
  *
  * An npm update replaces the code and never touches `~/.tonedial/`, so a corrected anchor would
- * otherwise never reach an existing user. Re-running `init` is the update path, and this is
- * what tells someone there is a reason to.
+ * otherwise never reach an existing user. `doctor --fix` refreshes generated application files.
  */
 function seedCheck(ctx: Ctx, config: Config, seeds: readonly SeedInspection[]): Check {
   // Zero means `init` never ran, which `use` and `wire` reach on their own and which nothing is
@@ -915,7 +916,7 @@ function seedCheck(ctx: Ctx, config: Config, seeds: readonly SeedInspection[]): 
         state: "problem",
         detail: ctx.t.doctor.seedsAttention,
         files: stale.map(({ seed, state }) => ({ path: seed.path, reason: state as Exclude<SeedState, "current"> })),
-        ...(stale.every(({ state }) => state === "missing" || state === "stale") ? { repair: repairCommand(ctx, "init") } : {}),
+        ...(stale.every(({ state }) => state === "missing" || state === "stale") ? { repair: repairCommand(ctx, "doctor --fix") } : {}),
       };
 }
 
@@ -1206,15 +1207,22 @@ function elsewhereReport(rows: Elsewhere[], ctx: Ctx): string[] {
 function report(check: Check, ctx: Ctx): string[] {
   const paint =
     check.state === "problem" ? ctx.ui.error : check.state === "ok" ? ctx.ui.success : ctx.ui.dim;
-  const head = `  ${paint(MARK[check.state])} ${ctx.ui.bold(humanText(check.name))}`;
+  const head = `  ${paint(MARK[check.state])} ${ctx.ui.bold(humanText(check.name === "seeds" ? ctx.t.doctor.seedsHeading : check.name))}`;
   // Keep the marker and check name together, then give every detail a stable four-cell hanging
   // indent. A fixed name column made a narrow doctor report spend most of its width on padding.
-  const body = (check.humanDetail ?? [check.detail]).flatMap(detail => detail.split("\n"))
+  const body = (check.files?.length ? [] : check.humanDetail ?? [check.detail]).flatMap(detail => detail.split("\n"))
     .flatMap(line => receiptLines(humanText(line), ctx.ui.width - 6));
   const lines = [head, ...body.map((line) => `    ${check.state === "ok" ? ctx.ui.dim(line) : line}`)];
-  for (const file of check.files ?? []) {
-    lines.push(...wrap(ctx.t.doctor.seedReason[file.reason], ctx.ui.width - 6).map((line) => `    ${line}`));
-    lines.push(`    ${humanText(file.path)}`);
+  if (check.files?.length) {
+    lines.push(`    ${humanText(ctx.paths.root)}`);
+    for (const reason of ["missing", "stale", "modified", "foreign", "unreadable"] as const) {
+      const files = check.files.filter(file => file.reason === reason);
+      if (!files.length) continue;
+      lines.push(...wrap(ctx.t.doctor.seedReason[reason], ctx.ui.width - 6).map(line => `    ${line}`));
+      for (const file of files) {
+        lines.push(...wrap(humanText(relative(ctx.paths.root, file.path)), ctx.ui.width - 8).map(line => `      ${line}`));
+      }
+    }
   }
   if (check.repair) lines.push(...nextStep(check.repair, ctx.ui));
   return lines;
@@ -1254,7 +1262,5 @@ function unconnectedReport(settings: readonly HookSetting[], ctx: Ctx): string[]
   return [
     `  ${ctx.ui.dim(MARK.note)} ${ctx.ui.bold(ctx.t.doctor.hookGroupHeading)}`,
     ...wrap(ctx.t.doctor.hookGroupUnknown(tools), ctx.ui.width - 4).map(line => `    ${line}`),
-    ...wrap(ctx.t.doctor.hookGroupMissing, ctx.ui.width - 4).map(line => `    ${line}`),
-    ...wrap(ctx.t.doctor.hookGroupAction, ctx.ui.width - 4).map(line => `    ${line}`),
   ];
 }

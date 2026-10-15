@@ -516,9 +516,21 @@ test("doctor names what it checked, what it could not, and where it looked", asy
     ),
     0,
   );
-  const withCommand = JSON.parse(stdout()) as { healthy: boolean; checks: { name: string; state: string }[] };
+  const withCommand = JSON.parse(stdout()) as {
+    healthy: boolean;
+    appHealthy: boolean;
+    nativeAttention: boolean;
+    integrations: unknown[];
+    hookSettings: { tool: string; state: string; basis: string; path: string | null }[];
+    checks: { name: string; state: string }[];
+  };
   assert.equal(withCommand.checks.find((c) => c.name === "tonedial on PATH")!.state, "ok");
   assert.equal(withCommand.healthy, true, "and nothing else was wrong");
+  assert.equal(withCommand.appHealthy, true);
+  assert.equal(withCommand.nativeAttention, false);
+  assert.deepEqual(withCommand.integrations, []);
+  assert.deepEqual(withCommand.hookSettings, AGENT_TOOLS.map(tool => ({ tool, state: "unknown", basis: "unverified", path: null })),
+    "quiet unconnected agents retain their explicit machine evidence");
 
   out = [];
   assert.equal(await run(
@@ -527,7 +539,10 @@ test("doctor names what it checked, what it could not, and where it looked", asy
     work, false, false,
   ), 0);
   assert.match(stdout(), /Application: healthy/);
-  assert.match(stdout(), /Connection files: no issues in selected scope/);
+  assert.ok(stdout().includes(EN.doctor.hookGroupUnknown(["Claude Code", "Antigravity IDE/Desktop", "Codex CLI"])));
+  assert.equal(stdout().split(EN.doctor.hookGroupHeading).length - 1, 1, "unconnected agents share one group");
+  assert.ok(!stdout().includes(EN.doctor.connectionHealth(false)), "no connection summary without a configured integration");
+  assert.ok(!stdout().includes(EN.doctor.hookSettingScope), "no hook-inspection caveat without a managed hook");
   assert.doesNotMatch(stdout(), /App activation is unverified/);
   assert.doesNotMatch(stdout(), new RegExp(EN.doctor.contextCurrent), "healthy check detail is verbose");
   out = [];

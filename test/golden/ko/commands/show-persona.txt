@@ -27,7 +27,5 @@ status: 0
 
   * ToneDial 기본값과 다름 · 프로필에 저장되지 않았습니다.
   tonedial save "My Tone"
---- stderr --- [bytes=300; endsWithNewline=true]
-  ⚠ 페르소나에는 고정된 행동 규칙이 없으며 축 설정이 우선합니다. 설명은
-    내용에도 영향을 줄 수 있습니다. 역할극은 자격이나 권한을 주지 않습니다.
-  ⚠ 사용하는 모델에 따라 기대한 말투가 나오지 않을 수 있습니다.
+--- stderr --- [bytes=0; endsWithNewline=false]
+

@@ -17,6 +17,7 @@ import { check as checkCombos } from "../core/combos.ts";
 import { artifactSize, combination, humanText, riskWarnings } from "../ui/format.ts";
 import { captureRawEntry, planChange, rawReadChange, rawReadCheck, type Change, type RawEntryCapture } from "../wiring/apply.ts";
 import { emptyWiring } from "../wiring/ownership.ts";
+import { settingsWarnings } from "./set.ts";
 
 /**
  * The editor to hand the file to. `$VISUAL` wins over `$EDITOR` by long convention — a user
@@ -228,10 +229,9 @@ export async function runEdit(ctx: Ctx, args: string[]): Promise<CommandResult> 
 
 /** The notices every other state-changing command emits, through the same owners they use. */
 function stateWarnings(ctx: Ctx, config: Config): string[] {
-  const p = config.persona;
   return [
-    ...checkCombos(config.axes, p, config.speech_level).map((w) => combination(w, ctx.t)),
-    ...(p.age || p.gender || p.note || p.address || p.user || p.agent ? [ctx.t.notice.personaUnanchored] : []),
+    ...checkCombos(config.axes).map((w) => combination(w, ctx.t)),
+    ...settingsWarnings(config, ctx.t, ctx.asJson),
     ...riskWarnings(config.axes, ctx.t),
   ];
 }

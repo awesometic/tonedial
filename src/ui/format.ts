@@ -19,7 +19,7 @@ export function nextStep(command: string, ui: Palette): string[] {
 /** One advisory notice from the shared axis metadata, without changing selected levels. */
 export function riskWarnings(axes: Axes, t: Messages): string[] {
   const risks = riskyAxes(axes);
-  return [...(risks.length ? [t.notice.riskAxes(risks)] : []), ...(axes.playfulness >= 4 ? [t.notice.roleplay] : [])];
+  return risks.length ? [t.notice.riskAxes(risks)] : [];
 }
 
 /** Two retained phases restore their shared config in reverse order, with copyable IDs. */
@@ -88,10 +88,7 @@ export function artifactSize(size: SizeReport, t: Messages): string {
   return t.artifact.size(num(size.chars));
 }
 
-/** Render combination warnings with the same layer distinction in every command. */
+/** Contradictions stay advisory and never block the selected values. */
 export function combination(w: Warning, t: Messages): string {
-  const sentence = t.combos[w.id];
-  return w.layer === "forbidden"
-    ? `${t.combos.contradiction(w.rule)} ${sentence} ${t.combos.nothingBlocked}`
-    : `${t.combos.reads(w.rule)} ${sentence}`;
+  return `${t.combos.contradiction(w.rule)} ${t.combos[w.id]} ${t.combos.nothingBlocked}`;
 }

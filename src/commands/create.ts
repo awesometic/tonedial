@@ -13,7 +13,7 @@ import { guardTerminal } from "../ui/prompt.ts";
 import { wrap } from "../ui/width.ts";
 import { planConfig } from "./compile.ts";
 import { savePreset } from "./save.ts";
-import { applyAssignments } from "./set.ts";
+import { applyAssignments, settingsWarnings } from "./set.ts";
 
 export async function runCreate(ctx: Ctx, args: string[]): Promise<CommandResult> {
   try {
@@ -26,7 +26,7 @@ export async function runCreate(ctx: Ctx, args: string[]): Promise<CommandResult
     config.persona.agent ??= defaults.agent;
     let displayName = args[0]?.trim() ?? "";
     let slug = ctx.flags.slug ?? undefined;
-    const warnings = applyAssignments(config, args.slice(1), ctx.t, ctx.asJson).warnings;
+    applyAssignments(config, args.slice(1), ctx.t, ctx.asJson);
 
     if (ctx.canPrompt && !ctx.flags.auto && !ctx.flags.dryRun) {
       const release = guardTerminal();
@@ -60,10 +60,9 @@ export async function runCreate(ctx: Ctx, args: string[]): Promise<CommandResult
             const chosen = await ask(label, value);
             try {
               const candidate = structuredClone(config);
-              const applied = applyAssignments(candidate, [`${key}=${chosen}`], ctx.t, false);
+              applyAssignments(candidate, [`${key}=${chosen}`], ctx.t, false);
               serializeConfig(candidate, ctx.t);
               Object.assign(config, candidate);
-              warnings.push(...applied.warnings);
               if (key === "persona.user" || key === "persona.agent") {
                 process.stdout.write(`  ${ctx.t.create.descriptionCount([...chosen].length, PERSONA_DESCRIPTION_MAX)}\n`);
               }
@@ -88,9 +87,10 @@ export async function runCreate(ctx: Ctx, args: string[]): Promise<CommandResult
     return {
       ...result,
       json: { ...result.json, ...(result.json.created === true ? { config: toCompileInput(config) } : {}) },
-      warnings: [...new Set([...warnings, ...(result.warnings ?? []), ...riskWarnings(config.axes, ctx.t),
-        ...checkCombos(config.axes, config.persona, config.speech_level).map((notice) => combination(notice, ctx.t)),
-        ctx.t.notice.modelExpectation])],
+      warnings: result.json.created === true ? [
+        ...settingsWarnings(config, ctx.t, ctx.asJson), ...riskWarnings(config.axes, ctx.t),
+        ...checkCombos(config.axes).map((notice) => combination(notice, ctx.t)),
+      ] : [],
     };
   } catch (cause) {
     if (!(cause instanceof Error) || (cause as NodeJS.ErrnoException).code !== "ABORT_ERR") throw cause;

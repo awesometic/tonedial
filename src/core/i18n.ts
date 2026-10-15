@@ -138,7 +138,6 @@ export type Messages = {
     slugNotEditable: (was: string, tried: string) => string;
     noLatin: (name: string) => string;
     nameTooLong: (given: number, cap: number) => string;
-    sparsity: (slug: string, count: number) => string;
     replaced: (slug: string) => string;
     imported: (slug: string, replaced: boolean) => string;
     unreadable: (path: string, reason: string) => string;
@@ -215,8 +214,6 @@ export type Messages = {
     addressNone: string;
     age: (given: string, bands: readonly string[]) => string;
     gender: (options: readonly string[]) => string;
-    noteOverCap: (given: number, cap: number) => string;
-    noteNamesAxis: (axes: string[]) => string;
     callsYou: (term: string) => string;
     callsItself: (term: string) => string;
     noteChars: (count: number) => string;
@@ -344,9 +341,9 @@ export type Messages = {
     toneMatches: string;
     toneNotWritten: string;
     toneDisagrees: string;
+    seedsHeading: string;
     seedsOk: (version: number) => string;
     seedsNotRun: string;
-    seedsStale: (labels: string[]) => string;
     seedsAttention: string;
     recoveryPending: string;
     contextCurrent: string;
@@ -360,7 +357,6 @@ export type Messages = {
     rollbackAction: Record<"applied" | "already-reverted" | "changed" | "unsupported", string>;
     rollbackQuestion: string;
     seedReason: Record<"missing" | "stale" | "modified" | "foreign" | "unreadable", string>;
-    seedsBehind: (had: number, has: number) => string;
     skillLinked: string;
     skillCopied: string;
     skillForeign: (path: string) => string;
@@ -375,8 +371,6 @@ export type Messages = {
     hookSettingScope: string;
     hookGroupHeading: string;
     hookGroupUnknown: (tools: readonly string[]) => string;
-    hookGroupMissing: string;
-    hookGroupAction: string;
     hookNotConnected: string;
     hookNeedsInspection: string;
     hookGuidance: Record<"claude" | "codex" | "antigravity", string>;
@@ -424,20 +418,27 @@ export type Messages = {
     commandNotOnPathNpm: string;
   };
   notice: {
-    modelExpectation: string;
     riskIntro: string;
     riskAxes: (axes: readonly string[]) => string;
-    personaUnanchored: string;
     roleplay: string;
     risk: string;
   };
   /** `edit` and `update`. Both are auxiliary commands; neither changes an axis. */
   update: {
     running: (version: string) => string;
-    installedBy: (shape: string) => string;
     toUpdate: string;
     thenRefresh: string;
-    neverInitialised: string;
+    setupNeeded: string;
+    refreshFiles: (count: number) => string;
+    reviewState: string;
+    stateIssue: Record<"missing" | "unsafe" | "changed" | "invalid" | "unreadable", string>;
+    npmQuestion: string;
+    npmComplete: (version: string) => string;
+    npmMissing: string;
+    npmScopeUnknown: string;
+    npmScopeMismatch: string;
+    npmFailed: string;
+    versionUnknown: string;
     fetching: (registry: string) => string;
     found: (version: string, bytes: number) => string;
     already: (version: string) => string;
@@ -445,7 +446,6 @@ export type Messages = {
     question: (version: string) => string;
     replaced: (version: string) => string;
     declined: string;
-    onlyCurl: (shape: string) => string;
     noTar: string;
     notAPackage: string;
     linkInPackage: string;
@@ -478,15 +478,9 @@ export type Messages = {
     flags: { global: string; here: string; project: string; migrateLegacy: string; auto: string; dryRun: string; lang: string; commands: string; tools: string; fix: string; rollback: string; fromOperation: string; fromPreset: string; restorePreset: string; preset: string; slug: string; acceptUsage: string; explain: string; check: string; json: string; verbose: string; color: string; version: string; help: string };
   };
   combos: {
-    /** The two framings around a rule's sentence. */
+    /** Advisory framing for a contradiction. */
     contradiction: (rule: string) => string;
-    reads: (rule: string) => string;
     refusalCompliance: string;
-    formalSelfRef: string;
-    casualUserRef: string;
-    teensFormal: string;
-    seniorJuniorSelfRef: string;
-    addressUnlikely: string;
     /** Stated once, because a forbidden combination is still applied. */
     nothingBlocked: string;
   };
@@ -637,8 +631,6 @@ const enMessages: Messages = {
       `Run tonedial use ${was}, then save it as ${tried}.`,
     noLatin: (name) => `"${name}": no Latin letters or digits for a slug`,
     nameTooLong: (given, cap) => `display name: ${given} characters · maximum ${cap}`,
-    sparsity: (slug, count) =>
-      `${slug}: ${count} changed axes · recommended 3–7 (5±2). Fewer extremes reduce conflicts`,
     replaced: (slug) => `${slug}: existing preset replaced`,
     imported: (slug, replaced) => `${slug}: ${replaced ? "replaced" : "imported"}`,
     unreadable: (path, reason) => `${path}\ncannot read: ${reason}`,
@@ -719,9 +711,6 @@ const enMessages: Messages = {
     addressNone: "currently unset · Enter keeps it unset",
     age: (given, bands) => `persona.age=${given} · available: ${bands.join(", ")}`,
     gender: (options) => `persona.gender · available: ${options.join(", ")}`,
-    noteOverCap: (given, cap) => `persona.note: ${given} characters · over ${cap} recommended`,
-    noteNamesAxis: (axes) =>
-      `persona.note overlaps the ${axes.join(", ")} axes. Axes have anchors, so they win any conflict.`,
     callsYou: (term) => `user name ${term}`,
     callsItself: (term) => `self name ${term}`,
     noteChars: (count) => `note ${count} chars`,
@@ -843,14 +832,14 @@ const enMessages: Messages = {
     inspectScope: "To keep using these connections, inspect this scope:",
     disconnectScope: "If no longer needed, disconnect all agents in this scope:",
     scope: "Inspection scope: project",
-    toLookAt: (count) => `${count} need attention · --fix repairs what it can`,
+    toLookAt: (count) => `${count} ${count === 1 ? "check needs" : "checks need"} attention`,
     needsAPerson: "manual review required · see details above",
     toneMatches: "matches config.json",
     toneNotWritten: "not written",
     toneDisagrees: "differs from config.json · edited directly or write interrupted",
+    seedsHeading: "Bundled files",
     seedsOk: (version) => `version ${version}`,
     seedsNotRun: "no bundled files · init has not run here",
-    seedsStale: (labels) => `${labels.length} need refresh: ${labels.join(", ")}`,
     seedsAttention: "bundled files need attention",
     recoveryPending: "An operation is active or needs recovery. Nothing was changed. Run tonedial doctor --json to inspect IDs. A recorded rollback uses doctor --fix --rollback ID; a stopped valid operation can be explicitly selected for app rebuild with doctor --fix --from-operation ID. Live or ambiguous owners stay protected.",
     contextCurrent: "AGENTS.md and TONE.md layout is current.",
@@ -886,14 +875,12 @@ const enMessages: Messages = {
     rollbackAction: { applied: "restore", "already-reverted": "already restored", changed: "changed · preserve", unsupported: "unsupported · preserve" },
     rollbackQuestion: "Restore the selected operation?",
     seedReason: {
-      missing: "missing · run init with the required agents selected",
-      stale: "older bundled file · review an init refresh",
-      modified: "locally modified · review changes before replacement",
-      foreign: "Not owned by ToneDial. Preserve it and choose a dedicated state directory.",
-      unreadable: "Cannot read safely. Check the path and its permissions.",
+      missing: "Missing bundled file",
+      stale: "Bundled file update available",
+      modified: "Locally modified · review before replacement",
+      foreign: "Not owned by ToneDial · preserved",
+      unreadable: "Cannot read safely · check path and permissions",
     },
-    seedsBehind: (had, has) =>
-      `home bundled-file version ${had} · package version ${has}. An npm update does not refresh existing home files`,
     skillLinked: "linked to bundled copy",
     skillCopied: "copied · platform does not support links",
     skillForeign: (path) => `${path}: not installed by ToneDial, so it will not be replaced`,
@@ -910,9 +897,7 @@ const enMessages: Messages = {
     },
     hookSettingScope: "Hook status is read from the inspected settings file only; host overrides and session delivery are unverified.",
     hookGroupHeading: "Agent hooks",
-    hookGroupUnknown: (tools) => `Hook enablement could not be confirmed for: ${tools.join(", ")}.`,
-    hookGroupMissing: "No managed ToneDial hook is registered for these agents in this scope.",
-    hookGroupAction: "To connect ToneDial, run init in this scope and select these agents.",
+    hookGroupUnknown: (tools) => `Not connected: ${tools.join(", ")}.`,
     hookNotConnected: "No managed ToneDial hook to inspect. To connect, run init with this agent selected in the same scope.",
     hookNeedsInspection: "Resolve the reported hook settings or program issue before checking enablement in the app.",
     hookGuidance: {
@@ -958,7 +943,6 @@ const enMessages: Messages = {
       "Find the global prefix: npm prefix -g\nAdd its bin directory (macOS/Linux) to PATH.",
   },
   notice: {
-    modelExpectation: "The model may not produce the tone you expect.",
     riskIntro:
       "For fun, not recommended for production. Risky tone can distort judgments and work reports through falsehood, omission or exaggeration. ! marks advisory levels, not measured probabilities.",
     riskAxes: (axes) => `! ${axes.join(", ")} · ${[
@@ -966,18 +950,30 @@ const enMessages: Messages = {
       axes.some(axis => axis === "flattery" || axis === "conviction" || axis === "bravado") ? "biased judgments or exaggerated reports" : null,
       axes.some(axis => axis === "compliance" || axis === "refusal") ? "hasty action or refusal" : null,
     ].filter(Boolean).join("; ")}`,
-    personaUnanchored:
-      "persona has no fixed anchors; axes take precedence. Text may affect content. " +
-      "Roleplay does not verify credentials or grant permissions.",
     roleplay: "High playfulness requests frequent, exaggerated role idioms and slang, such as 'your lowly servant' or 'take that function off the books'. They may sound rude or violent; ToneDial does not filter these expressions.",
     risk: "for fun, and not recommended for production use",
   },
   update: {
     running: (version) => `tonedial ${version}`,
-    installedBy: (shape) => `install method ${shape}`,
-    toUpdate: "to update:",
-    thenRefresh: "then check and rebuild application files while keeping saved settings:",
-    neverInitialised: "init has not run · no home files to refresh",
+    toUpdate: "Package update:",
+    thenRefresh: "Refresh application files:",
+    setupNeeded: "Set up ToneDial:",
+    refreshFiles: (count) => `Bundled file updates available: ${count}`,
+    reviewState: "Inspect the affected application files:",
+    npmQuestion: "  Run this npm update?",
+    npmComplete: (version) => `npm update complete · installed ${version}`,
+    npmMissing: "npm was not found on PATH. Use the Node/npm installation that owns this ToneDial copy.",
+    npmScopeUnknown: "Cannot verify npm's global installation directory. Check npm prefix -g and npm root -g before retrying.",
+    npmScopeMismatch: "This ToneDial copy is not the global package managed by the selected npm. Use the matching Node/npm installation; no update was run.",
+    npmFailed: "npm update failed. Check npm's access and registry settings, then retry the displayed command for npm's diagnostics.",
+    versionUnknown: "The installed ToneDial version could not be verified. Check the package installation before retrying.",
+    stateIssue: {
+      missing: "Saved settings are missing.",
+      unsafe: "Saved settings cannot be read safely. Check links and file types.",
+      changed: "Saved settings changed during inspection. Retry after changes stop.",
+      invalid: "Saved settings are invalid.",
+      unreadable: "Application state could not be read. Check the path and permissions.",
+    },
     fetching: (registry) => `checking · ${registry}`,
     found: (version, bytes) => `${version}, ${bytes.toLocaleString("en")} bytes`,
     already: (version) => `${version} already installed`,
@@ -985,11 +981,10 @@ const enMessages: Messages = {
     question: (version) => `  Replace this install with ${version}?`,
     replaced: (version) => `updated · ${version}`,
     declined: "cancelled · existing install kept",
-    onlyCurl: (shape) => `${shape} install · use its own update path`,
     noTar: "tar is required for updates but is not on PATH",
     notAPackage: "download is not a ToneDial package",
     linkInPackage: "release contains a symbolic link, but published files need none",
-    needsApproval: "Replacing an install needs approval, but no terminal is available. Rerun with --auto.",
+    needsApproval: "Update not run · approval required. Rerun tonedial update --auto to approve.",
     integrityMismatch: "download hash differs from the registry",
     notOurs: (dir) => `${dir}: not created by ToneDial; remove it yourself`,
     swapFailed: (reason) => `installation stopped: ${reason}. Check recovery details before retrying.`,
@@ -1054,14 +1049,8 @@ const enMessages: Messages = {
   },
   combos: {
     contradiction: (rule) => `${rule} contradicts itself.`,
-    reads: (rule) => `${rule}:`,
     refusalCompliance: "One axis requires a declared strike; the other requires immediate action without comment. Lower one.",
-    formalSelfRef: "Ceremonious wording and a familiar self-name create a contrast.",
-    casualUserRef: "Familiar wording and an honorific address create a contrast.",
-    teensFormal: "A teenage persona with ceremonious wording can sound theatrical.",
-    seniorJuniorSelfRef: "The stated age and self-name imply different standing.",
     nothingBlocked: "Nothing is blocked.",
-    addressUnlikely: "Brief or unemotional replies may omit names; strong roleplay may make them more frequent.",
   },
   errors: {
     notACommand: (name, known, nearest) =>
@@ -1245,7 +1234,7 @@ const en: Catalogue = {
     "persona.gender": "gender the model may associate with",
     "persona.self_ref": "agent's self-name",
     "persona.user_ref": "agent's name for the user",
-    "persona.note": "role the axes cannot express · over 200 characters warns",
+    "persona.note": "role or manner the axes cannot express",
     "persona.user": "user context · maximum 200 characters",
     "persona.agent": "fictional agent role · maximum 200 characters · credentials are unverified; grants no capability or permission",
   },
@@ -1324,8 +1313,6 @@ const koMessages: Messages = {
       `tonedial use ${was} 명령을 실행한 뒤 저장할 새 이름을 지정하세요: ${tried}`,
     noLatin: (name) => `"${name}": 슬러그로 쓸 라틴 문자나 숫자가 없습니다`,
     nameTooLong: (given, cap) => `표시 이름: ${given}자 · 최대 ${cap}자`,
-    sparsity: (slug, count) =>
-      `${slug}: 변경 축 ${count}개 · 권장 3~7개(5±2). 극단값이 적으면 충돌도 줄어듭니다`,
     replaced: (slug) => `${slug}: 기존 프리셋 교체됨`,
     imported: (slug, replaced) => `${slug}: ${replaced ? "교체됨" : "가져옴"}`,
     unreadable: (path, reason) => `${path}\n읽을 수 없습니다: ${reason}`,
@@ -1406,9 +1393,6 @@ const koMessages: Messages = {
     addressNone: "현재 설정 없음 · 엔터를 누르면 유지",
     age: (given, bands) => `persona.age=${given} · 사용 가능: ${bands.join(", ")}`,
     gender: (options) => `persona.gender · 사용 가능: ${options.join(", ")}`,
-    noteOverCap: (given, cap) => `persona.note: ${given}자 · 권장 ${cap}자 초과`,
-    noteNamesAxis: (axes) =>
-      `persona.note가 ${axes.join(", ")} 축과 겹칩니다. 축에는 앵커가 있으므로 충돌하면 축이 우선합니다`,
     // Labels rather than clauses, for the same reason as `autoChose` above: an address is
     // free-form user text in any language, and `전하이라고` is what attaching `이라고` to it
     // produced — 전하 ends in a vowel and takes `라고`.
@@ -1532,14 +1516,14 @@ const koMessages: Messages = {
     inspectScope: "계속 사용하려면 이 범위를 검사하세요:",
     disconnectScope: "더 이상 필요 없으면 이 범위의 모든 에이전트 연결을 해제하세요:",
     scope: "검사 범위: 프로젝트",
-    toLookAt: (count) => `확인 필요 ${count}건 · 가능한 항목은 --fix로 복구`,
+    toLookAt: (count) => `점검 필요 ${count}건`,
     needsAPerson: "직접 확인 필요 · 위 세부 내용을 확인해 주세요",
     toneMatches: "config.json과 일치",
     toneNotWritten: "파일 없음",
     toneDisagrees: "config.json과 다름 · 직접 수정했거나 저장이 중단됨",
+    seedsHeading: "기본 파일",
     seedsOk: (version) => `버전 ${version}`,
     seedsNotRun: "기본 파일 없음 · init으로 준비하세요",
-    seedsStale: (labels) => `갱신 필요 ${labels.length}개: ${labels.join(", ")}`,
     seedsAttention: "기본 파일 확인 필요",
     recoveryPending: "진행 중이거나 복구가 필요한 작업이 있습니다. 아무것도 바꾸지 않았습니다. tonedial doctor --json으로 ID를 확인하세요. 기록된 롤백은 doctor --fix --rollback ID로, 중단된 유효한 작업을 선택해 앱을 다시 만들 때는 doctor --fix --from-operation ID로 진행하세요. 실행 중이거나 소유자가 불확실한 작업은 유지합니다.",
     contextCurrent: "AGENTS.md와 TONE.md 구성이 최신입니다.",
@@ -1575,14 +1559,12 @@ const koMessages: Messages = {
     rollbackAction: { applied: "복구", "already-reverted": "이미 복구됨", changed: "변경됨 · 보존", unsupported: "지원하지 않음 · 보존" },
     rollbackQuestion: "선택한 작업을 복구할까요?",
     seedReason: {
-      missing: "파일 없음 · 필요한 에이전트를 선택해 init을 실행해 주세요",
-      stale: "이전 버전의 기본 파일 · init으로 갱신할 내용을 확인해 주세요",
-      modified: "직접 수정한 파일 · 교체하기 전에 변경 내용을 확인해 주세요",
-      foreign: "ToneDial이 관리하는 파일이 아닙니다. 파일을 보존하고 전용 상태 디렉터리를 선택해 주세요.",
-      unreadable: "안전하게 읽을 수 없습니다. 경로와 접근 권한을 확인해 주세요.",
+      missing: "기본 파일 없음",
+      stale: "기본 파일 업데이트 가능",
+      modified: "직접 수정한 파일 · 교체 전 확인 필요",
+      foreign: "ToneDial 관리 파일 아님 · 보존됨",
+      unreadable: "안전하게 읽을 수 없음 · 경로와 접근 권한 확인 필요",
     },
-    seedsBehind: (had, has) =>
-      `홈 기본 파일 버전 ${had} · 패키지 버전 ${has}. npm 업데이트만으로는 홈의 기존 파일이 갱신되지 않습니다`,
     skillLinked: "기본 파일 사본에 연결됨",
     skillCopied: "복사됨 · 이 플랫폼은 링크를 쓰지 않음",
     skillForeign: (path) => `${path}: ToneDial이 설치한 스킬이 아니므로 교체하지 않습니다`,
@@ -1599,9 +1581,7 @@ const koMessages: Messages = {
     },
     hookSettingScope: "훅 상태는 검사한 설정 파일만 읽어 표시합니다. 앱의 설정 덮어쓰기와 세션 전달 여부는 확인하지 않습니다.",
     hookGroupHeading: "에이전트 훅",
-    hookGroupUnknown: (tools) => `다음 에이전트의 훅 활성화 여부를 확인할 수 없습니다: ${tools.join(", ")}`,
-    hookGroupMissing: "이 검사 범위에는 ToneDial 관리 훅이 등록되어 있지 않습니다.",
-    hookGroupAction: "ToneDial을 연결하려면 같은 범위에서 init을 실행하고 이 에이전트들을 선택하세요.",
+    hookGroupUnknown: (tools) => `연결 안 됨: ${tools.join(", ")}`,
     hookNotConnected: "검사할 ToneDial 관리 훅이 없습니다. 연결하려면 같은 범위에서 init을 실행하고 이 에이전트를 선택해 주세요.",
     hookNeedsInspection: "위에 나온 훅 설정이나 실행 프로그램 문제를 먼저 확인한 뒤 앱에서 활성화 여부를 확인해 주세요.",
     hookGuidance: {
@@ -1647,7 +1627,6 @@ const koMessages: Messages = {
       "전역 경로 확인: npm prefix -g\n그 경로의 bin 폴더(macOS/Linux)를 PATH에 추가하세요.",
   },
   notice: {
-    modelExpectation: "사용하는 모델에 따라 기대한 말투가 나오지 않을 수 있습니다.",
     riskIntro:
       "재미를 위한 도구로 실무 사용은 권장하지 않습니다. 위험한 말투에 거짓·누락·과장이 섞여 판단과 작업 보고가 왜곡될 수 있습니다. !는 주의 표시이며 측정한 확률이 아닙니다.",
     riskAxes: (axes) => `! ${axes.join(", ")} · ${[
@@ -1655,18 +1634,30 @@ const koMessages: Messages = {
       axes.some(axis => axis === "flattery" || axis === "conviction" || axis === "bravado") ? "치우친 판단·과장된 보고" : null,
       axes.some(axis => axis === "compliance" || axis === "refusal") ? "성급한 실행·거절" : null,
     ].filter(Boolean).join(" · ")}`,
-    personaUnanchored:
-      "페르소나에는 고정된 행동 규칙이 없으며 축 설정이 우선합니다. 설명은 내용에도 영향을 줄 수 있습니다. " +
-      "역할극은 자격이나 권한을 주지 않습니다.",
     roleplay: "playfulness가 높으면 '아뢰옵기 황송하오나', '이 함수, 장부에서 지울까요?' 같은 역할 어휘와 은어를 더 자주, 과장해서 쓰도록 요청합니다. 무례하거나 거칠게 들릴 수 있으며, ToneDial은 이런 표현을 걸러내지 않습니다.",
     risk: "재미를 위한 도구이며 실무 사용은 권장하지 않습니다",
   },
   update: {
     running: (version) => `tonedial ${version}`,
-    installedBy: (shape) => `설치 방식 ${shape}`,
-    toUpdate: "업데이트하려면:",
-    thenRefresh: "저장된 설정을 유지하면서 앱 파일을 확인하고 다시 준비하세요:",
-    neverInitialised: "init을 실행한 기록 없음 · 홈에서 갱신할 파일 없음",
+    toUpdate: "패키지 업데이트:",
+    thenRefresh: "앱 파일을 업데이트하려면:",
+    setupNeeded: "ToneDial 초기 설정:",
+    refreshFiles: (count) => `업데이트 가능한 기본 파일 ${count}개`,
+    reviewState: "문제가 있는 앱 파일을 검사하려면:",
+    npmQuestion: "  npm으로 업데이트할까요?",
+    npmComplete: (version) => `npm 업데이트 완료 · 설치 버전 ${version}`,
+    npmMissing: "PATH에서 npm을 찾지 못했습니다. 현재 ToneDial을 설치한 Node/npm 환경을 사용해 주세요.",
+    npmScopeUnknown: "npm의 전역 설치 경로를 확인할 수 없습니다. npm prefix -g와 npm root -g를 확인한 뒤 다시 시도해 주세요.",
+    npmScopeMismatch: "현재 ToneDial은 선택한 npm이 관리하는 전역 패키지가 아닙니다. 설치할 때 사용한 Node/npm 환경을 선택해 주세요. 업데이트는 실행하지 않았습니다.",
+    npmFailed: "npm 업데이트에 실패했습니다. npm의 접근 권한과 레지스트리 설정을 확인해 주세요. 표시된 명령을 직접 실행하면 npm의 오류 내용을 볼 수 있습니다.",
+    versionUnknown: "설치된 ToneDial 버전을 확인할 수 없습니다. 패키지 설치 상태를 확인한 뒤 다시 시도해 주세요.",
+    stateIssue: {
+      missing: "저장된 설정이 없습니다.",
+      unsafe: "저장된 설정을 안전하게 읽을 수 없습니다. 링크와 파일 형식을 확인해 주세요.",
+      changed: "검사 중 저장된 설정이 바뀌었습니다. 변경이 끝난 뒤 다시 시도해 주세요.",
+      invalid: "저장된 설정이 올바르지 않습니다.",
+      unreadable: "앱 상태를 읽지 못했습니다. 경로와 접근 권한을 확인해 주세요.",
+    },
     fetching: (registry) => `확인 중 · ${registry}`,
     found: (version, bytes) => `${version}, ${bytes.toLocaleString("ko")}바이트`,
     already: (version) => `설치 버전 ${version} · 이미 설치됨`,
@@ -1674,11 +1665,10 @@ const koMessages: Messages = {
     question: (version) => `  대상 버전 ${version} · 이 설치를 바꿀까요?`,
     replaced: (version) => `업데이트됨 · ${version}`,
     declined: "취소됨 · 기존 설치 유지",
-    onlyCurl: (shape) => `${shape} 설치 · 자체 업데이트 경로 사용`,
     noTar: "업데이트에 필요한 tar를 PATH에서 찾지 못했습니다",
     notAPackage: "다운로드한 파일이 ToneDial 패키지가 아닙니다",
     linkInPackage: "릴리스에 심볼릭 링크가 있지만 배포물에는 필요하지 않습니다",
-    needsApproval: "설치를 바꾸려면 승인이 필요한데 물어볼 터미널이 없습니다. --auto로 다시 실행하세요.",
+    needsApproval: "업데이트 승인 필요 · 실행하지 않았습니다. 승인하려면 tonedial update --auto를 실행하세요.",
     integrityMismatch: "다운로드한 파일의 해시가 레지스트리와 다릅니다",
     notOurs: (dir) => `${dir}: ToneDial이 만든 항목이 아니므로 직접 치워 주세요`,
     swapFailed: (reason) => `설치를 중단했습니다: ${reason}. 다시 시도하기 전에 복구 안내를 확인하세요.`,
@@ -1743,14 +1733,8 @@ const koMessages: Messages = {
   },
   combos: {
     contradiction: (rule) => `${rule}: 서로 모순됩니다.`,
-    reads: (rule) => `${rule}:`,
     refusalCompliance: "한 축은 거절 선언을 요구하고 다른 축은 군말 없는 실행을 요구합니다. 한쪽을 낮춰 주세요.",
-    formalSelfRef: "의례적인 표현과 친근한 자칭이 대비를 만듭니다.",
-    casualUserRef: "친근한 표현과 깍듯한 호칭이 대비를 만듭니다.",
-    teensFormal: "십대 캐릭터가 의례적인 표현을 쓰면 연극처럼 들릴 수 있습니다.",
-    seniorJuniorSelfRef: "설정한 나이와 자칭이 서로 다른 지위를 나타냅니다.",
     nothingBlocked: "막지는 않습니다.",
-    addressUnlikely: "짧거나 감정 없는 답변에서는 호칭이 생략될 수 있습니다. 역할극이 강하면 더 자주 나올 수 있습니다.",
   },
   errors: {
     notACommand: (name, known, nearest) =>
@@ -1937,7 +1921,7 @@ const ko: Catalogue = {
     "persona.gender": "모델이 연상할 성별",
     "persona.self_ref": "에이전트의 자칭",
     "persona.user_ref": "에이전트가 쓰는 사용자 호칭",
-    "persona.note": "축으로 표현할 수 없는 역할 · 200자 초과 시 경고",
+    "persona.note": "축으로 표현할 수 없는 역할이나 말투",
     "persona.user": "사용자 배경 설명 · 최대 200자",
     "persona.agent": "가상 에이전트 역할 · 최대 200자 · 경력은 확인하지 않으며 능력·권한을 부여하지 않음",
   },

@@ -29,7 +29,5 @@ status: 0
 
   * differs from ToneDial's default
   tonedial show --explain
---- stderr --- [bytes=199; endsWithNewline=true]
-  ⚠ persona has no fixed anchors; axes take precedence. Text may affect
-    content. Roleplay does not verify credentials or grant permissions.
-  ⚠ The model may not produce the tone you expect.
+--- stderr --- [bytes=0; endsWithNewline=false]
+

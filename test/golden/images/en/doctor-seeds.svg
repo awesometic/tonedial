@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1002" height="820" viewBox="0 0 1002 820" role="img" aria-labelledby="title description">
+<title id="title">ToneDial screen (en · doctor-seeds)</title>
+<desc id="description">ToneDial · doctor
+
+  Inspection scope: global
+  &lt;ROOT&gt;
+
+  Application: needs attention
+
+  Checks
+  · Agent hooks
+    Not connected: Claude Code, Antigravity IDE/Desktop, Codex CLI.
+
+  ! Bundled files
+    &lt;ROOT&gt;/state
+    Missing bundled file
+      presets/builtin/eager-sycophant.json
+      presets/builtin/royal-advisor.json
+    Bundled file update available
+      skill/tonedial/SKILL.md
+      presets/builtin/caring-brother.json
+      presets/builtin/bratty-kid.json
+    Locally modified · review before replacement
+      skill/tonedial/references/traits.md
+    Not owned by ToneDial · preserved
+      presets/builtin/ego-sword.json
+      presets/builtin/heavenly-demon.json
+
+  1 check needs attention
+</desc>
+<rect width="100%" height="100%" rx="16" fill="#171b20"/>
+<g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, system-ui" font-size="22"><text x="32" y="48" fill="#edf3f6" font-weight="400" opacity="1">ToneDial · doctor</text>
+<text x="60" y="104" fill="#edf3f6" font-weight="400" opacity="1">Inspection scope: global</text>
+<text x="60" y="132" fill="#edf3f6" font-weight="400" opacity="1">&lt;ROOT&gt;</text>
+<text x="60" y="188" fill="#edf3f6" font-weight="400" opacity="1">Application: needs attention</text>
+<text x="60" y="244" fill="#edf3f6" font-weight="400" opacity="1">Checks</text>
+<text x="60" y="272" fill="#edf3f6" font-weight="400" opacity="1">· Agent hooks</text>
+<text x="88" y="300" fill="#edf3f6" font-weight="400" opacity="1">Not connected: Claude Code, Antigravity IDE/Desktop, Codex CLI.</text>
+<text x="60" y="356" fill="#edf3f6" font-weight="400" opacity="1">! Bundled files</text>
+<text x="88" y="384" fill="#edf3f6" font-weight="400" opacity="1">&lt;ROOT&gt;/state</text>
+<text x="88" y="412" fill="#edf3f6" font-weight="400" opacity="1">Missing bundled file</text>
+<text x="116" y="440" fill="#edf3f6" font-weight="400" opacity="1">presets/builtin/eager-sycophant.json</text>
+<text x="116" y="468" fill="#edf3f6" font-weight="400" opacity="1">presets/builtin/royal-advisor.json</text>
+<text x="88" y="496" fill="#edf3f6" font-weight="400" opacity="1">Bundled file update available</text>
+<text x="116" y="524" fill="#edf3f6" font-weight="400" opacity="1">skill/tonedial/SKILL.md</text>
+<text x="116" y="552" fill="#edf3f6" font-weight="400" opacity="1">presets/builtin/caring-brother.json</text>
+<text x="116" y="580" fill="#edf3f6" font-weight="400" opacity="1">presets/builtin/bratty-kid.json</text>
+<text x="88" y="608" fill="#edf3f6" font-weight="400" opacity="1">Locally modified · review before replacement</text>
+<text x="116" y="636" fill="#edf3f6" font-weight="400" opacity="1">skill/tonedial/references/traits.md</text>
+<text x="88" y="664" fill="#edf3f6" font-weight="400" opacity="1">Not owned by ToneDial · preserved</text>
+<text x="116" y="692" fill="#edf3f6" font-weight="400" opacity="1">presets/builtin/ego-sword.json</text>
+<text x="116" y="720" fill="#edf3f6" font-weight="400" opacity="1">presets/builtin/heavenly-demon.json</text>
+<text x="60" y="776" fill="#edf3f6" font-weight="400" opacity="1">1 check needs attention</text></g>
+</svg>

@@ -118,7 +118,7 @@ tonedial set "persona.note="
 
 Long descriptions are rejected before writing, never truncated; literal `unspecified` remains text.
 Persona and safeword begin unset before profile defaults are applied.
-Axes take precedence over unanchored persona text, then model defaults; `show` warns when persona fields are set.
+Axes take precedence over unanchored persona text, then model defaults.
 The output-style header requests this scope but does not filter role meaning or guarantee it stays out of answer content.
 Explicit config JSON and review diffs can contain the descriptions; native test plans omit the injected prompt.
 
@@ -138,7 +138,7 @@ These are prompt requests, not measured adherence.
 | 5 | Exaggerated character idioms throughout, even in short answers |
 
 Courtly phrases such as “아뢰옵기 황송하오나” and underworld metaphors such as “이 함수, 장부에서 지울까요?” stay available.
-There is no role-word blacklist or silent substitution; the CLI warns that role language can sound rude or violent.
+There is no role-word blacklist or silent substitution; role language can sound rude or violent.
 `profanity` grades swearing and `bravado` grades effort claims independently.
 Actual frequency and naturalness require model measurements.
 
@@ -445,7 +445,7 @@ Moving an installed curl root breaks command/PATH references and is not repair.
 | `LC_ALL`, `LC_MESSAGES`, `LANG` | First-init interface detection |
 | `TONEDIAL_AGENT_HOME` | Wiring-destination override even with scope flags; not a host profile setting |
 | `SHELL` | Curl PATH syntax |
-| `TONEDIAL_REGISTRY` | Install/update registry |
+| `TONEDIAL_REGISTRY` | Curl install/update registry; npm uses its own registry settings |
 | `TMPDIR` | Private installation staging |
 
 </details>
@@ -495,7 +495,7 @@ Any `operations.lock` entry suppresses native reader delivery; removing it exter
 <summary>If the command itself cannot run</summary>
 
 Package and application repair are separate.
-Npm users reinstall/update through npm, then use `doctor --fix`; ToneDial never spawns npm.
+Npm users reinstall through npm, then use `doctor --fix` to repair application files.
 Curl users run a fresh `install.sh --repair` at the same root, retain program archives and approve required component/source choices.
 Unknown components stay protected without their named archive choice; retry failed state repair with the new command.
 Curl PATH repair covers only the recorded global profile/owned region; changed/foreign content is protected and npm owns its PATH setup.
@@ -528,7 +528,7 @@ Successful tone mutations recompile in the same action.
 | `eject` | Disconnect a scope; retain shared state |
 | `compile` | Repair missing/stale `TONE.md`; `--check` inspects without writes |
 | `test [claude\|codex]` | Fresh preview; `--preset` selects a profile; JSON/dry-run launch nothing |
-| `update` | Update curl installs or show npm's update command |
+| `update` | Update the running npm or curl installation after approval |
 
 Ordinary changes compile automatically; `compile --check --json` also supplies reload paths.
 
@@ -605,8 +605,15 @@ See the [media recipes and locale provenance](./media/readme/README.md#dial-imag
 
 ```bash
 npm install --global tonedial
-npm update --global tonedial
+tonedial update
 ```
+
+`update --dry-run` previews the update without replacing the package.
+Use `--auto` to approve an unattended update; JSON output never prompts.
+For npm installations, ToneDial runs npm only after checking that its global target matches the running copy.
+A different prefix or linked development copy is reported without updating another installation.
+The receipt reports the installed version, not a separate registry freshness check.
+If generated files need attention, the command reports their state and the applicable repair action once.
 
 `npx` is unsupported: skill/control commands need a durable executable.
 For source builds, see [CONTRIBUTING.md](../CONTRIBUTING.md#build-and-run-from-source).
@@ -618,7 +625,7 @@ For source builds, see [CONTRIBUTING.md](../CONTRIBUTING.md#build-and-run-from-s
 curl -fsSL https://raw.githubusercontent.com/awesometic/tonedial/main/install.sh | sh
 ```
 
-Update curl installs with `tonedial update`.
+The same `tonedial update` command also updates curl installations.
 For local installer verification before publication, use the [isolated candidate procedure](./TESTING.md#isolated-candidate).
 
 </details>

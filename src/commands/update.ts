@@ -1,4 +1,4 @@
-// Update curl installations, guide npm updates, and report generated-state freshness.
+// Update through the installation owner and report application-state work separately.
 
 import type { CommandResult, Ctx } from "../cli.ts";
 import { VERSION } from "../cli.ts";
@@ -6,15 +6,15 @@ import { closeSync, constants, fstatSync, lstatSync, openSync, readSync } from "
 import { TextDecoder } from "node:util";
 
 import { ConfigError, parseConfig, type Config } from "../core/config.ts";
-import { AGENT_TOOLS, UPDATE_COMMAND, installShape } from "../core/paths.ts";
-import { REGISTRY, downloadRelease, haveTar, installRelease, installedVersion, latestRelease } from "../core/selfupdate.ts";
+import { AGENT_TOOLS, UPDATE_COMMAND, installShape, shellQuote } from "../core/paths.ts";
+import { REGISTRY, downloadRelease, haveTar, inspectNpmInstall, installRelease, installedVersion, latestRelease, updateNpmInstall } from "../core/selfupdate.ts";
 import { confirm } from "../ui/prompt.ts";
 import { SEED_VERSION, inspectSeeds, recordedSeedSelection } from "../core/seeds.ts";
-import { humanText } from "../ui/format.ts";
+import { humanText, receiptLines } from "../ui/format.ts";
 import { urlIdentity } from "../core/net.ts";
 
 /** A damaged state file must not disable package guidance or reveal its parser excerpt. */
-function updateConfig(ctx: Ctx): { config: Config | null; issue: string | null } {
+function updateConfig(ctx: Ctx): { config: Config | null; issue: keyof Ctx["t"]["update"]["stateIssue"] | null } {
   let descriptor: number | undefined;
   try {
     const root = lstatSync(ctx.paths.root, { throwIfNoEntry: false });
@@ -79,17 +79,39 @@ export async function runUpdate(ctx: Ctx): Promise<CommandResult> {
     }
   }
 
-  const lines = [
-    `  ${ctx.ui.bold(ctx.t.update.running(VERSION))}`,
-    `  ${ctx.ui.dim(ctx.t.update.installedBy(shape))}`,
-    "",
-  ];
-
-  // npm is told, not driven. Spawning a package manager to update a package it owns is a
-  // different act from replacing a directory this tool put there itself.
+  const lines = [`  ${ctx.ui.bold(ctx.t.update.running(VERSION))}`, ""];
+  const preview = () => {
+    if (!ctx.asJson) {
+      process.stdout.write(`${lines.join("\n")}\n`);
+      lines.length = 0;
+    }
+  };
   let replaced: string | null = null;
+  let installed: string | null = null;
+  let outcome: "updated" | "unchanged" | "dry-run" | "approval-required" | "declined";
   if (shape !== "curl") {
-    lines.push(`  ${ctx.t.update.onlyCurl(shape)}`, `  ${ctx.t.update.toUpdate}`, `    ${ctx.ui.accent(command)}`);
+    if (ctx.flags.dryRun) {
+      outcome = "dry-run";
+      lines.push(`  ${ctx.t.update.toUpdate}`, `    ${ctx.ui.accent(command)}`, `  ${ctx.t.wiring.dryRun}`);
+    } else if (!ctx.flags.auto && !ctx.canPrompt) {
+      outcome = "approval-required";
+      lines.push(`  ${ctx.t.update.toUpdate}`, `    ${ctx.ui.accent(command)}`,
+        ...receiptLines(ctx.t.update.needsApproval, ctx.ui.width - 2).map(line => `  ${line}`));
+    } else {
+      const target = inspectNpmInstall(ctx.env, ctx.t);
+      lines.push(`  ${ctx.t.update.toUpdate}`,
+        `    ${ctx.ui.accent(`${command} --prefix "${shellQuote(humanText(target.prefix))}"`)}`);
+      preview();
+      if (ctx.flags.auto || (await confirm(ctx.t.update.npmQuestion)) === "yes") {
+        installed = updateNpmInstall(target, ctx.env, ctx.t);
+        replaced = installed === target.version ? null : installed;
+        outcome = replaced === null ? "unchanged" : "updated";
+        lines.push(`  ${ctx.ui.success(ctx.t.update.npmComplete(installed))}`);
+      } else {
+        outcome = "declined";
+        lines.push(`  ${ctx.t.update.declined}`);
+      }
+    }
   } else {
     // Before the network, like `install.sh` checks its tools before it fetches anything.
     if (!haveTar()) throw new ConfigError(ctx.t.update.noTar);
@@ -99,25 +121,33 @@ export async function runUpdate(ctx: Ctx): Promise<CommandResult> {
     if (release.version === VERSION) {
       // Nothing downloaded. The common case is an install that is already current, and paying
       // for the whole package to be told so is a cost with nothing on the other side of it.
+      installed = VERSION;
+      outcome = "unchanged";
       lines.push(`  ${ctx.ui.success(ctx.t.update.already(release.version))}`);
     } else if (ctx.flags.dryRun) {
-      lines.push(`  ${ctx.ui.warn(ctx.t.update.wouldReplace(humanText(ctx.paths.lib), humanText(release.version)))}`);
+      outcome = "dry-run";
+      lines.push(`  ${ctx.t.update.wouldReplace(humanText(ctx.paths.lib), humanText(release.version))}`);
     } else if (!ctx.flags.auto && !ctx.canPrompt) {
       // JSON never asks, including on a terminal. Explicit --auto supplies approval through
       // the same branch as human output; absent approval, report the existing no-install result.
-      lines.push(`  ${ctx.ui.warn(ctx.t.update.needsApproval)}`);
-    } else if (ctx.flags.auto || (await confirm(ctx.t.update.question(release.version))) === "yes") {
-      const tarball = await downloadRelease(release, ctx.t);
-      lines.push(`  ${ctx.ui.accent(ctx.t.update.found(release.version, tarball.byteLength))}`);
-      installRelease(ctx.paths, tarball, ctx.t);
-      // **What landed, not what was claimed.** The registry's `version` is metadata; a stub or
-      // a mistake serving one number and a different tarball made `update` report a version it
-      // had not installed — and, because the no-op check compares that metadata against this
-      // process's own constant, swap again on every run forever.
-      replaced = installedVersion(ctx.paths) ?? release.version;
-      lines.push(`  ${ctx.ui.success(ctx.ui.bold(ctx.t.update.replaced(replaced)))}`);
+      outcome = "approval-required";
+      lines.push(...receiptLines(ctx.t.update.needsApproval, ctx.ui.width - 2).map(line => `  ${line}`));
     } else {
-      lines.push(`  ${ctx.t.update.declined}`);
+      lines.push(`  ${ctx.t.update.wouldReplace(humanText(ctx.paths.lib), humanText(release.version))}`);
+      preview();
+      if (ctx.flags.auto || (await confirm(ctx.t.update.question(release.version))) === "yes") {
+        const tarball = await downloadRelease(release, ctx.t);
+        lines.push(`  ${ctx.ui.accent(ctx.t.update.found(release.version, tarball.byteLength))}`);
+        installRelease(ctx.paths, tarball, ctx.t);
+        installed = installedVersion(ctx.paths);
+        if (installed === null) throw new ConfigError(ctx.t.update.versionUnknown);
+        replaced = installed;
+        outcome = "updated";
+        lines.push(`  ${ctx.ui.success(ctx.ui.bold(ctx.t.update.replaced(installed)))}`);
+      } else {
+        outcome = "declined";
+        lines.push(`  ${ctx.t.update.declined}`);
+      }
     }
   }
 
@@ -126,18 +156,25 @@ export async function runUpdate(ctx: Ctx): Promise<CommandResult> {
   // `seedFiles` are constants in the copy that has just been replaced, so a release that moved
   // the anchors would be reported against the old ones — which is the exact gap this command
   // exists to close. Say the one thing that is still true and stop measuring.
-  if (replaced !== null || config === null || config.seedVersion === 0 || stateIssue !== null || (stale && stale.length > 0)) {
-    lines.push("", `  ${ctx.t.update.thenRefresh}`, `    ${ctx.ui.accent("tonedial doctor --fix")}`);
-  }
-  if (replaced === null && config?.seedVersion === 0) {
-    warnings.push(ctx.t.update.neverInitialised);
-  } else if (replaced === null && stale && stale.length > 0) {
-    // Second, and phrased as a second step: replacing the package is not the whole update, and
-    // a user who stops at the first line is the one who ends up running new code on old anchors.
-    for (const { seed, state } of stale) {
-      if (state !== "current") warnings.push(`${ctx.t.doctor.seedReason[state]}\n${seed.path}`);
+  const inspectable = replaced === null ? stale ?? [] : [];
+  const routine = inspectable.filter(({ state }) => state === "missing" || state === "stale");
+  const problems = inspectable.filter(({ state }) => state !== "missing" && state !== "stale");
+  const fresh = stateIssue === "missing" && ![ctx.paths.agents, ctx.paths.tone, ctx.paths.presets, ctx.paths.skill].some(path => {
+    try { return lstatSync(path, { throwIfNoEntry: false }) !== undefined; } catch { return true; }
+  });
+  if (stateIssue !== null && !fresh) warnings.push(ctx.t.update.stateIssue[stateIssue]);
+  if (routine.length) lines.push("", `  ${ctx.t.update.refreshFiles(routine.length)}`);
+  if (problems.length) {
+    lines.push("", `  ${ctx.t.wiring.stateRoot}`, `  ${humanText(ctx.paths.root)}`);
+    for (const reason of ["modified", "foreign", "unreadable"] as const) {
+      const group = problems.filter(({ state }) => state === reason);
+      if (group.length) warnings.push([ctx.t.doctor.seedReason[reason], ...group.map(({ seed }) => seed.label)].join("\n"));
     }
   }
+  const stateRecoveryRequired = !fresh && (stateIssue !== null || config?.seedVersion === 0 || inspectable.length > 0 || replaced !== null);
+  const recoveryCommand = fresh ? "tonedial init" : problems.length ? "tonedial doctor" : "tonedial doctor --fix";
+  if (fresh || stateRecoveryRequired) lines.push("", `  ${fresh ? ctx.t.update.setupNeeded : problems.length ? ctx.t.update.reviewState : ctx.t.update.thenRefresh}`,
+    `    ${ctx.ui.accent(recoveryCommand)}`);
 
   return {
     lines,
@@ -146,17 +183,18 @@ export async function runUpdate(ctx: Ctx): Promise<CommandResult> {
       shape,
       command,
       replaced,
+      installedVersion: installed,
+      outcome,
       seedVersion: config?.seedVersion ?? null,
       stateIssue,
-      stateRecoveryRequired: stateIssue !== null || config?.seedVersion === 0 || (stale?.length ?? 0) > 0 || replaced !== null,
-      recoveryCommand: "tonedial doctor --fix",
+      stateRecoveryRequired,
+      recoveryCommand,
       // Null after a swap: this process is the old package, and reporting its constants as the
       // installed ones would be a claim it cannot make.
       packageSeedVersion: replaced === null ? SEED_VERSION : null,
       staleSeeds: replaced === null ? (stale?.map(({ seed }) => seed.label) ?? null) : null,
       seedIssues: replaced === null ? (stale?.map(({ seed, state }) => ({ path: seed.path, reason: state })) ?? null) : null,
-      // Named for what it is. On npm this command asks nothing of the network, so a consumer
-      // must not read silence here as "you are up to date".
+      // npm owns registry/cache resolution; only the curl branch observes remote metadata.
       checkedRemote: shape === "curl",
     },
     warnings,

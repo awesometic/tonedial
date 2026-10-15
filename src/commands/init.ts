@@ -219,10 +219,9 @@ export async function runInit(entry: Ctx, _args: string[]): Promise<CommandResul
       addReceipt(message);
     }
   }
-  lines.push("");
-  addReceipt(copy.init.risk, ctx.ui.warn);
-  addReceipt(ctx.t.notice.modelExpectation);
-  for (const notice of riskWarnings(config.axes, ctx.t)) addReceipt(notice, ctx.ui.risk);
+  if (applied) {
+    for (const notice of riskWarnings(config.axes, ctx.t)) addReceipt(notice, ctx.ui.risk);
+  }
   lines.push("");
   // Skills and controls invoke bare tonedial, so command reachability needs its own hint.
   if (onPath("tonedial", ctx.env) === null) {
@@ -296,17 +295,13 @@ async function rebuildExisting(entry: Ctx): Promise<CommandResult> {
   const resultHeading = ctx.canPrompt && !ctx.flags.auto && !ctx.flags.dryRun
     ? section(copy.init.resultHeading, ctx.ui) : [];
   const app = await runAppRebuild(ctx);
-  const riskIntro = [
-    ...receiptLines(copy.init.risk, ctx.ui.width - 2).map(line => `  ${ctx.ui.warn(line)}`),
-    ...receiptLines(ctx.t.notice.modelExpectation, ctx.ui.width - 2).map(line => `  ${line}`),
-  ];
   if (ctx.flags.dryRun) {
     const answers = await ask(ctx, copy, false, selection);
     const tools = selection ?? answers.tools!;
     if (ctx.flags.commands && !tools.includes("claude")) throw new ConfigError(ctx.t.errors.commandsNeedClaude);
     const native = await runRebuildNative({ ...ctx, flags: { ...ctx.flags, tools: tools.length ? tools.join(",") : "none" } }, app.legacy, app.proposedConfig);
     return {
-      lines: [...(ctx.canPrompt ? [] : introduction), ...app.lines, ...native.lines, ...riskIntro],
+      lines: [...(ctx.canPrompt ? [] : introduction), ...app.lines, ...native.lines],
       json: { ...app.json, agentRoot: ctx.agent.root, live: ctx.agent.live,
         scope: ctx.agent.live ? "global" : "project", scopeExplicit, language: app.proposedConfig.language,
         seedVersion: SEED_VERSION, tools, native: native.json,
@@ -316,7 +311,7 @@ async function rebuildExisting(entry: Ctx): Promise<CommandResult> {
       warnings: [...(app.warnings ?? []), ...(native.warnings ?? [])],
     };
   }
-  if (app.rebuiltConfig === null) return { ...app, lines: [...(ctx.canPrompt ? [] : introduction), ...resultHeading, ...app.lines, ...riskIntro] };
+  if (app.rebuiltConfig === null) return { ...app, lines: [...(ctx.canPrompt ? [] : introduction), ...resultHeading, ...app.lines] };
   const answers = await ask(ctx, copy, false, selection);
   const tools = selection ?? answers.tools!;
   if (ctx.flags.commands && !tools.includes("claude")) throw new ConfigError(ctx.t.errors.commandsNeedClaude);
@@ -327,7 +322,6 @@ async function rebuildExisting(entry: Ctx): Promise<CommandResult> {
   const after = codexHandoff(scoped, native.json.applied === true || native.json.reason === "nothing", codexConfigured);
   return {
     lines: [...(ctx.canPrompt ? [] : introduction), ...resultHeading, ...app.lines, ...native.lines,
-      ...riskIntro,
       ...recoveryRollbackLines(ctx.t, app.json.operationId, native.json.operationId)],
     ...(after ? { after } : {}),
     json: {

@@ -1,0 +1,19 @@
+status: 0
+--- stdout --- [bytes=250; endsWithNewline=true]
+ToneDial · update
+
+  tonedial <VERSION>
+
+  패키지 업데이트:
+    npm update -g tonedial
+  --dry-run · 변경 없음
+
+  ToneDial 공통 상태 디렉터리:
+  <ROOT>/state
+
+  문제가 있는 앱 파일을 검사하려면:
+    tonedial doctor
+--- stderr --- [bytes=125; endsWithNewline=true]
+  ⚠ ToneDial 관리 파일 아님 · 보존됨
+    presets/builtin/caring-brother.json
+    presets/builtin/bratty-kid.json

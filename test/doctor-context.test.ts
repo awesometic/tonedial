@@ -644,7 +644,7 @@ test("doctor does not probe a missing retained reader", async () => {
     scope: "cli-runtime",
   });
   assert.equal(check(report, "reader").state, "problem");
-  assert.equal(check(report, "seeds").repair, `tonedial init --project "${join(scratch, "project")}"`);
+  assert.equal(check(report, "seeds").repair, `tonedial doctor --fix --project "${join(scratch, "project")}"`);
 });
 
 test("doctor does not probe a stale retained reader", async () => {
@@ -1168,8 +1168,7 @@ for (const language of ["en", "ko"] as const) {
     assert.equal(result.code, 0, result.output + result.error);
     assert.equal(count(copy.hookGroupHeading), 1, result.output);
     assert.ok(containsWrapped(result.output, copy.hookGroupUnknown(tools)), result.output);
-    assert.equal(count(copy.hookGroupMissing), 1, result.output);
-    assert.equal(count(copy.hookGroupAction), 1, result.output);
+    assert.ok(!containsWrapped(result.output, copy.hookSettingScope), "unused integrations need no enablement disclaimer");
     assert.ok(result.output.includes(copy.scopeGlobal), result.output);
     assert.doesNotMatch(result.output, /Hook enabled|훅이 켜져/);
     assertHumanWidth(result.output, language, 60);

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="610" height="512" viewBox="0 0 610 512" role="img" aria-labelledby="title description">
+<title id="title">ToneDial screen (ko · update-blocked)</title>
+<desc id="description">ToneDial · update
+
+  tonedial &lt;VERSION&gt;
+
+  패키지 업데이트:
+    npm update -g tonedial
+  --dry-run · 변경 없음
+
+  ToneDial 공통 상태 디렉터리:
+  &lt;ROOT&gt;/state
+
+  문제가 있는 앱 파일을 검사하려면:
+    tonedial doctor
+  ⚠ ToneDial 관리 파일 아님 · 보존됨
+    presets/builtin/caring-brother.json
+    presets/builtin/bratty-kid.json
+</desc>
+<rect width="100%" height="100%" rx="16" fill="#171b20"/>
+<g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, system-ui" font-size="22"><text x="32" y="48" fill="#edf3f6" font-weight="400" opacity="1">ToneDial · update</text>
+<text x="60" y="104" fill="#edf3f6" font-weight="400" opacity="1">tonedial &lt;VERSION&gt;</text>
+<text x="60" y="160" fill="#edf3f6" font-weight="400" opacity="1">패키지 업데이트:</text>
+<text x="88" y="188" fill="#edf3f6" font-weight="400" opacity="1">npm update -g tonedial</text>
+<text x="60" y="216" fill="#edf3f6" font-weight="400" opacity="1">--dry-run · 변경 없음</text>
+<text x="60" y="272" fill="#edf3f6" font-weight="400" opacity="1">ToneDial 공통 상태 디렉터리:</text>
+<text x="60" y="300" fill="#edf3f6" font-weight="400" opacity="1">&lt;ROOT&gt;/state</text>
+<text x="60" y="356" fill="#edf3f6" font-weight="400" opacity="1">문제가 있는 앱 파일을 검사하려면:</text>
+<text x="88" y="384" fill="#edf3f6" font-weight="400" opacity="1">tonedial doctor</text>
+<text x="60" y="412" fill="#edf3f6" font-weight="400" opacity="1">⚠ ToneDial 관리 파일 아님 · 보존됨</text>
+<text x="88" y="440" fill="#edf3f6" font-weight="400" opacity="1">presets/builtin/caring-brother.json</text>
+<text x="88" y="468" fill="#edf3f6" font-weight="400" opacity="1">presets/builtin/bratty-kid.json</text></g>
+</svg>

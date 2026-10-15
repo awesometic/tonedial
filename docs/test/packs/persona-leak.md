@@ -27,7 +27,7 @@ Run both, score the twelve axes on each, and compare.
 Any axis score that moves is leakage.
 
 `age`, `gender`, `persona.user`, `persona.agent`, and `note` carry no anchors.
-They may influence output through model associations, so the artifact states an explicit precedence order and `show` warns whenever a persona field is set.
+They may influence output through model associations, so the artifact states an explicit precedence order.
 
 The full variant includes user context and a fictional agent role.
 Use the matched user-only and agent-only arms in [scenarios](../scenarios.md) to isolate their influence.

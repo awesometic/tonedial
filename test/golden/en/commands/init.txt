@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=1947; endsWithNewline=true]
+--- stdout --- [bytes=1702; endsWithNewline=true]
 ToneDial · init
 
   Scope
@@ -67,11 +67,6 @@ ToneDial · init
   Ready
   Setup complete
   TONE.md generated
-
-  For fun, not recommended for production. Risky tone can distort judgments and
-  work reports through falsehood, omission or exaggeration. ! marks advisory
-  levels, not measured probabilities.
-  The model may not produce the tone you expect.
 
   tonedial command not found. Install globally:
   npm i -g tonedial

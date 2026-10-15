@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=2094; endsWithNewline=true]
+--- stdout --- [bytes=1762; endsWithNewline=true]
 ToneDial · init
 
   범위
@@ -67,11 +67,6 @@ ToneDial · init
   준비 완료
   초기 설정 완료
   TONE.md 생성됨
-
-  재미를 위한 도구로 실무 사용은 권장하지 않습니다. 위험한 말투에
-  거짓·누락·과장이 섞여 판단과 작업 보고가 왜곡될 수 있습니다. !는 주의
-  표시이며 측정한 확률이 아닙니다.
-  사용하는 모델에 따라 기대한 말투가 나오지 않을 수 있습니다.
 
   tonedial 명령을 찾지 못했습니다. 전역 설치:
   npm i -g tonedial

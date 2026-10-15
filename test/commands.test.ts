@@ -19,7 +19,7 @@ import { AXIS_DEFAULT, AXIS_ORDER } from "../src/core/anchors.ts";
 import { parseConfig, serializeConfig, defaultConfig, nearestAxis } from "../src/core/config.ts";
 import { resolvePaths } from "../src/core/paths.ts";
 import { editorCommand } from "../src/commands/edit.ts";
-import { catalogue } from "../src/core/i18n.ts";
+import { LANGUAGES, catalogue } from "../src/core/i18n.ts";
 import { BUNDLED, RETIRED_PRESETS, slugify, applyPreset, customPresetDir, builtinPresetDir } from "../src/core/presets.ts";
 import { nonDefaultAxes } from "../src/core/combos.ts";
 import { gate, planChange } from "../src/wiring/apply.ts";
@@ -391,19 +391,16 @@ test("persona gender is a closed set", async () => {
   assert.equal(await cli("set", "persona.gender=nonbinary"), 1);
 });
 
-test("setting any persona field warns that persona is ranked, not controlled", async () => {
+test("normal address changes do not report a problem", async () => {
   await initializeState();
   assert.equal(await cli("set", "persona.user_ref=선생님"), 0);
-  assert.match(stderr(), /axes take precedence/);
+  assert.equal(stderr(), "");
 });
 
-test("the unanchored-persona warning is raised once per command, not once per field", async () => {
+test("valid persona settings do not repeat general product caveats", async () => {
   await initializeState();
-  // Three fields used to print the same sentence three times, which reads as three problems
-  // and buries the ones that are about this particular combination.
   assert.equal(await cli("set", "persona.age=40s", "persona.gender=masculine", "persona.note=x"), 0);
-  const hits = stderr().split("axes take precedence").length - 1;
-  assert.equal(hits, 1, "one warning for one fact");
+  assert.equal(stderr(), "");
 });
 
 test("address sets both terms in one command, and is the same write as two sets", async () => {
@@ -677,22 +674,30 @@ test("saved names and settings cannot forge human notices while storage and JSON
   assert.equal(JSON.parse(stdout()).warnings[0], EN.settings.safewordShort("x\ny"), "display escaping altered the machine warning");
 });
 
-test("a note naming an observable an axis owns is warned about, never edited", async () => {
+test("role notes are preserved without English substring guesses about tone", async () => {
   await initializeState();
-  assert.equal(await cli("set", "persona.note=Be harsh about the code and very brief."), 0);
-  assert.match(stderr(), /critique/);
-  assert.match(stderr(), /verbosity/);
-  assert.equal(
-    config().persona.note,
-    "Be harsh about the code and very brief.",
-    "the note is stored exactly as written",
-  );
+  for (const note of ["Swarm engineer and shortbread baker", "Be harsh about the code and very brief.",
+    "간결한 답변을 좋아하는 개발자", "簡潔な説明が好きな開発者", "喜欢简明说明的开发者", "Desarrolla herramientas pequeñas"]) {
+    out = []; err = [];
+    assert.equal(await cli("set", `persona.note=${note}`, "--json"), 0);
+    assert.deepEqual(JSON.parse(stdout()).warnings, []);
+    assert.equal(config().persona.note, note);
+  }
 });
 
-test("a note over 200 characters warns without blocking", async () => {
+test("setting warnings describe final values rather than superseded assignments", async () => {
   await initializeState();
-  assert.equal(await cli("set", `persona.note=${"x".repeat(201)}`), 0);
-  assert.ok(stderr().includes(EN.persona.noteOverCap(201, 200)));
+  assert.equal(await cli("set", "safeword=x", "safeword=plain reply", `persona.note=${"x".repeat(201)}`,
+    "persona.note=Final role note", "--json"), 0);
+  assert.deepEqual(JSON.parse(stdout()).warnings, []);
+  assert.equal(config().safeword, "plain reply");
+  assert.equal(config().persona.note, "Final role note");
+});
+
+test("a long persona note is valid and preserves its full text without a made-up limit", async () => {
+  await initializeState();
+  assert.equal(await cli("set", `persona.note=${"x".repeat(201)}`, "playfulness=5", "--json"), 0);
+  assert.deepEqual(JSON.parse(stdout()).warnings, []);
   assert.equal([...config().persona.note!].length, 201, "stored anyway");
 });
 
@@ -770,7 +775,7 @@ test("use announces safeword scope and advisory risky axes", async () => {
   const receipt = flat();
   assert.match(receipt, /safeword 연기 그만 .*requests one plain answer/, "the safeword applies to one plain answer");
   assert.match(receipt, /neither switches tone off nor grants authority/, "the safeword grants no permission");
-  assert.ok(flat().includes(EN.notice.risk));
+  assert.ok(!receipt.includes(EN.notice.risk), "a valid selection must not repeat the general product disclaimer");
   assert.match(receipt, /! critique · harsh language/);
   assert.doesNotMatch(stdout(), /guards|G[1-4]/i, "retired guard state is absent");
 });
@@ -827,11 +832,14 @@ test("save refuses to shadow a bundled slug", async () => {
   assert.match(stderr(), /bundled preset/);
 });
 
-test("save warns when a preset falls outside the 5±2 sparsity guidance", async () => {
+test("saving a valid custom preset does not warn about its number of changed axes", async () => {
   await initializeState();
   assert.equal(await cli("set", "critique=5"), 0);
-  assert.equal(await cli("save", "Just One"), 0);
-  assert.ok(collapsed(stderr()).includes(collapsed(EN.preset.sparsity("just-one", 1))));
+  out = []; err = [];
+  assert.equal(await cli("save", "Just One", "--json"), 0);
+  const saved = JSON.parse(stdout());
+  assert.equal(saved.nonDefaultAxes, 1);
+  assert.deepEqual(saved.warnings, []);
 });
 
 test("slugs are lowercase Latin letters, digits, and dashes", async () => {
@@ -864,6 +872,10 @@ test("export and import round-trip full profiles without activating them", async
   assert.ok(sourceRow, "the import receipt lost its local source");
   assert.ok(maxCells(sourceRow) > 100, "the fixture did not exercise an intact long path");
   assert.equal(readFileSync(sourceRow.trim(), "utf8"), exported, "the displayed source no longer resolves to the imported bytes");
+  out = []; err = [];
+  assert.equal(await cli("import", file), 0);
+  assert.ok(stdout().includes(EN.preset.imported("portable", true)));
+  assert.equal(stderr(), "", "a successful replacement is a receipt, not a warning");
 });
 
 test("import refuses to replace a bundled preset", async () => {
@@ -1023,6 +1035,7 @@ test("create previews without writes and refuses missing approval, unsafe input 
   const preview = JSON.parse(stdout());
   assert.equal(preview.created, false);
   assert.equal(preview.reason, "dry-run");
+  assert.deepEqual(preview.warnings, [], "an unapplied profile must not emit current-state warnings");
   assert.ok(preview.diff.length >= 3);
   for (const args of [
     ["create"],
@@ -1044,6 +1057,18 @@ test("create previews without writes and refuses missing approval, unsafe input 
   assert.equal(await cli("create", "Existing", "warmth=5", "--auto"), 1);
   assert.deepEqual(readFileSync(paths().config), existingConfig);
   assert.deepEqual(readFileSync(join(customPresetDir(paths().presets), "existing.json")), preset);
+});
+
+test("created profiles report only final applicable setting warnings", async () => {
+  await initializeState();
+  assert.equal(await cli("create", "Final Profile", "safeword=x", "safeword=plain reply",
+    `persona.note=${"x".repeat(201)}`, "persona.note=Final note", "--auto", "--json"), 0, stderr());
+  const created = JSON.parse(stdout());
+  assert.equal(created.created, true);
+  assert.deepEqual(created.warnings, []);
+  out = []; err = [];
+  assert.equal(await cli("create", "Short Safeword", "safeword=x", "--auto", "--json"), 0, stderr());
+  assert.deepEqual(JSON.parse(stdout()).warnings, [EN.settings.safewordShort("x")]);
 });
 
 test("show refusing a preset name lists the ones it would have taken", async () => {
@@ -1266,9 +1291,10 @@ test("save reports a replacement instead of overwriting in silence", async () =>
   await initializeState();
   assert.equal(await cli("set", "critique=5"), 0);
   assert.equal(await cli("save", "Same Name"), 0);
-  err = [];
+  out = []; err = [];
   assert.equal(await cli("save", "Same  Name!"), 0, "both slugify to same-name");
-  assert.ok(stderr().includes(EN.preset.replaced("same-name")));
+  assert.ok(stdout().includes(EN.preset.replaced("same-name")));
+  assert.equal(stderr(), "");
 });
 
 test("use --json carries the disclosure the human lines make", async () => {
@@ -1302,16 +1328,25 @@ test("the keyed use notice preserves its shape with and without risky axes", asy
   assert.deepEqual(Object.keys(off.notice), Object.keys(on.notice), "the same keys either way");
 });
 
-test("show reports the register without treating formal plain forms as a clash", async () => {
+test("independent persona, address and register choices stay quiet in every interface language", async () => {
   await initializeState();
-  assert.equal(await cli("set", "speech_level=plain", "formality=5"), 0);
-  out = [];
-  assert.equal(await cli("show"), 0);
-  assert.match(stdout(), /register plain/);
-  out = [];
-  assert.equal(await cli("show", "--json"), 0);
-  const parsed = JSON.parse(stdout()) as { combinations: { layer: string; rule: string }[] };
-  assert.ok(!parsed.combinations.some((c) => /speech_level|formality/.test(c.rule)));
+  for (const language of LANGUAGES) {
+    for (const [formality, age] of [[5, "teens"], [1, "50s+"]] as const) {
+      out = []; err = [];
+      assert.equal(await cli("set", `language=${language}`, `formality=${formality}`, "warmth=1", "verbosity=1",
+        "speech_level=plain", `persona.age=${age}`, "persona.self_ref=형", "persona.user_ref=선생님", "--json"), 0);
+      assert.deepEqual(JSON.parse(stdout()).warnings, [], `${language}: valid settings were marked as a problem`);
+      out = []; err = [];
+      assert.equal(await cli("show", "--json"), 0);
+      const shown = JSON.parse(stdout());
+      assert.deepEqual(shown.combinations, []);
+      assert.deepEqual(shown.warnings, []);
+      assert.equal(shown.axes.formality, formality);
+      assert.equal(shown.persona.age, age);
+      assert.deepEqual(shown.persona.address, { self_ref: "형", user_ref: "선생님" });
+      assert.equal(shown.speech_level, "plain");
+    }
+  }
 });
 
 test("show previewing a preset reports that preset's own size", async () => {
@@ -1954,7 +1989,7 @@ test("an edit that lands the state a warning covers still raises the warning", a
 });
 
 for (const field of ["user", "agent"] as const) {
-  test(`editing only persona.${field} discloses unanchored context without echoing it`, async () => {
+  test(`editing valid persona.${field} preserves private text without a generic warning`, async () => {
     await initializeState();
     const edited = config();
     const value = `Dummy private ${field} description`;
@@ -1964,7 +1999,7 @@ for (const field of ["user", "agent"] as const) {
     assert.equal(await cliWith(fakeEditor(JSON.stringify(edited)), "edit", "--json"), 0, stderr());
     const receipt = stdout();
     const payload = JSON.parse(receipt) as { warnings: string[] };
-    assert.equal(payload.warnings.filter(warning => warning === EN.notice.personaUnanchored).length, 1);
+    assert.deepEqual(payload.warnings, []);
     assert.equal(receipt.includes(value), false);
     assert.equal(config().persona[field], value);
     assert.ok(tone().includes(value));

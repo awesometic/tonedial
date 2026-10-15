@@ -1,12 +1,11 @@
 status: 0
---- stdout --- [bytes=144; endsWithNewline=true]
+--- stdout --- [bytes=118; endsWithNewline=true]
 ToneDial · update
 
   tonedial <VERSION>
-  install method npm
 
-  npm install · use its own update path
-  to update:
+  Package update:
     npm update -g tonedial
+  --dry-run · nothing written
 --- stderr --- [bytes=0; endsWithNewline=false]
 
