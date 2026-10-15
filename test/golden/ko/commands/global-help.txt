@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=3556; endsWithNewline=true]
+--- stdout --- [bytes=3568; endsWithNewline=true]
 tonedial — 코딩 에이전트의 말투를 한 번 정하고 계속 씁니다
 
 tonedial <command> [options]
@@ -42,7 +42,7 @@ tonedial <command> [options]
   --migrate-legacy       init: 검증된 이전 상태를 옮기도록 승인
   --auto                 승인 질문 생략 · diff는 계속 표시
   --dry-run              변경 내용만 표시 · 기록하지 않음
-  --lang=CODE            init: 인터페이스 언어(en, ko)
+  --lang=CODE            init: 인터페이스 언어(en, ko, ja, zh, es)
   --commands             init: /tone 명령도 설치
   --tools=LIST           연결할 에이전트 · init에서 none은 상태만 준비
   --fix                  doctor: 고칠 수 있는 문제 복구

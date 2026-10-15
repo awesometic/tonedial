@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=3269; endsWithNewline=true]
+--- stdout --- [bytes=3281; endsWithNewline=true]
 tonedial — set a coding agent's manner once and keep using it
 
 tonedial <command> [options]
@@ -43,7 +43,7 @@ Options
   --migrate-legacy       init: approve validated older state
   --auto                 skip approval prompt · always show diff
   --dry-run              show changes · write nothing
-  --lang=CODE            init: interface language (en, ko)
+  --lang=CODE            init: interface language (en, ko, ja, zh, es)
   --commands             init: also install /tone
   --tools=LIST           agents to connect · init: none = state only
   --fix                  doctor: repair fixable findings

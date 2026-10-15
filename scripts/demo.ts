@@ -30,6 +30,9 @@ export const SCENES: readonly Scene[] = [
     address: {
       en: { self: "your humble servant", user: "Your Majesty" },
       ko: { self: "소인", user: "전하" },
+      ja: { self: "臣", user: "陛下" },
+      zh: { self: "臣", user: "陛下" },
+      es: { self: "su humilde servidor", user: "Su Majestad" },
     },
   },
   {

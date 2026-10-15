@@ -6,13 +6,16 @@ import { dirname } from "node:path";
 
 import type { SettingKey } from "./config.ts";
 import type { Persona } from "./combos.ts";
+import { ja } from "./locales/ja.ts";
+import { zh } from "./locales/zh.ts";
+import { es } from "./locales/es.ts";
 
 export type RoleDefaults = Pick<Persona, "address" | "user" | "agent">;
 const role = (self_ref: string, user_ref: string, user: string, agent: string): RoleDefaults => ({
   address: { self_ref, user_ref }, user, agent,
 });
 
-export const LANGUAGES = ["en", "ko"] as const;
+export const LANGUAGES = ["en", "ko", "ja", "zh", "es"] as const;
 export type Language = (typeof LANGUAGES)[number];
 
 export function isLanguage(value: string): value is Language {
@@ -1031,7 +1034,7 @@ const enMessages: Messages = {
       migrateLegacy: "init: approve validated older state",
       auto: "skip approval prompt · always show diff",
       dryRun: "show changes · write nothing",
-      lang: "init: interface language (en, ko)",
+      lang: "init: interface language (en, ko, ja, zh, es)",
       commands: "init: also install /tone",
       tools: "agents to connect · init: none = state only",
       fix: "doctor: repair fixable findings",
@@ -1720,7 +1723,7 @@ const koMessages: Messages = {
       migrateLegacy: "init: 검증된 이전 상태를 옮기도록 승인",
       auto: "승인 질문 생략 · diff는 계속 표시",
       dryRun: "변경 내용만 표시 · 기록하지 않음",
-      lang: "init: 인터페이스 언어(en, ko)",
+      lang: "init: 인터페이스 언어(en, ko, ja, zh, es)",
       commands: "init: /tone 명령도 설치",
       tools: "연결할 에이전트 · init에서 none은 상태만 준비",
       fix: "doctor: 고칠 수 있는 문제 복구",
@@ -1951,7 +1954,7 @@ const ko: Catalogue = {
   },
 };
 
-const CATALOGUES: Record<Language, Catalogue> = { en, ko };
+const CATALOGUES: Record<Language, Catalogue> = { en, ko, ja, zh, es };
 
 export function catalogue(language: Language): Catalogue {
   return CATALOGUES[language];

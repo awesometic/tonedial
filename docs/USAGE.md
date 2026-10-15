@@ -7,7 +7,8 @@ ToneDial requires Node 24+ and remains an unpublished `0.1.0` candidate; use the
 ## Tone and axes
 
 ToneDial compiles saved settings into `TONE.md` using one set of English instructions.
-The agent can continue answering in the conversation's language; `language` changes only ToneDial's English or Korean interface.
+The agent can continue answering in the conversation's language; `language` selects ToneDial's interface.
+Supported choices are English (`en`), Korean (`ko`), Japanese (`ja`), Simplified Chinese (`zh`) and Spanish (`es`).
 Native delivery reads the managed `AGENTS.md` operating guide followed by `TONE.md` from the same state root.
 Tone changes recompile the artifact without rewriting the guide.
 
@@ -155,7 +156,7 @@ tonedial set speech_level=polite    # auto (default) | polite | plain
 tonedial set persona.user="I maintain services and prefer direct trade-offs"
 tonedial set persona.agent="A fictional SRE specialist with 12 years' experience; speaks plainly"
 tonedial address "guide" "friend"  # self and user; bare address asks for both
-tonedial set language=ko           # en | ko; init also accepts --lang
+tonedial set language=ko           # en | ko | ja | zh (Simplified) | es; init also accepts --lang
 tonedial set persona.user= persona.agent=  # empty values clear either description
 tonedial set "persona.note="       # the note keeps its existing behavior
 ```

@@ -12,9 +12,9 @@ import { join } from "node:path";
 import { run } from "../src/cli.ts";
 import { AXIS_DEFAULT } from "../src/core/anchors.ts";
 import { defaultConfig, parseConfig } from "../src/core/config.ts";
-import { catalogue } from "../src/core/i18n.ts";
+import { catalogue, detectLanguage, LANGUAGES } from "../src/core/i18n.ts";
 import {
-  applyPreset, builtinPresetDir, customPresetDir, inspectPresetLibrary, parsePreset, presetSettings, PRESET_MAX_BYTES, resolvePreset,
+  applyPreset, BUNDLED, builtinPresetDir, customPresetDir, inspectPresetLibrary, localizedPreset, parsePreset, presetSettings, PRESET_MAX_BYTES, resolvePreset,
   serializePreset,
 } from "../src/core/presets.ts";
 import { assertFresh, gate, rawReadChange, rawReadCheck } from "../src/wiring/apply.ts";
@@ -392,6 +392,18 @@ test("built-in role defaults localize on selection and a saved custom role survi
     assert.deepEqual(read().persona.address, { self_ref: "I", user_ref: "Boss" });
     assert.equal((await invoke(f, "use", "my-court")).status, 0);
     assert.deepEqual(presetSettings(read()), royal, "a saved literal role never translates on use");
+    for (const language of LANGUAGES) {
+      assert.equal(detectLanguage({ LANG: `${language}_XX.UTF-8` }), language);
+      assert.equal((await invoke(f, "set", `language=${language}`)).status, 0);
+      assert.deepEqual(presetSettings(read()), royal, "interface changes preserve the current role");
+      for (const preset of BUNDLED) {
+        assert.equal((await invoke(f, "use", preset.slug)).status, 0);
+        assert.deepEqual(presetSettings(read()), localizedPreset(preset, catalogue(language).cli).settings,
+          `${language}/${preset.slug}: use must apply the complete localized profile`);
+      }
+      assert.equal((await invoke(f, "use", "my-court")).status, 0);
+      assert.deepEqual(presetSettings(read()), royal, `${language}: saved roles remain literal`);
+    }
   } finally { f.dispose(); }
 });
 

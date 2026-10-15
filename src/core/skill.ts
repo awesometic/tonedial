@@ -46,7 +46,8 @@ Creation saves and applies axes, persona, address, register and safeword in one 
 The interactive form retries invalid fields, reports each role's 200-character budget, and
 shows address and role content again before final approval. JSON creation never interviews.
 \`use\` restores the selected profile's complete settings. All seven bundled profiles include
-address, user context, fictional agent role and register defaults in English and Korean.
+address, user context, fictional agent role and register defaults in English, Korean,
+Japanese, Simplified Chinese and Spanish.
 Built-in defaults follow the interface language when selected; saved custom text never translates.
 Legacy schema-1 presets restore axes while preserving the current separate settings.
 Tough Love and Terse Operator are retired from the menu; their old slugs remain compatible.

@@ -16,7 +16,7 @@ ToneDial · wire
 
   <ROOT>/state/skill/tonedial/SKILL.md
   → <ROOT>/state/skill/tonedial/SKILL.md
-  (new file)  276 lines
+  (new file)  277 lines
   + ---
   + name: tonedial
 

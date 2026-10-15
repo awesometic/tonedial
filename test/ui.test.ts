@@ -278,13 +278,14 @@ for (const language of LANGUAGES) {
     rmSync(hookPath);
     out = [];
     assert.equal(await cli("doctor", "--here"), 0, err.join(""));
-    assert.match(out.join(""), /No ToneDial|ToneDial SessionStart 훅 없음/);
+    assert.ok(out.join("").includes(localized.doctor.nativeMissing("", "SessionStart").split(" · ")[0]!));
     assert.doesNotMatch(out.join("").replace(/\s+/g, " "), /\/hooks → SessionStart → ToneDial/, "a missing hook must be repaired before enabling it");
     document.hooks.SessionStart[0].hooks[0].statusMessage = "User-edited hook";
     writeFileSync(hookPath, JSON.stringify(document));
     out = [];
     assert.equal(await cli("doctor", "--here"), 0, err.join(""));
-    assert.match(out.join(""), /changed outside ToneDial|ToneDial 밖에서/);
+    const foreign = out.join("").replace(/\s+/g, "");
+    assert.ok(foreign.includes(localized.doctor.nativeForeign.replace(/\s+/g, "")));
     assert.doesNotMatch(out.join("").replace(/\s+/g, " "), /\/hooks → SessionStart → ToneDial/, "do not advise enabling a foreign definition");
   });
 }
@@ -778,17 +779,21 @@ test("init and --explain describe advisory risk in every language", async () => 
     restore.push(() => { rmSync(leaked, { recursive: true, force: true }); });
     assert.equal(await cli("init", "--here", "--tools", "none", "--lang", language, "--auto"), 0);
     const copy = catalogue(language);
-    const flatten = (text: string) => text.replace(/\s+/g, " ");
+    const flatten = (text: string) => text.replace(/\s+/g, language === "ja" || language === "zh" ? "" : " ");
     assert.ok(flatten(out.join("")).includes(flatten(copy.cli.notice.riskIntro)), `${language}: init risk introduction missing`);
     assert.equal(flatten(out.join("")).split(copy.cli.notice.modelExpectation).length - 1, 1, `${language}: init model notice appears once`);
     out = [];
     assert.equal(await cli("show", "--explain"), 0);
     const section = out.join("").split(copy.cli.artifact.riskHeading)[1] ?? "";
-    const screen = section.replace(/\n\s*/g, " ");
+    const screen = flatten(section);
     assert.ok(flatten(screen).includes(flatten(copy.cli.notice.riskIntro)), `${language}: advisory limits missing`);
-    const concrete = language === "en"
-      ? [/judgments and work reports/, /falsehood, omission or exaggeration/, /not measured probabilities/]
-      : [/판단과 작업 보고/, /거짓·누락·과장/, /측정한 확률이 아닙니다/];
+    const concrete = {
+      en: [/judgments and work reports/, /falsehood, omission or exaggeration/, /not measured probabilities/],
+      ko: [/판단과 작업 보고/, /거짓·누락·과장/, /측정한 확률이 아닙니다/],
+      ja: [/判断や作業報告/, /虚偽・省略・誇張/, /測定した確率ではありません/],
+      zh: [/判断和工作报告/, /虚假、遗漏或夸张/, /不是测得的概率/],
+      es: [/juicios e informes/, /falsedades, omisiones o exageraciones/, /no una probabilidad medida/],
+    }[language];
     for (const expected of concrete) assert.match(screen, expected, language);
     assert.doesNotMatch(screen, /G[1-4]|guards|가드/);
     err = [];

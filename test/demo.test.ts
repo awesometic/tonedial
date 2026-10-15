@@ -8,7 +8,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { DEMO_COLUMNS, SCENES, render } from "../scripts/demo.ts";
 import { AXIS_ORDER } from "../src/core/anchors.ts";
 import { maxCells } from "../src/ui/width.ts";
-import { LANGUAGES } from "../src/core/i18n.ts";
+import { LANGUAGES, catalogue } from "../src/core/i18n.ts";
 
 const RETAKE = "the screenshots need retaking — node scripts/demo.ts <scene> <language>";
 
@@ -94,9 +94,9 @@ for (const scene of SCENES) {
         assert.ok(plain.includes(address.user), `${scene.id}/${language} lost its address — ${RETAKE}`);
       }
       if (scene.id === "risky-tone") {
-        assert.match(
-          plain.replace(/\s+/g, " "),
-          /! .*critique.*(?:harsh language|거친 표현)/,
+        const warning = catalogue(language).cli.notice.riskAxes(["critique"]);
+        assert.ok(
+          plain.replace(/\s+/g, " ").includes(warning.split(" · ")[1]!),
           `${scene.id}/${language} no longer explains risky levels — ${RETAKE}`,
         );
       }

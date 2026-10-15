@@ -83,8 +83,8 @@ Use `tonedial create` for guided creation with a name, separate slug, tone setti
 `persona.user` and `persona.agent` are optional role descriptions capped at 200 Unicode code points each; empty input clears one.
 The agent description is fictional roleplay context, not a verified credential or permission grant.
 `set persona.agent="..."` adds or changes the current role immediately while preserving the axes; use `save` to update the selected profile.
-The interface is English or Korean.
-Choose it during `init` with `--lang en` or `--lang ko`.
+The interface supports English (`en`), Korean (`ko`), Japanese (`ja`), Simplified Chinese (`zh`) and Spanish (`es`).
+Choose it during `init` with `--lang CODE`.
 After setup, change it with `tonedial set language=ko`.
 One English anchor set leaves the conversation language to your agent.
 

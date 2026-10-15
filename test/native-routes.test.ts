@@ -899,7 +899,7 @@ test("approved native refresh updates stale skill seeds and the selected optiona
   assert.equal(after.seedVersion, SEED_VERSION);
   assert.deepEqual(Object.fromEntries(Object.entries(after.managedSeeds).filter(([id]) => !id.startsWith("skill/"))), retainedRecords);
   for (const seed of skills) {
-    assert.equal(after.managedSeeds[seed.id]?.version, seed.id === "skill/body" ? 14 : 8, seed.id);
+    assert.equal(after.managedSeeds[seed.id]?.version, seed.id === "skill/body" ? 15 : 8, seed.id);
     assert.equal(readFileSync(seed.path, "utf8"), seed.contents, seed.id);
     assert.equal(after.managedSeeds[seed.id]?.sha256, createHash("sha256").update(seed.contents).digest("hex"), seed.id);
   }

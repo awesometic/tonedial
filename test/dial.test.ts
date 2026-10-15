@@ -110,6 +110,31 @@ function inlineFrame(written: string[]): string[] {
   return stripVTControlCharacters(frames.at(-1)!).slice(0, -1).split("\n");
 }
 
+test("new language copy keeps every axis editable at the 60 by 24 floor", async () => {
+  for (const language of ["ja", "zh", "es"] as const) {
+    const stdin = fakeStdin();
+    const { stream, written } = fakeStdout(60, 24);
+    const result = dial({ ...AXIS_DEFAULT }, PLAIN, catalogue(language), stdin, stream);
+    try {
+      for (const axis of AXIS_ORDER) {
+        const lines = inlineFrame(written);
+        assert.ok(lines.find(line => line.startsWith("> "))?.includes(axis), `${language}/${axis}: navigation stopped`);
+        assert.ok(lines.length < 24);
+        for (const line of lines) assert.ok(maxCells(line) < 60, `${language}: ${line}`);
+        stdin.press("5", "5");
+        stdin.press("down");
+      }
+      stdin.press("return");
+      const applied = await result;
+      assert.ok(applied, `${language}: apply must remain available`);
+      assert.deepEqual(Object.values(applied), AXIS_ORDER.map(() => 5));
+    } finally {
+      stdin.press("escape");
+      await result;
+    }
+  }
+});
+
 test("inline keeps one ordered gauge list, selected semantics and actions within each viewport", async () => {
   for (const { language, columns, color } of [
     { language: "ko", columns: 60, color: "never" },

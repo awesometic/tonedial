@@ -4,7 +4,7 @@
 import { EventEmitter } from "node:events";
 
 import { AXIS_ORDER } from "../src/core/anchors.ts";
-import { catalogue, isLanguage } from "../src/core/i18n.ts";
+import { catalogue, isLanguage, LANGUAGES } from "../src/core/i18n.ts";
 import { BUNDLED, applyPreset } from "../src/core/presets.ts";
 import { dial } from "../src/ui/dial.ts";
 import { palette } from "../src/ui/style.ts";
@@ -12,7 +12,7 @@ import { palette } from "../src/ui/style.ts";
 const [language = "en", width = "80", ...extra] = process.argv.slice(2);
 const columns = Number(width);
 if (!isLanguage(language) || !Number.isInteger(columns) || columns < 60 || columns > 160 || extra.length) {
-  process.stderr.write("Usage: node scripts/dial-frame.ts [en|ko] [columns: 60..160]\n");
+  process.stderr.write(`Usage: node scripts/dial-frame.ts [${LANGUAGES.join("|")}] [columns: 60..160]\n`);
   process.exit(2);
 }
 
