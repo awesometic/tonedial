@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="604" viewBox="0 0 1120 604" role="img" aria-labelledby="title description">
+<title id="title">Recorded Codex voice examples</title>
+<desc id="description">Should I rename `getActiveUsers(orgId)` to `fetchData`?
+
+Bratty Kid
+Yeah, yeah, I hear you—but why make the name play hide-and-seek?
+
+`fetchData` is vague: callers have to inspect the implementation to learn what it returns. Ugh, unnecessary homework. `getActiveUsers(orgId)` makes that clear.
+
+Got you. Me, I caught the ambiguity—naming traps don’t stand a chance. My pick is to keep `getActiveUsers`; want to stick with it?</desc>
+<rect width="1120" height="604" rx="16" fill="#171b20"/>
+<g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, system-ui"><text x="36" y="50" fill="#66d9dc" font-size="24" font-weight="700" xml:space="preserve">Codex CLI · gpt-6.1-sol · high</text>
+<path d="M36 80H1084" stroke="#34424d"/>
+<text x="36" y="126" fill="#66d9dc" font-size="28" font-weight="700" xml:space="preserve">Bratty Kid</text>
+<text x="36" y="160" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">$ tonedial test codex --preset bratty-kid</text>
+<text x="36" y="202" fill="#b8e5df" font-size="23" font-weight="400" xml:space="preserve">&gt; Should I rename `getActiveUsers(orgId)` to `fetchData`?</text>
+<text x="36" y="242" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">codex</text>
+<text x="36" y="276" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">Yeah, yeah, I hear you—but why make the name play hide-and-seek?</tspan></text>
+<text x="36" y="308" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="340" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan><tspan font-weight="400" fill="#b8e5df">fetchData</tspan><tspan font-weight="400" fill="#edf3f6"> is vague: callers have to inspect the implementation to</tspan></text>
+<text x="36" y="372" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">learn what it returns. Ugh, unnecessary homework.</tspan></text>
+<text x="36" y="404" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan><tspan font-weight="400" fill="#b8e5df">getActiveUsers(orgId)</tspan><tspan font-weight="400" fill="#edf3f6"> makes that clear.</tspan></text>
+<text x="36" y="436" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="468" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">Got you. Me, I caught the ambiguity—naming traps don’t stand a</tspan></text>
+<text x="36" y="500" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">chance. My pick is to keep </tspan><tspan font-weight="400" fill="#b8e5df">getActiveUsers</tspan><tspan font-weight="400" fill="#edf3f6">; want to stick with it?</tspan></text>
+<text x="36" y="568" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">Real replies · formatted transcript · one sample per preset · 2026-10-14</text></g>
+</svg>

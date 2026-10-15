@@ -105,7 +105,7 @@ test("an unmarked candidate can inspect its tree and history but cannot pass the
 test("a clean public checkout with localized READMEs and matching identity passes", () => {
   const root = fixture();
   writeFileSync(join(root, "README.md"), "# ToneDial\n");
-  writeFileSync(join(root, "README.ko.md"), "# ToneDial\n");
+  for (const language of ["ko", "ja", "zh", "es"]) writeFileSync(join(root, `README.${language}.md`), "# ToneDial\n");
   commit(root, "public candidate");
   const result = check(root);
   assert.equal(result.code, 0, result.stderr);

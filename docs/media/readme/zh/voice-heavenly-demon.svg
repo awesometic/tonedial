@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="540" viewBox="0 0 1120 540" role="img" aria-labelledby="title description">
+<title id="title">Codex 实际语气示例</title>
+<desc id="description">`getActiveUsers(orgId)` 可以改名为 `fetchData` 吗？
+
+Heavenly Demon
+本座的选择：保留 `getActiveUsers(orgId)`。徒儿，`fetchData` 抹掉了“活跃用户”的含义，招式名含糊，调用处便难辨意图。若要强调从远端获取，可改为 `fetchActiveUsers(orgId)`。
+
+罢了，本座再补一道护脉建议：测试应确认结果只包含指定组织的活跃用户，别让其他组织或停用用户混入气脉。</desc>
+<rect width="1120" height="540" rx="16" fill="#171b20"/>
+<g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, system-ui"><text x="36" y="50" fill="#66d9dc" font-size="24" font-weight="700" xml:space="preserve">Codex CLI · gpt-6.1-sol · high</text>
+<path d="M36 80H1084" stroke="#34424d"/>
+<text x="36" y="126" fill="#66d9dc" font-size="28" font-weight="700" xml:space="preserve">Heavenly Demon</text>
+<text x="36" y="160" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">$ tonedial test codex --preset heavenly-demon</text>
+<text x="36" y="202" fill="#b8e5df" font-size="23" font-weight="400" xml:space="preserve">&gt; `getActiveUsers(orgId)` 可以改名为 `fetchData` 吗？</text>
+<text x="36" y="242" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">codex</text>
+<text x="36" y="276" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">本座的选择：保留 </tspan><tspan font-weight="400" fill="#b8e5df">getActiveUsers(orgId)</tspan><tspan font-weight="400" fill="#edf3f6">。徒儿，</tspan><tspan font-weight="400" fill="#b8e5df">fetchData</tspan><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="308" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">抹掉了“活跃用户”的含义，招式名含糊，调用处便难辨意图。若要强调从远</tspan></text>
+<text x="36" y="340" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">端获取，可改为 </tspan><tspan font-weight="400" fill="#b8e5df">fetchActiveUsers(orgId)</tspan><tspan font-weight="400" fill="#edf3f6">。</tspan></text>
+<text x="36" y="372" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="404" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">罢了，本座再补一道护脉建议：测试应确认结果只包含指定组织的活跃用户，</tspan></text>
+<text x="36" y="436" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">别让其他组织或停用用户混入气脉。</tspan></text>
+<text x="36" y="504" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">实际回复 · 仅整理显示格式 · 每个预设一例 · 2026-10-15</text></g>
+</svg>

@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="700" viewBox="0 0 1120 700" role="img" aria-labelledby="title description">
+<title id="title">Ejemplos reales de tono de Codex</title>
+<desc id="description">¿Debería cambiar el nombre de `getActiveUsers(orgId)` a `fetchData`?
+
+Heavenly Demon
+Mi elección, discípulo: conserva `getActiveUsers(orgId)`. `fetchData` oculta qué obtiene y pierde precisión; corrige tu postura con nombres que revelen la intención.
+
+Si realiza una petición de red, este maestro consideraría `fetchActiveUsers(orgId)` para señalar ese comportamiento.
+
+Tsk, aunque parezca tedioso, añade esta comprobación al entrenamiento: una organización con usuarios activos e inactivos debe devolver únicamente sus propios usuarios activos.</desc>
+<rect width="1120" height="700" rx="16" fill="#171b20"/>
+<g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, system-ui"><text x="36" y="50" fill="#66d9dc" font-size="24" font-weight="700" xml:space="preserve">Codex CLI · gpt-6.1-sol · high</text>
+<path d="M36 80H1084" stroke="#34424d"/>
+<text x="36" y="126" fill="#66d9dc" font-size="28" font-weight="700" xml:space="preserve">Heavenly Demon</text>
+<text x="36" y="160" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">$ tonedial test codex --preset heavenly-demon</text>
+<text x="36" y="202" fill="#b8e5df" font-size="23" font-weight="400" xml:space="preserve">&gt; ¿Debería cambiar el nombre de `getActiveUsers(orgId)` a</text>
+<text x="36" y="234" fill="#b8e5df" font-size="23" font-weight="400" xml:space="preserve">`fetchData`?</text>
+<text x="36" y="274" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">codex</text>
+<text x="36" y="308" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">Mi elección, discípulo: conserva </tspan><tspan font-weight="400" fill="#b8e5df">getActiveUsers(orgId)</tspan><tspan font-weight="400" fill="#edf3f6">.</tspan></text>
+<text x="36" y="340" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan><tspan font-weight="400" fill="#b8e5df">fetchData</tspan><tspan font-weight="400" fill="#edf3f6"> oculta qué obtiene y pierde precisión; corrige tu</tspan></text>
+<text x="36" y="372" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">postura con nombres que revelen la intención.</tspan></text>
+<text x="36" y="404" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="436" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">Si realiza una petición de red, este maestro consideraría</tspan></text>
+<text x="36" y="468" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan><tspan font-weight="400" fill="#b8e5df">fetchActiveUsers(orgId)</tspan><tspan font-weight="400" fill="#edf3f6"> para señalar ese comportamiento.</tspan></text>
+<text x="36" y="500" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="532" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">Tsk, aunque parezca tedioso, añade esta comprobación al</tspan></text>
+<text x="36" y="564" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">entrenamiento: una organización con usuarios activos e inactivos</tspan></text>
+<text x="36" y="596" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">debe devolver únicamente sus propios usuarios activos.</tspan></text>
+<text x="36" y="664" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">Respuestas reales · transcripción con formato · una muestra por preajuste · 2026-10-15</text></g>
+</svg>

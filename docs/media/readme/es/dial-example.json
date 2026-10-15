@@ -1,0 +1,39 @@
+{
+  "format": 1,
+  "kind": "synthetic-rendered-dial-frame",
+  "recipe": "node scripts/dial-frame.ts es 80",
+  "language": "es",
+  "columns": 80,
+  "terminalRows": 24,
+  "preset": "caring-brother",
+  "selectedAxis": "warmth",
+  "previewLevel": 4,
+  "committed": false,
+  "nativeClientRun": false,
+  "personalStateRead": false,
+  "font": "browser-installed monospace and CJK fallback",
+  "fontRedistributed": false,
+  "renderer": "state-free ANSI serialized as natural text runs at SVG column positions with bold and fixed palette; visual font fallback varies",
+  "frameSha256": "4bc9a9a435c49c82b1a88907034420566ed45516c118f96ef03f1dee0df08b6d",
+  "imageSha256": "e219d515776a609e3b21103400e6c4bd1f96f271476cf74a628b75356b7805f1",
+  "inputs": {
+    "scripts/dial-frame.ts": "71ba709632f41d76e5d36bdcf7bdcdb864459b56b9e351622d6e54117dc1205a",
+    "src/ui/dial.ts": "89be03aa196219d24ce36b286287f1cd586e58b6417eff433f82c1c3fd70f98c",
+    "src/ui/gauge.ts": "7b4a8d69780103421c1ec691746be8defae8d1489768367e8b9e0f909f9eca1a",
+    "src/ui/prompt.ts": "9e7e02e17aea1158203b9e584d90aba5213902b0c246fe281d91f3290231b50d",
+    "src/ui/style.ts": "2dc560ebc69677d391ec8ab39817c3a89545d6b8b603c080a7f6d09a75450a8e",
+    "src/ui/width.ts": "eb1013f8511ccfc8b9eca78e3d74433cfcf30096b7faf71ba118a5cd42163acd",
+    "src/core/i18n.ts": "2be73bb7a4c9629ba2d291e77d6ec10a3b5b07b9be89177ba9d063aa48afb662",
+    "src/core/anchors.ts": "906050bea776cc55e898eb277ea128b21e9af83f0b0215c384c6b8f9acd10218",
+    "src/core/presets.ts": "992d498f5787856c914027427b07b6d7544e581ee7c6bf5921a7420fb45d5aa7",
+    "scripts/dial-svg.ts": "eb81cde392f472ea8df8b251150afccfcf02e5adf936221a174ab17d965e13a4",
+    "src/core/locales/ja.ts": "8db5088a641beda8df5e680f9735819b031cd7b68c936124669949c6b2a284b7",
+    "src/core/locales/zh.ts": "f234b8bced33213a8d8f26d6ab5076eca4abb0b6ef5c10d829a599236769c693",
+    "src/core/locales/es.ts": "b655265a4b2d42b3755870e5c5697f31f875775cffb758093b4b006aad0e991f"
+  },
+  "svgRecipe": [
+    "scripts/dial-svg.ts",
+    "es",
+    "80"
+  ]
+}

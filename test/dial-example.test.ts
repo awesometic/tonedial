@@ -10,6 +10,7 @@ import { stripVTControlCharacters } from "node:util";
 
 import { AXIS_ORDER } from "../src/core/anchors.ts";
 import { maxCells } from "../src/ui/width.ts";
+import { catalogue, LANGUAGES } from "../src/core/i18n.ts";
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const hash = (bytes: string | Buffer) => createHash("sha256").update(bytes).digest("hex");
@@ -20,7 +21,8 @@ function localAssetPath(reference: string, prefix: string): string {
   return resolve(root, reference.slice(prefix.length));
 }
 
-for (const [file, language] of [["README.md", "en"], ["README.ko.md", "ko"]] as const) {
+for (const language of LANGUAGES) {
+  const file = language === "en" ? "README.md" : `README.${language}.md`;
   test(`${file} resolves its own locale's current state-free dial frame`, () => {
     const readme = readFileSync(join(root, file), "utf8");
     const image = /<img\s+src="([^"]+)"/.exec(readme)?.[1];
@@ -69,7 +71,7 @@ for (const [file, language] of [["README.md", "en"], ["README.ko.md", "ko"]] as 
       for (const line of visible) assert.ok(maxCells(line) < metadata.columns, line);
       assert.deepEqual(visible.filter(line => /[▮▯]/u.test(line)).map(line => AXIS_ORDER.find(axis => line.includes(axis))), AXIS_ORDER);
       assert.match(visible.find(line => line.startsWith("> "))!, /warmth\s+▮▮▮▮▯\s+4/);
-      assert.match(visible[1]!, language === "en" ? /changes pending/ : /변경 미리보기/);
+      assert.ok(visible[1]!.includes(catalogue(language).cli.artifact.dialPreview("", true).trim()));
       assert.equal(readFileSync(join(state, "config.json"), "utf8"), original);
       assert.deepEqual(readdirSync(state), ["config.json"]);
       assert.deepEqual(readdirSync(agents), []);

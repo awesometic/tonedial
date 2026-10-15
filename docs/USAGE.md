@@ -513,7 +513,8 @@ node scripts/dial-svg.ts ko 80 > dial-ko.svg
 Rasterization is optional development tooling; render the frame with an ANSI-to-image tool and inspect glyph/cell alignment.
 `node scripts/demo.ts --list`, then `node scripts/demo.ts <scene> <language>`, renders isolated 80-column CLI scenes without a native client.
 Demo rendering uses no authenticated capture or provider; unknown options refuse before rendering or starting a child.
-README.md is the English default; README.ko.md adds Korean. Follow the [README media conventions](./media/readme/README.md) for locale folders and names.
+README.md is the English default; README.ko.md, README.ja.md, README.zh.md and README.es.md add Korean, Japanese, Simplified Chinese and Spanish.
+Follow the [README media conventions](./media/readme/README.md) for locale folders and names.
 Follow [TESTING.md](./TESTING.md).
 
 ## Installation channels after release

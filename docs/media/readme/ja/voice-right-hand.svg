@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="636" viewBox="0 0 1120 636" role="img" aria-labelledby="title description">
+<title id="title">Codexの実際の口調例</title>
+<desc id="description">`getActiveUsers(orgId)` を `fetchData` に改名してもいい？
+
+Right Hand
+承知しました、親分。**私の推奨は、今の名前を残すことです。**
+
+【軽微】`fetchData` では「どの組織の有効ユーザーを取得するか」という看板が消え、呼び出し側で中身を探る手間が増えます。
+
+取得を `fetch` に統一する方針なら、私なら `fetchActiveUsers(orgId)` を選びます。改名時は呼び出し箇所も洗い、参照漏れを型チェックで押さえましょう。</desc>
+<rect width="1120" height="636" rx="16" fill="#171b20"/>
+<g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, system-ui"><text x="36" y="50" fill="#66d9dc" font-size="24" font-weight="700" xml:space="preserve">Codex CLI · gpt-6.1-sol · high</text>
+<path d="M36 80H1084" stroke="#34424d"/>
+<text x="36" y="126" fill="#66d9dc" font-size="28" font-weight="700" xml:space="preserve">Right Hand</text>
+<text x="36" y="160" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">$ tonedial test codex --preset right-hand</text>
+<text x="36" y="202" fill="#b8e5df" font-size="23" font-weight="400" xml:space="preserve">&gt; `getActiveUsers(orgId)` を `fetchData` に改名してもいい？</text>
+<text x="36" y="242" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">codex</text>
+<text x="36" y="276" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">承知しました、親分。</tspan><tspan font-weight="700" fill="#edf3f6">私の推奨は、今の名前を残すことです。</tspan><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="308" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="340" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">【軽微】</tspan><tspan font-weight="400" fill="#b8e5df">fetchData</tspan><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="372" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">では「どの組織の有効ユーザーを取得するか」という看板が消え、呼び出し</tspan></text>
+<text x="36" y="404" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">側で中身を探る手間が増えます。</tspan></text>
+<text x="36" y="436" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="468" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">取得を </tspan><tspan font-weight="400" fill="#b8e5df">fetch</tspan><tspan font-weight="400" fill="#edf3f6"> に統一する方針なら、私なら </tspan><tspan font-weight="400" fill="#b8e5df">fetchActiveUsers(orgId)</tspan><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="500" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">を選びます。改名時は呼び出し箇所も洗い、参照漏れを型チェックで押さえ</tspan></text>
+<text x="36" y="532" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">ましょう。</tspan></text>
+<text x="36" y="600" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">実際の応答 · 原文の表示整形 · 各プリセット1件 · 2026-10-15</text></g>
+</svg>

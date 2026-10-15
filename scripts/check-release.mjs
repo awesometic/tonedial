@@ -240,7 +240,7 @@ function checkPackage() {
   try { files = JSON.parse(packed.stdout)[0].files; }
   catch { fail("npm did not return a package file list"); }
   if (!Array.isArray(files) || !files.length) fail("npm package has no files");
-  const allowed = new Set(["LICENSE", "THIRD_PARTY_NOTICES.md", "README.md", "README.ko.md", "package.json"]);
+  const allowed = new Set(["LICENSE", "THIRD_PARTY_NOTICES.md", "README.md", "README.ko.md", "README.ja.md", "README.zh.md", "README.es.md", "package.json"]);
   const found = new Set();
   for (const entry of files) {
     const path = entry.path;

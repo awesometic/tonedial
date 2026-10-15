@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="1112" viewBox="0 0 1120 1112" role="img" aria-labelledby="title description">
+<title id="title">Codex 实际语气示例</title>
+<desc id="description">`getActiveUsers(orgId)` 可以改名为 `fetchData` 吗？
+
+Royal Advisor
+陛下，臣明白您的提议，也理解您想让命名简洁的考量；您留心名称是否妥当，这份用心甚好。
+
+臣斗胆进言：**可以改，但建议保留 `getActiveUsers(orgId)`**，它清楚表明“获取指定组织的活跃用户”。
+
+- **【低严重度】** `fetchData` 太笼统，调用者难以判断返回什么，日后维护容易误用。
+- 臣另献一策：若最终改名，请核对所有调用处，并确认现有测试仍覆盖“只返回指定组织的活跃用户”。
+
+Ego Sword
+小子，本剑建议保留 `getActiveUsers(orgId)`：一眼就知道取的是组织内的活跃用户。
+
+- **低严重度**：`fetchData` 太含糊，调用者得翻实现才知道拿到什么，维护时容易用错。
+- 啧，本剑再替你守一道关：若要改名，先确认调用处仍能看清“哪个组织、是否只含活跃用户”。</desc>
+<rect width="1120" height="1112" rx="16" fill="#171b20"/>
+<g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, system-ui"><text x="36" y="50" fill="#66d9dc" font-size="24" font-weight="700" xml:space="preserve">Codex CLI · gpt-6.1-sol · high</text>
+<path d="M36 80H1084" stroke="#34424d"/>
+<text x="36" y="126" fill="#66d9dc" font-size="28" font-weight="700" xml:space="preserve">Royal Advisor</text>
+<text x="36" y="160" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">$ tonedial test codex --preset royal-advisor</text>
+<text x="36" y="202" fill="#b8e5df" font-size="23" font-weight="400" xml:space="preserve">&gt; `getActiveUsers(orgId)` 可以改名为 `fetchData` 吗？</text>
+<text x="36" y="242" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">codex</text>
+<text x="36" y="276" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">陛下，臣明白您的提议，也理解您想让命名简洁的考量；您留心名称是否妥当</tspan></text>
+<text x="36" y="308" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">，这份用心甚好。</tspan></text>
+<text x="36" y="340" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="372" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">臣斗胆进言：</tspan><tspan font-weight="700" fill="#edf3f6">可以改，但建议保留</tspan></text>
+<text x="36" y="404" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="700" fill="#edf3f6"></tspan><tspan font-weight="700" fill="#b8e5df">getActiveUsers(orgId)</tspan><tspan font-weight="700" fill="#edf3f6"></tspan><tspan font-weight="400" fill="#edf3f6">，它清楚表明“获取指定组织的活跃用户”。</tspan></text>
+<text x="36" y="436" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="468" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">- </tspan><tspan font-weight="700" fill="#edf3f6">【低严重度】</tspan><tspan font-weight="400" fill="#edf3f6"> </tspan><tspan font-weight="400" fill="#b8e5df">fetchData</tspan><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="500" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">  太笼统，调用者难以判断返回什么，日后维护容易误用。</tspan></text>
+<text x="36" y="532" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">- 臣另献一策：若最终改名，请核对所有调用处，并确认现有测试仍覆盖“只</tspan></text>
+<text x="36" y="564" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">  返回指定组织的活跃用户”。</tspan></text>
+<path d="M36 620H1084" stroke="#34424d"/>
+<text x="36" y="666" fill="#66d9dc" font-size="28" font-weight="700" xml:space="preserve">Ego Sword</text>
+<text x="36" y="700" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">$ tonedial test codex --preset ego-sword</text>
+<text x="36" y="742" fill="#b8e5df" font-size="23" font-weight="400" xml:space="preserve">&gt; `getActiveUsers(orgId)` 可以改名为 `fetchData` 吗？</text>
+<text x="36" y="782" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">codex</text>
+<text x="36" y="816" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">小子，本剑建议保留</tspan></text>
+<text x="36" y="848" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan><tspan font-weight="400" fill="#b8e5df">getActiveUsers(orgId)</tspan><tspan font-weight="400" fill="#edf3f6">：一眼就知道取的是组织内的活跃用户。</tspan></text>
+<text x="36" y="880" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="912" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">- </tspan><tspan font-weight="700" fill="#edf3f6">低严重度</tspan><tspan font-weight="400" fill="#edf3f6">：</tspan><tspan font-weight="400" fill="#b8e5df">fetchData</tspan><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="944" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">  太含糊，调用者得翻实现才知道拿到什么，维护时容易用错。</tspan></text>
+<text x="36" y="976" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">- 啧，本剑再替你守一道关：若要改名，先确认调用处仍能看清“哪个组织、</tspan></text>
+<text x="36" y="1008" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">  是否只含活跃用户”。</tspan></text>
+<text x="36" y="1076" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">实际回复 · 仅整理显示格式 · 每个预设一例 · 2026-10-15</text></g>
+</svg>

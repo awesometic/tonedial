@@ -1,13 +1,18 @@
 # README languages and media
 
 English is the default and editing source: `README.md` at the repository root.
-`README.ko.md` is its Korean translation; each links to the other beside the title.
+Translations are `README.ko.md` (Korean), `README.ja.md` (Japanese),
+`README.zh.md` (Simplified Chinese) and `README.es.md` (Spanish).
+Each README links to all five languages beside the title.
 Do not create a second `README.en.md`, auto-select a language or translate command names, preset names or axis keys.
 Other maintained guides remain English unless they declare their own language contract.
 
 ```text
 README.md
 README.ko.md
+README.ja.md
+README.zh.md
+README.es.md
 docs/media/readme/
   README.md
   en/
@@ -15,11 +20,31 @@ docs/media/readme/
     dial-example.json
     voice-examples.json
     voice-examples.svg
+    voice-<preset>.svg
   ko/
     dial.svg
     dial-example.json
     voice-examples.json
     voice-examples.svg
+    voice-<preset>.svg
+  ja/
+    dial.svg
+    dial-example.json
+    voice-examples.json
+    voice-examples.svg
+    voice-<preset>.svg
+  zh/
+    dial.svg
+    dial-example.json
+    voice-examples.json
+    voice-examples.svg
+    voice-<preset>.svg
+  es/
+    dial.svg
+    dial-example.json
+    voice-examples.json
+    voice-examples.svg
+    voice-<preset>.svg
 ```
 
 Use lowercase language tags for directories and lowercase-kebab-case semantic file stems.
@@ -34,7 +59,8 @@ Use `https://raw.githubusercontent.com/awesometic/tonedial/main/<path>` for imag
 an image's surrounding link may use the GitHub `blob` URL.
 Keep the path's locale and file name identical to the repository asset.
 
-Edit English first, translate Korean, then check natural Korean and every command, link and factual limitation.
+Edit English first, translate each maintained locale, then check natural wording and every command, link and factual limitation.
+Polish Korean according to the project's copy pipeline.
 Update the matching localized image and its accessible text in the same change.
 The dial provenance test requires these canonical URLs and maps them back to local files before checking locale, hashes and renderer output.
 Keep those checks when changing link forms.
@@ -51,10 +77,14 @@ Run generation and media tests from the repository root with disposable state, a
 Recorded voice examples use the actual ToneDial test handoff and a disposable exec adapter
 around the native Codex client, with no provider/UI imitation and no product capture API.
 Each locale JSON owns all seven first completed replies, complete compiler inputs and tone/reply hashes.
-README features only Royal Advisor and Ego Sword; `docs/EXAMPLES.md` and the declared Korean
-translation `docs/EXAMPLES.ko.md` show every reply verbatim.
-Generate the two-role image with `node scripts/voice-svg.ts en` or `node scripts/voice-svg.ts ko`.
-These SVGs format transcripts; they are not screenshots of the native provider interface.
+Each README features only Royal Advisor and Ego Sword.
+`docs/EXAMPLES.md` and its declared `.ko.md`, `.ja.md`, `.zh.md` and `.es.md` translations
+show all seven conversations as individual images, with verbatim text in expandable blocks.
+Generate the two-role image with `node scripts/voice-svg.ts LANGUAGE`, using `en`, `ko`, `ja`, `zh` or `es`.
+Generate each `voice-<preset>.svg` with `node scripts/voice-svg.ts LANGUAGE PRESET`.
+Commands and speaker markers are presentation labels, not extra recorded response text.
+Preserve each locale's actual capture date and product revision; a translation does not inherit another run's evidence.
+These SVGs present terminal-style dialogue from recorded transcripts; they are not screenshots of the native provider interface.
 Retain model/client/effort/date metadata, failed-request notes and any unobserved evidence boundary.
 Never polish model wording, retry a completed response for a preferred result, publish raw provider
 journals or auth material, or treat these samples as hook activation or a scored measurement.

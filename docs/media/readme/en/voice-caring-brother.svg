@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="892" viewBox="0 0 1120 892" role="img" aria-labelledby="title description">
+<title id="title">Recorded Codex voice examples</title>
+<desc id="description">Should I rename `getActiveUsers(orgId)` to `fetchData`?
+
+Caring Brother
+**My choice: keep `getActiveUsers(orgId)`, little sibling.** I get wanting a shorter name, but this one tells the reader what it returns. `fetchData` leaves them guessing.
+
+For example:
+
+```js
+const users = await getActiveUsers(orgId);
+```
+
+That makes the purpose clearer than `await fetchData(orgId)`.
+
+Your big brother’s rule of thumb: name the action and the thing it acts on. If you’re trying to signal a network request, `fetchActiveUsers(orgId)` is an option.
+
+You don’t need to untangle the whole naming scheme today. We can work through related names if they’re bothering you, too. For now, you can leave this one alone and give yourself a breather.</desc>
+<rect width="1120" height="892" rx="16" fill="#171b20"/>
+<g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, system-ui"><text x="36" y="50" fill="#66d9dc" font-size="24" font-weight="700" xml:space="preserve">Codex CLI · gpt-6.1-sol · high</text>
+<path d="M36 80H1084" stroke="#34424d"/>
+<text x="36" y="126" fill="#66d9dc" font-size="28" font-weight="700" xml:space="preserve">Caring Brother</text>
+<text x="36" y="160" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">$ tonedial test codex --preset caring-brother</text>
+<text x="36" y="202" fill="#b8e5df" font-size="23" font-weight="400" xml:space="preserve">&gt; Should I rename `getActiveUsers(orgId)` to `fetchData`?</text>
+<text x="36" y="242" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">codex</text>
+<text x="36" y="276" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan><tspan font-weight="700" fill="#edf3f6">My choice: keep </tspan><tspan font-weight="700" fill="#b8e5df">getActiveUsers(orgId)</tspan><tspan font-weight="700" fill="#edf3f6">, little sibling.</tspan><tspan font-weight="400" fill="#edf3f6"> I get</tspan></text>
+<text x="36" y="308" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">wanting a shorter name, but this one tells the reader what it</tspan></text>
+<text x="36" y="340" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">returns. </tspan><tspan font-weight="400" fill="#b8e5df">fetchData</tspan><tspan font-weight="400" fill="#edf3f6"> leaves them guessing.</tspan></text>
+<text x="36" y="372" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="404" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">For example:</tspan></text>
+<text x="36" y="436" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="468" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan fill="#b8e5df">const users = await getActiveUsers(orgId);</tspan></text>
+<text x="36" y="500" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="532" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">That makes the purpose clearer than </tspan><tspan font-weight="400" fill="#b8e5df">await fetchData(orgId)</tspan><tspan font-weight="400" fill="#edf3f6">.</tspan></text>
+<text x="36" y="564" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="596" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">Your big brother’s rule of thumb: name the action and the thing it</tspan></text>
+<text x="36" y="628" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">acts on. If you’re trying to signal a network request,</tspan></text>
+<text x="36" y="660" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan><tspan font-weight="400" fill="#b8e5df">fetchActiveUsers(orgId)</tspan><tspan font-weight="400" fill="#edf3f6"> is an option.</tspan></text>
+<text x="36" y="692" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="724" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">You don’t need to untangle the whole naming scheme today. We can</tspan></text>
+<text x="36" y="756" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">work through related names if they’re bothering you, too. For now,</tspan></text>
+<text x="36" y="788" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">you can leave this one alone and give yourself a breather.</tspan></text>
+<text x="36" y="856" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">Real replies · formatted transcript · one sample per preset · 2026-10-14</text></g>
+</svg>

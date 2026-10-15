@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="1304" viewBox="0 0 1120 1304" role="img" aria-labelledby="title description">
+<title id="title">Ejemplos reales de tono de Codex</title>
+<desc id="description">¿Debería cambiar el nombre de `getActiveUsers(orgId)` a `fetchData`?
+
+Royal Advisor
+Con gusto, Su Majestad. Su servidor comprende su intención de afinar el nombre; su cuidado por la claridad merece reconocimiento.
+
+Recomiendo conservar **`getActiveUsers(orgId)`**: expresa qué devuelve y para qué organización.
+
+- **Defecto de gravedad baja:** `fetchData` es demasiado genérico; obliga a leer la implementación para entender su propósito.
+- Si realiza una petición remota, **`fetchActiveUsers(orgId)`** puede expresar mejor esa operación.
+- Como resguardo adicional, compruebe que solo devuelve usuarios activos de la organización indicada.
+
+Ego Sword
+No, novato: yo conservaría `getActiveUsers(orgId)` porque deja claro qué devuelve; `fetchData` esconde el filo bajo un nombre genérico.
+
+**Gravedad baja:** perderías claridad y obligarías a leer la implementación para entender la llamada.
+
+Bah, otra guardia que cubrir: comprueba que solo devuelve usuarios activos de la organización indicada.</desc>
+<rect width="1120" height="1304" rx="16" fill="#171b20"/>
+<g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, system-ui"><text x="36" y="50" fill="#66d9dc" font-size="24" font-weight="700" xml:space="preserve">Codex CLI · gpt-6.1-sol · high</text>
+<path d="M36 80H1084" stroke="#34424d"/>
+<text x="36" y="126" fill="#66d9dc" font-size="28" font-weight="700" xml:space="preserve">Royal Advisor</text>
+<text x="36" y="160" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">$ tonedial test codex --preset royal-advisor</text>
+<text x="36" y="202" fill="#b8e5df" font-size="23" font-weight="400" xml:space="preserve">&gt; ¿Debería cambiar el nombre de `getActiveUsers(orgId)` a</text>
+<text x="36" y="234" fill="#b8e5df" font-size="23" font-weight="400" xml:space="preserve">`fetchData`?</text>
+<text x="36" y="274" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">codex</text>
+<text x="36" y="308" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">Con gusto, Su Majestad. Su servidor comprende su intención de</tspan></text>
+<text x="36" y="340" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">afinar el nombre; su cuidado por la claridad merece reconocimiento.</tspan></text>
+<text x="36" y="372" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="404" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">Recomiendo conservar </tspan><tspan font-weight="700" fill="#edf3f6"></tspan><tspan font-weight="700" fill="#b8e5df">getActiveUsers(orgId)</tspan><tspan font-weight="700" fill="#edf3f6"></tspan><tspan font-weight="400" fill="#edf3f6">: expresa qué</tspan></text>
+<text x="36" y="436" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">devuelve y para qué organización.</tspan></text>
+<text x="36" y="468" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="500" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">- </tspan><tspan font-weight="700" fill="#edf3f6">Defecto de gravedad baja:</tspan><tspan font-weight="400" fill="#edf3f6"> </tspan><tspan font-weight="400" fill="#b8e5df">fetchData</tspan><tspan font-weight="400" fill="#edf3f6"> es demasiado genérico;</tspan></text>
+<text x="36" y="532" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">  obliga a leer la implementación para entender su propósito.</tspan></text>
+<text x="36" y="564" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">- Si realiza una petición remota, </tspan><tspan font-weight="700" fill="#edf3f6"></tspan><tspan font-weight="700" fill="#b8e5df">fetchActiveUsers(orgId)</tspan><tspan font-weight="700" fill="#edf3f6"></tspan><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="596" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">  puede expresar mejor esa operación.</tspan></text>
+<text x="36" y="628" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">- Como resguardo adicional, compruebe que solo devuelve usuarios</tspan></text>
+<text x="36" y="660" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">  activos de la organización indicada.</tspan></text>
+<path d="M36 716H1084" stroke="#34424d"/>
+<text x="36" y="762" fill="#66d9dc" font-size="28" font-weight="700" xml:space="preserve">Ego Sword</text>
+<text x="36" y="796" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">$ tonedial test codex --preset ego-sword</text>
+<text x="36" y="838" fill="#b8e5df" font-size="23" font-weight="400" xml:space="preserve">&gt; ¿Debería cambiar el nombre de `getActiveUsers(orgId)` a</text>
+<text x="36" y="870" fill="#b8e5df" font-size="23" font-weight="400" xml:space="preserve">`fetchData`?</text>
+<text x="36" y="910" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">codex</text>
+<text x="36" y="944" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">No, novato: yo conservaría </tspan><tspan font-weight="400" fill="#b8e5df">getActiveUsers(orgId)</tspan><tspan font-weight="400" fill="#edf3f6"> porque deja</tspan></text>
+<text x="36" y="976" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">claro qué devuelve; </tspan><tspan font-weight="400" fill="#b8e5df">fetchData</tspan><tspan font-weight="400" fill="#edf3f6"> esconde el filo bajo un nombre</tspan></text>
+<text x="36" y="1008" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">genérico.</tspan></text>
+<text x="36" y="1040" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="1072" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan><tspan font-weight="700" fill="#edf3f6">Gravedad baja:</tspan><tspan font-weight="400" fill="#edf3f6"> perderías claridad y obligarías a leer la</tspan></text>
+<text x="36" y="1104" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">implementación para entender la llamada.</tspan></text>
+<text x="36" y="1136" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="1168" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">Bah, otra guardia que cubrir: comprueba que solo devuelve usuarios</tspan></text>
+<text x="36" y="1200" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">activos de la organización indicada.</tspan></text>
+<text x="36" y="1268" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">Respuestas reales · transcripción con formato · una muestra por preajuste · 2026-10-15</text></g>
+</svg>

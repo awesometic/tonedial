@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="956" viewBox="0 0 1120 956" role="img" aria-labelledby="title description">
+<title id="title">Ejemplos reales de tono de Codex</title>
+<desc id="description">¿Debería cambiar el nombre de `getActiveUsers(orgId)` a `fetchData`?
+
+Caring Brother
+**Mi elección: mantén `getActiveUsers(orgId)`, hermanito.** Entiendo la duda: `fetchData` es más corto, pero deja poco claro qué datos devuelve y obliga a revisar la implementación.
+
+Por ejemplo:
+
+```js
+const users = await getActiveUsers(orgId);
+```
+
+Ese nombre ya cuenta que obtienes los usuarios activos de una organización. Con `fetchData(orgId)`, esa información se pierde.
+
+Aquí está tu hermano: si quieres indicar que hace una petición de red, consideraría **`fetchActiveUsers(orgId)`**, siempre que encaje con los nombres del proyecto.
+
+Tranquilo, podemos verlo juntos. Tu hermano mayor te anima a resolver solo esta decisión y dejar el resto para después; no hace falta convertirla en una refactorización grande.</desc>
+<rect width="1120" height="956" rx="16" fill="#171b20"/>
+<g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, system-ui"><text x="36" y="50" fill="#66d9dc" font-size="24" font-weight="700" xml:space="preserve">Codex CLI · gpt-6.1-sol · high</text>
+<path d="M36 80H1084" stroke="#34424d"/>
+<text x="36" y="126" fill="#66d9dc" font-size="28" font-weight="700" xml:space="preserve">Caring Brother</text>
+<text x="36" y="160" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">$ tonedial test codex --preset caring-brother</text>
+<text x="36" y="202" fill="#b8e5df" font-size="23" font-weight="400" xml:space="preserve">&gt; ¿Debería cambiar el nombre de `getActiveUsers(orgId)` a</text>
+<text x="36" y="234" fill="#b8e5df" font-size="23" font-weight="400" xml:space="preserve">`fetchData`?</text>
+<text x="36" y="274" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">codex</text>
+<text x="36" y="308" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan><tspan font-weight="700" fill="#edf3f6">Mi elección: mantén </tspan><tspan font-weight="700" fill="#b8e5df">getActiveUsers(orgId)</tspan><tspan font-weight="700" fill="#edf3f6">, hermanito.</tspan><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="340" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">Entiendo la duda: </tspan><tspan font-weight="400" fill="#b8e5df">fetchData</tspan><tspan font-weight="400" fill="#edf3f6"> es más corto, pero deja poco claro</tspan></text>
+<text x="36" y="372" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">qué datos devuelve y obliga a revisar la implementación.</tspan></text>
+<text x="36" y="404" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="436" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">Por ejemplo:</tspan></text>
+<text x="36" y="468" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="500" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan fill="#b8e5df">const users = await getActiveUsers(orgId);</tspan></text>
+<text x="36" y="532" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="564" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">Ese nombre ya cuenta que obtienes los usuarios activos de una</tspan></text>
+<text x="36" y="596" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">organización. Con </tspan><tspan font-weight="400" fill="#b8e5df">fetchData(orgId)</tspan><tspan font-weight="400" fill="#edf3f6">, esa información se pierde.</tspan></text>
+<text x="36" y="628" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="660" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">Aquí está tu hermano: si quieres indicar que hace una petición de</tspan></text>
+<text x="36" y="692" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">red, consideraría </tspan><tspan font-weight="700" fill="#edf3f6"></tspan><tspan font-weight="700" fill="#b8e5df">fetchActiveUsers(orgId)</tspan><tspan font-weight="700" fill="#edf3f6"></tspan><tspan font-weight="400" fill="#edf3f6">, siempre que encaje</tspan></text>
+<text x="36" y="724" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">con los nombres del proyecto.</tspan></text>
+<text x="36" y="756" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="788" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">Tranquilo, podemos verlo juntos. Tu hermano mayor te anima a</tspan></text>
+<text x="36" y="820" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">resolver solo esta decisión y dejar el resto para después; no hace</tspan></text>
+<text x="36" y="852" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">falta convertirla en una refactorización grande.</tspan></text>
+<text x="36" y="920" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">Respuestas reales · transcripción con formato · una muestra por preajuste · 2026-10-15</text></g>
+</svg>

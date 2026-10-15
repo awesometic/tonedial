@@ -1,6 +1,6 @@
 # ToneDial
 
-**English** | [한국어](https://github.com/awesometic/tonedial/blob/main/README.ko.md)
+**English** | [한국어](https://github.com/awesometic/tonedial/blob/main/README.ko.md) | [日本語](https://github.com/awesometic/tonedial/blob/main/README.ja.md) | [简体中文](https://github.com/awesometic/tonedial/blob/main/README.zh.md) | [Español](https://github.com/awesometic/tonedial/blob/main/README.es.md)
 
 **A dial for your coding agent's voice.**
 
@@ -29,7 +29,7 @@ See [refresh and bounded style feedback](https://github.com/awesometic/tonedial/
 [All seven recorded examples](https://github.com/awesometic/tonedial/blob/main/docs/EXAMPLES.md) ·
 [Complete inputs and response records](https://github.com/awesometic/tonedial/blob/main/docs/media/readme/en/voice-examples.json)
 
-<sub>Codex CLI 0.160.0 · gpt-6.1-sol · high effort · 2026-10-14. First completed responses, formatted as a transcript. This is not a native UI screenshot or hook-activation proof.</sub>
+<sub>Codex CLI 0.160.0 · gpt-6.1-sol · high effort · 2026-10-14. First completed responses, rendered as terminal-style dialogue. This is not a native UI screenshot or hook-activation proof.</sub>
 
 ## Try it
 

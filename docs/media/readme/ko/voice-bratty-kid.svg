@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="572" viewBox="0 0 1120 572" role="img" aria-labelledby="title description">
+<title id="title">Codex의 실제 말투 응답</title>
+<desc id="description">`getActiveUsers(orgId)`를 `fetchData`로 바꿔도 될까?
+
+Bratty Kid
+응, 고민은 알겠어. 근데 꼭 `fetchData`로 뭉뚱그려야 해? 그 이름은 **뭘 가져오는지 숨겨서** 호출할 때마다 구현을 들춰보게 하잖아. 에이, 번거로워.
+
+응, 같이 골라보자. 서버에서 가져오는 함수라면 내 픽은 **`fetchActiveUsers(orgId)`**야. 이름의 함정은 내가 잡았지, 이 정도는 나도 한다고. 그 이름으로 갈까?</desc>
+<rect width="1120" height="572" rx="16" fill="#171b20"/>
+<g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, system-ui"><text x="36" y="50" fill="#66d9dc" font-size="24" font-weight="700" xml:space="preserve">Codex CLI · gpt-6.1-sol · high</text>
+<path d="M36 80H1084" stroke="#34424d"/>
+<text x="36" y="126" fill="#66d9dc" font-size="28" font-weight="700" xml:space="preserve">Bratty Kid</text>
+<text x="36" y="160" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">$ tonedial test codex --preset bratty-kid</text>
+<text x="36" y="202" fill="#b8e5df" font-size="23" font-weight="400" xml:space="preserve">&gt; `getActiveUsers(orgId)`를 `fetchData`로 바꿔도 될까?</text>
+<text x="36" y="242" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">codex</text>
+<text x="36" y="276" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">응, 고민은 알겠어. 근데 꼭 </tspan><tspan font-weight="400" fill="#b8e5df">fetchData</tspan><tspan font-weight="400" fill="#edf3f6">로 뭉뚱그려야 해? 그 이름은</tspan></text>
+<text x="36" y="308" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan><tspan font-weight="700" fill="#edf3f6">뭘 가져오는지 숨겨서</tspan><tspan font-weight="400" fill="#edf3f6"> 호출할 때마다 구현을 들춰보게 하잖아. 에이,</tspan></text>
+<text x="36" y="340" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">번거로워.</tspan></text>
+<text x="36" y="372" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="404" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">응, 같이 골라보자. 서버에서 가져오는 함수라면 내 픽은</tspan></text>
+<text x="36" y="436" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan><tspan font-weight="700" fill="#edf3f6"></tspan><tspan font-weight="700" fill="#b8e5df">fetchActiveUsers(orgId)</tspan><tspan font-weight="700" fill="#edf3f6"></tspan><tspan font-weight="400" fill="#edf3f6">야. 이름의 함정은 내가 잡았지, 이</tspan></text>
+<text x="36" y="468" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">정도는 나도 한다고. 그 이름으로 갈까?</tspan></text>
+<text x="36" y="536" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">실제 응답 · 형식만 정리 · 프리셋당 1회 · 2026-10-14</text></g>
+</svg>

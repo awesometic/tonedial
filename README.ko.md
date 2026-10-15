@@ -1,6 +1,6 @@
 # ToneDial
 
-[English](https://github.com/awesometic/tonedial/blob/main/README.md) | **한국어**
+[English](https://github.com/awesometic/tonedial/blob/main/README.md) | **한국어** | [日本語](https://github.com/awesometic/tonedial/blob/main/README.ja.md) | [简体中文](https://github.com/awesometic/tonedial/blob/main/README.zh.md) | [Español](https://github.com/awesometic/tonedial/blob/main/README.es.md)
 
 **코딩 에이전트의 말투를 조절하는 다이얼입니다.**
 
@@ -31,7 +31,7 @@ Claude와 Codex는 답변이 끝난 뒤 말투만 조정하는 보정 요청을 
 [일곱 프리셋의 전체 예제](https://github.com/awesometic/tonedial/blob/main/docs/EXAMPLES.ko.md) ·
 [전체 입력과 응답 기록](https://github.com/awesometic/tonedial/blob/main/docs/media/readme/ko/voice-examples.json)
 
-<sub>Codex CLI 0.160.0 · gpt-6.1-sol · high 추론 · 2026-10-14. 첫 완료 응답의 원문을 이미지로 정리했습니다. 네이티브 UI 화면이나 훅 활성화의 증거는 아닙니다.</sub>
+<sub>Codex CLI 0.160.0 · gpt-6.1-sol · high 추론 · 2026-10-14. 첫 완료 응답의 원문을 터미널 대화 형식의 이미지로 정리했습니다. 네이티브 UI 화면이나 훅 활성화의 증거는 아닙니다.</sub>
 
 ## 사용해 보기
 

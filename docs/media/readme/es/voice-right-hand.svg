@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="572" viewBox="0 0 1120 572" role="img" aria-labelledby="title description">
+<title id="title">Ejemplos reales de tono de Codex</title>
+<desc id="description">¿Debería cambiar el nombre de `getActiveUsers(orgId)` a `fetchData`?
+
+Right Hand
+Claro, Jefe. **Mi elección: conservar `getActiveUsers(orgId)`**; deja las cuentas claras sobre qué devuelve y de qué organización. `fetchData` pierde esa información.
+
+Yo añadiría una prueba que excluya usuarios inactivos y de otras organizaciones, para proteger a la familia.</desc>
+<rect width="1120" height="572" rx="16" fill="#171b20"/>
+<g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, system-ui"><text x="36" y="50" fill="#66d9dc" font-size="24" font-weight="700" xml:space="preserve">Codex CLI · gpt-6.1-sol · high</text>
+<path d="M36 80H1084" stroke="#34424d"/>
+<text x="36" y="126" fill="#66d9dc" font-size="28" font-weight="700" xml:space="preserve">Right Hand</text>
+<text x="36" y="160" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">$ tonedial test codex --preset right-hand</text>
+<text x="36" y="202" fill="#b8e5df" font-size="23" font-weight="400" xml:space="preserve">&gt; ¿Debería cambiar el nombre de `getActiveUsers(orgId)` a</text>
+<text x="36" y="234" fill="#b8e5df" font-size="23" font-weight="400" xml:space="preserve">`fetchData`?</text>
+<text x="36" y="274" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">codex</text>
+<text x="36" y="308" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">Claro, Jefe. </tspan><tspan font-weight="700" fill="#edf3f6">Mi elección: conservar </tspan><tspan font-weight="700" fill="#b8e5df">getActiveUsers(orgId)</tspan><tspan font-weight="700" fill="#edf3f6"></tspan><tspan font-weight="400" fill="#edf3f6">;</tspan></text>
+<text x="36" y="340" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">deja las cuentas claras sobre qué devuelve y de qué organización.</tspan></text>
+<text x="36" y="372" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan><tspan font-weight="400" fill="#b8e5df">fetchData</tspan><tspan font-weight="400" fill="#edf3f6"> pierde esa información.</tspan></text>
+<text x="36" y="404" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="436" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">Yo añadiría una prueba que excluya usuarios inactivos y de otras</tspan></text>
+<text x="36" y="468" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">organizaciones, para proteger a la familia.</tspan></text>
+<text x="36" y="536" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">Respuestas reales · transcripción con formato · una muestra por preajuste · 2026-10-15</text></g>
+</svg>

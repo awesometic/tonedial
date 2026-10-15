@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="892" viewBox="0 0 1120 892" role="img" aria-labelledby="title description">
+<title id="title">Codex의 실제 말투 응답</title>
+<desc id="description">`getActiveUsers(orgId)`를 `fetchData`로 바꿔도 될까?
+
+Caring Brother
+**형의 선택은 `getActiveUsers(orgId)`를 유지하는 거야, 동생.** 이름을 더 간단하게 하고 싶은 마음은 이해돼.
+
+`fetchData`는 뭘 가져오는지 알기 어려워서, 호출하는 코드를 읽을 때 함수 안까지 확인해야 해. 예를 들어 `const users = await getActiveUsers(orgId)`는 “이 조직의 활성 사용자”를 가져온다는 뜻이 바로 보여.
+
+형이 같이 봐줄게. 의도에 따라 이렇게 고르면 돼.
+
+- **활성 사용자 조회:** 지금 이름 유지.
+- **네트워크 요청임을 강조:** `fetchActiveUsers(orgId)`도 괜찮아.
+- **여러 종류의 데이터를 가져오는 공통 함수:** 그때는 `fetchData`를 고려해도 돼.
+
+부담 갖지 말고, 함수가 실제로 하는 일부터 보면 돼. 이름 하나 때문에 주변 코드까지 한꺼번에 손보려 애쓰진 말자.</desc>
+<rect width="1120" height="892" rx="16" fill="#171b20"/>
+<g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, system-ui"><text x="36" y="50" fill="#66d9dc" font-size="24" font-weight="700" xml:space="preserve">Codex CLI · gpt-6.1-sol · high</text>
+<path d="M36 80H1084" stroke="#34424d"/>
+<text x="36" y="126" fill="#66d9dc" font-size="28" font-weight="700" xml:space="preserve">Caring Brother</text>
+<text x="36" y="160" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">$ tonedial test codex --preset caring-brother</text>
+<text x="36" y="202" fill="#b8e5df" font-size="23" font-weight="400" xml:space="preserve">&gt; `getActiveUsers(orgId)`를 `fetchData`로 바꿔도 될까?</text>
+<text x="36" y="242" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">codex</text>
+<text x="36" y="276" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan><tspan font-weight="700" fill="#edf3f6">형의 선택은 </tspan><tspan font-weight="700" fill="#b8e5df">getActiveUsers(orgId)</tspan><tspan font-weight="700" fill="#edf3f6">를 유지하는 거야, 동생.</tspan><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="308" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">이름을 더 간단하게 하고 싶은 마음은 이해돼.</tspan></text>
+<text x="36" y="340" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="372" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan><tspan font-weight="400" fill="#b8e5df">fetchData</tspan><tspan font-weight="400" fill="#edf3f6">는 뭘 가져오는지 알기 어려워서, 호출하는 코드를 읽을 때</tspan></text>
+<text x="36" y="404" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">함수 안까지 확인해야 해. 예를 들어 </tspan><tspan font-weight="400" fill="#b8e5df">const users = await</tspan></text>
+<text x="36" y="436" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#b8e5df">getActiveUsers(orgId)</tspan><tspan font-weight="400" fill="#edf3f6">는 “이 조직의 활성 사용자”를 가져온다는 뜻이</tspan></text>
+<text x="36" y="468" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">바로 보여.</tspan></text>
+<text x="36" y="500" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="532" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">형이 같이 봐줄게. 의도에 따라 이렇게 고르면 돼.</tspan></text>
+<text x="36" y="564" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="596" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">- </tspan><tspan font-weight="700" fill="#edf3f6">활성 사용자 조회:</tspan><tspan font-weight="400" fill="#edf3f6"> 지금 이름 유지.</tspan></text>
+<text x="36" y="628" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">- </tspan><tspan font-weight="700" fill="#edf3f6">네트워크 요청임을 강조:</tspan><tspan font-weight="400" fill="#edf3f6"> </tspan><tspan font-weight="400" fill="#b8e5df">fetchActiveUsers(orgId)</tspan><tspan font-weight="400" fill="#edf3f6">도 괜찮아.</tspan></text>
+<text x="36" y="660" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">- </tspan><tspan font-weight="700" fill="#edf3f6">여러 종류의 데이터를 가져오는 공통 함수:</tspan><tspan font-weight="400" fill="#edf3f6"> 그때는 </tspan><tspan font-weight="400" fill="#b8e5df">fetchData</tspan><tspan font-weight="400" fill="#edf3f6">를</tspan></text>
+<text x="36" y="692" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">  고려해도 돼.</tspan></text>
+<text x="36" y="724" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="756" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">부담 갖지 말고, 함수가 실제로 하는 일부터 보면 돼. 이름 하나 때문에</tspan></text>
+<text x="36" y="788" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">주변 코드까지 한꺼번에 손보려 애쓰진 말자.</tspan></text>
+<text x="36" y="856" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">실제 응답 · 형식만 정리 · 프리셋당 1회 · 2026-10-14</text></g>
+</svg>
