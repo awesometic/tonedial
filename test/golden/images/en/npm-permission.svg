@@ -2,7 +2,7 @@
 <title id="title">ToneDial screen (npm-permission)</title>
 <desc id="description">ToneDial · update
 
-  tonedial 0.1.3
+  tonedial 0.1.4
 
   Package update:
     npm update -g tonedial --prefix "&lt;ROOT&gt;/npm prefix"
@@ -14,7 +14,7 @@ https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#npm-permissions
 </desc>
 <rect width="100%" height="100%" rx="16" fill="#171b20"/>
 <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, system-ui" font-size="22"><text x="32" y="48" fill="#edf3f6" font-weight="400" opacity="1">ToneDial · update</text>
-<text x="60" y="104" fill="#edf3f6" font-weight="400" opacity="1">tonedial 0.1.3</text>
+<text x="60" y="104" fill="#edf3f6" font-weight="400" opacity="1">tonedial 0.1.4</text>
 <text x="60" y="160" fill="#edf3f6" font-weight="400" opacity="1">Package update:</text>
 <text x="88" y="188" fill="#edf3f6" font-weight="400" opacity="1">npm update -g tonedial --prefix "&lt;ROOT&gt;/npm prefix"</text>
 <text x="32" y="216" fill="#edf3f6" font-weight="400" opacity="1">npm update needs write permission (EACCES).</text>
