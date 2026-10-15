@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { afterEach, beforeEach, test } from "node:test";
 import childProcess from "node:child_process";
+import fs from "node:fs";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { syncBuiltinESMExports } from "node:module";
 import { PassThrough } from "node:stream";
@@ -21,6 +22,7 @@ import { UNKNOWN_WIDTH, maxCells } from "../src/ui/width.ts";
 import { createLegacyFixture } from "./support/legacy-fixture.ts";
 import { withPathLine } from "../src/wiring/shell.ts";
 import { isUnbreakable } from "./support/width-contract.ts";
+import { acquireOperation, beginJournal, inspectOperations } from "../src/core/operations.ts";
 
 type Check = {
   name: string;
@@ -120,6 +122,136 @@ test("a repair receipt offers each rollback command once and standalone diagnosi
   const diagnosis = await invokeHuman(["doctor", "--global"]);
   assert.equal(diagnosis.code, 0, diagnosis.error);
   assert.ok(diagnosis.output.includes(commands[0]!), "standalone diagnosis must retain the restorable operation");
+});
+
+test("a repair receipt preserves ordered rollback instructions when another operation becomes pending", async t => {
+  assert.equal((await invoke(["init", "--global", "--tools", "none", "--auto"])).code, 0);
+  const paths = resolvePaths(env);
+  writeFileSync(paths.agents, "damaged generated guide\n");
+  const remove = fs.rmdirSync;
+  let pendingId: string | null = null;
+  const released = t.mock.method(fs, "rmdirSync", (...args: Parameters<typeof fs.rmdirSync>) => {
+    remove(...args);
+    if (String(args[0]) !== paths.operationsLock || pendingId !== null) return;
+    const operation = acquireOperation(paths, "mutation");
+    pendingId = operation.owner.operationId;
+    beginJournal(operation, []);
+    const ownerPath = join(paths.operationsLock, "owner.json");
+    const owner = JSON.parse(readFileSync(ownerPath, "utf8"));
+    owner.pid = 2_147_483_000;
+    writeFileSync(ownerPath, JSON.stringify(owner));
+  });
+  syncBuiltinESMExports();
+  let result: HumanResult;
+  try {
+    result = await invokeHuman(["doctor", "--fix", "--global", "--tools", "none", "--auto"]);
+  } finally { released.mock.restore(); syncBuiltinESMExports(); }
+  assert.equal(result.code, 0, result.error);
+  assert.ok(pendingId, "the new operation must appear between app repair and final diagnosis");
+  assert.ok(result.output.includes(pendingId));
+  assert.ok(!result.output.includes(`tonedial doctor --fix --rollback ${pendingId}`), "the receipt owns its ordered rollback instructions");
+  assert.equal((result.output.match(/tonedial doctor --fix --rollback [0-9a-f]{32}/g) ?? []).length, 1);
+});
+
+test("blocked doctor shows the stopped operation and scoped recovery actions while retaining JSON and verbose history", async () => {
+  assert.equal((await invoke(["init", "--global", "--tools", "none", "--auto"])).code, 0);
+  assert.equal((await invoke(["set", "care=4"])).code, 0);
+  const paths = resolvePaths(env);
+  const history = inspectOperations(paths).journals.map(({ operationId }) => operationId);
+  assert.ok(history.length >= 2);
+  const operation = acquireOperation(paths, "mutation");
+  beginJournal(operation, []);
+  const ownerPath = join(paths.operationsLock, "owner.json");
+  const owner = JSON.parse(readFileSync(ownerPath, "utf8"));
+  owner.pid = 2_147_483_000;
+  writeFileSync(ownerPath, JSON.stringify(owner));
+  const journalPath = join(paths.operations, `${owner.operationId}.json`);
+  const journal = JSON.parse(readFileSync(journalPath, "utf8"));
+  journal.owner.pid = owner.pid;
+  writeFileSync(journalPath, JSON.stringify(journal));
+  const directory = join(scratch, "project with spaces");
+  mkdirSync(directory);
+  const before = [paths.config, ownerPath, journalPath].map(path => ({ path, bytes: readFileSync(path) }));
+  const report = await invokeHuman(["doctor", "--project", directory]);
+  assert.equal(report.code, 0, report.error);
+  assert.ok(report.output.includes(owner.operationId));
+  for (const id of history) assert.ok(!report.output.includes(id), "completed journals are history, not current blockers");
+  assert.ok(report.output.includes(`tonedial doctor --project "${directory}" --json`));
+  assert.ok(report.output.includes(`tonedial doctor --fix --from-operation ${owner.operationId} --project "${directory}"`));
+  assert.ok(report.output.includes(`tonedial doctor --fix --rollback ${owner.operationId}`));
+  const json = await invoke(["doctor", "--project", directory]);
+  assert.equal(json.code, 0, json.output);
+  assert.deepEqual(json.value.recovery, {
+    lock: "dead",
+    operations: inspectOperations(paths).journals.map(({ operationId, state }) => ({ operationId, state })),
+  });
+  const verbose = await invokeHuman(["doctor", "--project", directory, "--verbose"]);
+  assert.equal(verbose.code, 0, verbose.error);
+  for (const id of history) assert.ok(verbose.output.includes(id), "verbose diagnosis retains completed history");
+  for (const { path, bytes } of before) assert.deepEqual(readFileSync(path), bytes, "diagnosis changed recovery state");
+});
+
+test("live, unknown and invalid operation owners get diagnosis without resume or rollback offers", async t => {
+  assert.equal((await invoke(["init", "--global", "--tools", "none", "--auto"])).code, 0);
+  const paths = resolvePaths(env);
+  const operation = acquireOperation(paths, "mutation");
+  beginJournal(operation, []);
+  const ownerPath = join(paths.operationsLock, "owner.json");
+  const owner = JSON.parse(readFileSync(ownerPath, "utf8"));
+  const originalKill = process.kill;
+  t.mock.method(process, "kill", ((pid: number, signal?: number | NodeJS.Signals) => {
+    if (pid === 2_147_483_000 && signal === 0) throw Object.assign(new Error("fixture owner cannot be inspected"), { code: "EPERM" });
+    return originalKill(pid, signal);
+  }) as typeof process.kill);
+  for (const state of ["live", "unknown", "invalid"] as const) {
+    writeFileSync(ownerPath, JSON.stringify({ ...owner, pid: state === "live" ? process.pid : 2_147_483_000,
+      ...(state === "invalid" ? { nonce: "invalid" } : {}) }));
+    const before = readFileSync(ownerPath);
+    const human = await invokeHuman(["doctor", "--global"]);
+    assert.equal(human.code, 0, human.error);
+    assert.ok(human.output.includes(`tonedial doctor --global --json`));
+    assert.doesNotMatch(human.output, /--from-operation|--rollback/, state);
+    const json = await invoke(["doctor", "--global"]);
+    assert.equal(json.code, 0, json.output);
+    assert.equal((json.value.recovery as { lock: string }).lock, state);
+    assert.deepEqual(readFileSync(ownerPath), before, "diagnosis must preserve the owner");
+  }
+});
+
+test("a stopped preparation without a journal offers rollback without an unusable resume source", async () => {
+  assert.equal((await invoke(["init", "--global", "--tools", "none", "--auto"])).code, 0);
+  const paths = resolvePaths(env);
+  const operation = acquireOperation(paths, "mutation");
+  const ownerPath = join(paths.operationsLock, "owner.json");
+  const owner = JSON.parse(readFileSync(ownerPath, "utf8"));
+  owner.pid = 2_147_483_000;
+  writeFileSync(ownerPath, JSON.stringify(owner));
+  const human = await invokeHuman(["doctor", "--global"]);
+  assert.equal(human.code, 0, human.error);
+  assert.ok(human.output.includes(`tonedial doctor --fix --rollback ${operation.owner.operationId}`));
+  assert.doesNotMatch(human.output, /--from-operation/);
+  assert.equal(existsSync(join(paths.operations, `${operation.owner.operationId}.json`)), false,
+    "read-only diagnosis must not create a synthetic journal on disk");
+});
+
+test("an orphan pending journal offers diagnosis without recovery authority the executor does not have", async () => {
+  assert.equal((await invoke(["init", "--global", "--tools", "none", "--auto"])).code, 0);
+  const paths = resolvePaths(env);
+  const operation = acquireOperation(paths, "mutation");
+  beginJournal(operation, []);
+  rmSync(paths.operationsLock, { recursive: true });
+  const journalPath = join(paths.operations, `${operation.owner.operationId}.json`);
+  const before = readFileSync(journalPath);
+  const human = await invokeHuman(["doctor", "--global"]);
+  assert.equal(human.code, 0, human.error);
+  assert.ok(human.output.includes(operation.owner.operationId));
+  assert.ok(human.output.includes("tonedial doctor --global --json"));
+  assert.doesNotMatch(human.output, /--from-operation|--rollback/);
+  const rollback = await invoke(["doctor", "--fix", "--rollback", operation.owner.operationId, "--auto"]);
+  assert.equal(rollback.code, 1);
+  assert.match(rollback.value.error as string, /does not contain a recoverable owner/);
+  assert.deepEqual(readFileSync(journalPath), before);
+  assert.equal(existsSync(paths.operationsLock), false);
 });
 
 function containsWrapped(text: string, expected: string): boolean {

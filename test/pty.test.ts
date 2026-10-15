@@ -6,7 +6,9 @@ import { spawnSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
-import { selectedGoldenLanguages } from "./support/golden.ts";
+import { stripVTControlCharacters } from "node:util";
+import { assertGolden, goldenPath, selectedGoldenLanguages } from "./support/golden.ts";
+import { renderDialSvg } from "../scripts/dial-svg.ts";
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const driver = join(root, "test", "support", "pty.py");
@@ -47,9 +49,9 @@ for (const language of selectedGoldenLanguages()) {
       failureArtifact(language, result.stdout ?? "", result.stderr ?? "");
     }
     assert.equal(result.status, 0, `${language} PTY flow failed\nstdout: ${result.stdout}\nstderr: ${result.stderr}`);
-    let receipt: { ok: boolean; language: string };
+    let receipt: { ok: boolean; language: string; cases?: Record<string, { prompt?: string }> };
     try {
-      receipt = JSON.parse(result.stdout.trim()) as { ok: boolean; language: string };
+      receipt = JSON.parse(result.stdout.trim()) as typeof receipt;
     } catch (error) {
       failureArtifact(language, result.stdout ?? "", `${result.stderr ?? ""}\n${String(error)}`);
       throw error;
@@ -59,5 +61,12 @@ for (const language of selectedGoldenLanguages()) {
     }
     assert.equal(receipt.ok, true, `${language} PTY driver returned a failed receipt`);
     assert.equal(receipt.language, language);
+    const rawPrompt = receipt.cases?.["recovery-selection"]?.prompt;
+    assert.ok(typeof rawPrompt === "string" && rawPrompt.length > 0, "recovery PTY did not capture its real selection prompt");
+    const prompt = stripVTControlCharacters(rawPrompt);
+    // The SVG retains the full input gap; text fixtures end with a conventional newline.
+    assertGolden(goldenPath(language, "frames", "recovery-resume-prompt"), `${prompt.trimEnd()}\n`);
+    assertGolden(join(root, "test/golden/images", language, "recovery-resume-prompt.svg"),
+      renderDialSvg(prompt, language, `${language} · recovery resume prompt`));
   });
 }

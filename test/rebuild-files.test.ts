@@ -231,8 +231,9 @@ test("recovery-safe gate presentation excludes private bodies and verifies befor
     assert.equal(fs.readFileSync(target, "utf8"), `${privateValue}\n`);
     await assert.rejects(() => gate([change], { ...options, recoveryPresentation: true, verify() {
       assert.equal(readJournal(paths, JSON.parse(fs.readFileSync(join(paths.operationsLock, "owner.json"), "utf8")).operationId)?.state, "pending");
-      throw new Error(privateValue);
-    } }), (error: unknown) => error instanceof Error && !error.message.includes(privateValue));
+      throw Object.assign(new Error(privateValue), { code: privateValue, path: `/${privateValue}/config.json` });
+    } }), (error: unknown) => error instanceof Error && !error.message.includes(privateValue) &&
+      /verification \(UNKNOWN\)/.test(error.message));
     assert.equal(inspectOperations(paths).journals[0]!.state, "pending");
     assert.equal(fs.existsSync(paths.operationsLock), true);
   } finally { fs.rmSync(root, { recursive: true, force: true }); }

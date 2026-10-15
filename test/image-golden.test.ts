@@ -17,13 +17,14 @@ import {
   selectedGoldenLanguages,
   type GoldenLanguage,
 } from "./support/golden.ts";
-import { captureMaintenance, UPDATE_SCENARIOS, type MaintenanceScenario } from "./support/maintenance.ts";
+import { captureMaintenance, captureRecovery, RECOVERY_SCENARIOS, UPDATE_SCENARIOS, type MaintenanceScenario, type RecoveryScenario } from "./support/maintenance.ts";
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const artifactRoot = resolve(process.env.TONEDIAL_GOLDEN_ARTIFACT_DIR ?? join(root, "artifacts/golden"));
 const SETTINGS_SCENARIOS = ["get", "get-speech-narrow", "show-note-narrow"] as const;
 type SettingsScenario = typeof SETTINGS_SCENARIOS[number];
-type ImageScenario = "pending" | "help" | "doctor-global" | MaintenanceScenario | "doctor-seeds-narrow" | SettingsScenario;
+type RecoveryImageScenario = RecoveryScenario | "doctor-recovery-stopped-narrow" | "doctor-rebuild-failed-narrow";
+type ImageScenario = "pending" | "help" | "doctor-global" | MaintenanceScenario | "doctor-seeds-narrow" | SettingsScenario | RecoveryImageScenario;
 
 function imageGoldenPath(language: GoldenLanguage, scenario: ImageScenario): string {
   return join(root, "test/golden/images", language, `${scenario}.svg`);
@@ -125,6 +126,13 @@ async function captureImage(language: GoldenLanguage, scenario: ImageScenario): 
   if (scenario === "get" || scenario === "get-speech-narrow" || scenario === "show-note-narrow") {
     return renderDialSvg(await captureSettings(language, scenario), language, `${language} · ${scenario}`);
   }
+  if (scenario === "doctor-recovery-stopped" || scenario === "doctor-recovery-stopped-narrow" ||
+      scenario === "doctor-rebuild-failed" || scenario === "doctor-rebuild-failed-narrow") {
+    const narrow = scenario.endsWith("-narrow");
+    const name = scenario.startsWith("doctor-recovery") ? "doctor-recovery-stopped" : "doctor-rebuild-failed";
+    const capture = await captureRecovery(language, name, narrow ? 60 : 80);
+    return renderDialSvg(capture.stdout + capture.stderr, language, `${language} · ${scenario}`);
+  }
   if (scenario !== "pending" && scenario !== "help") {
     const capture = await captureMaintenance(language, scenario === "doctor-seeds-narrow" ? "doctor-seeds" : scenario,
       scenario === "doctor-seeds-narrow" ? 60 : 80);
@@ -150,7 +158,8 @@ function assertImageGolden(language: GoldenLanguage, scenario: ImageScenario, ac
 
 for (const language of selectedGoldenLanguages()) {
   test(`representative ${language} screen images match their SVG goldens`, async (t) => {
-    for (const scenario of ["pending", "help", "doctor-global", ...UPDATE_SCENARIOS, "doctor-seeds", "doctor-seeds-narrow", ...SETTINGS_SCENARIOS] as const) {
+    for (const scenario of ["pending", "help", "doctor-global", ...UPDATE_SCENARIOS, "doctor-seeds", "doctor-seeds-narrow", ...SETTINGS_SCENARIOS,
+      ...RECOVERY_SCENARIOS, "doctor-recovery-stopped-narrow", "doctor-rebuild-failed-narrow"] as const) {
       await t.test(scenario, async () => {
         assertImageGolden(language, scenario, await captureImage(language, scenario));
       });

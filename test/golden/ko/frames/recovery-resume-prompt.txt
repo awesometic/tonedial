@@ -1,0 +1,7 @@
+ToneDial · doctor
+
+  검사 범위: 프로젝트
+  <ROOT>/agents
+  중단된 작업:
+  ffffffffffffffffffffffffffffffff
+  계속하려면 위 작업 ID 전체를 입력하세요. Enter를 누르면 취소합니다:

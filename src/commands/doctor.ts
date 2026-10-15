@@ -642,11 +642,34 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true, showCodexActi
     operations: inspected.journals.map(({ operationId, state }) => ({ operationId, state })),
   };
   if (inspected.lock.state !== "none" || inspected.journals.some(({ state }) => state === "pending" || state === "invalid")) {
+    const owner = inspected.lock.owner;
+    const blocking = inspected.journals.filter(({ state }) => state === "pending" || state === "invalid");
+    const shown = ctx.flags.verbose ? inspected.journals : inspected.journals.filter(({ operationId, state }) =>
+      state === "pending" || state === "invalid" || operationId === owner?.operationId);
+    const lines = [
+      ...wrap(ctx.t.doctor.recoveryPending, ctx.ui.width - 2).map(line => `  ${ctx.ui.warn(line)}`),
+      ...shown.map(({ operationId, state }) => `  ${operationId}  ${ctx.t.doctor.operationState[state]}`),
+    ];
+    if (owner !== null && !shown.some(({ operationId }) => operationId === owner.operationId)) lines.push(`  ${owner.operationId}`);
+    if (inspected.lock.state === "live" || inspected.lock.state === "unknown" || inspected.lock.state === "invalid") {
+      lines.push(...wrap(ctx.t.doctor.rollbackStatus[inspected.lock.state === "live" ? "busy" : "unresolved"], ctx.ui.width - 2)
+        .map(line => `  ${line}`));
+    } else if (inspected.lock.state === "dead" && owner?.kind === "mutation") {
+      const entry = inspected.journals.find(({ operationId }) => operationId === owner.operationId);
+      if (entry?.journal && entry.journal.owner.nonce === owner.nonce) {
+        const selection = inspectRollback(ctx.paths, owner.operationId);
+        if (entry.state === "pending" && !selection.synthetic && blocking.every(({ operationId, journal }) => operationId === owner.operationId && journal !== null)) {
+          lines.push("", `  ${ctx.t.doctor.resumeOperation}`,
+            ...nextStep(repairCommand(ctx, `doctor --fix --from-operation ${owner.operationId}`), ctx.ui).slice(1));
+        }
+        if (showRollbackCommands && previewRollback(ctx.paths, owner.operationId, ctx.t).status === "ready") {
+          lines.push("", ...receiptLines(ctx.t.recovery.rollback(owner.operationId), ctx.ui.width - 2).map(line => `  ${line}`));
+        }
+      }
+    }
+    lines.push(...nextStep(`${repairCommand(ctx, "doctor")} --json`, ctx.ui));
     return {
-      lines: [
-        ...wrap(ctx.t.doctor.recoveryPending, ctx.ui.width - 2).map((line) => `  ${ctx.ui.warn(line)}`),
-        ...recovery.operations.map(({ operationId, state }) => `  ${operationId}  ${ctx.t.doctor.operationState[state]}`),
-      ],
+      lines,
       // The damaged config is deliberately not parsed here. `operation` is the only safe context
       // fact to expose until the owner-selected rollback or recovery has completed.
       json: {

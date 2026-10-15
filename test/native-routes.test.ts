@@ -815,6 +815,11 @@ test("both windows onto the CLI carry one reload procedure, and it reads the gui
   assert.equal(current.value.schema, 3);
   assert.equal(typeof current.value.values.warmth, "number");
   assert.equal(current.value.values["persona.agent"], parseConfig(readFileSync(resolvePaths(env).config, "utf8")).persona.agent);
+  const recoverySection = (lines: string[]) => /^## Connection scope and application recovery\n([\s\S]*?)(?=\n## |\nFirst distinguish)/m.exec(lines.join("\n"))?.[1];
+  const recovery = recoverySection(skill);
+  assert.ok(recovery);
+  assert.equal(recoverySection(command), recovery, "both controls must use the same stopped-operation recovery procedure");
+  assert.match(recovery, /doctor --fix --from-operation <id>/);
   assert.match(presets, /created: true/);
   const created = await invoke(["create", "Skill Example", "--slug", "skill-example", "warmth=2", "--auto"]);
   assert.equal(created.code, 0, JSON.stringify(created.value));

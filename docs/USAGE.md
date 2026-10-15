@@ -508,6 +508,17 @@ Rebuild replaces generated files while preserving valid settings, unsaved profil
 Healthy profiles remain listable/exportable with damaged config; one bad profile does not hide others.
 Flat user presets stay readable; conflicts receive a reported recovered copy without overwriting originals.
 
+After a failed repair, the error identifies the phase, affected path when known, safe error code and operation ID.
+Some file changes may already be applied; keep the operation record and run the reported scoped diagnosis.
+Doctor shows current blockers by default; `--verbose` and `--json` retain the full operation history.
+Running and uncertain owners remain protected and receive no automatic mutation recommendation.
+
+For a stopped valid operation, use the exact `--from-operation` command shown by doctor.
+Preview it with `--dry-run`, then review and approve the proposed repair.
+This continues application repair with valid current settings first; it does not undo the previous changes.
+Interactive selection asks for the full displayed operation ID; Enter cancels and a different ID is rejected without writing.
+The file-change preview still requires separate approval after selection.
+
 | Missing information | Explicit source |
 |---|---|
 | Axes | `--from-preset <slug>` |

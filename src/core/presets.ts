@@ -325,6 +325,8 @@ export function inspectPresetLibrary(presetsDir: string, t: Messages): PresetLib
     const read = readPresetSnapshot(presetsDir, path, t);
     if ("missing" in read) continue;
     if ("reason" in read) { unavailable.push({ slug: retired.slug, path, reason: read.reason }); continue; }
+    // Exact packaged bytes need no copy; edited labels or formatting still stay preserved.
+    if (read.text === `${JSON.stringify(retired, null, 2)}\n`) continue;
     let preset: Preset;
     try { preset = parsePreset(read.text, retired.slug, t); }
     catch { unavailable.push({ slug: retired.slug, path, reason: "invalid-data" }); continue; }

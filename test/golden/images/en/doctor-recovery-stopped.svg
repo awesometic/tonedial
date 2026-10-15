@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1212" height="512" viewBox="0 0 1212 512" role="img" aria-labelledby="title description">
+<title id="title">ToneDial screen (en · doctor-recovery-stopped)</title>
+<desc id="description">ToneDial · doctor
+
+  Inspection scope: global
+  &lt;ROOT&gt;
+
+  An operation is active or needs recovery. No files were changed by this
+  command.
+  ffffffffffffffffffffffffffffffff  pending
+
+  Continue application repair:
+  tonedial doctor --fix --from-operation ffffffffffffffffffffffffffffffff --global
+
+  Restore the previous files:
+  tonedial doctor --fix --rollback ffffffffffffffffffffffffffffffff
+
+  tonedial doctor --global --json
+</desc>
+<rect width="100%" height="100%" rx="16" fill="#171b20"/>
+<g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, system-ui" font-size="22"><text x="32" y="48" fill="#edf3f6" font-weight="400" opacity="1">ToneDial · doctor</text>
+<text x="60" y="104" fill="#edf3f6" font-weight="400" opacity="1">Inspection scope: global</text>
+<text x="60" y="132" fill="#edf3f6" font-weight="400" opacity="1">&lt;ROOT&gt;</text>
+<text x="60" y="188" fill="#edf3f6" font-weight="400" opacity="1">An operation is active or needs recovery. No files were changed by this</text>
+<text x="60" y="216" fill="#edf3f6" font-weight="400" opacity="1">command.</text>
+<text x="60" y="244" fill="#edf3f6" font-weight="400" opacity="1">ffffffffffffffffffffffffffffffff</text>
+<text x="536" y="244" fill="#edf3f6" font-weight="400" opacity="1">pending</text>
+<text x="60" y="300" fill="#edf3f6" font-weight="400" opacity="1">Continue application repair:</text>
+<text x="60" y="328" fill="#edf3f6" font-weight="400" opacity="1">tonedial doctor --fix --from-operation ffffffffffffffffffffffffffffffff --global</text>
+<text x="60" y="384" fill="#edf3f6" font-weight="400" opacity="1">Restore the previous files:</text>
+<text x="60" y="412" fill="#edf3f6" font-weight="400" opacity="1">tonedial doctor --fix --rollback ffffffffffffffffffffffffffffffff</text>
+<text x="60" y="468" fill="#edf3f6" font-weight="400" opacity="1">tonedial doctor --global --json</text></g>
+</svg>

@@ -7,6 +7,7 @@ import { dirname } from "node:path";
 import type { SettingKey } from "./config.ts";
 import type { Persona } from "./combos.ts";
 import type { SpeechLevel } from "./compile.ts";
+import type { RecoveryPhase } from "./operations.ts";
 import { ja } from "./locales/ja.ts";
 import { zh } from "./locales/zh.ts";
 import { es } from "./locales/es.ts";
@@ -193,7 +194,11 @@ export type Messages = {
     rollbackOrder: string;
     noSnapshot: (id: string) => string;
     retire: (id: string) => string;
-    failure: (id: string) => string;
+    resumeOperation: (id: string) => string;
+    resumeQuestion: string;
+    cancelled: string;
+    operationMismatch: string;
+    failure: (id: string, phase: RecoveryPhase, path: string | null, code: string) => string;
   };
   persona: {
     defaults: RoleDefaults;
@@ -347,6 +352,7 @@ export type Messages = {
     seedsNotRun: string;
     seedsAttention: string;
     recoveryPending: string;
+    resumeOperation: string;
     contextCurrent: string;
     contextRepair: string;
     contextSize: (guideChars: number, totalChars: number | null) => string;
@@ -687,7 +693,11 @@ const enMessages: Messages = {
     rollbackOrder: "Restore connections first, then application files:",
     noSnapshot: (id) => `${id}: no valid settings snapshot for this state root`,
     retire: (id) => `Retire stopped operation ${id} as history before a new application rebuild. Its external changes are not certified or undone.`,
-    failure: (id) => `Application recovery did not finish. Keep operation ${id}; run tonedial doctor for the recovery choices.`,
+    resumeOperation: (id) => `Stopped operation:\n${id}`,
+    resumeQuestion: "Type the full operation ID above to continue; Enter cancels:",
+    cancelled: "Recovery cancelled. No files were changed.",
+    operationMismatch: "The operation ID did not match. No files were changed.",
+    failure: (id, phase, path, code) => `Application recovery failed during ${({ prepare: "preparation", write: "file writes", verify: "verification", finalize: "completion" })[phase]} (${code}).${path ? `\n${path}` : ""}\nSome file changes may already be applied. Keep operation ${id}.`,
   },
   persona: {
     defaults: role("I", "you", "The person requesting help with a task.", "A general-purpose assistant helping with the requested task."),
@@ -843,7 +853,8 @@ const enMessages: Messages = {
     seedsOk: (version) => `version ${version}`,
     seedsNotRun: "no bundled files · init has not run here",
     seedsAttention: "bundled files need attention",
-    recoveryPending: "An operation is active or needs recovery. Nothing was changed. Run tonedial doctor --json to inspect IDs. A recorded rollback uses doctor --fix --rollback ID; a stopped valid operation can be explicitly selected for app rebuild with doctor --fix --from-operation ID. Live or ambiguous owners stay protected.",
+    recoveryPending: "An operation is active or needs recovery. No files were changed by this command.",
+    resumeOperation: "Continue application repair:",
     contextCurrent: "AGENTS.md and TONE.md layout is current.",
     contextRepair: "Managed context files need repair. Check the guide and tone-file diagnostics.",
     contextSize: (guide, total) => total === null
@@ -1371,7 +1382,11 @@ const koMessages: Messages = {
     rollbackOrder: "연결 파일을 먼저 되돌린 뒤 앱 파일을 되돌리세요:",
     noSnapshot: (id) => `${id}: 이 상태 경로에서 쓸 수 있는 설정 기록이 없습니다`,
     retire: (id) => `중단된 작업 ${id}를 기록으로 보관한 뒤 새 앱 복구를 시작합니다. 그 작업의 외부 파일 변경은 확인하거나 되돌리지 않습니다.`,
-    failure: (id) => `앱 복구가 끝나지 않았습니다. 작업 ${id}를 보존하고 tonedial doctor에서 복구 방법을 확인하세요.`,
+    resumeOperation: (id) => `중단된 작업:\n${id}`,
+    resumeQuestion: "계속하려면 위 작업 ID 전체를 입력하세요. Enter를 누르면 취소합니다:",
+    cancelled: "복구를 취소했습니다. 파일은 바꾸지 않았습니다.",
+    operationMismatch: "작업 ID가 일치하지 않습니다. 파일은 바꾸지 않았습니다.",
+    failure: (id, phase, path, code) => `앱 복구의 ${({ prepare: "준비", write: "파일 쓰기", verify: "결과 검증", finalize: "완료 처리" })[phase]} 단계에서 실패했습니다 (${code}).${path ? `\n${path}` : ""}\n일부 파일 변경이 이미 적용되었을 수 있습니다. 작업 ${id}의 기록을 보존해 주세요.`,
   },
   persona: {
     defaults: role("저", "사용자님", "작업에 필요한 도움을 요청하는 사용자.", "요청한 작업을 돕는 범용 조수."),
@@ -1529,7 +1544,8 @@ const koMessages: Messages = {
     seedsOk: (version) => `버전 ${version}`,
     seedsNotRun: "기본 파일 없음 · init으로 준비하세요",
     seedsAttention: "기본 파일 확인 필요",
-    recoveryPending: "진행 중이거나 복구가 필요한 작업이 있습니다. 아무것도 바꾸지 않았습니다. tonedial doctor --json으로 ID를 확인하세요. 기록된 롤백은 doctor --fix --rollback ID로, 중단된 유효한 작업을 선택해 앱을 다시 만들 때는 doctor --fix --from-operation ID로 진행하세요. 실행 중이거나 소유자가 불확실한 작업은 유지합니다.",
+    recoveryPending: "진행 중이거나 복구가 필요한 작업이 있습니다. 이번 실행에서는 파일을 바꾸지 않았습니다.",
+    resumeOperation: "앱 복구를 이어가려면:",
     contextCurrent: "AGENTS.md와 TONE.md 구성이 최신입니다.",
     contextRepair: "관리 중인 컨텍스트 파일을 복구해야 합니다. 안내 파일과 톤 파일의 진단을 확인해 주세요.",
     contextSize: (guide, total) => total === null

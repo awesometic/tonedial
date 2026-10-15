@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="946" height="260" viewBox="0 0 946 260" role="img" aria-labelledby="title description">
+<title id="title">ToneDial screen (en · recovery resume prompt)</title>
+<desc id="description">ToneDial · doctor
+
+  Inspection scope: project
+  &lt;ROOT&gt;/agents
+  Stopped operation:
+  ffffffffffffffffffffffffffffffff
+  Type the full operation ID above to continue; Enter cancels: </desc>
+<rect width="100%" height="100%" rx="16" fill="#171b20"/>
+<g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, system-ui" font-size="22"><text x="32" y="48" fill="#edf3f6" font-weight="400" opacity="1">ToneDial · doctor</text>
+<text x="60" y="104" fill="#edf3f6" font-weight="400" opacity="1">Inspection scope: project</text>
+<text x="60" y="132" fill="#edf3f6" font-weight="400" opacity="1">&lt;ROOT&gt;/agents</text>
+<text x="60" y="160" fill="#edf3f6" font-weight="400" opacity="1">Stopped operation:</text>
+<text x="60" y="188" fill="#edf3f6" font-weight="400" opacity="1">ffffffffffffffffffffffffffffffff</text>
+<text x="60" y="216" fill="#edf3f6" font-weight="400" opacity="1">Type the full operation ID above to continue; Enter cancels: </text></g>
+</svg>

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="848" height="316" viewBox="0 0 848 316" role="img" aria-labelledby="title description">
+<title id="title">ToneDial screen (en · doctor-rebuild-failed)</title>
+<desc id="description">ToneDial · doctor
+
+  Inspection scope: global
+  &lt;ROOT&gt;
+Application recovery failed during file writes (EACCES).
+&lt;ROOT&gt;/state/skill/tonedial/SKILL.md
+Some file changes may already be applied. Keep operation
+&lt;OPERATION_ID&gt;.
+tonedial doctor --global --json
+</desc>
+<rect width="100%" height="100%" rx="16" fill="#171b20"/>
+<g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, system-ui" font-size="22"><text x="32" y="48" fill="#edf3f6" font-weight="400" opacity="1">ToneDial · doctor</text>
+<text x="60" y="104" fill="#edf3f6" font-weight="400" opacity="1">Inspection scope: global</text>
+<text x="60" y="132" fill="#edf3f6" font-weight="400" opacity="1">&lt;ROOT&gt;</text>
+<text x="32" y="160" fill="#edf3f6" font-weight="400" opacity="1">Application recovery failed during file writes (EACCES).</text>
+<text x="32" y="188" fill="#edf3f6" font-weight="400" opacity="1">&lt;ROOT&gt;/state/skill/tonedial/SKILL.md</text>
+<text x="32" y="216" fill="#edf3f6" font-weight="400" opacity="1">Some file changes may already be applied. Keep operation</text>
+<text x="32" y="244" fill="#edf3f6" font-weight="400" opacity="1">&lt;OPERATION_ID&gt;.</text>
+<text x="32" y="272" fill="#edf3f6" font-weight="400" opacity="1">tonedial doctor --global --json</text></g>
+</svg>

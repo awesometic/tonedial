@@ -38,6 +38,7 @@ export type OperationPaths = {
 
 export type OperationKind = "install" | "mutation";
 export type OperationState = "pending" | "complete" | "rolled-back" | "retired-for-app-rebuild";
+export type RecoveryPhase = "prepare" | "write" | "verify" | "finalize";
 export type MutationOwnerPhase = "preparing" | "journaled";
 
 /** A completed journal is restorable only when the caller explicitly labels it as a migration. */

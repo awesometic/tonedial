@@ -13,7 +13,7 @@ import { compile } from "../core/compile.ts";
 import { toCompileInput } from "../core/resolve.ts";
 import { isLanguage, LANGUAGES, type Messages } from "../core/i18n.ts";
 import { recoverLegacyTone } from "../core/legacy-tone.ts";
-import { exportAliasesState, stateOverlapsInstructions } from "../core/paths.ts";
+import { connectionScopeFlag, exportAliasesState, stateOverlapsInstructions } from "../core/paths.ts";
 import {
   applyPreset, matchesPreset, assertPresetSelection, BUNDLED, customPresetDir, inspectPresetLibrary, parsePreset, PRESET_MAX_BYTES,
   resolvePreset, serializePreset, SLUG_PATTERN, type PresetEntry, type PresetLibrary,
@@ -23,7 +23,7 @@ import {
 } from "../core/seeds.ts";
 import {
   inspectOperations, readJournal, retireOperationForAppRebuild, type JsonValue,
-  type OperationAction, type OperationJournal,
+  type OperationAction, type OperationJournal, type RecoveryPhase,
 } from "../core/operations.ts";
 import {
   assertFresh, captureRawEntry, gate, planEntryRebuild, rawReadCheck, validateFileAction,
@@ -240,8 +240,13 @@ export async function runAppRebuild(ctx: Ctx): Promise<AppRebuildResult> {
       else if (!ctx.flags.auto && ctx.canPrompt) {
         const input = createInterface({ input: process.stdin, output: process.stdout });
         try {
-          process.stdout.write(`  ${t.doctor.recoveryPending}\n  ${owner.operationId}\n`);
-          if ((await input.question("  > ")).trim() !== owner.operationId) throw new ConfigError(t.doctor.recoveryPending);
+          const operation = t.recovery.resumeOperation(owner.operationId).split("\n").flatMap(line =>
+            line === owner.operationId ? [line] : wrap(line, ctx.ui.width - 2));
+          process.stdout.write(`${operation.map(line => `  ${line}`).join("\n")}\n`);
+          const question = wrap(t.recovery.resumeQuestion, ctx.ui.width - 3).map(line => `  ${line}`).join("\n");
+          const answer = (await input.question(`${question} `)).trim();
+          if (answer === "") throw new ConfigError(t.recovery.cancelled);
+          if (answer !== owner.operationId) throw new ConfigError(t.recovery.operationMismatch);
           retirementId = owner.operationId;
         } finally { input.close(); }
       } else throw new ConfigError(t.doctor.recoveryPending);
@@ -339,6 +344,10 @@ export async function runAppRebuild(ctx: Ctx): Promise<AppRebuildResult> {
   }
   const seedsSelection = generatedSeedSelection(ctx.paths, config, ctx.flags.tools !== null && ctx.flags.tools !== "none", t);
   const seeds = planGeneratedSeedRebuild(ctx.paths, config.managedSeeds, seedsSelection, t);
+  const generatedSeeds = seedFiles(ctx.paths, seedsSelection);
+  const rewrittenGenerated = new Set(generatedSeeds.filter(seed => seeds.operationActions.some(({ action }) =>
+    action.path === seed.path || (object(action.after)?.type === "directory" && seed.path.startsWith(`${action.path}${sep}`))
+  )).map(seed => seed.path));
   checks.push(...seeds.checks);
   config.managedSeeds = seeds.records;
   config.seedVersion = SEED_VERSION;
@@ -396,31 +405,48 @@ export async function runAppRebuild(ctx: Ctx): Promise<AppRebuildResult> {
     auto: ctx.flags.auto, dryRun: ctx.flags.dryRun, verbose: ctx.flags.verbose, ui: ctx.ui, t,
     heading: t.recovery.heading,
     interactive: () => ctx.canPrompt, ...(ctx.canPrompt ? {} : { out: () => {} }),
-    recoveryPresentation: { lines: presentation, failureMessage: t.recovery.failure },
+    recoveryPresentation: { lines: presentation,
+      failureMessage: (id: string, phase: RecoveryPhase, path: string | null, code: string) =>
+        `${t.recovery.failure(id, phase, path, code)}\ntonedial doctor ${connectionScopeFlag(ctx.agent)} --json` },
     verify: () => {
+      let verificationPath = ctx.paths.config;
+      const mismatch = () => new ConfigError(t.recovery.sourceInvalid, { cause: { code: "VERIFY_MISMATCH", path: verificationPath } });
       try {
         const repaired = parseConfig(capturedText(captureRawEntry(ctx.paths.config, t, { within: ctx.paths.root })) ?? "", t);
-        if (!isConfigV2(repaired) || serializeConfig(repaired, t) !== serializeConfig(config, t)) throw new ConfigError(t.recovery.sourceInvalid);
-        for (const seed of seedFiles(ctx.paths, seedsSelection)) {
+        if (!isConfigV2(repaired) || serializeConfig(repaired, t) !== serializeConfig(config, t)) throw mismatch();
+        for (const seed of generatedSeeds) {
+          verificationPath = seed.path;
           const now = captureRawEntry(seed.path, t, { within: ctx.paths.root });
-          if (capturedText(now) !== seed.contents) throw new ConfigError(t.recovery.sourceInvalid);
+          if (capturedText(now) !== seed.contents) throw mismatch();
         }
-        for (const target of artifacts) if (capturedText(captureRawEntry(target.path, t, { within: ctx.paths.root })) !== artifact) throw new ConfigError(t.recovery.sourceInvalid);
-        if (capturedText(captureRawEntry(ctx.paths.tone, t, { within: ctx.paths.root })) !== artifact) throw new ConfigError(t.recovery.sourceInvalid);
+        for (const target of artifacts) {
+          verificationPath = target.path;
+          if (capturedText(captureRawEntry(target.path, t, { within: ctx.paths.root })) !== artifact) throw mismatch();
+        }
+        verificationPath = ctx.paths.tone;
+        if (capturedText(captureRawEntry(ctx.paths.tone, t, { within: ctx.paths.root })) !== artifact) throw mismatch();
         for (const entry of library.entries) {
           for (const before of entry.selectionReads) {
-            if (before.path === restoredPreset?.capture.path) continue;
+            // Rewritten generated entries were checked against their new bytes above.
+            if (before.path === restoredPreset?.capture.path || rewrittenGenerated.has(before.path)) continue;
+            verificationPath = before.path;
             const now = captureRawEntry(before.path, t, { within: ctx.paths.root, maxBytes: PRESET_MAX_BYTES });
             if (now.type !== before.type || now.identity !== before.identity || now.mode !== before.mode ||
                 (now.bytes === null ? before.bytes !== null : before.bytes === null || !now.bytes.equals(before.bytes))) {
-              throw new ConfigError(t.recovery.sourceInvalid);
+              throw mismatch();
             }
           }
         }
         for (const slug of [...copies, ...(restoredPreset ? [restoredPreset.slug] : [])]) {
-          if (resolvePreset(ctx.paths.presets, slug, t) === null) throw new ConfigError(t.recovery.sourceInvalid);
+          verificationPath = slug === restoredPreset?.slug ? restoredPreset.capture.path
+            : library.recoveryCopies.find(copy => copy.preset.slug === slug)!.path;
+          if (resolvePreset(ctx.paths.presets, slug, t) === null) throw mismatch();
         }
-      } catch { throw new ConfigError(t.recovery.sourceInvalid); }
+      } catch (cause) {
+        if (cause instanceof ConfigError && (cause.cause as { code?: unknown } | undefined)?.code === "VERIFY_MISMATCH") throw cause;
+        const code = cause !== null && typeof cause === "object" && "code" in cause ? cause.code : undefined;
+        throw new ConfigError(t.recovery.sourceInvalid, { cause: { code, path: verificationPath, cause } });
+      }
     },
   };
   let result;

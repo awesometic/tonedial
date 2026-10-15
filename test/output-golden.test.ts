@@ -18,7 +18,7 @@ import {
   type GoldenLanguage,
   type GoldenWorkspace,
 } from "./support/golden.ts";
-import { captureMaintenance, UPDATE_SCENARIOS } from "./support/maintenance.ts";
+import { captureMaintenance, captureRecovery, RECOVERY_SCENARIOS, UPDATE_SCENARIOS } from "./support/maintenance.ts";
 
 type Scenario = {
   expected: number;
@@ -120,6 +120,15 @@ test("formatted captures preserve empty, newline, and missing-trailing-newline s
 });
 
 for (const language of selectedGoldenLanguages()) {
+  test(`recovery diagnostics preserve actionable output and stream boundaries · ${language}`, async (t) => {
+    for (const scenario of RECOVERY_SCENARIOS) {
+      await t.test(scenario, async () => {
+        const capture = await captureRecovery(language, scenario);
+        assertGolden(goldenPath(language, "commands", scenario), formatCapture(capture));
+      });
+    }
+  });
+
   test(`update maintenance states retain clear output and stream boundaries · ${language}`, async (t) => {
     for (const scenario of UPDATE_SCENARIOS.filter(scenario => scenario !== "update-current")) {
       await t.test(scenario, async () => {

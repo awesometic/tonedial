@@ -1,0 +1,7 @@
+ToneDial · doctor
+
+  Inspection scope: project
+  <ROOT>/agents
+  Stopped operation:
+  ffffffffffffffffffffffffffffffff
+  Type the full operation ID above to continue; Enter cancels:

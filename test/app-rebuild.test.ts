@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import { syncBuiltinESMExports } from "node:module";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { mock, test } from "node:test";
 
 import type { Ctx } from "../src/cli.ts";
@@ -14,9 +14,10 @@ import { compile } from "../src/core/compile.ts";
 import { defaultConfig, parseConfig, serializeConfig, type ConfigV2 } from "../src/core/config.ts";
 import { catalogue } from "../src/core/i18n.ts";
 import { resolveAgentPaths, resolvePaths } from "../src/core/paths.ts";
-import { applyPreset, inspectPresetLibrary, resolvePreset, serializePreset, type Preset } from "../src/core/presets.ts";
+import { applyPreset, inspectPresetLibrary, RETIRED_PRESETS, resolvePreset, serializePreset, type Preset } from "../src/core/presets.ts";
 import { inspectOperations, readJournal } from "../src/core/operations.ts";
 import { toCompileInput } from "../src/core/resolve.ts";
+import { generatedSeedSelection, seedFiles, seedRecord, SEED_VERSION } from "../src/core/seeds.ts";
 import { applyRollback, gate, planChange } from "../src/wiring/apply.ts";
 import { palette } from "../src/ui/style.ts";
 import { registrationKey } from "../src/wiring/ownership.ts";
@@ -58,6 +59,144 @@ function userPreset(f: ReturnType<typeof fixture>, slug = "old-profile", values:
   const bytes = JSON.stringify({ displayName: "An older readable name ".repeat(10), values });
   fs.writeFileSync(path, bytes, { mode: 0o640 });
   return { path, bytes };
+}
+
+test("an older installation with retired flat caches upgrades completely and preserves saved profiles", async () => {
+  const f = fixture();
+  try {
+    const config = defaultConfig();
+    config.preset = "custom-work";
+    config.unsaved = true;
+    config.axes = { ...oldAxes };
+    config.persona.note = PRIVATE;
+    config.safeword = "dummy plain reply";
+    config.speech_level = "polite";
+    config.seedVersion = 1;
+    const custom = join(f.ctx.paths.presets, "custom", "custom-work.json");
+    fs.mkdirSync(join(f.ctx.paths.presets, "custom"), { recursive: true });
+    const customBytes = serializePreset({ schema: 2, slug: "custom-work", displayName: "Saved work profile", values: { care: 2 },
+      settings: { persona: config.persona, safeword: "saved profile reply", speech_level: "plain" } });
+    fs.writeFileSync(custom, customBytes, { mode: 0o640 });
+    const customIdentity = fs.lstatSync(custom, { bigint: true }).ino;
+    const retired = RETIRED_PRESETS.flatMap(preset => {
+      const bytes = JSON.stringify({ ...preset, values: { ...preset.values, care: 2 } });
+      const paths = [join(f.ctx.paths.presets, `${preset.slug}.json`), join(f.ctx.paths.presets, "builtin", `${preset.slug}.json`)];
+      fs.mkdirSync(dirname(paths[1]!), { recursive: true });
+      config.managedSeeds[`preset/${preset.slug}`] = seedRecord({ id: `preset/${preset.slug}`, version: 1,
+        path: paths[1]!, label: preset.slug, contents: bytes });
+      return paths.map(path => {
+        fs.writeFileSync(path, bytes, { mode: 0o640 });
+        return { path, bytes };
+      });
+    });
+    for (const seed of seedFiles(f.ctx.paths, { native: true }).filter(seed => seed.id.startsWith("skill/"))) {
+      const older = { ...seed, version: 1, contents: `Previous generated ${seed.id}\n` };
+      fs.mkdirSync(dirname(seed.path), { recursive: true });
+      fs.writeFileSync(seed.path, older.contents);
+      config.managedSeeds[seed.id] = seedRecord(older);
+    }
+    fs.writeFileSync(f.ctx.paths.config, serializeConfig(config));
+    fs.writeFileSync(f.ctx.paths.tone, "Previous generated tone\n");
+    const selection = generatedSeedSelection(f.ctx.paths, config, false, EN);
+    const expectedSeeds = seedFiles(f.ctx.paths, selection);
+    const result = await runAppRebuild(f.ctx);
+    assert.equal(result.json.appRebuilt, true);
+    const repaired = parseConfig(fs.readFileSync(f.ctx.paths.config, "utf8"));
+    assert.deepEqual(repaired.axes, config.axes);
+    assert.deepEqual(repaired.persona, config.persona);
+    assert.equal(repaired.preset, config.preset);
+    assert.equal(repaired.unsaved, config.unsaved);
+    assert.equal(repaired.safeword, config.safeword);
+    assert.equal(repaired.speech_level, config.speech_level);
+    assert.equal(repaired.seedVersion, SEED_VERSION);
+    const recovered = (result.json.recoveredPresets as string[]).map(slug => resolvePreset(f.ctx.paths.presets, slug, EN)!.preset);
+    assert.equal(recovered.length, RETIRED_PRESETS.length, "old cache definitions must remain selectable");
+    for (const previous of RETIRED_PRESETS) {
+      const expected = JSON.stringify({ ...applyPreset(previous), care: 2 });
+      assert.ok(recovered.some(preset => JSON.stringify(applyPreset(preset)) === expected), previous.slug);
+    }
+    for (const seed of expectedSeeds) {
+      assert.equal(fs.readFileSync(seed.path, "utf8"), seed.contents, seed.label);
+      assert.deepEqual(repaired.managedSeeds[seed.id], seedRecord(seed));
+    }
+    assert.equal(fs.readFileSync(f.ctx.paths.tone, "utf8"), compile(toCompileInput(repaired)));
+    assert.equal(fs.readFileSync(custom, "utf8"), customBytes);
+    assert.equal(fs.lstatSync(custom, { bigint: true }).ino, customIdentity);
+    assert.equal(fs.lstatSync(custom).mode & 0o777, 0o640);
+    const journal = readJournal(f.ctx.paths, result.json.operationId as string)!;
+    assert.equal(journal.state, "complete");
+    assert.equal(journal.completed.length, journal.actions.length);
+    assert.equal(inspectOperations(f.ctx.paths).lock.state, "none");
+    for (const previous of retired) {
+      const action = journal.actions.find(action => action.path === previous.path)!;
+      const archive = (action.metadata as { archive: string }).archive;
+      assert.equal(fs.readFileSync(archive, "utf8"), previous.bytes, "old cache definitions remain in the retained operation");
+      assert.equal(fs.lstatSync(archive).mode & 0o777, 0o640);
+    }
+    assert.equal((await runAppRebuild(f.ctx)).json.reason, "nothing");
+    assert.equal(inspectOperations(f.ctx.paths).lock.state, "none");
+    assert.equal(inspectOperations(f.ctx.paths).journals.length, 1);
+    assert.equal(fs.readFileSync(custom, "utf8"), customBytes);
+  } finally { f.dispose(); }
+});
+
+for (const fault of ["generated cache", "replaced generated cache", "preserved user profile", "unreadable user profile"] as const) {
+  test(`postwrite verification rejects a changed ${fault} and preserves recovery evidence`, async () => {
+    const f = fixture();
+    try {
+      const preserved = userPreset(f);
+      const generated = userPreset(f, "tough-love", { care: 2 });
+      const target = fault === "generated cache" || fault === "replaced generated cache" ? generated.path : preserved.path;
+      const replacement = join(f.root, "replacement.json");
+      fs.writeFileSync(replacement, "");
+      let replacedBytes: Buffer | undefined;
+      fs.writeFileSync(f.ctx.paths.config, serializeConfig(defaultConfig()));
+      let publishedConfig = false;
+      const originalRename = fs.renameSync;
+      const originalOpen = fs.openSync;
+      const publication = mock.method(fs, "renameSync", (from: fs.PathLike, to: fs.PathLike) => {
+        originalRename(from, to);
+        if (String(to) === f.ctx.paths.config) {
+          publishedConfig = true;
+          if (fault === "replaced generated cache") {
+            replacedBytes = fs.readFileSync(target);
+            fs.writeFileSync(replacement, replacedBytes);
+            originalRename(replacement, target);
+          } else if (fault !== "unreadable user profile") fs.writeFileSync(target, PRIVATE);
+        }
+      });
+      const unreadable = mock.method(fs, "openSync", (...args: Parameters<typeof fs.openSync>) => {
+        if (fault === "unreadable user profile" && publishedConfig && String(args[0]) === target) {
+          throw Object.assign(new Error(PRIVATE), { code: "EACCES", path: PRIVATE });
+        }
+        return originalOpen(...args);
+      });
+      syncBuiltinESMExports();
+      let failure: Error | undefined;
+      try {
+        await assert.rejects(() => runAppRebuild(f.ctx), cause => {
+          assert.ok(cause instanceof Error);
+          failure = cause;
+          return true;
+        });
+      } finally {
+        publication.mock.restore(); unreadable.mock.restore(); syncBuiltinESMExports();
+      }
+      assert.equal(publishedConfig, true, "the fault must occur after all target writes");
+      const operation = inspectOperations(f.ctx.paths).journals[0]!.journal!;
+      assert.equal(operation.state, "pending");
+      assert.equal(operation.completed.length, operation.actions.length);
+      assert.equal(inspectOperations(f.ctx.paths).lock.state, "live");
+      assert.ok(failure!.message.includes(target), "verification must identify the controlled target path");
+      assert.ok(failure!.message.includes(fault === "unreadable user profile" ? "EACCES" : "VERIFY_MISMATCH"));
+      assert.ok(failure!.message.includes(operation.operationId));
+      assert.ok(failure!.message.includes(`tonedial doctor --project "${f.ctx.agent.root}" --json`));
+      assert.equal(failure!.message.includes(PRIVATE), false, "raw file/error text must stay private");
+      if (fault === "unreadable user profile") assert.equal(fs.readFileSync(target, "utf8"), preserved.bytes);
+      else if (fault === "replaced generated cache") assert.deepEqual(fs.readFileSync(target), replacedBytes, "matching bytes do not authorize adopting a replacement inode");
+      else assert.equal(fs.readFileSync(target, "utf8"), PRIVATE, "failed verification must not overwrite the changed entry");
+    } finally { f.dispose(); }
+  });
 }
 
 test("nonempty schema-1 settings and old generated output rebuild while saved custom files remain usable", async () => {

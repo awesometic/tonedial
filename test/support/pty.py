@@ -667,6 +667,55 @@ def create_case(root: Path, language: str, node: str, binary: Path, outcome: str
         shutil.rmtree(scratch, ignore_errors=True)
 
 
+def recovery_case(root: Path, language: str, node: str, binary: Path) -> dict[str, Any]:
+    scratch = Path(tempfile.mkdtemp(prefix="tonedial-pty-recovery-")).resolve()
+    try:
+        initialize(root, scratch, language, node, binary)
+        source = (
+            f"import {{ seedRecoveryHistory, RECOVERY_OPERATION_ID }} from {json.dumps((root / 'test/support/maintenance.ts').as_uri())};"
+            f"import {{ catalogue }} from {json.dumps((root / 'src/core/i18n.ts').as_uri())};"
+            "seedRecoveryHistory(process.env);"
+            f"const copy = catalogue({json.dumps(language)}).cli.recovery;"
+            "console.log(JSON.stringify({ id: RECOVERY_OPERATION_ID, question: copy.resumeQuestion, cancelled: copy.cancelled, mismatch: copy.operationMismatch }));"
+        )
+        seeded = subprocess.run([node, "--input-type=module", "--eval", source], cwd=root,
+                                env=base_env(scratch, language), text=True, encoding="utf-8",
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=10)
+        if seeded.returncode != 0:
+            raise ScenarioError(f"recovery fixture failed: {seeded.stderr[-1200:]}")
+        selection = json.loads(seeded.stdout)
+        state = scratch / "state"
+        before = snapshot(state)
+        prompt = ""
+        for outcome, answer in [("blank", b"\n"), ("wrong", b"0" * 32 + b"\n"),
+                                ("decline", selection["id"].encode() + b"\n")]:
+            with run_session(scratch, language, node, binary, ["doctor", "--fix", "--here"]) as session:
+                session.wait_for([selection["question"].encode()])
+                if selection["id"].encode() not in session.output or snapshot(state) != before:
+                    raise ScenarioError("recovery selection omitted its exact ID or wrote before selection")
+                if outcome == "blank":
+                    prompt = session.output.decode("utf-8").replace("\r\n", "\n").replace(str(scratch), "<ROOT>")
+                start = session.mark()
+                session.send(answer)
+                if outcome == "decline":
+                    session.wait_for([b"[y/N]"], since=start)
+                    if snapshot(state) != before:
+                        raise ScenarioError("matching the recovery ID authorized writes before plan approval")
+                    session.send(b"n\n")
+                code = session.wait(8)
+                require_termios(session, f"recovery {outcome}")
+                if code != (0 if outcome == "decline" else 1):
+                    raise ScenarioError(f"recovery {outcome}: exit={code}")
+                message = selection["cancelled"] if outcome == "blank" else selection["mismatch"] if outcome == "wrong" else None
+                if message is not None and message.encode() not in session.output:
+                    raise ScenarioError(f"recovery {outcome}: missing truthful selection result")
+            if snapshot(state) != before:
+                raise ScenarioError(f"recovery {outcome}: declined or rejected selection changed state")
+        return {"unchanged": True, "termiosRestored": True, "prompt": prompt}
+    finally:
+        shutil.rmtree(scratch, ignore_errors=True)
+
+
 def run_all(root: Path, language: str, node: str, binary: Path) -> dict[str, Any]:
     global last_transcript
     cases = {
@@ -685,6 +734,7 @@ def run_all(root: Path, language: str, node: str, binary: Path) -> dict[str, Any
         "create-cancel": lambda: create_case(root, language, node, binary, "cancel"),
         "create-interrupt": lambda: create_case(root, language, node, binary, "interrupt"),
         "create-approval-interrupt": lambda: create_case(root, language, node, binary, "approval-interrupt"),
+        "recovery-selection": lambda: recovery_case(root, language, node, binary),
     }
     results: dict[str, Any] = {}
     for name, run_case in cases.items():

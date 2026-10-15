@@ -48,6 +48,7 @@ import {
   type OperationPaths,
   type OperationRetention,
   type OperationState,
+  type RecoveryPhase,
 } from "../core/operations.ts";
 import { confirm, interactive } from "../ui/prompt.ts";
 import { palette as paletteFor, type Palette } from "../ui/style.ts";
@@ -2438,7 +2439,7 @@ export type GateOptions = {
   /** Mark this journal as an explicitly approved delivery/schema/case migration backup. */
   retention?: OperationRetention;
   /** Recovery previews expose paths and caller-supplied field summaries, never file bodies. */
-  recoveryPresentation?: boolean | { lines?: string[]; failureMessage?: (operationId: string) => string };
+  recoveryPresentation?: boolean | { lines?: string[]; failureMessage?: (operationId: string, phase: RecoveryPhase, path: string | null, code: string) => string };
   /** Read back repaired state under the owner before its journal can become complete. */
   verify?: () => void | Promise<void>;
 };
@@ -2539,6 +2540,8 @@ export async function gate(changes: Change[], opts: GateOptions): Promise<GateRe
   actions.push(...effects.final.map((effect, index) => effectAction(effect, "final", index)));
   const done: string[] = [];
   let journalStarted = false;
+  let phase: RecoveryPhase = "prepare";
+  let target: string | null = null;
   try {
     handle = acquireOperation(opts.paths, "mutation");
     // Revalidate every target, including content-equal/no-op changes, while this owner is held.
@@ -2552,6 +2555,8 @@ export async function gate(changes: Change[], opts: GateOptions): Promise<GateRe
     const createdParents = new Map<string, string>();
     for (let index = 0; index < effects.initial.length; index++) {
       const change = effects.initial[index]!.change;
+      phase = "write";
+      target = change.path;
       try {
         actions[index] = prepareFileWrite(change, actions[index]!, opts.t);
         checkpointJournal(handle, completed, actions);
@@ -2561,12 +2566,14 @@ export async function gate(changes: Change[], opts: GateOptions): Promise<GateRe
         completed.push(index);
         checkpointJournal(handle, completed, actions);
       } catch (cause) {
-        throw new ConfigError(opts.t.errors.couldNotWrite(change.path, (cause as Error).message, done));
+        throw new ConfigError(opts.t.errors.couldNotWrite(change.path, (cause as Error).message, done), { cause });
       }
     }
     for (let index = 0; index < operationActions.length; index++) {
       const planned = operationActions[index]!;
       const actionIndex = effects.initial.length + index;
+      phase = "write";
+      target = planned.action.path;
       try {
         assertWrittenAliases(actions, completed, opts.t);
         planned.prepare?.((action) => {
@@ -2579,12 +2586,14 @@ export async function gate(changes: Change[], opts: GateOptions): Promise<GateRe
         completed.push(actionIndex);
         checkpointJournal(handle, completed, actions);
       } catch (cause) {
-        throw new ConfigError(opts.t.errors.couldNotWrite(planned.action.path, (cause as Error).message, done));
+        throw new ConfigError(opts.t.errors.couldNotWrite(planned.action.path, (cause as Error).message, done), { cause });
       }
     }
     for (let index = 0; index < effects.final.length; index++) {
       const change = effects.final[index]!.change;
       const actionIndex = effects.initial.length + operationActions.length + index;
+      phase = "write";
+      target = change.path;
       try {
         assertWrittenAliases(actions, completed, opts.t);
         actions[actionIndex] = prepareFileWrite(change, actions[actionIndex]!, opts.t);
@@ -2595,12 +2604,27 @@ export async function gate(changes: Change[], opts: GateOptions): Promise<GateRe
         completed.push(actionIndex);
         checkpointJournal(handle, completed, actions);
       } catch (cause) {
-        throw new ConfigError(opts.t.errors.couldNotWrite(change.path, (cause as Error).message, done));
+        throw new ConfigError(opts.t.errors.couldNotWrite(change.path, (cause as Error).message, done), { cause });
       }
     }
+    phase = "verify";
+    target = null;
     await opts.verify?.();
+    for (const index of completed) {
+      const action = actions[index]!;
+      if (action.kind !== "entry-rebuild") continue;
+      target = action.path;
+      const { metadata } = validateEntryRebuildAction(action, true);
+      if (!entrySnapshotMatches(action.path, action.after, metadata, opts.t)) {
+        throw new ConfigError(opts.t.errors.staleTarget(action.path), { cause: { code: "VERIFY_MISMATCH", path: action.path } });
+      }
+    }
+    target = null;
     assertWrittenAliases(actions, completed, opts.t);
+    phase = "finalize";
+    target = join(opts.paths.operations, `${handle.owner.operationId}.json`);
     finishJournal(handle, "complete");
+    target = opts.paths.operationsLock;
     releaseOperation(handle);
     return { applied: true, lines, reason: "written", diff, operationId: handle.owner.operationId };
   } catch (cause) {
@@ -2619,9 +2643,34 @@ export async function gate(changes: Change[], opts: GateOptions): Promise<GateRe
     }
     if (opts.recoveryPresentation && journalStarted) {
       const operationId = handle!.owner.operationId;
+      const knownCodes = [
+        "EACCES", "EPERM", "ENOSPC", "EROFS", "ENOENT", "EIO", "ESTALE", "EEXIST",
+        "ENOTDIR", "EISDIR", "ENOTEMPTY", "EBUSY", "VERIFY_MISMATCH",
+      ];
+      // Only planned paths and owned bookkeeping may leave the recovery error boundary.
+      const paths = [...new Set([
+        ...[...changes, ...finalChanges].flatMap(change => [change.path, change.realPath]),
+        ...actions.flatMap(action => [action.path, action.realPath]),
+        opts.paths.operationsLock, join(opts.paths.operations, `${operationId}.json`),
+      ])].sort((left, right) => right.length - left.length);
+      let detail: unknown = cause;
+      let code = "UNKNOWN";
+      let reported: string | null = null;
+      // shortcut: inspect four cause layers; extend if another recovery wrapper nests deeper.
+      for (let depth = 0; depth < 4 && detail !== null && typeof detail === "object"; depth++) {
+        const error = detail as { code?: unknown; path?: unknown; cause?: unknown };
+        if (code === "UNKNOWN" && typeof error.code === "string" && knownCodes.includes(error.code)) code = error.code;
+        if (reported === null && typeof error.path === "string" && isAbsolute(error.path)) {
+          const candidate = error.path;
+          reported = paths.find(path => path === candidate) ?? paths.find(path => lexicallyInside(candidate, path)) ?? null;
+        }
+        detail = error.cause;
+      }
+      const affected = reported ?? target;
+      const path = affected === null ? null : humanText(affected);
       throw new ConfigError(typeof opts.recoveryPresentation === "object" && opts.recoveryPresentation.failureMessage !== undefined
-        ? opts.recoveryPresentation.failureMessage(operationId)
-        : `app rebuild did not complete; preserve operation ${operationId} for recovery`);
+        ? opts.recoveryPresentation.failureMessage(operationId, phase, path, code)
+        : opts.t.recovery.failure(operationId, phase, path, code));
     }
     if (cause instanceof ConfigError) throw cause;
     if (cause instanceof OperationError) throw new ConfigError(cause.message);

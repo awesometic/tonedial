@@ -1,0 +1,20 @@
+status: 0
+--- stdout --- [bytes=482; endsWithNewline=true]
+ToneDial · doctor
+
+  검사 범위: 전역
+  <ROOT>
+
+  진행 중이거나 복구가 필요한 작업이 있습니다. 이번 실행에서는 파일을 바꾸지
+  않았습니다.
+  ffffffffffffffffffffffffffffffff  미완료
+
+  앱 복구를 이어가려면:
+  tonedial doctor --fix --from-operation ffffffffffffffffffffffffffffffff --global
+
+  이전 파일로 돌아가기:
+  tonedial doctor --fix --rollback ffffffffffffffffffffffffffffffff
+
+  tonedial doctor --global --json
+--- stderr --- [bytes=0; endsWithNewline=false]
+

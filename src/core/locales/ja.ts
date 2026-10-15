@@ -121,7 +121,11 @@ const messages: Messages = {
     rollbackOrder: "先に接続を復元し、その後アプリケーションのファイルを復元してください：",
     noSnapshot: (id) => `${id}: この状態ルート用の有効な設定スナップショットがありません`,
     retire: (id) => `停止した操作 ${id} を履歴に移してから再構築してください。外部への変更は検証も取り消しもされません。`,
-    failure: (id) => `復旧が完了しませんでした。操作 ${id} を保持し、tonedial doctor で復旧方法を確認してください。`,
+    resumeOperation: (id) => `停止した操作:\n${id}`,
+    resumeQuestion: "続行するには上の操作ID全体を入力してください。Enterで中止:",
+    cancelled: "復旧を中止しました。ファイルは変更していません。",
+    operationMismatch: "操作IDが一致しません。ファイルは変更していません。",
+    failure: (id, phase, path, code) => `アプリ復旧の${({ prepare: "準備", write: "ファイル書き込み", verify: "結果の検証", finalize: "完了処理" })[phase]}で失敗しました (${code})。${path ? `\n${path}` : ""}\n一部のファイル変更が適用済みの場合があります。操作 ${id} の記録を保持してください。`,
   },
   persona: {
     defaults: role("私", "あなた", "作業の支援を求めている利用者。", "依頼された作業を手伝う汎用アシスタント。"),
@@ -277,7 +281,8 @@ const messages: Messages = {
     seedsOk: (version) => `バージョン ${version}`,
     seedsNotRun: "同梱ファイルなし · ここでは init 未実行",
     seedsAttention: "同梱ファイルの確認が必要",
-    recoveryPending: "実行中または復旧待ちの操作があります。変更はしていません。tonedial doctor --json でIDを確認してください。記録済みの復元は doctor --fix --rollback ID、停止済みの有効な操作からの再構築は doctor --fix --from-operation ID を使います。実行中または所有者不明の操作は保護されます。",
+    recoveryPending: "実行中または復旧が必要な操作があります。この実行ではファイルを変更していません。",
+    resumeOperation: "アプリ復旧を続けるには:",
     contextCurrent: "AGENTS.md と TONE.md の構成は最新です。",
     contextRepair: "管理対象のコンテキストファイルに修復が必要です。ガイドと口調ファイルの診断を確認してください。",
     contextSize: (guide, total) => total === null

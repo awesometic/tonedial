@@ -185,6 +185,14 @@ an active association needs the user's explicit choice and must not reset saved 
 Do not edit files, change the state root, remove locks or grant hook trust yourself.
 The user chooses native tools and scope separately; foreign provider containers are not
 application outputs. A successful app rebuild can still report native attention.
+If repair fails, report its phase, affected path, safe error code and operation ID.
+Some file changes may already be applied; a failure is not evidence that all files stayed unchanged.
+Preserve the operation record and follow the reported scoped read-only diagnosis.
+Default doctor output focuses on blockers; \`--verbose\` and JSON retain the operation history.
+For an explicitly selected stopped operation, \`doctor --fix --from-operation <id>\` continues
+application repair using valid current settings first; it does not undo the earlier changes.
+Preview that exact ID and scope with \`--dry-run\` before applying the approved repair.
+Interactive selection requires the full displayed ID; Enter cancels without writing.
 \`doctor --fix --dry-run\` previews app and selected native changes without writing or
 printing private prior values. Keep both reported IDs when recovery changes app and native
 files; follow the receipt and roll back native connections before application files.
@@ -426,7 +434,7 @@ Profanity grades actual swearing; bravado grades effort claims.
  * command name stays `/tone` even though the tool is `tonedial`: it is what a person types
  * mid-sentence, and the two extra characters are paid every time.
  */
-export const TONE_COMMAND_VERSION = 11;
+export const TONE_COMMAND_VERSION = 12;
 
 export const TONE_COMMAND_MD = `---
 description: Check, change, or reload this agent's tone, preset, or ToneDial settings

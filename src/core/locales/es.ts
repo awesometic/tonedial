@@ -121,7 +121,11 @@ const messages: Messages = {
     rollbackOrder: "Restaura primero las conexiones y después los archivos de la aplicación:",
     noSnapshot: (id) => `${id}: no hay una instantánea válida para este directorio de estado`,
     retire: (id) => `Archiva la operación detenida ${id} antes de reconstruir. Sus cambios externos no se certifican ni se deshacen.`,
-    failure: (id) => `La recuperación no terminó. Conserva la operación ${id} y ejecuta tonedial doctor para ver las opciones.`,
+    resumeOperation: (id) => `Operación detenida:\n${id}`,
+    resumeQuestion: "Para continuar, escribe el ID completo de arriba; Enter cancela:",
+    cancelled: "Recuperación cancelada. No se cambió ningún archivo.",
+    operationMismatch: "El ID de operación no coincide. No se cambió ningún archivo.",
+    failure: (id, phase, path, code) => `La recuperación falló durante la ${({ prepare: "preparación", write: "escritura de archivos", verify: "verificación", finalize: "finalización" })[phase]} (${code}).${path ? `\n${path}` : ""}\nEs posible que algunos cambios ya estén aplicados. Conserva el registro de la operación ${id}.`,
   },
   persona: {
     defaults: role("yo", "tú", "La persona que solicita ayuda con una tarea.", "Un asistente general que ayuda con la tarea solicitada."),
@@ -277,7 +281,8 @@ const messages: Messages = {
     seedsOk: (version) => `versión ${version}`,
     seedsNotRun: "sin archivos incluidos · aquí no se ha ejecutado init",
     seedsAttention: "los archivos incluidos requieren atención",
-    recoveryPending: "Hay una operación activa o pendiente de recuperación. No se cambió nada. Consulta los ID con tonedial doctor --json. Revierte con doctor --fix --rollback ID o reconstruye desde una operación válida detenida con doctor --fix --from-operation ID. Los propietarios activos o ambiguos siguen protegidos.",
+    recoveryPending: "Hay una operación en curso o que necesita recuperación. Esta ejecución no cambió archivos.",
+    resumeOperation: "Continuar la reparación de la aplicación:",
     contextCurrent: "La estructura de AGENTS.md y TONE.md está al día.",
     contextRepair: "Los archivos de contexto gestionados necesitan reparación. Revisa el diagnóstico de la guía y del tono.",
     contextSize: (guide, total) => total === null

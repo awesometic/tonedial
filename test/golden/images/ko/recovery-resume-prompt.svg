@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1044" height="260" viewBox="0 0 1044 260" role="img" aria-labelledby="title description">
+<title id="title">ToneDial screen (ko · recovery resume prompt)</title>
+<desc id="description">ToneDial · doctor
+
+  검사 범위: 프로젝트
+  &lt;ROOT&gt;/agents
+  중단된 작업:
+  ffffffffffffffffffffffffffffffff
+  계속하려면 위 작업 ID 전체를 입력하세요. Enter를 누르면 취소합니다: </desc>
+<rect width="100%" height="100%" rx="16" fill="#171b20"/>
+<g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, system-ui" font-size="22"><text x="32" y="48" fill="#edf3f6" font-weight="400" opacity="1">ToneDial · doctor</text>
+<text x="60" y="104" fill="#edf3f6" font-weight="400" opacity="1">검사 범위: 프로젝트</text>
+<text x="60" y="132" fill="#edf3f6" font-weight="400" opacity="1">&lt;ROOT&gt;/agents</text>
+<text x="60" y="160" fill="#edf3f6" font-weight="400" opacity="1">중단된 작업:</text>
+<text x="60" y="188" fill="#edf3f6" font-weight="400" opacity="1">ffffffffffffffffffffffffffffffff</text>
+<text x="60" y="216" fill="#edf3f6" font-weight="400" opacity="1">계속하려면 위 작업 ID 전체를 입력하세요. Enter를 누르면 취소합니다: </text></g>
+</svg>

@@ -20,7 +20,7 @@ import { BUNDLED, builtinPresetDir, LEGACY_BUILTIN_SLUGS, RETIRED_PRESETS } from
 import { SKILL_MD, SKILL_NAME, SKILL_TRAITS_MD } from "./skill.ts";
 
 // Bump for changed generated content; freshness also checks each managed seed's bytes/provenance.
-export const SEED_VERSION = 19;
+export const SEED_VERSION = 20;
 
 /** The state-root operating boundaries. The compiler owns the current tone separately. */
 export const GUIDE_MD = `${GUIDE_FORMAT_MARKER}
@@ -89,7 +89,7 @@ export function seedFiles(paths: Paths, selection: SeedSelection): Seed[] {
   };
   const native: Seed[] = [
     reader,
-    { id: "skill/body", version: 19, path: join(paths.skill, SKILL_NAME, "SKILL.md"), label: `skill/${SKILL_NAME}/SKILL.md`, contents: SKILL_MD },
+    { id: "skill/body", version: 20, path: join(paths.skill, SKILL_NAME, "SKILL.md"), label: `skill/${SKILL_NAME}/SKILL.md`, contents: SKILL_MD },
     {
       id: "skill/traits",
       version: 11,

@@ -1,10 +1,14 @@
 import assert from "node:assert/strict";
-import { mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import fs, { mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { spawnSync } from "node:child_process";
+import { syncBuiltinESMExports } from "node:module";
+import { mock } from "node:test";
 
 import { parseConfig, serializeConfig } from "../../src/core/config.ts";
 import { resolvePaths } from "../../src/core/paths.ts";
 import { seedFiles, seedRecord } from "../../src/core/seeds.ts";
+import { acquireOperation, beginJournal, finishJournal, inspectOperations, releaseOperation } from "../../src/core/operations.ts";
 import {
   captureCli,
   createGoldenWorkspace,
@@ -15,6 +19,76 @@ import {
 
 export const UPDATE_SCENARIOS = ["update-current", "update-refresh", "update-modified", "update-blocked", "update-invalid"] as const;
 export type MaintenanceScenario = typeof UPDATE_SCENARIOS[number] | "doctor-seeds";
+export const RECOVERY_SCENARIOS = ["doctor-recovery-stopped", "doctor-rebuild-failed"] as const;
+export type RecoveryScenario = typeof RECOVERY_SCENARIOS[number];
+export const RECOVERY_OPERATION_ID = "f".repeat(32);
+
+/** This child exits with a real pending owner after retaining completed history. */
+export function seedRecoveryHistory(env: NodeJS.ProcessEnv): void {
+  const paths = resolvePaths(env);
+  for (let index = 1; index <= 8; index++) {
+    const handle = acquireOperation(paths, "mutation", index.toString(16).padStart(32, "0"));
+    beginJournal(handle, []);
+    finishJournal(handle, "complete");
+    releaseOperation(handle);
+  }
+  beginJournal(acquireOperation(paths, "mutation", RECOVERY_OPERATION_ID), []);
+}
+
+export async function captureRecovery(language: GoldenLanguage, scenario: RecoveryScenario, columns = 80): Promise<CliCapture> {
+  const workspace = createGoldenWorkspace(language);
+  workspace.env.COLUMNS = String(columns);
+  let restoreFault: (() => void) | null = null;
+  try {
+    const initialized = await captureCli(workspace, ["init", "--lang", language, "--tools", "none", "--global", "--auto", "--json"]);
+    assert.equal(initialized.status, 0, initialized.stdout + initialized.stderr);
+    const paths = resolvePaths(workspace.env);
+    if (scenario === "doctor-recovery-stopped") {
+      const child = spawnSync(process.execPath, ["--input-type=module", "--eval",
+        `import { seedRecoveryHistory } from ${JSON.stringify(import.meta.url)}; seedRecoveryHistory(process.env);`],
+      { env: workspace.env, encoding: "utf8", timeout: 10_000 });
+      assert.equal(child.status, 0, child.stderr);
+    } else {
+      const config = parseConfig(readFileSync(paths.config, "utf8"));
+      const seeds = seedFiles(paths, { native: true }).filter(seed => seed.id.startsWith("skill/"));
+      for (const seed of seeds) {
+        mkdirSync(dirname(seed.path), { recursive: true });
+        const contents = seed.id === "skill/body" ? "Previous generated skill.\n" : seed.contents;
+        writeFileSync(seed.path, contents);
+        config.managedSeeds[seed.id] = seedRecord({ ...seed, contents });
+      }
+      writeFileSync(paths.config, serializeConfig(config));
+      const target = seeds[0]!.path;
+      const originalRename = fs.renameSync;
+      const fault = mock.method(fs, "renameSync", (from: fs.PathLike, to: fs.PathLike) => {
+        if (String(to) === target) throw Object.assign(new Error("PRIVATE_RECOVERY_FAILURE_4682"), { code: "EACCES", path: target, syscall: "rename" });
+        originalRename(from, to);
+      });
+      syncBuiltinESMExports();
+      restoreFault = () => { fault.mock.restore(); syncBuiltinESMExports(); };
+    }
+    let capture = normalizeCapture(await captureCli(workspace, scenario === "doctor-recovery-stopped"
+      ? ["doctor", "--global"] : ["doctor", "--fix", "--global", "--auto"]), workspace);
+    if (scenario === "doctor-recovery-stopped") {
+      assert.equal(capture.status, 0, capture.stderr);
+      assert.equal(capture.stderr, "");
+      assert.ok(capture.stdout.includes(RECOVERY_OPERATION_ID));
+      for (let index = 1; index <= 8; index++) assert.ok(!capture.stdout.includes(index.toString(16).padStart(32, "0")), "completed history leaked into the default recovery report");
+    } else {
+      assert.equal(capture.status, 1, capture.stdout + capture.stderr);
+      assert.match(capture.stderr, /EACCES/);
+      assert.ok(capture.stderr.includes("SKILL.md"), "failed rebuild must identify its target");
+      for (const { operationId } of inspectOperations(paths).journals) {
+        capture = { ...capture, stdout: capture.stdout.replaceAll(operationId, "<OPERATION_ID>"), stderr: capture.stderr.replaceAll(operationId, "<OPERATION_ID>") };
+      }
+    }
+    assert.doesNotMatch(capture.stdout + capture.stderr, /PRIVATE_RECOVERY_FAILURE_4682/);
+    return capture;
+  } finally {
+    restoreFault?.();
+    workspace.dispose();
+  }
+}
 
 /** Real seed provenance in disposable state; dry runs never invoke a package manager. */
 export async function captureMaintenance(

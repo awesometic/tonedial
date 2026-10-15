@@ -14,7 +14,7 @@ ToneDial · wire
   + import {
 
   <ROOT>/state/skill/tonedial/SKILL.md
-  (새 파일)  292줄
+  (새 파일)  300줄
   + ---
   + name: tonedial
 

@@ -121,7 +121,11 @@ const messages: Messages = {
     rollbackOrder: "请先恢复连接，再恢复应用文件：",
     noSnapshot: (id) => `${id}：没有此状态根目录的有效设置快照`,
     retire: (id) => `重建应用前，请将已停止的操作 ${id} 归档为历史。其外部变更不会被认证或撤销。`,
-    failure: (id) => `应用恢复未完成。请保留操作 ${id}，运行 tonedial doctor 查看恢复方式。`,
+    resumeOperation: (id) => `已停止的操作：\n${id}`,
+    resumeQuestion: "要继续，请输入上方完整的操作 ID；按 Enter 取消：",
+    cancelled: "已取消恢复，未更改文件。",
+    operationMismatch: "操作 ID 不匹配，未更改文件。",
+    failure: (id, phase, path, code) => `应用恢复在${({ prepare: "准备", write: "写入文件", verify: "验证结果", finalize: "完成处理" })[phase]}阶段失败 (${code})。${path ? `\n${path}` : ""}\n部分文件更改可能已应用。请保留操作 ${id} 的记录。`,
   },
   persona: {
     defaults: role("我", "你", "请求任务协助的用户。", "协助完成所请求任务的通用助手。"),
@@ -277,7 +281,8 @@ const messages: Messages = {
     seedsOk: (version) => `版本 ${version}`,
     seedsNotRun: "无内置文件 · 尚未在此运行 init",
     seedsAttention: "内置文件需要处理",
-    recoveryPending: "有操作正在运行或需要恢复，未作任何修改。请用 tonedial doctor --json 查看 ID。已有回滚记录用 doctor --fix --rollback ID；已停止的有效操作可用 doctor --fix --from-operation ID 重建应用。运行中或所有者不明确的操作仍受保护。",
+    recoveryPending: "有操作正在运行或需要恢复。本次执行未更改文件。",
+    resumeOperation: "继续应用恢复：",
     contextCurrent: "AGENTS.md 与 TONE.md 布局已是最新。",
     contextRepair: "受管理的上下文文件需要修复，请检查指南和语气文件诊断。",
     contextSize: (guide, total) => total === null
