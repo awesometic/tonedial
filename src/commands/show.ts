@@ -8,7 +8,7 @@ import { stripVTControlCharacters } from "node:util";
 import type { CommandResult, Ctx } from "../cli.ts";
 import { AXIS_DEFAULT, AXIS_GROUP, AXIS_KIND, AXIS_RISK_FROM, riskyAxes } from "../core/anchors.ts";
 import { check as checkCombos, PERSONA_DESCRIPTION_MAX } from "../core/combos.ts";
-import { ConfigError, isConfigV2, type Config } from "../core/config.ts";
+import { ConfigError, isConfigV2, settingValues } from "../core/config.ts";
 import { compile, measure } from "../core/compile.ts";
 import { withPreset, matchesPreset, inspectPresetLibrary, resolvePreset } from "../core/presets.ts";
 import { toCompileInput } from "../core/resolve.ts";
@@ -36,6 +36,7 @@ export function runShow(ctx: Ctx, args: string[]): CommandResult {
   }
   const shown = preview ? withPreset(config, preview) : config;
   const axes = shown.axes;
+  const values = settingValues(shown);
 
   const input = toCompileInput(shown);
   const artifact = compile(input);
@@ -69,29 +70,33 @@ export function runShow(ctx: Ctx, args: string[]): CommandResult {
     for (const folded of wrap(sizeLabel, ui.width - 2)) lines.push(`  ${ui.dim(folded)}`);
   }
 
-  const p = shown.persona;
-  const personaSet = Boolean(p.age || p.gender || p.note || p.address || p.user || p.agent);
+  const { "persona.age": age, "persona.gender": gender, "persona.note": note,
+    "persona.self_ref": selfRef, "persona.user_ref": userRef, "persona.user": user, "persona.agent": agent } = values;
+  const personaSet = Boolean(age || gender || note || selfRef || userRef || user || agent);
   const gauges = [gaugeHeader(ui, ctx.t), ...gaugeBlock(axes, ui)];
   const gaugeWidth = Math.max(...gauges.map((line) => maxCells(stripVTControlCharacters(line))));
   const detailWidth = ui.terminal && ui.width >= 119 ? ui.width - gaugeWidth - 4 : ui.width - 2;
   const details: string[] = [ui.bold(ctx.t.artifact.settingsHeading)];
   if (personaSet) {
     const bits = [
-      p.age ? humanText(p.age) : null,
-      p.gender ? humanText(p.gender) : null,
-      p.address?.self_ref ? ctx.t.persona.callsItself(humanText(p.address.self_ref)) : null,
-      p.address?.user_ref ? ctx.t.persona.callsYou(humanText(p.address.user_ref)) : null,
-      p.note ? ctx.t.persona.noteChars([...p.note].length) : null,
-      p.user && p.agent ? ctx.t.persona.descriptionCounts([...p.user].length, [...p.agent].length, PERSONA_DESCRIPTION_MAX) : null,
-      p.user && !p.agent ? ctx.t.persona.descriptionChars("user", [...p.user].length) : null,
-      p.agent && !p.user ? ctx.t.persona.descriptionChars("agent", [...p.agent].length) : null,
+      age ? humanText(age) : null,
+      gender ? humanText(gender) : null,
+      selfRef ? ctx.t.persona.callsItself(humanText(selfRef)) : null,
+      userRef ? ctx.t.persona.callsYou(humanText(userRef)) : null,
+      note ? ctx.t.persona.noteChars([...note].length) : null,
+      user && agent ? ctx.t.persona.descriptionCounts([...user].length, [...agent].length, PERSONA_DESCRIPTION_MAX) : null,
+      user && !agent ? ctx.t.persona.descriptionChars("user", [...user].length) : null,
+      agent && !user ? ctx.t.persona.descriptionChars("agent", [...agent].length) : null,
     ].filter(Boolean);
     if (bits.length) for (const folded of wrap(bits.join(" · "), detailWidth)) details.push(ui.dim(folded));
-    for (const [field, value] of [["agent", p.agent], ["user", p.user]] as const) {
+    for (const [field, value] of [["agent", agent], ["user", user]] as const) {
       if (value === null) continue;
       for (const folded of wrap(ctx.t.persona.descriptionFull(field, humanText(value)), detailWidth)) {
         details.push(ui.dim(folded));
       }
+    }
+    if (note !== null) {
+      for (const folded of wrap(ctx.t.persona.descriptionFull("note", humanText(note)), detailWidth)) details.push(ui.dim(folded));
     }
   }
 
@@ -101,7 +106,7 @@ export function runShow(ctx: Ctx, args: string[]): CommandResult {
     ? [...new Set(Object.values(config.wiring.registrations).map((record) => `${record.target} (${record.scope})`))]
     : Object.keys(config.wiring);
   for (const text of [
-    stateRow(shown, ctx.t), ctx.t.artifact.displaySettings(config.language),
+    stateRow(values, ctx.t), ctx.t.artifact.displaySettings(values.language),
     ctx.t.artifact.connectionRecords(records.map(humanText)),
   ]) for (const folded of wrap(text, detailWidth)) details.push(folded);
   // The config's presence cannot distinguish a prepared root from a legacy one. Use the same
@@ -176,10 +181,10 @@ export function runShow(ctx: Ctx, args: string[]): CommandResult {
       riskAxes: riskyAxes(axes),
       riskThresholds: AXIS_RISK_FROM,
       persona: shown.persona,
-      safeword: shown.safeword,
-      speech_level: shown.speech_level,
+      safeword: values.safeword,
+      speech_level: values.speech_level,
       // Interface language never changes the compiled tone.
-      language: config.language,
+      language: values.language,
       chars: size.chars,
       artifact: { exists: artifactOnDisk },
     },
@@ -205,9 +210,9 @@ function titleRow(name: string, sizeLabel: string, ctx: Ctx): string {
  * Safeword and register on one row. Plain text, because it is folded before it is
  * painted and an escape sequence measures as characters while occupying no cell.
  */
-function stateRow(config: Config, t: Messages): string {
-  const safeword = config.safeword ? t.settings.safewordSet(humanText(config.safeword)).split(" — ")[0]! : t.settings.noSafeword.split(" — ")[0]!;
-  return `${safeword} · ${t.settings.register(config.speech_level)}`;
+function stateRow(values: ReturnType<typeof settingValues>, t: Messages): string {
+  const safeword = values.safeword ? t.settings.safewordSet(humanText(values.safeword)).split(" — ")[0]! : t.settings.noSafeword.split(" — ")[0]!;
+  return `${safeword} · ${t.settings.register(values.speech_level)}`;
 }
 
 // Presence alone establishes neither current contents nor native loading.

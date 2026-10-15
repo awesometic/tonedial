@@ -221,7 +221,7 @@ export type Messages = {
     descriptionOverCap: (field: string, given: number, cap: number) => string;
     descriptionChars: (field: "user" | "agent", count: number) => string;
     descriptionCounts: (user: number, agent: number, cap: number) => string;
-    descriptionFull: (field: "user" | "agent", value: string) => string;
+    descriptionFull: (field: "user" | "agent" | "note", value: string) => string;
   };
   settings: {
     guardsRetired: string;
@@ -475,7 +475,7 @@ export type Messages = {
     /** The two commands someone who has just installed this should run. */
     firstSteps: string;
     examples: string;
-    commands: { init: string; set: string; address: string; persona: string; reset: string; show: string; create: string; save: string; list: string; edit: string; use: string; compile: string; export: string; import: string; wire: string; unwire: string; doctor: string; update: string; eject: string; test: string };
+    commands: { init: string; set: string; get: string; address: string; persona: string; reset: string; show: string; create: string; save: string; list: string; edit: string; use: string; compile: string; export: string; import: string; wire: string; unwire: string; doctor: string; update: string; eject: string; test: string };
     flags: { global: string; here: string; project: string; migrateLegacy: string; auto: string; dryRun: string; lang: string; commands: string; tools: string; fix: string; rollback: string; fromOperation: string; fromPreset: string; restorePreset: string; preset: string; slug: string; acceptUsage: string; explain: string; check: string; json: string; verbose: string; color: string; version: string; help: string };
   };
   combos: {
@@ -599,7 +599,7 @@ const enMessages: Messages = {
     unknown: (name, nearest) => `${name}: not an axis${nearest ? `. Did you mean ${nearest}?` : ""}`,
     notSettable: (name, nearest) =>
       `${name}: not an axis or setting. ${nearest ? `Did you mean ${nearest}? ` : ""}` +
-      "Full list: tonedial show --explain",
+      "Full list: tonedial get --help",
     reset: (axis, level) => `${axis}: default ${level}`,
     resetAll: "All axes reset to defaults; persona and settings kept.",
     nothingChanged: "no changes",
@@ -718,7 +718,7 @@ const enMessages: Messages = {
     descriptionOverCap: (field, given, cap) => `${field}: ${given} characters · maximum ${cap}`,
     descriptionChars: (field, count) => `${field === "user" ? "user context" : "fictional agent role"} · ${count} chars`,
     descriptionCounts: (user, agent, cap) => `roles · user ${user}/${cap} · agent ${agent}/${cap}`,
-    descriptionFull: (field, value) => `${field === "user" ? "user context" : "fictional agent role"}: ${value}`,
+    descriptionFull: (field, value) => `${field === "user" ? "user context" : field === "agent" ? "fictional agent role" : "persona note"}: ${value}`,
   },
   settings: {
     guardsRetired: "guards is retired. ToneDial no longer adds guard requests. No settings were changed.",
@@ -1003,6 +1003,7 @@ const enMessages: Messages = {
     commands: {
       init: "set up and refresh bundled files",
       set: "change axes, role or settings · bare opens dial",
+      get: "read current setting values · key adds its meaning and choices",
       address: "set names for each party · bare prompts",
       persona: "set agent and user roles · bare prompts",
       reset: "reset an axis · bare resets all axes",
@@ -1230,7 +1231,7 @@ const en: Catalogue = {
   },
   settingHints: {
     safeword: "request for one plain answer to one message",
-    speech_level: "honorific forms: auto, polite, plain · formality varies wording within them",
+    speech_level: "auto: adapt to the relationship · polite: honorific forms · plain: ordinary non-honorific forms · wording and distance: formality",
     language: "CLI interface language · unrelated to agent replies",
     "persona.age": "age band the model may associate with",
     "persona.gender": "gender the model may associate with",
@@ -1282,7 +1283,7 @@ const koMessages: Messages = {
     unknown: (name, nearest) => `${name}: 축이 아닙니다${nearest ? `. ${nearest} 말씀이신가요?` : ""}`,
     notSettable: (name, nearest) =>
       `${name}: 축도 설정도 아닙니다. ${nearest ? `${nearest} 말씀이신가요? ` : ""}` +
-      "전체 목록: tonedial show --explain",
+      "전체 목록: tonedial get --help",
     reset: (axis, level) => `${axis}: 기본값 ${level}`,
     resetAll: "모든 축을 기본값으로 되돌렸습니다. 페르소나와 설정은 유지했습니다.",
     nothingChanged: "변경 없음",
@@ -1404,7 +1405,7 @@ const koMessages: Messages = {
     descriptionOverCap: (field, given, cap) => `${field}: ${given}자 · 최대 ${cap}자`,
     descriptionChars: (field, count) => `${field === "user" ? "사용자 배경" : "가상 에이전트 역할"} · ${count}자`,
     descriptionCounts: (user, agent, cap) => `역할 · 사용자 ${user}/${cap} · 에이전트 ${agent}/${cap}`,
-    descriptionFull: (field, value) => `${field === "user" ? "사용자 배경" : "가상 에이전트 역할"}: ${value}`,
+    descriptionFull: (field, value) => `${field === "user" ? "사용자 배경" : field === "agent" ? "가상 에이전트 역할" : "추가 말투·역할"}: ${value}`,
   },
   settings: {
     guardsRetired: "guards 설정은 더 이상 쓰지 않습니다. ToneDial은 가드 요청을 넣지 않습니다. 설정은 바꾸지 않았습니다.",
@@ -1688,6 +1689,7 @@ const koMessages: Messages = {
     commands: {
       init: "초기 설정과 기본 파일 갱신",
       set: "축·역할·설정 변경 · 인자 없으면 다이얼",
+      get: "현재 설정값 조회 · 키를 지정하면 의미와 선택지도 표시",
       address: "서로 부르는 말 · 인자 없으면 질문",
       persona: "에이전트·사용자 역할 · 인자 없으면 질문",
       reset: "축을 기본값으로 · 축을 안 주면 전부",
@@ -1918,7 +1920,7 @@ const ko: Catalogue = {
   },
   settingHints: {
     safeword: "한 메시지만 담백하게 답해 달라는 요청 문구",
-    speech_level: "높임 체계: auto, polite, plain · 표현의 격식은 formality로 조절",
+    speech_level: "auto: 관계에 맞게 선택 · polite: 존댓말 · plain: 일반 반말 · 표현의 격식과 거리감은 formality로 조절",
     language: "CLI 인터페이스 언어 · 에이전트 답변 언어와 무관",
     "persona.age": "모델이 연상할 나이대",
     "persona.gender": "모델이 연상할 성별",

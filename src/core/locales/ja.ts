@@ -34,7 +34,7 @@ const messages: Messages = {
     unknown: (name, nearest) => `${name}: 軸ではありません${nearest ? `。${nearest} のことですか？` : ""}`,
     notSettable: (name, nearest) =>
       `${name}: 軸でも設定項目でもありません。${nearest ? `${nearest} のことですか？ ` : ""}` +
-      "全項目：tonedial show --explain",
+      "全項目：tonedial get --help",
     reset: (axis, level) => `${axis}: 既定値 ${level}`,
     resetAll: "全軸を既定値に戻しました。ペルソナと設定は保持しました。",
     nothingChanged: "変更なし",
@@ -153,7 +153,7 @@ const messages: Messages = {
     descriptionOverCap: (field, given, cap) => `${field}: ${given}文字 · 上限 ${cap}`,
     descriptionChars: (field, count) => `${field === "user" ? "ユーザー背景" : "架空の役割"} · ${count}文字`,
     descriptionCounts: (user, agent, cap) => `役割 · ユーザー ${user}/${cap} · エージェント ${agent}/${cap}`,
-    descriptionFull: (field, value) => `${field === "user" ? "ユーザー背景" : "架空の役割"}: ${value}`,
+    descriptionFull: (field, value) => `${field === "user" ? "ユーザー背景" : field === "agent" ? "架空の役割" : "追加の話し方・役割"}: ${value}`,
   },
   settings: {
     guardsRetired: "guards は廃止されました。ToneDialはガード要求を追加しません。設定は変更していません。",
@@ -434,6 +434,7 @@ const messages: Messages = {
     commands: {
       init: "初期設定と同梱ファイルの更新",
       set: "軸・役割・設定を変更 · 引数なしでダイヤル",
+      get: "現在の設定値を確認 · キー指定で意味と選択肢も表示",
       address: "双方の呼称を設定 · 引数なしで質問",
       persona: "エージェントとユーザーの役割を設定 · 引数なしで質問",
       reset: "軸を初期化 · 引数なしで全軸",
@@ -657,7 +658,7 @@ export const ja: Catalogue = {
   },
   settingHints: {
     safeword: "1つのメッセージに一度だけ平易な回答を求める文句",
-    speech_level: "敬語区分：auto, polite, plain · 各区分内の表現は formality で調整",
+    speech_level: "auto: 関係に合わせる · polite: 敬語 · plain: 通常の常体 · 表現の格式と距離感は formality で調整",
     language: "CLIの表示言語 · エージェントの回答言語とは別",
     "persona.age": "モデルに連想させる年齢層",
     "persona.gender": "モデルに連想させるジェンダー",

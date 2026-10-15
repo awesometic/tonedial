@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=3657; endsWithNewline=true]
+--- stdout --- [bytes=3759; endsWithNewline=true]
 tonedial — 코딩 에이전트의 말투를 한 번 정하고 계속 씁니다
 
 tonedial <command> [options]
@@ -9,7 +9,8 @@ tonedial <command> [options]
   tonedial show
 
 말투
-  set <axis>=<level> …  축·역할·설정 변경 · 인자 없으면 다이얼
+  set <key>=<value> …   축·역할·설정 변경 · 인자 없으면 다이얼
+  get [key]              현재 설정값 조회 · 키를 지정하면 의미와 선택지도 표시
   address [self user]    서로 부르는 말 · 인자 없으면 질문
   persona [agent user]   에이전트·사용자 역할 · 인자 없으면 질문
   reset [axis]           축을 기본값으로 · 축을 안 주면 전부

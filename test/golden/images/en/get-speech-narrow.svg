@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="554" height="288" viewBox="0 0 554 288" role="img" aria-labelledby="title description">
+<title id="title">ToneDial screen (en · get-speech-narrow)</title>
+<desc id="description">ToneDial · get
+
+  speech_level  plain
+
+  auto: adapt to the relationship ·
+  polite: honorific forms · plain:
+  ordinary non-honorific forms ·
+  wording and distance: formality
+</desc>
+<rect width="100%" height="100%" rx="16" fill="#171b20"/>
+<g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, system-ui" font-size="22"><text x="32" y="48" fill="#edf3f6" font-weight="400" opacity="1">ToneDial · get</text>
+<text x="60" y="104" fill="#edf3f6" font-weight="400" opacity="1">speech_level</text>
+<text x="256" y="104" fill="#edf3f6" font-weight="400" opacity="1">plain</text>
+<text x="60" y="160" fill="#edf3f6" font-weight="400" opacity="1">auto: adapt to the relationship ·</text>
+<text x="60" y="188" fill="#edf3f6" font-weight="400" opacity="1">polite: honorific forms · plain:</text>
+<text x="60" y="216" fill="#edf3f6" font-weight="400" opacity="1">ordinary non-honorific forms ·</text>
+<text x="60" y="244" fill="#edf3f6" font-weight="400" opacity="1">wording and distance: formality</text></g>
+</svg>

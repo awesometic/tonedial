@@ -808,6 +808,13 @@ test("both windows onto the CLI carry one reload procedure, and it reads the gui
   const presets = presetSection(skill);
   assert.ok(presets);
   assert.equal(presetSection(command), presets, "the two control entry points disagree about preset creation");
+  assert.match(presets, /tonedial get --json/);
+  assert.match(command.join("\n"), /current settings from `values`/);
+  const current = await invoke(["get"]);
+  assert.equal(current.code, 0, JSON.stringify(current.value));
+  assert.equal(current.value.schema, 3);
+  assert.equal(typeof current.value.values.warmth, "number");
+  assert.equal(current.value.values["persona.agent"], parseConfig(readFileSync(resolvePaths(env).config, "utf8")).persona.agent);
   assert.match(presets, /created: true/);
   const created = await invoke(["create", "Skill Example", "--slug", "skill-example", "warmth=2", "--auto"]);
   assert.equal(created.code, 0, JSON.stringify(created.value));

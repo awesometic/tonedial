@@ -34,7 +34,14 @@ or repair decision. Never edit or recreate them directly.
 /** Both entry points distinguish current tone settings from saved profiles. */
 const PRESETS_MD = `## Current settings and saved presets
 
-\`tonedial show --json\` reports the current settings. \`show <slug> --json\` previews that
+\`tonedial get --json\` reports the current editable settings in a flat \`values\` object.
+\`get <key> --json\` selects one of those keys, preserving numbers, literal text and nulls.
+The keys are the twelve axes, \`language\`, \`speech_level\`, \`safeword\`, and
+\`persona.age\`, \`persona.gender\`, \`persona.self_ref\`, \`persona.user_ref\`,
+\`persona.note\`, \`persona.user\`, and \`persona.agent\`.
+\`language\` selects the CLI interface, not the agent's reply language.
+Read-only \`get\` neither changes settings nor reloads this conversation.
+\`tonedial show --json\` adds the overview and artifact metadata. \`show <slug> --json\` previews that
 preset's saved tone settings. \`unsaved\` on the current result means the current tone settings
 have not been saved back to a profile; the current configuration itself is persisted.
 For an explicit request to save a profile, use \`tonedial save "<display name>" --json\`.
@@ -207,12 +214,13 @@ the user to complete CLI installation and explicit setup; do not install it or g
 ## Read the current state first
 
 \`\`\`bash
-tonedial show --json
+tonedial get --json
 \`\`\`
 
-The payload carries \`axes\` (twelve axes, each 1–5), \`defaults\`, \`groups\`, \`kinds\`,
-\`riskAxes\`, \`persona\`, \`safeword\`, \`speech_level\`, and \`chars\`. Every command takes \`--json\` and answers with a
-\`schema\` field.
+The \`values\` object carries the twelve axis levels and the separate settings under their
+editable keys. An unset setting is \`null\`; description text is returned in full.
+For the formatted overview, preset state and advisory \`riskAxes\`, use \`tonedial show --json\`.
+Every command takes \`--json\` and answers with a \`schema\` field.
 ${JSON_MD}
 Otherwise report the failed step
 and stop that flow. Never report a failed mutation as saved; failures after a successful mutation
@@ -318,7 +326,7 @@ During a test conversation, do not mutate ToneDial settings or perform work thro
  */
 export const SKILL_TRAITS_MD = `# Axes
 
-Twelve axes, each 1 to 5. Read the live values with \`tonedial show --json\`; this file says what
+Twelve axes, each 1 to 5. Read the live values with \`tonedial get --json\`; this file says what
 each one **owns**, which is what tells you which axis a request is actually about.
 
 Axes name distinct aspects of a reply. Map the aspect the user named rather than changing
@@ -413,13 +421,13 @@ Profanity grades actual swearing; bravado grades effort claims.
  * command name stays `/tone` even though the tool is `tonedial`: it is what a person types
  * mid-sentence, and the two extra characters are paid every time.
  */
-export const TONE_COMMAND_VERSION = 9;
+export const TONE_COMMAND_VERSION = 10;
 
 export const TONE_COMMAND_MD = `---
 description: Check, change, or reload this agent's tone, preset, or ToneDial settings
 ---
 
-Run \`tonedial show --json\` and report the requested current settings in plain language.
+Run \`tonedial get --json\` and report the requested current settings from \`values\` in plain language.
 Use the same installed CLI and environment throughout.
 ${JSON_MD}
 Otherwise report the failed step and stop that flow.

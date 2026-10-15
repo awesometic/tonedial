@@ -34,7 +34,7 @@ const messages: Messages = {
     unknown: (name, nearest) => `${name}：不是语气轴${nearest ? `。是否想输入 ${nearest}？` : ""}`,
     notSettable: (name, nearest) =>
       `${name}：不是语气轴或设置项。${nearest ? `是否想输入 ${nearest}？ ` : ""}` +
-      "完整列表：tonedial show --explain",
+      "完整列表：tonedial get --help",
     reset: (axis, level) => `${axis}：默认值 ${level}`,
     resetAll: "已将所有语气轴重置为默认值，保留人设和其他设置。",
     nothingChanged: "无变更",
@@ -153,7 +153,7 @@ const messages: Messages = {
     descriptionOverCap: (field, given, cap) => `${field}：${given} 字符 · 上限 ${cap}`,
     descriptionChars: (field, count) => `${field === "user" ? "用户背景" : "虚构代理角色"} · ${count} 字符`,
     descriptionCounts: (user, agent, cap) => `角色 · 用户 ${user}/${cap} · 代理 ${agent}/${cap}`,
-    descriptionFull: (field, value) => `${field === "user" ? "用户背景" : "虚构代理角色"}：${value}`,
+    descriptionFull: (field, value) => `${field === "user" ? "用户背景" : field === "agent" ? "虚构代理角色" : "补充语气与角色"}：${value}`,
   },
   settings: {
     guardsRetired: "guards 已停用，ToneDial 不再添加防护请求。设置未变更。",
@@ -434,6 +434,7 @@ const messages: Messages = {
     commands: {
       init: "初始化并刷新内置文件",
       set: "修改语气轴、角色或设置 · 无参数打开面板",
+      get: "读取当前设置值 · 指定键可查看含义和选项",
       address: "设置双方称呼 · 无参数则交互输入",
       persona: "设置代理和用户角色 · 无参数则交互输入",
       reset: "重置语气轴 · 无参数重置全部",
@@ -657,7 +658,7 @@ export const zh: Catalogue = {
   },
   settingHints: {
     safeword: "对一条消息请求一次平实回答的短语",
-    speech_level: "敬语形式：auto、polite、plain · formality 调整形式内措辞",
+    speech_level: "auto：按关系选择 · polite：敬语 · plain：普通非敬语 · 措辞和距离感由 formality 调整",
     language: "CLI 界面语言 · 与代理回答语言无关",
     "persona.age": "模型可能联想的年龄段",
     "persona.gender": "模型可能联想的性别",

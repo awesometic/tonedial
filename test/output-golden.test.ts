@@ -40,6 +40,7 @@ const initialized = (args: (workspace: GoldenWorkspace, language: GoldenLanguage
 
 const scenarios: Record<string, Scenario> = {
   set: initialized(() => ["set", "warmth=5"]),
+  get: initialized(() => ["get"]),
   test: initialized(() => ["test", "codex", "--dry-run"]),
   address: initialized(() => ["address", "self", "user"]),
   persona: initialized(() => ["persona", "Fictional reviewer", "Developer"]),

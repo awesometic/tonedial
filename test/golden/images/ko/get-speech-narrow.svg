@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="568" height="260" viewBox="0 0 568 260" role="img" aria-labelledby="title description">
+<title id="title">ToneDial screen (ko · get-speech-narrow)</title>
+<desc id="description">ToneDial · get
+
+  speech_level  plain
+
+  auto: 관계에 맞게 선택 · polite:
+  존댓말 · plain: 일반 반말 · 표현의
+  격식과 거리감은 formality로 조절
+</desc>
+<rect width="100%" height="100%" rx="16" fill="#171b20"/>
+<g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, system-ui" font-size="22"><text x="32" y="48" fill="#edf3f6" font-weight="400" opacity="1">ToneDial · get</text>
+<text x="60" y="104" fill="#edf3f6" font-weight="400" opacity="1">speech_level</text>
+<text x="256" y="104" fill="#edf3f6" font-weight="400" opacity="1">plain</text>
+<text x="60" y="160" fill="#edf3f6" font-weight="400" opacity="1">auto: 관계에 맞게 선택 · polite:</text>
+<text x="60" y="188" fill="#edf3f6" font-weight="400" opacity="1">존댓말 · plain: 일반 반말 · 표현의</text>
+<text x="60" y="216" fill="#edf3f6" font-weight="400" opacity="1">격식과 거리감은 formality로 조절</text></g>
+</svg>

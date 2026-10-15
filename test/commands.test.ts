@@ -330,12 +330,12 @@ test("bare help stays compact, --help carries the reference, and verbose keeps J
   out = [];
   assert.equal(await cli(), 0);
   const compactHelp = stdout();
-  assert.doesNotMatch(compactHelp, /set <axis>=<level>/, "compact help is a command directory");
+  assert.doesNotMatch(compactHelp, /set <key>=<value>/, "compact help is a command directory");
 
   out = [];
   assert.equal(await cli("--help"), 0);
   const fullHelp = stdout();
-  assert.match(fullHelp, /set <axis>=<level>/, "full help includes command syntax and descriptions");
+  assert.match(fullHelp, /set <key>=<value>/, "full help includes command syntax and descriptions");
   assert.ok(fullHelp.split("\n").length > compactHelp.split("\n").length, "full help carries the reference");
   out = [];
   assert.equal(await cli("--help", "--verbose"), 0);

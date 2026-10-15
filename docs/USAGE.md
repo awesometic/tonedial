@@ -13,7 +13,7 @@ tonedial save "My Sword"
 For a checkout, use [build and run from source](../CONTRIBUTING.md#build-and-run-from-source).
 Use the [candidate procedure](./TESTING.md#isolated-candidate) for disposable setup.
 
-[Profiles & roles](#presets-and-personal-settings) · [Axes](#tone-and-axes) · [Dial](#the-inline-dial) · [Connect](#connecting-an-agent) · [Reload](#changing-an-open-conversation) · [Recover](#recovery) · [Commands & JSON](#command-reference-and-json) · [Try a conversation](#try-a-fresh-conversation)
+[Profiles & roles](#presets-and-personal-settings) · [Read settings](#read-current-settings) · [Axes](#tone-and-axes) · [Dial](#the-inline-dial) · [Connect](#connecting-an-agent) · [Reload](#changing-an-open-conversation) · [Recover](#recovery) · [Commands & JSON](#command-reference-and-json) · [Try a conversation](#try-a-fresh-conversation)
 
 ## Presets and personal settings
 
@@ -98,6 +98,31 @@ tonedial save                         # also update the selected user profile
 In the guided form, Enter keeps the current value and `""` clears it; invalid descriptions are retried before either role is applied.
 `show` displays the current descriptions and their counts; `show <slug>` displays the saved profile's descriptions.
 Use `set persona.agent=...` or `set persona.user=...` to change just one.
+
+### Read current settings
+
+Use `set` to change a value, `get` to read it, and `show` for the combined overview:
+
+```bash
+tonedial get                         # all editable current values
+tonedial get language                # interface language, with its meaning and choices
+tonedial get speech_level            # honorific forms, separate from formality
+tonedial get persona.agent           # full saved role description
+tonedial get warmth --json           # { "schema": 3, "ok": true, "values": { "warmth": 3 }, ... }
+tonedial get --help                  # available keys, meanings and choices
+tonedial show                       # gauges, settings, profile and artifact state
+```
+
+`get` reads the active configuration, including changes not yet saved to a profile.
+It never writes, connects an agent or reloads a conversation.
+Before initial setup it reports that no saved configuration exists.
+Use `show <slug>` to preview a saved profile without applying it.
+
+The readable keys are all [twelve axes](#tone-and-axes) and every setting in the table below.
+Single-key human output includes an explanation and available enum values;
+JSON always returns a flat `values` object, with one key or all keys.
+Numbers remain numbers, unset fields are `null`, and text is returned in full.
+Wiring, file paths and internal ownership records are diagnosed with `doctor`, outside `get`.
 
 | Setting | Meaning | Clearing / limits |
 |---|---|---|
@@ -511,7 +536,8 @@ Successful tone mutations recompile in the same action.
 
 | Command | Purpose |
 |---|---|
-| `set <axis>=<level> …` | Change axes/settings; bare opens the dial |
+| `set <key>=<value> …` | Change axes/settings; bare opens the dial |
+| `get [key]` | Read one/all current editable values; key adds meaning and choices |
 | `address [self user]` | Set address; bare asks for both |
 | `persona [agent user]` | Set both role descriptions; bare asks for each |
 | `reset [axis]` | Restore one/all axes; keep other settings |
@@ -538,6 +564,7 @@ Ordinary changes compile automatically; `compile --check --json` also supplies r
 | Stored schemas | Config 2; preset 2 with legacy 1 support; operation formats separate |
 | Streams | JSON stdout has no terminal escapes or ToneDial prompts/provider handoff |
 | Export | Plain is raw preset JSON; `--json` wraps it |
+| Get | Flat `values` object using editable keys; one requested key or all; full text and typed nulls |
 | Show | Includes `riskAxes`, `riskThresholds`; no unsupported guard/ceiling/width fields |
 | Compile check | Human: current/stale/missing; JSON: character count and absolute `agentsPath`/`path`, not existence/delivery proof |
 | Explicit editor | `edit --json` still launches the requested editor; live output uses stderr |

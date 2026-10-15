@@ -9,7 +9,7 @@ import { AXIS_DEFAULT, AXIS_ORDER, riskyAxes, type Axes, type Level } from "../c
 import { check as checkCombos, PERSONA_DESCRIPTION_MAX } from "../core/combos.ts";
 import {
   AGE_BANDS, GENDERS, SPEECH_LEVELS,
-  ConfigError, SETTING_KEYS, isAxis, nearest, nearestAxis, serializeConfig, type Config,
+  ConfigError, SETTING_KEYS, isAxis, nearest, nearestAxis, serializeConfig, settingValues, type Config, type SettableKey,
 } from "../core/config.ts";
 import { toCompileInput } from "../core/resolve.ts";
 import { LANGUAGES, catalogue, isLanguage, type Messages } from "../core/i18n.ts";
@@ -173,26 +173,15 @@ function movementLines(moves: { key: string; from: string; to: string }[], ctx: 
  * Returns `undefined` for a key this tool does not have, which `assign` then rejects by name.
  */
 function readKey(config: Config, key: string, t: Messages): string | undefined {
-  if (key === "safeword") return config.safeword ?? UNSET;
-  if (key === "speech_level") return config.speech_level;
-  if (key === "language") return config.language;
-  if (key.startsWith("persona.")) {
-    const field = key.slice("persona.".length);
-    if (field === "age") return config.persona.age ?? UNSET;
-    if (field === "gender") return config.persona.gender ?? UNSET;
-    if (field === "self_ref") return config.persona.address?.self_ref ?? UNSET;
-    if (field === "user_ref") return config.persona.address?.user_ref ?? UNSET;
-    if (field === "note") {
-      const note = config.persona.note;
-      return note ? t.persona.noteChars([...note].length) : UNSET;
-    }
-    if (field === "user" || field === "agent") {
-      const description = config.persona[field];
-      return description ? t.persona.descriptionChars(field, [...description].length) : UNSET;
-    }
-    return undefined;
+  const values = settingValues(config);
+  if (!Object.hasOwn(values, key)) return undefined;
+  const value = values[key as SettableKey];
+  if (value === null) return UNSET;
+  if (typeof value === "string") {
+    if (key === "persona.note") return t.persona.noteChars([...value].length);
+    if (key === "persona.user" || key === "persona.agent") return t.persona.descriptionChars(key.slice("persona.".length) as "user" | "agent", [...value].length);
   }
-  return isAxis(key) ? String(config.axes[key]) : undefined;
+  return String(value);
 }
 
 /**

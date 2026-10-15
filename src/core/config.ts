@@ -934,14 +934,10 @@ export const isAxis = (name: string): name is Axis =>
 /**
  * Everything `set <key>=<value>` takes that is not an axis.
  *
- * Two consumers: the did-you-mean match in `set`, and the order `show --explain` renders the
- * per-language descriptions in. It does not drive `assign` or `readKey` — each of those branches
- * carries its own parsing and its own refusal.
+ * Shared by key discovery, setting reads, and the did-you-mean match in `set`.
+ * Assignment retains its own validation.
  *
- * Only one drift direction is caught. A key listed here with no branch in `assign` fails the
- * test that drives every entry through `set`. A branch added to `assign` and never listed here
- * is invisible: it would not appear in `--explain` and `nearest` would not suggest it, and
- * nothing fails. Closing that needs `assign` to be a table rather than a chain of `if`s.
+ * Command tests exercise this inventory through both setting and reading values.
  */
 export const SETTING_KEYS = [
   "safeword", "speech_level", "language",
@@ -950,6 +946,24 @@ export const SETTING_KEYS = [
 ] as const;
 
 export type SettingKey = (typeof SETTING_KEYS)[number];
+export type SettableKey = Axis | SettingKey;
+
+/** Current editable values, without presentation labels or internal ownership metadata. */
+export function settingValues(config: Config) {
+  return {
+    ...Object.fromEntries(AXIS_ORDER.map(axis => [axis, config.axes[axis]])) as Axes,
+    safeword: config.safeword,
+    speech_level: config.speech_level,
+    language: config.language,
+    "persona.age": config.persona.age,
+    "persona.gender": config.persona.gender,
+    "persona.self_ref": config.persona.address?.self_ref ?? null,
+    "persona.user_ref": config.persona.address?.user_ref ?? null,
+    "persona.note": config.persona.note,
+    "persona.user": config.persona.user,
+    "persona.agent": config.persona.agent,
+  };
+}
 
 /** Levenshtein-lite: enough to say "did you mean critique?" and no more. */
 export function nearest<T extends string>(name: string, candidates: readonly T[]): T | null {

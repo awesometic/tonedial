@@ -34,7 +34,7 @@ const messages: Messages = {
     unknown: (name, nearest) => `${name}: no es un eje${nearest ? `. ¿Querías decir ${nearest}?` : ""}`,
     notSettable: (name, nearest) =>
       `${name}: no es un eje ni un ajuste. ${nearest ? `¿Querías decir ${nearest}? ` : ""}` +
-      "Lista completa: tonedial show --explain",
+      "Lista completa: tonedial get --help",
     reset: (axis, level) => `${axis}: valor predeterminado ${level}`,
     resetAll: "Se restablecieron todos los ejes; se conservaron la personalidad y los ajustes.",
     nothingChanged: "sin cambios",
@@ -153,7 +153,7 @@ const messages: Messages = {
     descriptionOverCap: (field, given, cap) => `${field}: ${given} caracteres · máximo ${cap}`,
     descriptionChars: (field, count) => `${field === "user" ? "contexto del usuario" : "rol ficticio del agente"} · ${count} caracteres`,
     descriptionCounts: (user, agent, cap) => `Roles · usuario ${user}/${cap} · agente ${agent}/${cap}`,
-    descriptionFull: (field, value) => `${field === "user" ? "contexto del usuario" : "rol ficticio del agente"}: ${value}`,
+    descriptionFull: (field, value) => `${field === "user" ? "contexto del usuario" : field === "agent" ? "rol ficticio del agente" : "nota de personalidad"}: ${value}`,
   },
   settings: {
     guardsRetired: "guards se ha retirado. ToneDial ya no añade solicitudes de protección. No se cambió ningún ajuste.",
@@ -434,6 +434,7 @@ const messages: Messages = {
     commands: {
       init: "configurar y actualizar archivos incluidos",
       set: "cambiar ejes, rol o ajustes · sin argumentos abre el dial",
+      get: "consultar valores actuales · una clave muestra su significado y opciones",
       address: "definir los nombres de ambas partes · sin argumentos pregunta",
       persona: "definir roles del agente y usuario · sin argumentos pregunta",
       reset: "restablecer un eje · sin argumentos restablece todos",
@@ -657,7 +658,7 @@ export const es: Catalogue = {
   },
   settingHints: {
     safeword: "petición de una respuesta sencilla para un solo mensaje",
-    speech_level: "formas de trato: auto, polite, plain · formality varía el lenguaje dentro de ellas",
+    speech_level: "auto: según la relación · polite: formas honoríficas · plain: formas normales sin honoríficos · formality controla el lenguaje y la distancia",
     language: "idioma de la interfaz CLI · independiente de las respuestas del agente",
     "persona.age": "franja de edad que puede asociar el modelo",
     "persona.gender": "género que puede asociar el modelo",

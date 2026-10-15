@@ -3,14 +3,15 @@
 import { parseArgs } from "node:util";
 import { isAbsolute } from "node:path";
 
-import { ConfigError, isConfigV2, nearest } from "./core/config.ts";
+import { ConfigError, SETTING_KEYS, isConfigV2, nearest } from "./core/config.ts";
+import { AXIS_ORDER } from "./core/anchors.ts";
 import { compile } from "./core/compile.ts";
 import { toCompileInput } from "./core/resolve.ts";
 import { inspectContextLayout } from "./core/seeds.ts";
 import { OperationError } from "./core/operations.ts";
 import { RegionError } from "./wiring/region.ts";
 import { connectionScopeFlag, installShape, resolveAgentPaths, resolvePaths, type AgentPaths } from "./core/paths.ts";
-import { messages, type Messages } from "./core/i18n.ts";
+import { catalogue, configLanguage, detectLanguage, messages, type Catalogue, type Messages } from "./core/i18n.ts";
 import { isColourMode, palette, type Palette } from "./ui/style.ts";
 import { cells, maxCells, resolveBudget, wrap } from "./ui/width.ts";
 import { interactive } from "./ui/prompt.ts";
@@ -26,6 +27,7 @@ import { runSave } from "./commands/save.ts";
 import { runCreate } from "./commands/create.ts";
 import { runAddress, runPersona, runSet, runReset } from "./commands/set.ts";
 import { runShow } from "./commands/show.ts";
+import { runGet, settingHelp } from "./commands/get.ts";
 import { runUse } from "./commands/use.ts";
 import { runDoctor } from "./commands/doctor.ts";
 import { runEject } from "./commands/eject.ts";
@@ -143,6 +145,7 @@ const COMMANDS: Record<
   { run: (ctx: Ctx, args: string[]) => CommandResult | Promise<CommandResult>; flags: (keyof Flags)[]; max: number | null; context?: "state" | "setup" }
 > = {
   set: { run: runSet, flags: [], max: null, context: "state" },
+  get: { run: runGet, flags: [], max: 1 },
   test: { run: runTest, flags: ["project", "dryRun", "preset", "acceptUsage"], max: 1 },
   address: { run: runAddress, flags: [], max: 2, context: "state" },
   persona: { run: runPersona, flags: [], max: 2, context: "state" },
@@ -182,7 +185,8 @@ type CommandRow = [keyof Messages["help"]["commands"], string];
 /** Intent groups share one command inventory between compact and full help. */
 const COMMAND_GROUPS: [keyof Messages["help"]["groups"], CommandRow[]][] = [
   ["tone", [
-    ["set", "set <axis>=<level> …"],
+    ["set", "set <key>=<value> …"],
+    ["get", "get [key]"],
     ["address", "address [self user]"],
     ["persona", "persona [agent user]"],
     ["reset", "reset [axis]"],
@@ -215,6 +219,7 @@ const COMMAND_SYNTAX: CommandRow[] = COMMAND_GROUPS.flatMap(([, rows]) => rows);
 
 const COMMAND_EXAMPLES: Record<keyof Messages["help"]["commands"], readonly string[]> = {
   set: ["tonedial set", "tonedial set warmth=5 critique=4", "tonedial set persona.agent=reviewer"],
+  get: ["tonedial get", "tonedial get language", "tonedial get speech_level --json"],
   test: ["tonedial test codex --dry-run", "tonedial test claude --project .", "tonedial test codex --preset my-tone --accept-usage"],
   address: ['tonedial address "assistant" "friend"'],
   persona: ["tonedial persona", 'tonedial persona "Fictional reviewer" "Developer"'],
@@ -331,7 +336,8 @@ function compactUsage(t: Messages, ui: Palette): string {
 }
 
 /** One command's syntax and only the flags that can affect that command. */
-function commandUsage(name: string, t: Messages, ui: Palette): string {
+function commandUsage(name: string, copy: Catalogue, ui: Palette): string {
+  const t = copy.cli;
   const command = COMMANDS[name]!;
   const syntax = COMMAND_SYNTAX.find(([key]) => key === name)?.[1] ?? name;
   const flagKeys = [
@@ -346,6 +352,7 @@ function commandUsage(name: string, t: Messages, ui: Palette): string {
     return [syntax, t.help.flags[key]] as [string, string];
   });
   const width = Math.max(...flags.map(([flag]) => cells(flag)));
+  const keyWidth = Math.max(...[...AXIS_ORDER, ...SETTING_KEYS].map(key => maxCells(key)));
   return [
     ui.bold(`tonedial ${syntax}`),
     "",
@@ -356,6 +363,12 @@ function commandUsage(name: string, t: Messages, ui: Palette): string {
     "",
     ui.bold(t.help.examples),
     ...COMMAND_EXAMPLES[name as keyof Messages["help"]["commands"]].map(example => `  ${ui.accent(example)}`),
+    ...(["get", "set"].includes(name) ? [
+      "", ui.bold(t.artifact.whatEachAxisObserves),
+      ...helpRows(AXIS_ORDER.map(key => [key, settingHelp(key, copy).join(" · ")]), keyWidth, ui),
+      "", ui.bold(t.artifact.whatElseIsSettable),
+      ...helpRows(SETTING_KEYS.map(key => [key, settingHelp(key, copy).join(" · ")]), keyWidth, ui),
+    ] : []),
   ].join("\n");
 }
 
@@ -447,7 +460,8 @@ export async function run(
   // Resolved before the mode is validated, so the message about a bad `--color` is itself
   // painted the way the rest of this invocation would have been.
   const configPath = resolvePaths(env).config;
-  const say = messages(configPath, env);
+  const copy = catalogue(configLanguage(configPath) ?? detectLanguage(env));
+  const say = copy.cli;
   const colour = String(parsed.values.color);
   const mode = isColourMode(colour) ? colour : "auto";
   // The line budget is settled here beside the colour, because it is the same kind of decision:
@@ -485,7 +499,7 @@ export async function run(
     if (!Object.hasOwn(COMMANDS, name)) {
       return fail(asJson, say.errors.notACommand(asJson ? name : humanText(name), COMMAND_NAMES, nearest(name, COMMAND_NAMES)), 2, uiErr);
     }
-    process.stdout.write(`${commandUsage(name, say, ui)}\n`);
+    process.stdout.write(`${commandUsage(name, copy, ui)}\n`);
     return 0;
   }
 

@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="890" height="960" viewBox="0 0 890 960" role="img" aria-labelledby="title description">
+<title id="title">ToneDial screen (ko · show-note-narrow)</title>
+<desc id="description">  ToneDial · show · Caring Brother (저장하지 않은 변경)
+  TONE.md 2,436자
+
+                         현재      초기값 · ! 위험 말투
+  form      formality    ▮▯▯▯▯  1   *3
+            verbosity    ▮▮▮▮▯  4   *3
+            profanity    ▮▮▯▯▯  2   *1
+            playfulness  ▮▮▮▯▯  3    3
+  target    critique     ▮▮▯▯▯  2   *3
+            flattery     ▮▯▯▯▯  1    1
+            warmth       ▮▮▮▮▮  5   *3
+  behaviour conviction   ▮▮▮▮▯  4   *3
+            care         ▮▮▮▮▮  5   *3
+            compliance   ▮▮▮▯▯  3    3
+            refusal      ▮▯▯▯▯  1    1
+            bravado      ▮▯▯▯▯  1    1
+
+  사용자 설정
+  자칭 형 · 사용자 호칭 동생 · 노트 43자 · 역할 ·
+  사용자 22/200 · 에이전트 64/200
+  가상 에이전트 역할: 동생을 다정하게 챙기는 형. '야,
+  동생', '형이 같이 봐줄게', '밥은 챙겨 먹었냐' 같은 익숙한
+  표현을 쓴다.
+  사용자 배경: 형에게 고민을 나누고 도움을 받는 동생.
+  추가 말투·역할: 설명은 간결하게 정리하고 불확실한 점과
+  다음에 할 일을 빠짐없이 알려 주세요.
+  세이프워드 없음 · 말씨 plain
+  화면 언어 ko
+  연결: 없음
+
+  * ToneDial 기본값과 다름 · 프로필에 저장되지 않았습니다.
+  tonedial save "My Tone"
+</desc>
+<rect width="100%" height="100%" rx="16" fill="#171b20"/>
+<g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, system-ui" font-size="22"><text x="60" y="48" fill="#edf3f6" font-weight="400" opacity="1">ToneDial · show · Caring Brother (저장하지 않은 변경)</text>
+<text x="60" y="76" fill="#edf3f6" font-weight="400" opacity="1">TONE.md 2,436자</text>
+<text x="382" y="132" fill="#edf3f6" font-weight="400" opacity="1">현재</text>
+<text x="522" y="132" fill="#edf3f6" font-weight="400" opacity="1">초기값 · ! 위험 말투</text>
+<text x="60" y="160" fill="#edf3f6" font-weight="400" opacity="1">form</text>
+<text x="200" y="160" fill="#edf3f6" font-weight="400" opacity="1">formality</text>
+<text x="382" y="160" fill="#edf3f6" font-weight="400" opacity="1">▮▯▯▯▯</text>
+<text x="480" y="160" fill="#edf3f6" font-weight="400" opacity="1">1</text>
+<text x="536" y="160" fill="#edf3f6" font-weight="400" opacity="1">*3</text>
+<text x="200" y="188" fill="#edf3f6" font-weight="400" opacity="1">verbosity</text>
+<text x="382" y="188" fill="#edf3f6" font-weight="400" opacity="1">▮▮▮▮▯</text>
+<text x="480" y="188" fill="#edf3f6" font-weight="400" opacity="1">4</text>
+<text x="536" y="188" fill="#edf3f6" font-weight="400" opacity="1">*3</text>
+<text x="200" y="216" fill="#edf3f6" font-weight="400" opacity="1">profanity</text>
+<text x="382" y="216" fill="#edf3f6" font-weight="400" opacity="1">▮▮▯▯▯</text>
+<text x="480" y="216" fill="#edf3f6" font-weight="400" opacity="1">2</text>
+<text x="536" y="216" fill="#edf3f6" font-weight="400" opacity="1">*1</text>
+<text x="200" y="244" fill="#edf3f6" font-weight="400" opacity="1">playfulness</text>
+<text x="382" y="244" fill="#edf3f6" font-weight="400" opacity="1">▮▮▮▯▯</text>
+<text x="480" y="244" fill="#edf3f6" font-weight="400" opacity="1">3</text>
+<text x="550" y="244" fill="#edf3f6" font-weight="400" opacity="1">3</text>
+<text x="60" y="272" fill="#edf3f6" font-weight="400" opacity="1">target</text>
+<text x="200" y="272" fill="#edf3f6" font-weight="400" opacity="1">critique</text>
+<text x="382" y="272" fill="#edf3f6" font-weight="400" opacity="1">▮▮▯▯▯</text>
+<text x="480" y="272" fill="#edf3f6" font-weight="400" opacity="1">2</text>
+<text x="536" y="272" fill="#edf3f6" font-weight="400" opacity="1">*3</text>
+<text x="200" y="300" fill="#edf3f6" font-weight="400" opacity="1">flattery</text>
+<text x="382" y="300" fill="#edf3f6" font-weight="400" opacity="1">▮▯▯▯▯</text>
+<text x="480" y="300" fill="#edf3f6" font-weight="400" opacity="1">1</text>
+<text x="550" y="300" fill="#edf3f6" font-weight="400" opacity="1">1</text>
+<text x="200" y="328" fill="#edf3f6" font-weight="400" opacity="1">warmth</text>
+<text x="382" y="328" fill="#edf3f6" font-weight="400" opacity="1">▮▮▮▮▮</text>
+<text x="480" y="328" fill="#edf3f6" font-weight="400" opacity="1">5</text>
+<text x="536" y="328" fill="#edf3f6" font-weight="400" opacity="1">*3</text>
+<text x="60" y="356" fill="#edf3f6" font-weight="400" opacity="1">behaviour conviction</text>
+<text x="382" y="356" fill="#edf3f6" font-weight="400" opacity="1">▮▮▮▮▯</text>
+<text x="480" y="356" fill="#edf3f6" font-weight="400" opacity="1">4</text>
+<text x="536" y="356" fill="#edf3f6" font-weight="400" opacity="1">*3</text>
+<text x="200" y="384" fill="#edf3f6" font-weight="400" opacity="1">care</text>
+<text x="382" y="384" fill="#edf3f6" font-weight="400" opacity="1">▮▮▮▮▮</text>
+<text x="480" y="384" fill="#edf3f6" font-weight="400" opacity="1">5</text>
+<text x="536" y="384" fill="#edf3f6" font-weight="400" opacity="1">*3</text>
+<text x="200" y="412" fill="#edf3f6" font-weight="400" opacity="1">compliance</text>
+<text x="382" y="412" fill="#edf3f6" font-weight="400" opacity="1">▮▮▮▯▯</text>
+<text x="480" y="412" fill="#edf3f6" font-weight="400" opacity="1">3</text>
+<text x="550" y="412" fill="#edf3f6" font-weight="400" opacity="1">3</text>
+<text x="200" y="440" fill="#edf3f6" font-weight="400" opacity="1">refusal</text>
+<text x="382" y="440" fill="#edf3f6" font-weight="400" opacity="1">▮▯▯▯▯</text>
+<text x="480" y="440" fill="#edf3f6" font-weight="400" opacity="1">1</text>
+<text x="550" y="440" fill="#edf3f6" font-weight="400" opacity="1">1</text>
+<text x="200" y="468" fill="#edf3f6" font-weight="400" opacity="1">bravado</text>
+<text x="382" y="468" fill="#edf3f6" font-weight="400" opacity="1">▮▯▯▯▯</text>
+<text x="480" y="468" fill="#edf3f6" font-weight="400" opacity="1">1</text>
+<text x="550" y="468" fill="#edf3f6" font-weight="400" opacity="1">1</text>
+<text x="60" y="524" fill="#edf3f6" font-weight="400" opacity="1">사용자 설정</text>
+<text x="60" y="552" fill="#edf3f6" font-weight="400" opacity="1">자칭 형 · 사용자 호칭 동생 · 노트 43자 · 역할 ·</text>
+<text x="60" y="580" fill="#edf3f6" font-weight="400" opacity="1">사용자 22/200 · 에이전트 64/200</text>
+<text x="60" y="608" fill="#edf3f6" font-weight="400" opacity="1">가상 에이전트 역할: 동생을 다정하게 챙기는 형. '야,</text>
+<text x="60" y="636" fill="#edf3f6" font-weight="400" opacity="1">동생', '형이 같이 봐줄게', '밥은 챙겨 먹었냐' 같은 익숙한</text>
+<text x="60" y="664" fill="#edf3f6" font-weight="400" opacity="1">표현을 쓴다.</text>
+<text x="60" y="692" fill="#edf3f6" font-weight="400" opacity="1">사용자 배경: 형에게 고민을 나누고 도움을 받는 동생.</text>
+<text x="60" y="720" fill="#edf3f6" font-weight="400" opacity="1">추가 말투·역할: 설명은 간결하게 정리하고 불확실한 점과</text>
+<text x="60" y="748" fill="#edf3f6" font-weight="400" opacity="1">다음에 할 일을 빠짐없이 알려 주세요.</text>
+<text x="60" y="776" fill="#edf3f6" font-weight="400" opacity="1">세이프워드 없음 · 말씨 plain</text>
+<text x="60" y="804" fill="#edf3f6" font-weight="400" opacity="1">화면 언어 ko</text>
+<text x="60" y="832" fill="#edf3f6" font-weight="400" opacity="1">연결: 없음</text>
+<text x="60" y="888" fill="#edf3f6" font-weight="400" opacity="1">* ToneDial 기본값과 다름 · 프로필에 저장되지 않았습니다.</text>
+<text x="60" y="916" fill="#edf3f6" font-weight="400" opacity="1">tonedial save "My Tone"</text></g>
+</svg>

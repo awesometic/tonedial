@@ -21,7 +21,9 @@ import { captureMaintenance, UPDATE_SCENARIOS, type MaintenanceScenario } from "
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const artifactRoot = resolve(process.env.TONEDIAL_GOLDEN_ARTIFACT_DIR ?? join(root, "artifacts/golden"));
-type ImageScenario = "pending" | "help" | "doctor-global" | MaintenanceScenario | "doctor-seeds-narrow";
+const SETTINGS_SCENARIOS = ["get", "get-speech-narrow", "show-note-narrow"] as const;
+type SettingsScenario = typeof SETTINGS_SCENARIOS[number];
+type ImageScenario = "pending" | "help" | "doctor-global" | MaintenanceScenario | "doctor-seeds-narrow" | SettingsScenario;
 
 function imageGoldenPath(language: GoldenLanguage, scenario: ImageScenario): string {
   return join(root, "test/golden/images", language, `${scenario}.svg`);
@@ -92,8 +94,37 @@ async function captureDoctor(language: GoldenLanguage): Promise<string> {
   }
 }
 
+async function captureSettings(language: GoldenLanguage, scenario: SettingsScenario): Promise<string> {
+  const workspace = createGoldenWorkspace(language);
+  workspace.env.COLUMNS = String(scenario === "get" ? 80 : scenario === "get-speech-narrow" ? 40 : 60);
+  const note = language === "ko"
+    ? "설명은 간결하게 정리하고 불확실한 점과 다음에 할 일을 빠짐없이 알려 주세요."
+    : "Prefer direct explanations. Preserve uncertainty and mention concrete next steps.";
+  try {
+    const initialized = await captureCli(workspace, ["init", "--lang", language, "--tools", "none", "--global", "--auto", "--json"]);
+    assert.equal(initialized.status, 0, initialized.stdout + initialized.stderr);
+    const configured = await captureCli(workspace, ["set", "speech_level=plain",
+      ...(scenario === "show-note-narrow" ? [`persona.note=${note}`] : []), "--json"]);
+    assert.equal(configured.status, 0, configured.stdout + configured.stderr);
+    const args = scenario === "show-note-narrow" ? ["show"] : scenario === "get" ? ["get"] : ["get", "speech_level"];
+    const capture = normalizeCapture(await captureCli(workspace, args), workspace);
+    assert.equal(capture.status, 0, capture.stderr);
+    assert.equal(capture.stderr, "", `${scenario}: ordinary settings should not emit warnings`);
+    assert.ok(capture.stdout.length > 0, `${scenario}: empty settings capture`);
+    if (scenario === "show-note-narrow") {
+      assert.ok(capture.stdout.replace(/\s+/gu, " ").includes(note), "show must display the complete persona note");
+    }
+    return capture.stdout;
+  } finally {
+    workspace.dispose();
+  }
+}
+
 async function captureImage(language: GoldenLanguage, scenario: ImageScenario): Promise<string> {
   if (scenario === "doctor-global") return renderDialSvg(await captureDoctor(language), language, `${language} · doctor --global`);
+  if (scenario === "get" || scenario === "get-speech-narrow" || scenario === "show-note-narrow") {
+    return renderDialSvg(await captureSettings(language, scenario), language, `${language} · ${scenario}`);
+  }
   if (scenario !== "pending" && scenario !== "help") {
     const capture = await captureMaintenance(language, scenario === "doctor-seeds-narrow" ? "doctor-seeds" : scenario,
       scenario === "doctor-seeds-narrow" ? 60 : 80);
@@ -119,7 +150,7 @@ function assertImageGolden(language: GoldenLanguage, scenario: ImageScenario, ac
 
 for (const language of selectedGoldenLanguages()) {
   test(`representative ${language} screen images match their SVG goldens`, async (t) => {
-    for (const scenario of ["pending", "help", "doctor-global", ...UPDATE_SCENARIOS, "doctor-seeds", "doctor-seeds-narrow"] as const) {
+    for (const scenario of ["pending", "help", "doctor-global", ...UPDATE_SCENARIOS, "doctor-seeds", "doctor-seeds-narrow", ...SETTINGS_SCENARIOS] as const) {
       await t.test(scenario, async () => {
         assertImageGolden(language, scenario, await captureImage(language, scenario));
       });
