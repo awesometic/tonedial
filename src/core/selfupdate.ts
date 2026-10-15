@@ -2,9 +2,9 @@
 
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { accessSync, constants, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { isAbsolute, join, resolve } from "node:path";
+import { dirname, isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { gunzipSync } from "node:zlib";
 
@@ -57,6 +57,7 @@ export function inspectNpmInstall(env: NodeJS.ProcessEnv, t: Messages): NpmInsta
   };
   const prefix = query(["prefix", "-g"]);
   const root = join(query(["root", "-g", "--prefix", prefix]), "tonedial");
+  let install: NpmInstall;
   try {
     const own = fileURLToPath(new URL("../../", import.meta.url));
     const current = fileIdentity(own);
@@ -65,10 +66,19 @@ export function inspectNpmInstall(env: NodeJS.ProcessEnv, t: Messages): NpmInsta
     if (lstatSync(root, { throwIfNoEntry: false })?.isSymbolicLink() || current === null || target === null || current.dev !== target.dev || current.ino !== target.ino || version === null) {
       throw new ConfigError(t.update.npmScopeMismatch);
     }
-    return { entry, prefix, root, version };
+    install = { entry, prefix, root, version };
   } catch {
     throw new ConfigError(t.update.npmScopeMismatch);
   }
+  try {
+    // npm replaces the package by renaming it in this parent, not by editing its files.
+    accessSync(dirname(root), constants.W_OK | constants.X_OK);
+  } catch (cause) {
+    const code = (cause as NodeJS.ErrnoException).code;
+    if (code === "EACCES" || code === "EPERM") throw new ConfigError(t.update.npmPermissionDenied(code, prefix));
+    throw new ConfigError(t.update.npmScopeUnknown);
+  }
+  return install;
 }
 
 /** npm owns replacement; captured output cannot corrupt JSON or disclose npm configuration. */
@@ -77,7 +87,13 @@ export function updateNpmInstall(install: NpmInstall, env: NodeJS.ProcessEnv, t:
   if (current.entry !== install.entry || current.prefix !== install.prefix || current.root !== install.root || current.version !== install.version) throw new ConfigError(t.update.npmScopeMismatch);
   const result = spawnSync(install.entry, ["update", "-g", "tonedial", "--prefix", install.prefix, "--json"],
     { env, encoding: "utf8", timeout: 120_000, maxBuffer: RELEASE_MAX_BYTES, stdio: ["ignore", "pipe", "pipe"] });
-  if (result.status !== 0) throw new ConfigError(t.update.npmFailed);
+  if (result.status !== 0) {
+    let code: unknown;
+    try { code = (JSON.parse(result.stdout ?? "null") as { error?: { code?: unknown } } | null)?.error?.code; } catch { /* npm may fail before JSON output. */ }
+    code ??= /^npm (?:error|ERR!) code (EACCES|EPERM)\s*$/m.exec(result.stderr ?? "")?.[1];
+    if (code === "EACCES" || code === "EPERM") throw new ConfigError(t.update.npmPermissionDenied(code, install.prefix));
+    throw new ConfigError(t.update.npmFailed);
+  }
   const version = installedVersion({ lib: install.root });
   if (version === null) throw new ConfigError(t.update.versionUnknown);
   return version;

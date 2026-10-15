@@ -398,6 +398,7 @@ const messages: Messages = {
     npmScopeUnknown: "npmのグローバルインストール先を確認できません。npm prefix -g と npm root -g を確認して再試行してください。",
     npmScopeMismatch: "このToneDialは選択したnpmが管理するグローバルパッケージではありません。対応するNode/npm環境を使用してください。更新は実行していません。",
     npmFailed: "npmの更新に失敗しました。権限とレジストリ設定を確認し、表示されたコマンドを実行してnpmの診断を確認してください。",
+    npmPermissionDenied: (code, prefix) => `npmの更新に必要な書き込み権限がありません (${code})。\n${prefix}\n設定とプリセットをバックアップしてから、ユーザー所有の場所に再インストールしてください。\n復旧手順:\nhttps://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#npm-permissions`,
     versionUnknown: "インストールされたToneDialのバージョンを確認できません。パッケージの状態を確認して再試行してください。",
     stateIssue: {
       missing: "保存済み設定がありません。",

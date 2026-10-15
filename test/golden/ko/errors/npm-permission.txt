@@ -1,0 +1,14 @@
+status: 1
+--- stdout --- [bytes=120; endsWithNewline=true]
+ToneDial · update
+
+  tonedial 0.1.2
+
+  패키지 업데이트:
+    npm update -g tonedial --prefix "<ROOT>/npm prefix"
+--- stderr --- [bytes=274; endsWithNewline=true]
+npm 업데이트에 필요한 쓰기 권한이 없습니다 (EACCES).
+<ROOT>/npm prefix
+설정과 프리셋을 백업한 뒤 사용자 소유 경로에 다시 설치해 주세요.
+복구 절차:
+https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#npm-permissions

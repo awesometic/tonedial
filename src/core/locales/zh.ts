@@ -398,6 +398,7 @@ const messages: Messages = {
     npmScopeUnknown: "无法确认 npm 的全局安装目录。请检查 npm prefix -g 和 npm root -g 后重试。",
     npmScopeMismatch: "当前 ToneDial 不是所选 npm 管理的全局软件包。请使用对应的 Node/npm 环境。未执行更新。",
     npmFailed: "npm 更新失败。请检查权限和镜像设置，并直接运行显示的命令查看 npm 的诊断信息。",
+    npmPermissionDenied: (code, prefix) => `npm 更新缺少写入权限 (${code})。\n${prefix}\n请先备份设置和预设，再重新安装到用户拥有的目录。\n恢复步骤：\nhttps://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#npm-permissions`,
     versionUnknown: "无法确认安装的 ToneDial 版本。请检查软件包的安装状态后重试。",
     stateIssue: {
       missing: "保存的设置缺失。",

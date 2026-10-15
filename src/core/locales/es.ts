@@ -398,6 +398,7 @@ const messages: Messages = {
     npmScopeUnknown: "No se puede verificar el directorio global de npm. Comprueba npm prefix -g y npm root -g antes de reintentar.",
     npmScopeMismatch: "Esta copia de ToneDial no es el paquete global gestionado por el npm seleccionado. Usa la instalación de Node/npm correspondiente. No se ejecutó la actualización.",
     npmFailed: "La actualización de npm falló. Comprueba los permisos y el registro, y ejecuta el comando mostrado para ver el diagnóstico de npm.",
+    npmPermissionDenied: (code, prefix) => `La actualización de npm necesita permiso de escritura (${code}).\n${prefix}\nHaz una copia de seguridad de los ajustes y preajustes, y reinstala en un directorio de tu usuario.\nPasos de recuperación:\nhttps://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#npm-permissions`,
     versionUnknown: "No se pudo verificar la versión instalada de ToneDial. Comprueba la instalación del paquete antes de reintentar.",
     stateIssue: {
       missing: "Faltan los ajustes guardados.",

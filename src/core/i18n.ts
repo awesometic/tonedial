@@ -438,6 +438,7 @@ export type Messages = {
     npmScopeUnknown: string;
     npmScopeMismatch: string;
     npmFailed: string;
+    npmPermissionDenied: (code: "EACCES" | "EPERM", prefix: string) => string;
     versionUnknown: string;
     fetching: (registry: string) => string;
     found: (version: string, bytes: number) => string;
@@ -966,6 +967,7 @@ const enMessages: Messages = {
     npmScopeUnknown: "Cannot verify npm's global installation directory. Check npm prefix -g and npm root -g before retrying.",
     npmScopeMismatch: "This ToneDial copy is not the global package managed by the selected npm. Use the matching Node/npm installation; no update was run.",
     npmFailed: "npm update failed. Check npm's access and registry settings, then retry the displayed command for npm's diagnostics.",
+    npmPermissionDenied: (code, prefix) => `npm update needs write permission (${code}).\n${prefix}\nBack up your settings and presets, then reinstall in a user-owned directory.\nRecovery steps:\nhttps://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#npm-permissions`,
     versionUnknown: "The installed ToneDial version could not be verified. Check the package installation before retrying.",
     stateIssue: {
       missing: "Saved settings are missing.",
@@ -1650,6 +1652,7 @@ const koMessages: Messages = {
     npmScopeUnknown: "npm의 전역 설치 경로를 확인할 수 없습니다. npm prefix -g와 npm root -g를 확인한 뒤 다시 시도해 주세요.",
     npmScopeMismatch: "현재 ToneDial은 선택한 npm이 관리하는 전역 패키지가 아닙니다. 설치할 때 사용한 Node/npm 환경을 선택해 주세요. 업데이트는 실행하지 않았습니다.",
     npmFailed: "npm 업데이트에 실패했습니다. npm의 접근 권한과 레지스트리 설정을 확인해 주세요. 표시된 명령을 직접 실행하면 npm의 오류 내용을 볼 수 있습니다.",
+    npmPermissionDenied: (code, prefix) => `npm 업데이트에 필요한 쓰기 권한이 없습니다 (${code}).\n${prefix}\n설정과 프리셋을 백업한 뒤 사용자 소유 경로에 다시 설치해 주세요.\n복구 절차:\nhttps://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#npm-permissions`,
     versionUnknown: "설치된 ToneDial 버전을 확인할 수 없습니다. 패키지 설치 상태를 확인한 뒤 다시 시도해 주세요.",
     stateIssue: {
       missing: "저장된 설정이 없습니다.",

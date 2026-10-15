@@ -2,11 +2,14 @@
 
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test, type TestContext } from "node:test";
+import { renderDialSvg } from "../scripts/dial-svg.ts";
+import { assertGolden, formatCapture, goldenPath } from "./support/golden.ts";
+import { cells } from "../src/ui/width.ts";
 
 const REPO = dirname(dirname(fileURLToPath(import.meta.url)));
 
@@ -32,6 +35,11 @@ if (args[0] === "prefix") process.stdout.write(prefix + "\\n");
 else if (args[0] === "root") process.stdout.write(path.join(prefix, "lib", "node_modules") + "\\n");
 else if (args[0] === "update") {
   if (args[args.indexOf("--prefix") + 1] !== prefix) process.exit(99);
+  if (process.env.TEST_NPM_PERMISSION) {
+    if (process.env.TEST_NPM_LEGACY) process.stderr.write("npm ERR! code " + process.env.TEST_NPM_PERMISSION + "\\nPRIVATE_NPM_ERROR_2947");
+    else process.stdout.write(JSON.stringify({error: {code: process.env.TEST_NPM_PERMISSION, detail: "PRIVATE_NPM_ERROR_2947"}}));
+    process.exit(7);
+  }
   process.stdout.write("PRIVATE_NPM_OUTPUT_2947");
   process.stderr.write("PRIVATE_NPM_ERROR_2947");
   if (process.env.TEST_NPM_FAILURE) process.exit(7);
@@ -143,6 +151,63 @@ test("npm failure stays a failure and does not expose npm output or claim instal
   assert.doesNotMatch(result.out + result.err, /PRIVATE_|updated|update complete/);
   assert.equal(JSON.parse(readFileSync(f.manifest, "utf8")).version, "0.1.0");
   assert.deepEqual(f.snapshot(), before);
+});
+
+test("npm update checks rename permission on the package parent before launching an update", { skip: process.platform === "win32" || process.getuid?.() === 0 }, (t) => {
+  const f = fixture(t);
+  const before = f.snapshot();
+  const parent = dirname(f.installed);
+  chmodSync(parent, 0o555);
+  try {
+    const result = f.invoke(["update", "--auto", "--json"]);
+    assert.equal(result.code, 1, result.out + result.err);
+    assert.equal(result.value.ok, false);
+    assert.match(result.value.error, /write permission \(EACCES\)/);
+    assert.ok(result.value.error.includes(f.prefix));
+    assert.match(result.value.error, /Back up.*reinstall/s);
+    assert.equal(f.calls().some(args => args[0] === "update"), false);
+    assert.deepEqual(f.snapshot(), before);
+  } finally { chmodSync(parent, 0o755); }
+});
+
+test("npm permission failures report recovery without exposing npm details or changing settings", (t) => {
+  const f = fixture(t);
+  const before = f.snapshot();
+  for (const [code, legacy] of [["EACCES", ""], ["EPERM", "1"]]) {
+    const result = f.invoke(["update", "--auto", "--json"], { TEST_NPM_PERMISSION: code, TEST_NPM_LEGACY: legacy });
+    assert.equal(result.code, 1, result.out + result.err);
+    assert.equal(result.value.ok, false);
+    assert.ok(result.value.error.includes(`(${code})`));
+    assert.match(result.value.error, /docs\/USAGE.md#npm-permissions/);
+    assert.doesNotMatch(result.out + result.err, /PRIVATE_|sudo|update complete/);
+    assert.equal(JSON.parse(readFileSync(f.manifest, "utf8")).version, "0.1.0");
+    assert.deepEqual(f.snapshot(), before);
+  }
+});
+
+test("localized npm permission recovery preserves streams, copyable targets and narrow prose", (t) => {
+  const f = fixture(t);
+  for (const language of ["en", "ko", "ja", "zh", "es"] as const) {
+    assert.equal(f.invoke(["set", `language=${language}`, "--json"]).code, 0);
+    for (const columns of [40, 80]) {
+      const result = f.invoke(["update", "--auto"], { TEST_NPM_PERMISSION: "EACCES", COLUMNS: String(columns) });
+      assert.equal(result.code, 1, result.out + result.err);
+      assert.match(result.err, /EACCES/);
+      assert.ok(result.err.includes(f.prefix));
+      assert.ok(result.err.includes("https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#npm-permissions\n"));
+      assert.doesNotMatch(result.out + result.err, /PRIVATE_/);
+      for (const line of result.err.split("\n")) {
+        if (line === f.prefix || line.startsWith("https://")) continue;
+        assert.ok(cells(line) <= columns, `${language}/${columns}: ${line}`);
+      }
+      if ((language === "en" || language === "ko") && columns === 80) {
+        const normalize = (value: string) => value.replaceAll(f.scratch, "<ROOT>");
+        const capture = { status: result.code!, stdout: normalize(result.out), stderr: normalize(result.err) };
+        assertGolden(goldenPath(language, "errors", "npm-permission"), formatCapture(capture));
+        assertGolden(join(REPO, "test/golden/images", language, "npm-permission.svg"), renderDialSvg(capture.stdout + capture.stderr, language, "npm-permission"));
+      }
+    }
+  }
 });
 
 test("npm success without a verifiable installed version is not reported as an update", (t) => {

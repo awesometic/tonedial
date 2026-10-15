@@ -1,0 +1,14 @@
+status: 1
+--- stdout --- [bytes=112; endsWithNewline=true]
+ToneDial · update
+
+  tonedial 0.1.2
+
+  Package update:
+    npm update -g tonedial --prefix "<ROOT>/npm prefix"
+--- stderr --- [bytes=234; endsWithNewline=true]
+npm update needs write permission (EACCES).
+<ROOT>/npm prefix
+Back up your settings and presets, then reinstall in a user-owned directory.
+Recovery steps:
+https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#npm-permissions

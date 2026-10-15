@@ -614,6 +614,8 @@ For npm installations, ToneDial runs npm only after checking that its global tar
 A different prefix or linked development copy is reported without updating another installation.
 The receipt reports the installed version, not a separate registry freshness check.
 If generated files need attention, the command reports their state and the applicable repair action once.
+ToneDial does not require root privileges; npm's global prefix must be writable by your user.
+For `EACCES` or `EPERM`, follow [npm permission recovery](#npm-permissions).
 
 `npx` is unsupported: skill/control commands need a durable executable.
 For source builds, see [CONTRIBUTING.md](../CONTRIBUTING.md#build-and-run-from-source).
@@ -629,3 +631,75 @@ The same `tonedial update` command also updates curl installations.
 For local installer verification before publication, use the [isolated candidate procedure](./TESTING.md#isolated-candidate).
 
 </details>
+
+### npm permissions
+
+An installation made with `sudo npm install --global tonedial` may be owned by root.
+ToneDial checks whether npm can rename the package in its global `node_modules` directory
+before an approved update, and also recognizes permission errors returned by npm.
+It never elevates privileges, retries with `sudo`, changes directory ownership or removes the old installation automatically.
+
+For a new npm setup, npm recommends a [Node version manager](https://docs.npmjs.com/resolving-eacces-permissions-errors-when-installing-packages-globally/).
+To recover only ToneDial without changing other global packages, use its existing curl installer:
+
+1. Back up the complete state root, including settings and custom profiles.
+   The commands below use the same root selection as the installer.
+   Keep this backup private; it can contain personal descriptions.
+
+   ```bash
+   state_root="${TONEDIAL_HOME:-${XDG_CONFIG_HOME:+$XDG_CONFIG_HOME/tonedial}}"
+   state_root="${state_root:-$HOME/.tonedial}"
+   backup_dir="$(mktemp -d "$HOME/tonedial-backup.XXXXXX")"
+   chmod 700 "$backup_dir"
+   cp -Rp "$state_root" "$backup_dir/state"
+   ```
+
+   Stop if the copy fails; do not delete the original state root.
+   If this directory is itself root-owned, choose the version-manager route or ask its administrator
+   to restore access to this exact directory before continuing.
+
+2. Install a user-owned copy with the same state root.
+   The installer replaces only its own package and command files;
+   it preserves saved settings, custom profiles and agent connections.
+   It refuses conflicting files rather than deleting them.
+
+   ```bash
+   curl -fsSL https://raw.githubusercontent.com/awesometic/tonedial/main/install.sh \
+     | TONEDIAL_HOME="$state_root" sh
+   "$state_root/bin/tonedial" --version
+   "$state_root/bin/tonedial" show
+   ```
+
+   Stop on any installation or verification failure and keep the backup.
+   Check your expected settings and profiles before removing the old copy.
+
+3. Put the new command first on PATH in the current shell, then add that same PATH entry
+   to your shell startup file for future terminals.
+   The installer does not edit your shell files.
+
+   ```bash
+   export PATH="$state_root/bin:$PATH"
+   hash -r
+   command -v tonedial
+   tonedial --version
+   ```
+
+   The resolved command must be the new `$state_root/bin/tonedial`.
+   Keep any custom `TONEDIAL_HOME` or `XDG_CONFIG_HOME` setting in future shells too.
+
+4. Only after the new copy works, optionally remove the old npm package.
+   Use the exact old prefix from the permission error; `/usr/local` below is an example.
+   This administrator command removes the old package, not the ToneDial state root:
+
+   ```bash
+   sudo npm uninstall --global tonedial --prefix /usr/local
+   hash -r
+   command -v tonedial
+   tonedial --version
+   tonedial update
+   ```
+
+Do not use `eject` or delete the state root as an uninstall workaround; those are not package migration steps.
+If npm still reports a permission error from a user-owned installation, inspect npm's reported
+path and its [permission guidance](https://docs.npmjs.com/resolving-eacces-permissions-errors-when-installing-packages-globally/)
+before changing cache or prefix permissions.

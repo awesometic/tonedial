@@ -637,7 +637,7 @@ function fail(asJson: boolean, message: string, code: number, ui: Palette): numb
   } else {
     // A standalone path is a copy target, not prose to split into unusable fragments.
     const lines = message.split("\n").flatMap((line) =>
-      isAbsolute(line) || /^(?:tonedial|npm|curl) /.test(line) ? [humanText(line)] : wrap(humanText(line), ui.width));
+      isAbsolute(line) || /^(?:tonedial|curl) |^npm (?:install|uninstall|update) -|^https?:\/\//.test(line) ? [humanText(line)] : wrap(humanText(line), ui.width));
     process.stderr.write(lines.map((line) => ui.error(line)).join("\n") + "\n");
   }
   return code;
