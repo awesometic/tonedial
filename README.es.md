@@ -18,17 +18,12 @@ Elige un personaje, ajusta doce diales y guarda una voz para usarla en distintos
 
 ## Pruébalo
 
-> [!NOTE]
-> **Vista previa inicial · 0.1.0.** Ejecuta desde el código fuente. La publicación en npm/curl y la verificación de activación nativa siguen pendientes.
-> [Estado y comprobaciones](https://github.com/awesometic/tonedial/blob/main/docs/TESTING.md).
-
-Desde una copia del repositorio, con **Node 24 o posterior** y npm:
+Requiere **Node 24 o posterior** y npm.
 
 ```bash
-npm ci
-npm run build
-node dist/bin.js init --tools none --global --lang es
-node dist/bin.js set
+npm install --global tonedial
+tonedial init --tools none --global --lang es
+tonedial set
 ```
 
 La configuración muestra los cambios de archivos y pide aprobación. Puedes abrir el dial sin conectar un agente.
@@ -48,12 +43,12 @@ La configuración muestra los cambios de archivos y pide aprobación. Puedes abr
 | Right Hand | Jefe → consigliere de confianza |
 
 ```bash
-node dist/bin.js use ego-sword
-node dist/bin.js set verbosity=1 warmth=3
-node dist/bin.js save "My Sword"
+tonedial use ego-sword
+tonedial set verbosity=1 warmth=3
+tonedial save "My Sword"
 ```
 
-Crea el tuyo con `node dist/bin.js create`. Cada perfil guarda tono, roles, formas de trato, registro y palabra clave.
+Crea el tuyo con `tonedial create`. Cada perfil guarda tono, roles, formas de trato, registro y palabra clave.
 
 ## Ajusta los diales
 
@@ -74,7 +69,7 @@ ToneDial compila los ajustes en `TONE.md` de forma local y determinista. Tu agen
 Prueba una conversación nueva con un cliente Codex o Claude Code instalado:
 
 ```bash
-node dist/bin.js test codex --preset my-sword
+tonedial test codex --preset my-sword
 ```
 
 - Las vistas previas usan tu cuenta del proveedor; se aplican el consumo, los cargos y el historial habituales.
@@ -85,4 +80,4 @@ node dist/bin.js test codex --preset my-sword
 
 [Uso y referencia](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md) · [Aporta un preajuste o una corrección](https://github.com/awesometic/tonedial/blob/main/CONTRIBUTING.md) · [Pruebas](https://github.com/awesometic/tonedial/blob/main/docs/TESTING.md) · [Seguridad](https://github.com/awesometic/tonedial/blob/main/SECURITY.md)
 
-[Guía para agentes](https://github.com/awesometic/tonedial/blob/main/AGENTS.md) · [Licencia MIT](https://github.com/awesometic/tonedial/blob/main/LICENSE) · [Avisos de terceros](https://github.com/awesometic/tonedial/blob/main/THIRD_PARTY_NOTICES.md)
+[Compilar desde el código fuente](https://github.com/awesometic/tonedial/blob/main/CONTRIBUTING.md#build-and-run-from-source) · [Guía para agentes](https://github.com/awesometic/tonedial/blob/main/AGENTS.md) · [Licencia MIT](https://github.com/awesometic/tonedial/blob/main/LICENSE) · [Avisos de terceros](https://github.com/awesometic/tonedial/blob/main/THIRD_PARTY_NOTICES.md)

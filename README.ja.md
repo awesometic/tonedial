@@ -18,17 +18,12 @@
 
 ## 試してみる
 
-> [!NOTE]
-> **初期プレビュー · 0.1.0。** ソースから実行してください。npm/curlでの配布とネイティブ有効化の検証は未完了です。
-> [現在の状況と検証](https://github.com/awesometic/tonedial/blob/main/docs/TESTING.md).
-
-チェックアウトした場所で、**Node 24以降**とnpmを使います。
+**Node 24以降**とnpmが必要です。
 
 ```bash
-npm ci
-npm run build
-node dist/bin.js init --tools none --global --lang ja
-node dist/bin.js set
+npm install --global tonedial
+tonedial init --tools none --global --lang ja
+tonedial set
 ```
 
 設定時にファイル変更を表示し、承認を求めます。エージェントに接続せず、まずダイヤルを試せます。
@@ -48,12 +43,12 @@ node dist/bin.js set
 | Right Hand | 親分 → 信頼できる右腕 |
 
 ```bash
-node dist/bin.js use ego-sword
-node dist/bin.js set verbosity=1 warmth=3
-node dist/bin.js save "My Sword"
+tonedial use ego-sword
+tonedial set verbosity=1 warmth=3
+tonedial save "My Sword"
 ```
 
-`node dist/bin.js create` で自分のキャラクターも作れます。口調、役割、呼称、敬語区分、合言葉を1つのプロファイルに保存します。
+`tonedial create` で自分のキャラクターも作れます。口調、役割、呼称、敬語区分、合言葉を1つのプロファイルに保存します。
 
 ## ダイヤルを回す
 
@@ -74,7 +69,7 @@ ToneDialは設定をローカルで `TONE.md` にコンパイルします。同�
 インストール済みのCodexかClaude Codeで、新しい会話を試せます。
 
 ```bash
-node dist/bin.js test codex --preset my-sword
+tonedial test codex --preset my-sword
 ```
 
 - プレビューは利用者のプロバイダーアカウントを使い、通常の使用量・料金・履歴の扱いが適用されます。
@@ -85,4 +80,4 @@ node dist/bin.js test codex --preset my-sword
 
 [使い方とリファレンス](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md) · [プリセットや修正を提案](https://github.com/awesometic/tonedial/blob/main/CONTRIBUTING.md) · [テスト](https://github.com/awesometic/tonedial/blob/main/docs/TESTING.md) · [セキュリティ](https://github.com/awesometic/tonedial/blob/main/SECURITY.md)
 
-[エージェント作業ガイド](https://github.com/awesometic/tonedial/blob/main/AGENTS.md) · [MITライセンス](https://github.com/awesometic/tonedial/blob/main/LICENSE) · [第三者の権利表示](https://github.com/awesometic/tonedial/blob/main/THIRD_PARTY_NOTICES.md)
+[ソースからビルド](https://github.com/awesometic/tonedial/blob/main/CONTRIBUTING.md#build-and-run-from-source) · [エージェント作業ガイド](https://github.com/awesometic/tonedial/blob/main/AGENTS.md) · [MITライセンス](https://github.com/awesometic/tonedial/blob/main/LICENSE) · [第三者の権利表示](https://github.com/awesometic/tonedial/blob/main/THIRD_PARTY_NOTICES.md)

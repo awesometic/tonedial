@@ -9,9 +9,9 @@ tonedial show
 tonedial save "My Sword"
 ```
 
-**Early preview · Node 24+ · unpublished 0.1.0.**
-Start with the [source quickstart](../README.md#try-it); in a checkout, replace `tonedial` with `node dist/bin.js`.
-For disposable setup, use the [candidate procedure](./TESTING.md#isolated-candidate).
+**Requires Node 24+.** [Install with npm](../README.md#try-it).
+For a checkout, use [build and run from source](../CONTRIBUTING.md#build-and-run-from-source).
+Use the [candidate procedure](./TESTING.md#isolated-candidate) for disposable setup.
 
 [Profiles & roles](#presets-and-personal-settings) · [Axes](#tone-and-axes) · [Dial](#the-inline-dial) · [Connect](#connecting-an-agent) · [Reload](#changing-an-open-conversation) · [Recover](#recovery) · [Commands & JSON](#command-reference-and-json) · [Try a conversation](#try-a-fresh-conversation)
 
@@ -592,18 +592,26 @@ It uses the current renderer, not a native response; fonts/colors can differ.
 Width belongs to the synthetic stream, not a saved setting or runtime option.
 See the [media recipes and locale provenance](./media/readme/README.md#dial-images) to regenerate it.
 
-## Installation channels after release
+<a id="installation-channels-after-release"></a>
 
-<details>
-<summary>Npm/curl commands — not live for this unpublished candidate</summary>
+## Installation and updates
 
 ```bash
-npm i -g tonedial
+npm install --global tonedial
+npm update --global tonedial
+```
+
+`npx` is unsupported: skill/control commands need a durable executable.
+For source builds, see [CONTRIBUTING.md](../CONTRIBUTING.md#build-and-run-from-source).
+
+<details>
+<summary>Alternative curl installation</summary>
+
+```bash
 curl -fsSL https://raw.githubusercontent.com/awesometic/tonedial/main/install.sh | sh
 ```
 
-Update npm installs with `npm update -g tonedial`; curl installs with `tonedial update`.
-`npx` is unsupported: skill/control commands need a durable executable.
-Until release, use the [source quickstart](../README.md#try-it).
+Update curl installs with `tonedial update`.
+For local installer verification before publication, use the [isolated candidate procedure](./TESTING.md#isolated-candidate).
 
 </details>

@@ -18,17 +18,12 @@ Pick a character, tune twelve dials, and save a voice to use across projects.
 
 ## Try it
 
-> [!NOTE]
-> **Early preview · 0.1.0.** Run from source. npm/curl releases and native activation verification are pending.
-> [Status & checks](https://github.com/awesometic/tonedial/blob/main/docs/TESTING.md).
-
-From a checkout, with **Node 24+** and npm:
+Requires **Node 24+** and npm.
 
 ```bash
-npm ci
-npm run build
-node dist/bin.js init --tools none --global --lang en
-node dist/bin.js set
+npm install --global tonedial
+tonedial init --tools none --global --lang en
+tonedial set
 ```
 
 Setup previews file changes for approval. This opens the dial without connecting an agent.
@@ -48,12 +43,12 @@ Setup previews file changes for approval. This opens the dial without connecting
 | Right Hand | Boss → trusted consigliere |
 
 ```bash
-node dist/bin.js use ego-sword
-node dist/bin.js set verbosity=1 warmth=3
-node dist/bin.js save "My Sword"
+tonedial use ego-sword
+tonedial set verbosity=1 warmth=3
+tonedial save "My Sword"
 ```
 
-Use `node dist/bin.js create` to build your own. Profiles keep tone, roles, address forms, register and safeword together.
+Use `tonedial create` to build your own. Profiles keep tone, roles, address forms, register and safeword together.
 
 ## Turn the dials
 
@@ -74,7 +69,7 @@ ToneDial compiles your settings into `TONE.md` locally and deterministically. Yo
 Try a fresh conversation through an installed Codex or Claude Code client:
 
 ```bash
-node dist/bin.js test codex --preset my-sword
+tonedial test codex --preset my-sword
 ```
 
 - Previews use your provider account; normal usage, charges and history apply.
@@ -85,4 +80,4 @@ node dist/bin.js test codex --preset my-sword
 
 [Usage & reference](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md) · [Contribute a preset or fix](https://github.com/awesometic/tonedial/blob/main/CONTRIBUTING.md) · [Testing](https://github.com/awesometic/tonedial/blob/main/docs/TESTING.md) · [Security](https://github.com/awesometic/tonedial/blob/main/SECURITY.md)
 
-[Agent guide](https://github.com/awesometic/tonedial/blob/main/AGENTS.md) · [MIT license](https://github.com/awesometic/tonedial/blob/main/LICENSE) · [Third-party notices](https://github.com/awesometic/tonedial/blob/main/THIRD_PARTY_NOTICES.md)
+[Build from source](https://github.com/awesometic/tonedial/blob/main/CONTRIBUTING.md#build-and-run-from-source) · [Agent guide](https://github.com/awesometic/tonedial/blob/main/AGENTS.md) · [MIT license](https://github.com/awesometic/tonedial/blob/main/LICENSE) · [Third-party notices](https://github.com/awesometic/tonedial/blob/main/THIRD_PARTY_NOTICES.md)

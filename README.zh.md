@@ -18,17 +18,12 @@
 
 ## 开始试用
 
-> [!NOTE]
-> **早期预览 · 0.1.0。** 请从源码运行。npm/curl 发布和原生激活验证尚未完成。
-> [当前状态与检查](https://github.com/awesometic/tonedial/blob/main/docs/TESTING.md).
-
-在检出目录中，使用 **Node 24 或更高版本**及 npm：
+需要 **Node 24 或更高版本**和 npm。
 
 ```bash
-npm ci
-npm run build
-node dist/bin.js init --tools none --global --lang zh
-node dist/bin.js set
+npm install --global tonedial
+tonedial init --tools none --global --lang zh
+tonedial set
 ```
 
 设置时会先展示文件变更并请求批准。无需连接代理即可先打开面板试用。
@@ -48,12 +43,12 @@ node dist/bin.js set
 | Right Hand | 老大 → 可靠的左右手 |
 
 ```bash
-node dist/bin.js use ego-sword
-node dist/bin.js set verbosity=1 warmth=3
-node dist/bin.js save "My Sword"
+tonedial use ego-sword
+tonedial set verbosity=1 warmth=3
+tonedial save "My Sword"
 ```
 
-也可用 `node dist/bin.js create` 创建自己的角色。语气、角色、称呼、敬语形式和安全词一起保存在配置中。
+也可用 `tonedial create` 创建自己的角色。语气、角色、称呼、敬语形式和安全词一起保存在配置中。
 
 ## 调节语气
 
@@ -74,7 +69,7 @@ ToneDial 在本地将设置编译为 `TONE.md`，相同设置生成相同结果�
 通过已安装的 Codex 或 Claude Code 客户端试用一次新对话：
 
 ```bash
-node dist/bin.js test codex --preset my-sword
+tonedial test codex --preset my-sword
 ```
 
 - 预览使用你的服务商账号，按正常规则处理用量、费用和历史记录。
@@ -85,4 +80,4 @@ node dist/bin.js test codex --preset my-sword
 
 [使用方法与参考](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md) · [贡献预设或修复](https://github.com/awesometic/tonedial/blob/main/CONTRIBUTING.md) · [测试](https://github.com/awesometic/tonedial/blob/main/docs/TESTING.md) · [安全](https://github.com/awesometic/tonedial/blob/main/SECURITY.md)
 
-[代理工作指南](https://github.com/awesometic/tonedial/blob/main/AGENTS.md) · [MIT 许可证](https://github.com/awesometic/tonedial/blob/main/LICENSE) · [第三方声明](https://github.com/awesometic/tonedial/blob/main/THIRD_PARTY_NOTICES.md)
+[从源码构建](https://github.com/awesometic/tonedial/blob/main/CONTRIBUTING.md#build-and-run-from-source) · [代理工作指南](https://github.com/awesometic/tonedial/blob/main/AGENTS.md) · [MIT 许可证](https://github.com/awesometic/tonedial/blob/main/LICENSE) · [第三方声明](https://github.com/awesometic/tonedial/blob/main/THIRD_PARTY_NOTICES.md)

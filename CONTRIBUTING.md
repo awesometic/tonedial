@@ -8,19 +8,35 @@ For sensitive findings, use [private reporting](./SECURITY.md).
 
 | Start here | Owns |
 |---|---|
-| [README](./README.md) | Product and unpublished candidate status |
+| [README](./README.md) | Product overview and installation |
 | [Usage](./docs/USAGE.md) | Commands, settings, state and privacy limits |
 | [Testing](./docs/TESTING.md) | Automated gates, candidate/native trials and measurements |
 | [Agent guide](./AGENTS.md) | Obligations for agent-assisted work |
 
-Npm/curl release and native acceptance remain pending; passing local checks does not complete them.
+Prepare version 0.1.0 as the first release through the maintainer-controlled [publish workflow](./.github/workflows/publish.yml).
+Publication and native acceptance are separate checks; local passes do not establish either.
 
-## Setup and checks
+<a id="setup-and-checks"></a>
 
-Use **Node 24+ and npm** from the repository root:
+## Build and run from source
+
+Use **Node 24+ and npm** from a checkout:
 
 ```bash
 npm ci
+npm run build
+node dist/bin.js init --tools none --global --lang en
+node dist/bin.js set
+```
+
+The compiled CLI is `dist/bin.js`; use `node dist/bin.js` in place of installed `tonedial` commands.
+Setup previews changes to your normal ToneDial state before approval and selects no agent connection.
+For disposable state and projects, follow the [isolated candidate procedure](./docs/TESTING.md#isolated-candidate).
+Use `--lang ko`, `ja`, `zh` or `es` for another interface language.
+
+### Check your changes
+
+```bash
 npm test
 ```
 

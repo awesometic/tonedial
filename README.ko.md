@@ -18,17 +18,12 @@
 
 ## 바로 시작하기
 
-> [!NOTE]
-> **초기 프리뷰 · 0.1.0.** 소스에서 실행하세요. npm/curl 배포와 네이티브 활성화 검증은 아직 완료되지 않았습니다.
-> [현재 상태와 검증](https://github.com/awesometic/tonedial/blob/main/docs/TESTING.md).
-
-저장소를 내려받은 뒤 **Node 24 이상**과 npm으로 실행하세요.
+**Node 24 이상**과 npm이 필요합니다.
 
 ```bash
-npm ci
-npm run build
-node dist/bin.js init --tools none --global --lang ko
-node dist/bin.js set
+npm install --global tonedial
+tonedial init --tools none --global --lang ko
+tonedial set
 ```
 
 설정 과정에서 파일 변경 내용을 보여주고 승인을 받습니다. 에이전트 연결 없이 다이얼부터 열어 봅니다.
@@ -48,12 +43,12 @@ node dist/bin.js set
 | Right Hand | 보스 → 믿음직한 오른팔 |
 
 ```bash
-node dist/bin.js use ego-sword
-node dist/bin.js set verbosity=1 warmth=3
-node dist/bin.js save "My Sword"
+tonedial use ego-sword
+tonedial set verbosity=1 warmth=3
+tonedial save "My Sword"
 ```
 
-`node dist/bin.js create`로 직접 만들 수도 있습니다. 말투, 역할, 호칭, 말씨, 세이프워드를 프로필 하나에 저장합니다.
+`tonedial create`로 직접 만들 수도 있습니다. 말투, 역할, 호칭, 말씨, 세이프워드를 프로필 하나에 저장합니다.
 
 ## 말투 조절하기
 
@@ -74,7 +69,7 @@ ToneDial은 설정을 로컬에서 `TONE.md`로 컴파일합니다. 같은 설�
 설치된 Codex나 Claude Code 클라이언트에서 새 대화를 열어 시험해 보세요.
 
 ```bash
-node dist/bin.js test codex --preset my-sword
+tonedial test codex --preset my-sword
 ```
 
 - 미리보기는 사용 중인 프로바이더 계정을 쓰며, 평소와 같은 사용량·요금·기록 정책이 적용됩니다.
@@ -85,4 +80,4 @@ node dist/bin.js test codex --preset my-sword
 
 [사용법과 전체 명령어](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md) · [프리셋·수정 기여하기](https://github.com/awesometic/tonedial/blob/main/CONTRIBUTING.md) · [테스트](https://github.com/awesometic/tonedial/blob/main/docs/TESTING.md) · [보안](https://github.com/awesometic/tonedial/blob/main/SECURITY.md)
 
-[에이전트 작업 가이드](https://github.com/awesometic/tonedial/blob/main/AGENTS.md) · [MIT 라이선스](https://github.com/awesometic/tonedial/blob/main/LICENSE) · [서드파티 고지](https://github.com/awesometic/tonedial/blob/main/THIRD_PARTY_NOTICES.md)
+[소스 빌드](https://github.com/awesometic/tonedial/blob/main/CONTRIBUTING.md#build-and-run-from-source) · [에이전트 작업 가이드](https://github.com/awesometic/tonedial/blob/main/AGENTS.md) · [MIT 라이선스](https://github.com/awesometic/tonedial/blob/main/LICENSE) · [서드파티 고지](https://github.com/awesometic/tonedial/blob/main/THIRD_PARTY_NOTICES.md)
