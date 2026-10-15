@@ -66,6 +66,8 @@ function isolatedEnv(extra: Record<string, string> = {}): NodeJS.ProcessEnv {
     TONEDIAL_AGENT_HOME: undefined,
     TONEDIAL_INSTALL_SHAPE: undefined,
     TONEDIAL_REGISTRY: undefined,
+    // Early setup refusals precede --lang; keep fixture errors independent of the publishing shell.
+    LC_ALL: "C",
     HOME: home,
     XDG_CONFIG_HOME: join(scratch, "xdg"),
     XDG_CACHE_HOME: join(scratch, "xdg-cache"),
