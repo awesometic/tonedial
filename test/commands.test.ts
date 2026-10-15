@@ -447,6 +447,46 @@ test("address refuses rather than blocking where no question can be asked", asyn
   assert.match(stdout(), /address/);
 });
 
+test("persona applies agent and user roles together, recompiles, and saves them with the profile", async () => {
+  await initializeState();
+  const axes = config().axes;
+  const address = config().persona.address;
+  assert.equal(await cli("persona", "  A fictional reviewer  ", "A developer", "--json"), 0, stderr());
+  const result = JSON.parse(stdout());
+  assert.equal(result.config.persona.agent, "A fictional reviewer");
+  assert.equal(result.config.persona.user, "A developer");
+  assert.deepEqual(config().axes, axes);
+  assert.deepEqual(config().persona.address, address);
+  assert.equal(config().unsaved, true);
+  assert.ok(tone().includes("A fictional reviewer") && tone().includes("A developer"));
+  assert.equal(await cli("save", "Persona Example"), 0, stderr());
+  assert.equal(await cli("persona", "", ""), 0, stderr());
+  assert.equal(config().persona.agent, null);
+  assert.equal(config().persona.user, null);
+  assert.equal(await cli("use", "persona-example"), 0, stderr());
+  assert.equal(config().persona.agent, "A fictional reviewer");
+  assert.equal(config().persona.user, "A developer");
+  assert.equal(await cli("persona", "Another reviewer", "Another developer"), 0, stderr());
+  out = [];
+  assert.equal(await cli("show", "persona-example"), 0, stderr());
+  assert.match(stdout().replace(/\s+/g, " "), /A fictional reviewer/);
+  assert.doesNotMatch(stdout(), /Another reviewer/);
+});
+
+test("persona validates both 200-code-point descriptions before writing and never prompts in JSON", async () => {
+  await initializeState();
+  const boundary = "😀".repeat(200);
+  assert.equal(await cli("persona", boundary, boundary), 0, stderr());
+  const before = [readFileSync(paths().config, "utf8"), tone()];
+  for (const args of [["persona"], ["persona", "One role"], ["persona", "Too", "Many", "Roles"],
+    ["persona", boundary + "😀", "Changed user"], ["persona", "Changed agent", boundary + "😀"]]) {
+    out = [];
+    assert.notEqual(await cli(...args, "--json"), 0, args.join(" "));
+    assert.equal(JSON.parse(stdout()).ok, false);
+    assert.deepEqual([readFileSync(paths().config, "utf8"), tone()], before, "rejected roles changed files");
+  }
+});
+
 test("bare set --json honors nonprompting context when streams report TTY", async () => {
   await initializeState();
   const beforeConfig = readFileSync(paths().config, "utf8");
@@ -1285,6 +1325,35 @@ test("show previewing a preset reports that preset's own size", async () => {
   assert.equal(await cli("show", "--json"), 0);
   const real = JSON.parse(stdout()) as { chars: number };
   assert.equal(preview.chars, real.chars, "the preview used the active preset's slug");
+});
+
+test("large tone artifacts report only their current character count without size warnings", async () => {
+  await initializeState();
+  const config = parseConfig(readFileSync(paths().config, "utf8"));
+  config.persona.note = "😀".repeat(4000);
+  writeFileSync(paths().config, serializeConfig(config));
+  out = [];
+  assert.equal(await cli("compile", "--json"), 0);
+  const compiled = JSON.parse(stdout());
+  const artifact = readFileSync(paths().tone, "utf8");
+  assert.ok(artifact.includes(config.persona.note), "compilation truncated the persona note");
+  assert.equal(compiled.chars, [...artifact].length);
+  assert.ok(compiled.chars > 4000);
+  for (const args of [["compile", "--check"], ["show"]]) {
+    out = [];
+    assert.equal(await cli(...args, "--json"), 0);
+    const result = JSON.parse(stdout());
+    assert.equal(result.chars, compiled.chars);
+    for (const field of ["target", "cap", "overTarget", "overCap"]) {
+      assert.equal(Object.hasOwn(result, field), false, `${args[0]}: retired ${field} field`);
+    }
+    assert.ok(!result.warnings.some((warning: string) => warning.includes("TONE.md")), "size emitted an artifact warning");
+  }
+  out = [];
+  err = [];
+  assert.equal(await cli("show"), 0);
+  assert.match(stdout(), /TONE\.md [\d,]+ characters/);
+  assert.doesNotMatch(stderr(), /TONE\.md/);
 });
 
 test("a config carrying an impossible value is refused with the field named", async () => {

@@ -32,7 +32,7 @@ async function invoke(args: string[]) {
 }
 
 const mutations = [
-  ["set", "care=2"], ["reset"], ["use", "tough-love"], ["save", "Example"],
+  ["set", "care=2"], ["persona", "Reviewer", "Developer"], ["reset"], ["use", "tough-love"], ["save", "Example"],
   ["edit"], ["import", "https://example.invalid/preset.json"], ["compile"],
   ["wire", "--here", "codex", "--auto"],
 ];

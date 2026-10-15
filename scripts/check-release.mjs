@@ -193,6 +193,11 @@ function checkIdentity(repository) {
   if (!remoteUrls.some((url) => [repository, https, ssh.slice(0, -4), ssh, sshUrl.slice(0, -4), sshUrl].includes(url))) {
     fail("no configured GitHub remote matches .public-release.json");
   }
+  const notes = `docs/releases/${manifest.version}.md`;
+  if (!git(["ls-files", "--cached", "--", notes]).toString("utf8").trim()) {
+    fail(`${notes} must be committed before publishing`);
+  }
+  if (!readFileSync(join(root, notes), "utf8").trim()) fail(`${notes} must contain release notes`);
 }
 
 function checkHistory() {

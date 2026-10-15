@@ -45,7 +45,23 @@ jobs:
       - name: Publish the package with OIDC
         run: npm publish --ignore-scripts --provenance --access public
 
-      - name: Verify the published metadata
-        run: >-
-          npm view "tonedial@$(node -p 'JSON.parse(require("node:fs").readFileSync("package.json", "utf8")).version')" version
-          dist.integrity dist.tarball --json
+  github-release:
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          package-manager-cache: false
+
+      - name: Verify npm bytes and publish the GitHub Release
+        run: node scripts/github-release.ts
+        env:
+          GITHUB_TOKEN: ${{ github.token }}

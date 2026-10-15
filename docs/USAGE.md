@@ -83,6 +83,8 @@ JSON and dry-run never ask questions: provide the name and desired assignments.
 
 ```bash
 tonedial address "guide" "friend"    # self / user; bare address asks for both
+tonedial persona                   # guided agent role, then user role/background
+tonedial persona "A fictional SRE specialist" "A developer maintaining services"
 tonedial set persona.user="I maintain services and prefer direct trade-offs"
 tonedial set persona.agent="A fictional SRE specialist with 12 years' experience; speaks plainly"
 tonedial set speech_level=polite      # auto (default) | polite | plain
@@ -92,7 +94,10 @@ tonedial save                         # also update the selected user profile
 ```
 
 `set persona.agent="..."` adds a role to the current tone, preserves axes and recompiles immediately.
-`show` reports whether descriptions are set; `show --verbose` displays their wrapped text.
+`persona` sets both descriptions together, agent first and user second, with at most 200 Unicode code points each.
+In the guided form, Enter keeps the current value and `""` clears it; invalid descriptions are retried before either role is applied.
+`show` displays the current descriptions and their counts; `show <slug>` displays the saved profile's descriptions.
+Use `set persona.agent=...` or `set persona.user=...` to change just one.
 
 | Setting | Meaning | Clearing / limits |
 |---|---|---|
@@ -217,11 +222,11 @@ Red levels and a color-independent `!` start at `profanity=4`, `critique=4`, `fl
 They never clamp values, block a setting or add approval requirements.
 
 <details>
-<summary>Artifact size and budget</summary>
+<summary>Artifact character count</summary>
 
-`TONE.md` targets 1,800 Unicode code points and warns above a 2,700-character budget.
-The two role descriptions contribute at most 400 code points before labels/wrappers.
-Neither is silently shortened; notes, addresses and safeword have no global bound.
+`TONE.md` reports its current Unicode code-point count, including Markdown, comments and whitespace.
+There is no size target, maximum or warning, and compilation never shortens text to fit a budget.
+The two role descriptions still accept at most 200 code points each; notes, addresses and safeword have no global bound.
 
 Representative sizes with other persona fields and safeword unset:
 
@@ -229,9 +234,10 @@ Representative sizes with other persona fields and safeword unset:
 |---|---|
 | Default axes, no persona | 1,539 |
 | Default axes, both descriptions at 200 | 2,316 |
-| All axes at 5, both descriptions at 200 | 3,034; warning |
+| All axes at 5, both descriptions at 200 | 3,034 |
 
-These are generated-size observations, not a whole-config maximum or adherence evidence.
+These are generated-size observations, not model limits or adherence evidence.
+JSON size results retain `chars` and omit retired `target`, `cap`, `overTarget` and `overCap` fields.
 Mutation receipts show generated/current status; `--verbose` adds the numeric size.
 `show` and `compile` include it by default; diagnosis uses `doctor --verbose` or `doctor --json`.
 
@@ -507,6 +513,7 @@ Successful tone mutations recompile in the same action.
 |---|---|
 | `set <axis>=<level> …` | Change axes/settings; bare opens the dial |
 | `address [self user]` | Set address; bare asks for both |
+| `persona [agent user]` | Set both role descriptions; bare asks for each |
 | `reset [axis]` | Restore one/all axes; keep other settings |
 | `show [slug]` | Inspect current/saved tone; `--explain` adds settings/risks |
 | `use <slug>` | Apply a profile; `--project <dir>` also exports the artifact |
@@ -532,7 +539,7 @@ Ordinary changes compile automatically; `compile --check --json` also supplies r
 | Streams | JSON stdout has no terminal escapes or ToneDial prompts/provider handoff |
 | Export | Plain is raw preset JSON; `--json` wraps it |
 | Show | Includes `riskAxes`, `riskThresholds`; no unsupported guard/ceiling/width fields |
-| Compile check | Human: current/stale/missing; JSON: size and absolute `agentsPath`/`path`, not existence/delivery proof |
+| Compile check | Human: current/stale/missing; JSON: character count and absolute `agentsPath`/`path`, not existence/delivery proof |
 | Explicit editor | `edit --json` still launches the requested editor; live output uses stderr |
 
 `edit` refuses to apply config if the wiring ownership graph changes or cannot be proved unchanged, including invalid JSON.

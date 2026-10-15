@@ -66,7 +66,7 @@ Keep free-text user context separate from the fictional agent role; matched mode
 
 Use one representative user description and fictional agent role.
 Astral characters count as code points, not UTF-16 units.
-Together the descriptions add at most 400 points before wrappers; record actual artifact size/budget state instead of assuming a whole-config bound.
+Together the descriptions add at most 400 points before wrappers; record the actual Unicode code-point count instead of assuming a whole-config bound.
 
 ## `S1-fn-ko` — small function, Korean
 

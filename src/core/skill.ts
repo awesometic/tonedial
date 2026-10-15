@@ -8,6 +8,7 @@ export const SKILL_NAME = "tonedial";
 /** The current command envelope, shared by both installed control entry points. */
 const JSON_MD = `Require zero exit status and a JSON result with \`ok: true\` and \`schema: 3\`
 for every successful CLI step before continuing. Parse JSON rather than scraping human output.
+\`chars\` reports the current TONE.md Unicode character count; no size target or maximum applies.
 Schema 3 removes guard and ceiling fields and reports advisory \`riskAxes\`; persisted config
 remains schema 2. Custom profiles use preset schema 2; legacy schema 1 and journal formats
 remain supported. Never send \`guards\` or
@@ -105,6 +106,7 @@ interpolating it into shell code.
 | What to call the user only | \`tonedial set "persona.user_ref=friend" --json\` |
 | What to call yourself only | \`tonedial set "persona.self_ref=guide" --json\` |
 | Both address terms, self first and user second | \`tonedial address "assistant" "reader" --json\` |
+| Both role descriptions, agent first and user second | \`tonedial persona "Fictional database reviewer" "Developer" --json\` |
 | Persona age band | \`tonedial set persona.age=30s --json\` |
 | Persona gender | \`tonedial set persona.gender=neutral --json\` |
 | User background and preferences | \`tonedial set "persona.user=Developer who likes concise technical answers" --json\` |
@@ -120,6 +122,8 @@ An empty value clears only the named persona field or safeword, for example
 \`persona.user\` describes the user; \`persona.agent\` describes the agent's fictional role.
 Each accepts at most 200 Unicode code points; never silently truncate a longer request.
 Preserve the other fields and ask the user to shorten text rejected by the CLI.
+In a terminal, bare \`tonedial persona\` asks for both descriptions; Enter keeps a value and \`""\` clears it.
+\`show\` displays both descriptions and their character counts; a slug selects the saved profile.
 Agent experience and specialty are roleplay, not verified credentials or tool capabilities.
 Both descriptions lose to axes and task/permission rules, and may influence content.
 A persona note expresses manner or role, loses to axes, and may also influence
@@ -251,7 +255,7 @@ ${SETUP_MD}
 
 ## Apply it in this session
 
-Successful \`set\`, \`address\`, \`use\`, \`reset\`, \`save\`, and approved \`create\` commands recompile \`TONE.md\`; that is a saved state
+Successful \`set\`, \`address\`, \`persona\`, \`use\`, \`reset\`, \`save\`, and approved \`create\` commands recompile \`TONE.md\`; that is a saved state
 change, not evidence of a session reload.
 
 ${RELOAD_MD}
@@ -410,7 +414,7 @@ Profanity grades actual swearing; bravado grades effort claims. The CLI carries 
  * command name stays `/tone` even though the tool is `tonedial`: it is what a person types
  * mid-sentence, and the two extra characters are paid every time.
  */
-export const TONE_COMMAND_VERSION = 7;
+export const TONE_COMMAND_VERSION = 8;
 
 export const TONE_COMMAND_MD = `---
 description: Check, change, or reload this agent's tone, preset, or ToneDial settings

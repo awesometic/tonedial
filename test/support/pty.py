@@ -552,6 +552,57 @@ def init_case(root: Path, language: str, node: str, binary: Path, approve: bool)
         shutil.rmtree(scratch, ignore_errors=True)
 
 
+def persona_case(root: Path, language: str, node: str, binary: Path, interrupt: bool) -> dict[str, Any]:
+    scratch = Path(tempfile.mkdtemp(prefix="tonedial-pty-persona-"))
+    try:
+        initialize(root, scratch, language, node, binary)
+        state = scratch / "state"
+        before = snapshot(state)
+        original = json.loads((state / "config.json").read_text())
+        with run_session(scratch, language, node, binary, ["persona"]) as session:
+            session.wait_for([b"  > "])
+            start = session.mark()
+            session.send(("😀" * 201 + "\n").encode())
+            session.wait_for([b"  > "], since=start)
+            if b"201" not in session.output[start:] or snapshot(state) != before:
+                raise ScenarioError("persona retry did not reject 201 code points without writing")
+            start = session.mark()
+            session.send(b"Fictional reviewer\n")
+            session.wait_for([b"  > "], since=start)
+            if snapshot(state) != before:
+                raise ScenarioError("persona wrote before both roles were supplied")
+            session.send(b"\x03" if interrupt else b"\n")
+            if session.wait(8) != (130 if interrupt else 0):
+                raise ScenarioError("persona returned an unsuccessful exit")
+            require_termios(session, "persona")
+        if interrupt:
+            if snapshot(state) != before:
+                raise ScenarioError("interrupted persona changed files")
+        else:
+            config = json.loads((state / "config.json").read_text())
+            if config["persona"]["agent"] != "Fictional reviewer" or config["persona"]["user"] != original["persona"]["user"]:
+                raise ScenarioError("persona did not apply the agent role and keep the user's role")
+            if config["axes"] != original["axes"] or config["persona"]["address"] != original["persona"]["address"]:
+                raise ScenarioError("persona changed axes or address terms")
+            if "Fictional reviewer" not in (state / "TONE.md").read_text():
+                raise ScenarioError("persona did not recompile the role")
+            with run_session(scratch, language, node, binary, ["persona"]) as session:
+                session.wait_for([b"  > "])
+                start = session.mark()
+                session.send(b"\n")
+                session.wait_for([b"  > "], since=start)
+                session.send(b'""\n')
+                if session.wait(8) != 0:
+                    raise ScenarioError("persona clearing failed")
+                require_termios(session, "persona clear")
+            config = json.loads((state / "config.json").read_text())
+            if config["persona"]["agent"] != "Fictional reviewer" or config["persona"]["user"] is not None:
+                raise ScenarioError("persona did not keep one role and clear the other")
+        return {"written": not interrupt, "termiosRestored": True}
+    finally:
+        shutil.rmtree(scratch, ignore_errors=True)
+
+
 def create_case(root: Path, language: str, node: str, binary: Path, outcome: str) -> dict[str, Any]:
     scratch = Path(tempfile.mkdtemp(prefix=f"tonedial-pty-create-{outcome}-"))
     try:
@@ -626,6 +677,8 @@ def run_all(root: Path, language: str, node: str, binary: Path) -> dict[str, Any
         "error": lambda: error_case(root, language, node, binary),
         "init-approve": lambda: init_case(root, language, node, binary, True),
         "init-cancel": lambda: init_case(root, language, node, binary, False),
+        "persona-apply-retry-clear": lambda: persona_case(root, language, node, binary, False),
+        "persona-interrupt": lambda: persona_case(root, language, node, binary, True),
         "create-approve": lambda: create_case(root, language, node, binary, "approve"),
         "create-role-retry": lambda: create_case(root, language, node, binary, "retry"),
         "create-decline": lambda: create_case(root, language, node, binary, "decline"),

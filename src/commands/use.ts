@@ -9,9 +9,9 @@ import { ConfigError, serializeConfig } from "../core/config.ts";
 import { exportAliasesState, projectTonePath } from "../core/paths.ts";
 import { check as checkCombos } from "../core/combos.ts";
 import { withPreset, assertPresetSelection, inspectPresetLibrary, resolvePreset } from "../core/presets.ts";
-import { applyPlanned, planArtifact, planConfig, sizeWarning } from "./compile.ts";
+import { applyPlanned, planArtifact, planConfig } from "./compile.ts";
 import { planChange, rawReadCheck } from "../wiring/apply.ts";
-import { budget, combination, humanText, nextStep } from "../ui/format.ts";
+import { artifactSize, combination, humanText, nextStep } from "../ui/format.ts";
 import { truncate, wrap } from "../ui/width.ts";
 
 /**
@@ -83,7 +83,7 @@ export async function runUse(ctx: Ctx, args: string[]): Promise<CommandResult> {
     ...wrap(ctx.t.preset.active(truncate(humanText(preset.displayName), ui.width - 12)), ui.width - 2)
       .map((line) => `  ${ui.success(ui.bold(line))}`),
     `  ${ctx.t.artifact.generated}`,
-    ...(ctx.flags.verbose ? [`  ${ui.dim(budget(size, ctx.t))}`] : []),
+    ...(ctx.flags.verbose ? [`  ${ui.dim(artifactSize(size, ctx.t))}`] : []),
     // Folded here rather than at the printer: `lines` are laid out by the command that built
     // them, and a printer that reflowed them would break every column in the gauge block.
     "",
@@ -109,7 +109,6 @@ export async function runUse(ctx: Ctx, args: string[]): Promise<CommandResult> {
     warnings: [
       ...(notice.roleplay ? [notice.roleplay] : []),
       ...checkCombos(config.axes, config.persona, config.speech_level).map((w) => combination(w, ctx.t)),
-      ...sizeWarning(size, ctx.t),
     ],
   };
 }

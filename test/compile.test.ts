@@ -5,7 +5,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { compile, measure, type Config } from "../src/core/compile.ts";
-import { ANCHORS, AXIS_DEFAULT, AXIS_ORDER, CAP_CHARS, PERSONA, riskyAxes, type Axes, type Level } from "../src/core/anchors.ts";
+import { ANCHORS, AXIS_DEFAULT, AXIS_ORDER, PERSONA, riskyAxes, type Axes, type Level } from "../src/core/anchors.ts";
 import { check, nonDefaultAxes, type Persona } from "../src/core/combos.ts";
 import { BUNDLED } from "../src/core/presets.ts";
 
@@ -55,16 +55,9 @@ test("role idioms remain literal inputs as playfulness increases their requested
   }
 });
 
-test("the cap warns only above the limit rather than throwing", () => {
-  assert.equal(measure("x".repeat(CAP_CHARS)).overCap, false);
-  const over = measure("x".repeat(CAP_CHARS + 1));
-  assert.equal(over.overCap, true);
-  assert.equal(over.overTarget, true);
-});
-
-test("size is counted in code points, not UTF-16 units", () => {
-  const astral = "𝐀𝐁𝐂";
-  assert.equal(measure(astral).chars, 3);
+test("artifact size counts Unicode code points without a length threshold", () => {
+  assert.deepEqual(measure("A😀e\u0301\n"), { chars: 5 });
+  assert.deepEqual(measure("😀".repeat(5000)), { chars: 5000 });
 });
 
 test("each selected level has a distinct anchor and the hook marker tracks verbosity and care", () => {

@@ -830,6 +830,7 @@ test("installed explicit-setting examples use the CLI without changing neighbour
     (config) => { config.persona.address = { self_ref: config.persona.address?.self_ref ?? null, user_ref: "friend" }; },
     (config) => { config.persona.address!.self_ref = "guide"; },
     (config) => { config.persona.address = { self_ref: "assistant", user_ref: "reader" }; },
+    (config) => { config.persona.agent = "Fictional database reviewer"; config.persona.user = "Developer"; },
     (config) => { config.persona.age = "30s"; },
     (config) => { config.persona.gender = "neutral"; },
     (config) => { config.persona.user = "Developer who likes concise technical answers"; },
@@ -899,7 +900,7 @@ test("approved native refresh updates stale skill seeds and the selected optiona
   assert.equal(after.seedVersion, SEED_VERSION);
   assert.deepEqual(Object.fromEntries(Object.entries(after.managedSeeds).filter(([id]) => !id.startsWith("skill/"))), retainedRecords);
   for (const seed of skills) {
-    assert.equal(after.managedSeeds[seed.id]?.version, seed.id === "skill/body" ? 15 : 8, seed.id);
+    assert.equal(after.managedSeeds[seed.id]?.version, seed.id === "skill/body" ? 16 : 8, seed.id);
     assert.equal(readFileSync(seed.path, "utf8"), seed.contents, seed.id);
     assert.equal(after.managedSeeds[seed.id]?.sha256, createHash("sha256").update(seed.contents).digest("hex"), seed.id);
   }
@@ -911,7 +912,7 @@ test("approved native refresh updates stale skill seeds and the selected optiona
   ]);
   assert.equal(readFileSync(agent.command("tone"), "utf8"), currentCommand);
   const refreshedCommand = Object.values(after.wiring.resources).find((resource) => resource.kind === "command");
-  assert.equal(refreshedCommand?.managed.version, 7);
+  assert.equal(refreshedCommand?.managed.version, 8);
   assert.equal(refreshedCommand?.expected.sha256, createHash("sha256").update(currentCommand).digest("hex"));
   assert.equal(Object.values(after.managedSeeds).some((seed) => seed.path === agent.command("tone")), false,
     "the optional command is a wiring resource, not a seed");

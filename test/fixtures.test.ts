@@ -19,8 +19,6 @@ const AXES = [
   "care", "compliance", "refusal", "bravado",
 ];
 
-const CAP = 2700;
-
 type Persona = {
   age: string | null;
   gender: string | null;
@@ -135,13 +133,6 @@ test("the recorded character count is the artifact's own length in code points",
   for (const name of index.fixtures) {
     const { fixture, artifact } = load(name);
     assert.equal([...artifact].length, fixture.chars, `${name}: chars`);
-  }
-});
-
-test("no artifact exceeds the 2,700 character cap", () => {
-  for (const name of index.fixtures) {
-    const { fixture } = load(name);
-    assert.ok(fixture.chars <= CAP, `${name}: ${fixture.chars} chars is over the ${CAP} cap`);
   }
 });
 

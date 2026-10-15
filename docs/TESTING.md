@@ -12,9 +12,11 @@ Use Node 24+, npm and a POSIX shell from the repository root.
 | Installed package | [Isolated candidate](#isolated-candidate) |
 | Native delivery | [Actual host and one-day trial](#actual-host-and-one-day-trial) |
 | Tone behavior | [Model measurements](#model-measurements) |
+| Release automation | `node --test test/github-release.test.ts test/release-check.test.ts`; [maintainer workflow](../CONTRIBUTING.md#maintainer-releases) |
 
 Run automation before candidate inspection and the selected native trial.
 Configuration, reader health, trust, activation, delivered context and model adherence are separate claims; no single check qualifies a release.
+Release automation tests simulate npm/GitHub responses; they do not validate the trusted publisher or establish live publication.
 
 ## Automated checks
 

@@ -1,11 +1,11 @@
 status: 0
---- stdout --- [bytes=102; endsWithNewline=true]
+--- stdout --- [bytes=97; endsWithNewline=true]
 ToneDial · compile
 
   TONE.md 최신
   <ROOT>/state/TONE.md
-  TONE.md 2,255 / 2,700
+  TONE.md 2,255자
 
   tonedial show
---- stderr --- [bytes=50; endsWithNewline=true]
-  ⚠ TONE.md: 2,255자 · 목표 1,800자 초과
+--- stderr --- [bytes=0; endsWithNewline=false]
+

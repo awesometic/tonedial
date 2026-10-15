@@ -24,7 +24,7 @@ import { runEdit } from "./commands/edit.ts";
 import { runUpdate } from "./commands/update.ts";
 import { runSave } from "./commands/save.ts";
 import { runCreate } from "./commands/create.ts";
-import { runAddress, runSet, runReset } from "./commands/set.ts";
+import { runAddress, runPersona, runSet, runReset } from "./commands/set.ts";
 import { runShow } from "./commands/show.ts";
 import { runUse } from "./commands/use.ts";
 import { runDoctor } from "./commands/doctor.ts";
@@ -40,7 +40,7 @@ export const JSON_SCHEMA = 3;
  * run time is the one thing that breaks all three binary packagers at once. A test asserts this
  * equals the manifest, which is the cheap half of the trade.
  */
-export const VERSION = "0.1.0";
+export const VERSION = "0.1.1";
 
 /** Command flags are declared centrally and parsed strictly, so a typo fails rather than
  *  being silently dropped — which is what a permissive parse did to `--project`. */
@@ -99,7 +99,7 @@ const FLAG_SPELLING: Record<(typeof FLAG_NAMES)[number], string> = {
 export type CommandResult = {
   lines: string[];
   json: Record<string, unknown>;
-  /** Non-blocking notices — combination-layer warnings, persona warnings, a cap warning. */
+  /** Non-blocking notices about tone combinations and persona settings. */
   warnings?: string[];
   /**
    * Something to do once the receipt is on screen, and only then.
@@ -145,6 +145,7 @@ const COMMANDS: Record<
   set: { run: runSet, flags: [], max: null, context: "state" },
   test: { run: runTest, flags: ["project", "dryRun", "preset", "acceptUsage"], max: 1 },
   address: { run: runAddress, flags: [], max: 2, context: "state" },
+  persona: { run: runPersona, flags: [], max: 2, context: "state" },
   reset: { run: runReset, flags: [], max: 1, context: "state" },
   show: { run: runShow, flags: ["explain"], max: 1 },
   create: { run: runCreate, flags: ["slug", "auto", "dryRun"], max: null, context: "state" },
@@ -183,6 +184,7 @@ const COMMAND_GROUPS: [keyof Messages["help"]["groups"], CommandRow[]][] = [
   ["tone", [
     ["set", "set <axis>=<level> …"],
     ["address", "address [self user]"],
+    ["persona", "persona [agent user]"],
     ["reset", "reset [axis]"],
     ["show", "show [slug]"],
     ["test", "test [claude|codex]"],
@@ -215,6 +217,7 @@ const COMMAND_EXAMPLES: Record<keyof Messages["help"]["commands"], readonly stri
   set: ["tonedial set", "tonedial set warmth=5 critique=4", "tonedial set persona.agent=reviewer"],
   test: ["tonedial test codex --dry-run", "tonedial test claude --project .", "tonedial test codex --preset my-tone --accept-usage"],
   address: ['tonedial address "assistant" "friend"'],
+  persona: ["tonedial persona", 'tonedial persona "Fictional reviewer" "Developer"'],
   reset: ["tonedial reset", "tonedial reset warmth"],
   show: ["tonedial show", "tonedial show --explain"],
   create: ["tonedial create", 'tonedial create "Jarvis" --slug jarvis care=3 --auto'],

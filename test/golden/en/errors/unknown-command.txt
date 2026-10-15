@@ -1,7 +1,7 @@
 status: 2
 --- stdout --- [bytes=0; endsWithNewline=false]
 
---- stderr --- [bytes=174; endsWithNewline=true]
-not-a-command is not a command. Available: set, test, address, reset, show,
-create, save, list, edit, update, use, compile, export, import, wire, unwire,
-init, doctor, eject
+--- stderr --- [bytes=183; endsWithNewline=true]
+not-a-command is not a command. Available: set, test, address, persona, reset,
+show, create, save, list, edit, update, use, compile, export, import, wire,
+unwire, init, doctor, eject

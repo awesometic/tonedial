@@ -12,10 +12,9 @@ import {
   BUNDLED, SLUG_PATTERN, matchesPreset, withPreset, assertPresetSelection, customPresetDir, inspectPresetLibrary, parsePreset,
   preparePresetWrite, resolvePreset, type Preset, type PresetEntry,
 } from "../core/presets.ts";
-import { applyPlanned, planArtifact, planConfig, sizeWarning } from "./compile.ts";
+import { applyPlanned, planArtifact, planConfig } from "./compile.ts";
 import { check as checkCombos } from "../core/combos.ts";
-import { combination, humanText, riskWarnings } from "../ui/format.ts";
-import type { SizeReport } from "../core/compile.ts";
+import { artifactSize, combination, humanText, riskWarnings } from "../ui/format.ts";
 import { captureRawEntry, planChange, rawReadChange, rawReadCheck, type Change, type RawEntryCapture } from "../wiring/apply.ts";
 import { emptyWiring } from "../wiring/ownership.ts";
 
@@ -128,11 +127,11 @@ export async function runEdit(ctx: Ctx, args: string[]): Promise<CommandResult> 
       }
       const { change: toneChange, size } = planArtifact(ctx, config);
       await commit([toneChange], [{ ...baseline, after }]);
-      lines.push(`  ${(size.overCap ? ctx.ui.error : ctx.ui.success)(ctx.t.artifact.recompiled(size.chars, size.cap))}`);
+      lines.push(`  ${ctx.ui.dim(artifactSize(size, ctx.t))}`);
       return {
         lines,
         json: { path: target.path, editor: editor[0], opened: true, changed: true, chars: size.chars },
-        warnings: stateWarnings(ctx, config, size),
+        warnings: stateWarnings(ctx, config),
       };
     }
 
@@ -199,8 +198,8 @@ export async function runEdit(ctx: Ctx, args: string[]): Promise<CommandResult> 
         const { change: toneChange, size } = planArtifact(ctx, config);
         const finalConfig = { ...configRead.change, after: serializeConfig(config, ctx.t) };
         await commit([configRead.change, presetChange, toneChange], [finalConfig]);
-        lines.push(`  ${(size.overCap ? ctx.ui.error : ctx.ui.success)(ctx.t.artifact.recompiled(size.chars, size.cap))}`);
-        warnings.push(...stateWarnings(ctx, config, size));
+        lines.push(`  ${ctx.ui.dim(artifactSize(size, ctx.t))}`);
+        warnings.push(...stateWarnings(ctx, config));
       } else {
         await commit([configRead.change, presetChange]);
       }
@@ -228,13 +227,12 @@ export async function runEdit(ctx: Ctx, args: string[]): Promise<CommandResult> 
 }
 
 /** The notices every other state-changing command emits, through the same owners they use. */
-function stateWarnings(ctx: Ctx, config: Config, size: SizeReport): string[] {
+function stateWarnings(ctx: Ctx, config: Config): string[] {
   const p = config.persona;
   return [
     ...checkCombos(config.axes, p, config.speech_level).map((w) => combination(w, ctx.t)),
     ...(p.age || p.gender || p.note || p.address || p.user || p.agent ? [ctx.t.notice.personaUnanchored] : []),
     ...riskWarnings(config.axes, ctx.t),
-    ...sizeWarning(size, ctx.t),
   ];
 }
 

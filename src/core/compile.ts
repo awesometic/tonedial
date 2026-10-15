@@ -1,6 +1,6 @@
 import {
-  ANCHORS, AXIS_ORDER, CAP_CHARS, CONTROLS, FORMAT_COMPOSITION, GENERATION_COMMENT, PERSONA,
-  REGISTER_COMPOSITION, SCOPE_HEADER, SPEECH_LEVEL, STYLE_MARKER, TARGET_CHARS,
+  ANCHORS, AXIS_ORDER, CONTROLS, FORMAT_COMPOSITION, GENERATION_COMMENT, PERSONA,
+  REGISTER_COMPOSITION, SCOPE_HEADER, SPEECH_LEVEL, STYLE_MARKER,
   type Axes,
 } from "./anchors.ts";
 import { composites, PERSONA_DESCRIPTION_MAX, type Persona } from "./combos.ts";
@@ -107,19 +107,11 @@ export function compile(config: Config): string {
 
 export type SizeReport = {
   chars: number;
-  target: number;
-  cap: number;
-  overTarget: boolean;
-  overCap: boolean;
 };
 
 export function measure(artifact: string): SizeReport {
   const chars = [...artifact].length;
   return {
     chars,
-    target: TARGET_CHARS,
-    cap: CAP_CHARS,
-    overTarget: chars > TARGET_CHARS,
-    overCap: chars > CAP_CHARS,
   };
 }

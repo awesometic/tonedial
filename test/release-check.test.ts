@@ -47,6 +47,8 @@ function fixture(publicIdentity = true) {
   copyFileSync(script, join(root, "scripts", "check-release.mjs"));
   mkdirSync(join(root, "test"));
   copyFileSync(fileURLToPath(import.meta.url), join(root, "test", "release-check.test.ts"));
+  mkdirSync(join(root, "docs", "releases"), { recursive: true });
+  writeFileSync(join(root, "docs", "releases", "1.0.0.md"), "Release notes for the test package.\n");
   writeFileSync(join(root, "package.json"), JSON.stringify({
     name: "tonedial",
     version: "1.0.0",
@@ -120,6 +122,19 @@ test("ignored build output cannot introduce an extra npm package file", () => {
   const result = check(root);
   assert.notEqual(result.code, 0);
   assert.match(result.stderr, /unapproved packed file.*private-note/);
+});
+
+test("the publish gate refuses missing or empty versioned notes before publication", () => {
+  for (const missing of [true, false]) {
+    const root = fixture();
+    const notes = join(root, "docs", "releases", "1.0.0.md");
+    if (missing) unlinkSync(notes);
+    else writeFileSync(notes, "\n");
+    commit(root, "candidate without release notes");
+    const result = check(root);
+    assert.notEqual(result.code, 0);
+    assert.match(result.stderr, /docs\/releases\/1\.0\.0\.md must (?:be committed|contain release notes)/);
+  }
 });
 
 test("the release package must contain the third-party notices", () => {
@@ -223,7 +238,7 @@ test("tree inspection rejects nonignored private entries and symlinks without op
 test("local release instructions stay ignored and cannot enter the public tree or history", () => {
   const root = fixture();
   const path = "docs/RELEASING.local.md";
-  mkdirSync(join(root, "docs"));
+  mkdirSync(join(root, "docs"), { recursive: true });
   writeFileSync(join(root, path), "Local operator instructions\n");
   writeFileSync(join(root, ".gitignore"), `dist/\n/${path}\n`);
   commit(root, "public candidate");

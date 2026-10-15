@@ -40,8 +40,7 @@ ToneDial · create
   TONE.md generated
 
   tonedial list
---- stderr --- [bytes=253; endsWithNewline=true]
-  ⚠ TONE.md: 2,362 characters · over 1,800 target
+--- stderr --- [bytes=200; endsWithNewline=true]
   ⚠ address set while warmth≤2 or verbosity≤2: Brief or unemotional replies
     may omit names; strong roleplay may make them more frequent.
   ⚠ The model may not produce the tone you expect.

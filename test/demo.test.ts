@@ -79,7 +79,7 @@ for (const scene of SCENES) {
       for (const group of ["form", "target", "behaviour"]) {
         assert.ok(plain.includes(group), `the ${group} label is gone from ${scene.id}/${language} — ${RETAKE}`);
       }
-      assert.match(plain, /TONE\.md [\d,]+ \/ [\d,]+/, `the budget line changed in ${scene.id}/${language} — ${RETAKE}`);
+      assert.match(plain, /TONE\.md [\d,]+(?: characters|자|文字| 字符| caracteres)\n/, `the character count changed in ${scene.id}/${language} — ${RETAKE}`);
       assert.match(plain, /[▮▯]{5}\s+\d!?\s+\*\d/, `changed axes lost their default values — ${RETAKE}`);
 
       // The isolated recipe owns 80-column geometry, including Korean and emoji cell widths.

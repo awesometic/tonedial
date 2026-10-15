@@ -84,8 +84,8 @@ export function num(n: number): string {
 }
 
 /** The one shape the artifact's size is reported in, by every command that recompiles. */
-export function budget(size: SizeReport, t: Messages): string {
-  return t.artifact.budget(num(size.chars), num(size.cap));
+export function artifactSize(size: SizeReport, t: Messages): string {
+  return t.artifact.size(num(size.chars));
 }
 
 /** Render combination warnings with the same layer distinction in every command. */

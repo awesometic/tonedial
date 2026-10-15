@@ -201,6 +201,8 @@ export type Messages = {
     unknownField: (field: string, fields: readonly string[]) => string;
     /** `address` takes both terms or neither; one of two is a term set to the wrong one. */
     addressNeedsPair: string;
+    rolesNeedsPair: string;
+    rolesIntroduction: string;
     /**
      * `address` asks its own two questions rather than reusing `init`'s.
      *
@@ -234,16 +236,13 @@ export type Messages = {
     register: (level: string) => string;
   };
   artifact: {
-    budget: (chars: string, cap: string) => string;
+    size: (chars: string) => string;
     wouldWrite: string;
     wrote: string;
-    overCap: (chars: string, cap: string) => string;
-    overTarget: (chars: string, target: string) => string;
     notWritten: string;
     /** No config at all, where `compile` would be refused by the context gate. */
     notSetUp: string;
     movedFromDefault: string;
-    recompiled: (chars: number, cap: number) => string;
     /** The `--explain` legend's opening line. */
     defaultMarker: string;
     /** Advisory risk marker legend shared by static and interactive gauge headers. */
@@ -475,7 +474,7 @@ export type Messages = {
     /** The two commands someone who has just installed this should run. */
     firstSteps: string;
     examples: string;
-    commands: { init: string; set: string; address: string; reset: string; show: string; create: string; save: string; list: string; edit: string; use: string; compile: string; export: string; import: string; wire: string; unwire: string; doctor: string; update: string; eject: string; test: string };
+    commands: { init: string; set: string; address: string; persona: string; reset: string; show: string; create: string; save: string; list: string; edit: string; use: string; compile: string; export: string; import: string; wire: string; unwire: string; doctor: string; update: string; eject: string; test: string };
     flags: { global: string; here: string; project: string; migrateLegacy: string; auto: string; dryRun: string; lang: string; commands: string; tools: string; fix: string; rollback: string; fromOperation: string; fromPreset: string; restorePreset: string; preset: string; slug: string; acceptUsage: string; explain: string; check: string; json: string; verbose: string; color: string; version: string; help: string };
   };
   combos: {
@@ -664,7 +663,7 @@ const enMessages: Messages = {
     introduction: "Choose the profile name, slug, address and role, then adjust all twelve axes. Enter keeps the shown value; \"\" clears an optional field. Final approval saves and applies the whole profile.",
     name: "Display name",
     slug: "Slug (lowercase letters, digits, dashes)",
-    user: "Your background or preferences (up to 200 characters)",
+    user: "Your role or background (up to 200 characters)",
     agent: "Agent role (up to 200 characters)",
     register: "Register (auto, polite, plain)",
     safeword: "Safeword",
@@ -713,6 +712,8 @@ const enMessages: Messages = {
       "address needs both terms: tonedial address <self name> <user name>. " +
       'Use "" in each position to clear them. In a terminal, run it without arguments to be prompted.',
     askSelf: "What should the agent call itself?",
+    rolesNeedsPair: 'persona needs both descriptions: tonedial persona <agent role> <user role>. Use "" to clear a description, or run without arguments in a terminal.',
+    rolesIntroduction: 'Set the agent\'s role and your role or background. Enter keeps the current value; "" clears a role. Changes apply after both answers.',
     askUser: "What should it call you?",
     addressKept: (current) => `current ${current} · Enter keeps it`,
     addressNone: "currently unset · Enter keeps it unset",
@@ -740,15 +741,12 @@ const enMessages: Messages = {
     register: (level) => `register ${level}`,
   },
   artifact: {
-    budget: (chars, cap) => `TONE.md ${chars} / ${cap}`,
+    size: (chars) => `TONE.md ${chars} characters`,
     wouldWrite: "would write",
     wrote: "written",
-    overCap: (chars, cap) => `TONE.md: ${chars} characters · over ${cap} maximum`,
-    overTarget: (chars, target) => `TONE.md: ${chars} characters · over ${target} target`,
     notWritten: "TONE.md is missing. Run tonedial compile",
     notSetUp: "not initialized. Run tonedial init",
     movedFromDefault: "differs from ToneDial's default",
-    recompiled: (chars, cap) => `TONE.md ${chars.toLocaleString("en")} / ${cap.toLocaleString("en")}`,
     defaultMarker: "marks an axis that differs from ToneDial's default, not the agent's native tone.",
     riskMarker: "! risky tone",
     riskHeading: "Advisory risky levels:",
@@ -1009,8 +1007,9 @@ const enMessages: Messages = {
       init: "set up and refresh bundled files",
       set: "change axes, role or settings · bare opens dial",
       address: "set names for each party · bare prompts",
+      persona: "set agent and user roles · bare prompts",
       reset: "reset an axis · bare resets all axes",
-      show: "current settings · slug previews saved axes",
+      show: "current settings · slug previews a saved profile",
       test: "try saved settings or a preset in a new conversation",
       save: "save the current tone as a profile",
       create: "create and apply a preset · bare guides setup",
@@ -1351,7 +1350,7 @@ const koMessages: Messages = {
     introduction: "프로필 이름·슬러그·호칭·역할을 입력한 뒤 열두 축을 조절합니다. Enter를 누르면 표시된 값을 유지하며, '\"\"'를 입력하면 선택 항목을 지웁니다. 마지막 확인에서 전체 프로필을 저장하고 적용합니다.",
     name: "표시 이름",
     slug: "슬러그(영문 소문자·숫자·붙임표)",
-    user: "사용자 배경이나 선호(최대 200자)",
+    user: "사용자 역할·배경(최대 200자)",
     agent: "에이전트 역할(최대 200자)",
     register: "말씨(auto, polite, plain)",
     safeword: "세이프워드",
@@ -1400,6 +1399,8 @@ const koMessages: Messages = {
       "address에는 두 호칭이 모두 필요합니다: tonedial address <자칭> <사용자 호칭>. " +
       '지우려면 각 자리에 ""을 넣으세요. 터미널에서는 인자 없이 실행해 입력할 수도 있습니다.',
     askSelf: "에이전트가 자기를 뭐라고 부를까요?",
+    rolesNeedsPair: 'persona에는 두 역할 설명이 필요합니다: tonedial persona <에이전트 역할> <사용자 역할>. 지울 항목에는 ""를 넣으세요. 터미널에서는 인자 없이 실행해 입력할 수도 있습니다.',
+    rolesIntroduction: '에이전트와 사용자의 역할·배경을 설정합니다. Enter를 누르면 현재 값을 유지하고, ""를 입력하면 해당 역할을 지웁니다. 두 항목을 입력한 뒤 한 번에 적용합니다.',
     askUser: "에이전트가 사용자를 뭐라고 부를까요?",
     addressKept: (current) => `현재 ${current} · 엔터를 누르면 유지`,
     addressNone: "현재 설정 없음 · 엔터를 누르면 유지",
@@ -1429,15 +1430,12 @@ const koMessages: Messages = {
     register: (level) => `말씨 ${level}`,
   },
   artifact: {
-    budget: (chars, cap) => `TONE.md ${chars} / ${cap}`,
+    size: (chars) => `TONE.md ${chars}자`,
     wouldWrite: "기록 예정",
     wrote: "기록됨",
-    overCap: (chars, cap) => `TONE.md: ${chars}자 · 최대 ${cap}자 초과`,
-    overTarget: (chars, target) => `TONE.md: ${chars}자 · 목표 ${target}자 초과`,
     notWritten: "TONE.md가 없습니다. tonedial compile을 실행해 주세요",
     notSetUp: "초기 설정이 없습니다. tonedial init을 실행해 주세요",
     movedFromDefault: "ToneDial 기본값과 다름",
-    recompiled: (chars, cap) => `TONE.md ${chars.toLocaleString("ko")} / ${cap.toLocaleString("ko")}`,
     defaultMarker: "ToneDial 기본값과 다른 축을 표시합니다. 에이전트 원래 말투와 비교하지 않습니다.",
     riskMarker: "! 위험 말투",
     riskHeading: "주의할 레벨:",
@@ -1698,8 +1696,9 @@ const koMessages: Messages = {
       init: "초기 설정과 기본 파일 갱신",
       set: "축·역할·설정 변경 · 인자 없으면 다이얼",
       address: "서로 부르는 말 · 인자 없으면 질문",
+      persona: "에이전트·사용자 역할 · 인자 없으면 질문",
       reset: "축을 기본값으로 · 축을 안 주면 전부",
-      show: "현재 설정 · 슬러그를 주면 저장한 축",
+      show: "현재 설정 · 슬러그를 주면 저장한 프로필",
       test: "저장된 설정이나 프리셋으로 새 대화 시작",
       save: "현재 말투를 프로필로 저장",
       create: "프리셋 생성·적용 · 인자 없으면 안내",

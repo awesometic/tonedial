@@ -1,6 +1,6 @@
 status: 0
---- stdout --- [bytes=996; endsWithNewline=true]
-  ToneDial · show · Example (unsaved changes)           TONE.md 2,362 / 2,700
+--- stdout --- [bytes=1250; endsWithNewline=true]
+  ToneDial · show · Example (unsaved changes)        TONE.md 2,362 characters
 
                          Current   ToneDial default · ! risky tone
   form      formality    ▮▯▯▯▯  1   *3
@@ -19,16 +19,19 @@ status: 0
   Settings
   self name your big brother · user name little sibling · roles · user
   57/200 · agent 151/200
+  fictional agent role: A caring older brother who helps his sibling through
+  problems. Familiar expressions include 'hey, little sibling' and 'your big
+  brother has your back'.
+  user context: A younger sibling sharing problems with an older brother.
   no safeword · register plain
   Interface en
   Connections: none
 
   * differs from ToneDial's default · Not saved to a profile.
   tonedial save
---- stderr --- [bytes=399; endsWithNewline=true]
+--- stderr --- [bytes=346; endsWithNewline=true]
   ⚠ address set while warmth≤2 or verbosity≤2: Brief or unemotional replies
     may omit names; strong roleplay may make them more frequent.
   ⚠ persona has no fixed anchors; axes take precedence. Text may affect
     content. Roleplay does not verify credentials or grant permissions.
   ⚠ The model may not produce the tone you expect.
-  ⚠ TONE.md: 2,362 characters · over 1,800 target

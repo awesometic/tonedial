@@ -16,7 +16,7 @@ import { BUNDLED, localizedPreset, matchesPreset, withPreset } from "../core/pre
 import { SEED_VERSION, inspectContextLayout, planSeedChanges } from "../core/seeds.ts";
 import { inspectOperations } from "../core/operations.ts";
 import { SKILL_NAME, TONE_COMMAND_MD, TONE_COMMAND_VERSION } from "../core/skill.ts";
-import { budget, humanText, nativeSetup, receiptLines, recoveryRollbackLines, riskWarnings, section } from "../ui/format.ts";
+import { artifactSize, humanText, nativeSetup, receiptLines, recoveryRollbackLines, riskWarnings, section } from "../ui/format.ts";
 import { riskyAxes } from "../core/anchors.ts";
 import { padEnd, wrap } from "../ui/width.ts";
 import { gate, planChange } from "../wiring/apply.ts";
@@ -205,7 +205,7 @@ export async function runInit(entry: Ctx, _args: string[]): Promise<CommandResul
     addReceipt(ctx.t.artifact.generated, ctx.ui.success);
   }
   if (ctx.flags.verbose) {
-    lines.push(`  ${ctx.ui.dim(budget(size, ctx.t))}`);
+    lines.push(`  ${ctx.ui.dim(artifactSize(size, ctx.t))}`);
     // The seed list grows with every bundled preset, so it folds like any other sentence.
     addReceipt(ctx.t.wiring.seeded(seeds.labels));
     if (skills.length) {

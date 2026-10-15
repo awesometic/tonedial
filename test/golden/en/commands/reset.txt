@@ -4,5 +4,5 @@ ToneDial · reset
 
   warmth 5 → 3
   TONE.md generated
---- stderr --- [bytes=53; endsWithNewline=true]
-  ⚠ TONE.md: 2,359 characters · over 1,800 target
+--- stderr --- [bytes=0; endsWithNewline=false]
+

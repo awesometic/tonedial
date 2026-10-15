@@ -202,7 +202,3 @@ export const CONTROLS = {
   that message still goes through its normal checks.`,
   fallback: "If the user asks to change the tone, use the `tonedial` CLI (`tonedial --help`).",
 } as const;
-
-/** The compiled artifact's budget, in Unicode code points across the whole file. */
-export const TARGET_CHARS = 1800;
-export const CAP_CHARS = 2700;

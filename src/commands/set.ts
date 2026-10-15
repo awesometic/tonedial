@@ -1,4 +1,4 @@
-// `set`, `reset`, and `address`. One action: change state, then recompile, so the two cannot
+// `set`, `reset`, `address` and `persona`. Change state and recompile in one action, so they cannot
 // drift apart.
 //
 // Warnings never block. A user is entitled to a combination that reads badly, and the tool's
@@ -15,11 +15,11 @@ import { toCompileInput } from "../core/resolve.ts";
 import { LANGUAGES, catalogue, isLanguage, type Messages } from "../core/i18n.ts";
 import { presetSettings, resolvePreset } from "../core/presets.ts";
 import { dial } from "../ui/dial.ts";
-import { budget, combination, humanText, riskWarnings } from "../ui/format.ts";
-import { interactive } from "../ui/prompt.ts";
+import { artifactSize, combination, humanText, riskWarnings } from "../ui/format.ts";
+import { guardTerminal, interactive } from "../ui/prompt.ts";
 import { createInterface } from "node:readline/promises";
 import { cells, padEnd, truncate, wrap } from "../ui/width.ts";
-import { applyPlanned, planArtifact, planConfig, sizeWarning } from "./compile.ts";
+import { applyPlanned, planArtifact, planConfig } from "./compile.ts";
 
 /** A raw number is bucketed on write; the stored and compiled value is always the band. */
 function bucketAge(value: string, t: Messages, asJson: boolean): string {
@@ -294,7 +294,7 @@ async function commit(
       `  ${ctx.ui.bold(finalConfig.before === finalConfig.after ? ctx.t.axis.settingsUnchanged : ctx.ui.success(ctx.t.axis.settingsSaved))}`,
       ...movementLines(applied.moves, ctx, config.axes),
       `  ${ctx.ui.success(toneChange.before === toneChange.after ? ctx.t.artifact.current : ctx.t.artifact.generated)}`,
-      ...(ctx.flags.verbose ? [`  ${ctx.ui.dim(budget(size, ctx.t))}`] : []),
+      ...(ctx.flags.verbose ? [`  ${ctx.ui.dim(artifactSize(size, ctx.t))}`] : []),
     ],
     json: {
       changed: applied.changed,
@@ -302,7 +302,7 @@ async function commit(
       config: toCompileInput(config),
       chars: size.chars,
     },
-    warnings: [...applied.warnings, ...riskWarnings(config.axes, ctx.t), ...comboWarnings(config, ctx.t), ...sizeWarning(size, ctx.t)],
+    warnings: [...applied.warnings, ...riskWarnings(config.axes, ctx.t), ...comboWarnings(config, ctx.t)],
   };
 }
 
@@ -342,6 +342,54 @@ export async function runAddress(ctx: Ctx, args: string[]): Promise<CommandResul
     ["persona.user_ref", terms[1]!],
   ] as const;
   return commit(ctx, configChange, config, applyPairs(config, pairs, ctx.t, ctx.asJson));
+}
+
+/** Agent first, user second, like address's self/user pair. Apply only after both validate. */
+export async function runPersona(ctx: Ctx, args: string[]): Promise<CommandResult> {
+  const { change: configChange, config } = planConfig(ctx);
+  try {
+    const roles = args.length === 0 ? await askRoles(ctx, config) : args;
+    if (roles.length !== 2) throw new ConfigError(ctx.t.persona.rolesNeedsPair);
+    return commit(ctx, configChange, config, applyPairs(config, [
+      ["persona.agent", roles[0]!], ["persona.user", roles[1]!],
+    ], ctx.t, ctx.asJson));
+  } catch (cause) {
+    if (!(cause instanceof Error) || (cause as NodeJS.ErrnoException).code !== "ABORT_ERR") throw cause;
+    return { lines: [`  ${ctx.t.axis.nothingChanged}`], json: { changed: [], moves: [], cancelled: true }, after: async () => 130 };
+  }
+}
+
+async function askRoles(ctx: Ctx, config: Config): Promise<string[]> {
+  if (!ctx.canPrompt || !interactive()) throw new ConfigError(ctx.t.persona.rolesNeedsPair);
+  const release = guardTerminal();
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  try {
+    for (const line of wrap(ctx.t.persona.rolesIntroduction, ctx.ui.width - 2)) process.stdout.write(`  ${line}\n`);
+    const roles: string[] = [];
+    for (const field of ["agent", "user"] as const) {
+      const current = config.persona[field] ?? "";
+      for (;;) {
+        process.stdout.write("\n");
+        for (const line of wrap(`${ctx.t.create[field]}${current ? `: ${humanText(current)}` : ""}`, ctx.ui.width - 2)) {
+          process.stdout.write(`  ${line}\n`);
+        }
+        const answer = (await rl.question("  > ")).trim();
+        const chosen = answer === '""' ? "" : answer || current;
+        try {
+          assign(structuredClone(config), `persona.${field}`, chosen, ctx.t, false);
+          roles.push(chosen);
+          process.stdout.write(`  ${ctx.t.create.descriptionCount([...chosen].length, PERSONA_DESCRIPTION_MAX)}\n`);
+          break;
+        } catch (cause) {
+          if (!(cause instanceof ConfigError)) throw cause;
+          for (const line of wrap(humanText(cause.message), ctx.ui.width - 2)) process.stdout.write(`  ${ctx.ui.warn(line)}\n`);
+        }
+      }
+    }
+    return roles;
+  } finally {
+    try { rl.close(); } finally { release(); }
+  }
 }
 
 /**
@@ -432,9 +480,9 @@ export async function runReset(ctx: Ctx, args: string[]): Promise<CommandResult>
           : `  ${ctx.ui.bold(axis)} ${ctx.ui.dim(String(before))} ${ctx.ui.dim("→")} ${ctx.ui.bold(ctx.ui.accent(String(AXIS_DEFAULT[axis])))}`]
         : wrap(ctx.t.axis.resetAll, ctx.ui.width - 2).map(line => `  ${ctx.ui.bold(ctx.ui.success(line))}`)),
       `  ${ctx.ui.success(toneChange.before === toneChange.after ? ctx.t.artifact.current : ctx.t.artifact.generated)}`,
-      ...(ctx.flags.verbose ? [`  ${ctx.ui.dim(budget(size, ctx.t))}`] : []),
+      ...(ctx.flags.verbose ? [`  ${ctx.ui.dim(artifactSize(size, ctx.t))}`] : []),
     ],
     json: { reset: axis ?? "all", chars: size.chars },
-    warnings: [...riskWarnings(config.axes, ctx.t), ...comboWarnings(config, ctx.t), ...sizeWarning(size, ctx.t)],
+    warnings: [...riskWarnings(config.axes, ctx.t), ...comboWarnings(config, ctx.t)],
   };
 }

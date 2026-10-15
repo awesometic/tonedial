@@ -4,10 +4,10 @@ import type { CommandResult, Ctx } from "../cli.ts";
 import { AXIS_DEFAULT, AXIS_ORDER, type Axes, type Level } from "../core/anchors.ts";
 import { ConfigError, serializeConfig } from "../core/config.ts";
 import { BUNDLED, PRESET_SCHEMA, SLUG_PATTERN, preparePresetWrite, presetSettings, resolvePreset, slugify, type Preset, type PresetEntry } from "../core/presets.ts";
-import { budget, humanText, nextStep } from "../ui/format.ts";
+import { artifactSize, humanText, nextStep } from "../ui/format.ts";
 import { cells, truncate, wrap } from "../ui/width.ts";
 import { PERSONA_DESCRIPTION_MAX } from "../core/combos.ts";
-import { applyPlanned, planArtifact, planConfig, sizeWarning } from "./compile.ts";
+import { applyPlanned, planArtifact, planConfig } from "./compile.ts";
 import { planChange, rawReadChange, rawReadCheck } from "../wiring/apply.ts";
 
 /** Only the axes that moved. Every axis is still emitted; sparsity is storage, not compilation. */
@@ -84,7 +84,7 @@ export async function savePreset(
 
   const count = Object.keys(values).length;
   const countLabel = ctx.t.preset.nonDefault(count);
-  const warnings: string[] = [...sizeWarning(size, ctx.t)];
+  const warnings: string[] = [];
   if (replaced) warnings.push(ctx.t.preset.replaced(slug));
   // Sparsity survives on one reason after the omit-defaults rule fell: fewer extremes mean
   // fewer internal collisions. It is guidance, so it warns and never blocks.
@@ -103,7 +103,7 @@ export async function savePreset(
         Math.max(1, ctx.ui.width - cells(`    ${countLabel}`)),
       )}  ${ctx.ui.dim(countLabel)}`,
       `  ${ctx.t.artifact.generated}`,
-      ...(ctx.flags.verbose ? [`  ${ctx.ui.dim(budget(size, ctx.t))}`] : []),
+      ...(ctx.flags.verbose ? [`  ${ctx.ui.dim(artifactSize(size, ctx.t))}`] : []),
       ...nextStep("tonedial list", ctx.ui),
     ],
     json: { slug, displayName, values, settings: preset.settings, nonDefaultAxes: count, replaced, chars: size.chars,

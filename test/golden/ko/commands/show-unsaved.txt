@@ -1,6 +1,6 @@
 status: 0
---- stdout --- [bytes=1038; endsWithNewline=true]
-  ToneDial · show · Example (저장하지 않은 변경)        TONE.md 2,213 / 2,700
+--- stdout --- [bytes=1287; endsWithNewline=true]
+  ToneDial · show · Example (저장하지 않은 변경)              TONE.md 2,213자
 
                          현재      ToneDial 기본값 · ! 위험 말투
   form      formality    ▮▯▯▯▯  1   *3
@@ -18,16 +18,18 @@ status: 0
 
   사용자 설정
   자칭 형 · 사용자 호칭 동생 · 역할 · 사용자 22/200 · 에이전트 64/200
+  가상 에이전트 역할: 동생을 다정하게 챙기는 형. '야, 동생', '형이 같이
+  봐줄게', '밥은 챙겨 먹었냐' 같은 익숙한 표현을 쓴다.
+  사용자 배경: 형에게 고민을 나누고 도움을 받는 동생.
   세이프워드 없음 · 말씨 plain
   화면 언어 ko
   연결: 없음
 
   * ToneDial 기본값과 다름 · 프로필에 저장되지 않았습니다.
   tonedial save
---- stderr --- [bytes=544; endsWithNewline=true]
+--- stderr --- [bytes=494; endsWithNewline=true]
   ⚠ address set while warmth≤2 or verbosity≤2: 짧거나 감정 없는 답변에서는
     호칭이 생략될 수 있습니다. 역할극이 강하면 더 자주 나올 수 있습니다.
   ⚠ 페르소나에는 고정된 행동 규칙이 없으며 축 설정이 우선합니다. 설명은
     내용에도 영향을 줄 수 있습니다. 역할극은 자격이나 권한을 주지 않습니다.
   ⚠ 사용하는 모델에 따라 기대한 말투가 나오지 않을 수 있습니다.
-  ⚠ TONE.md: 2,213자 · 목표 1,800자 초과

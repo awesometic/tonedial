@@ -15,8 +15,8 @@ import { toCompileInput } from "../core/resolve.ts";
 import { inspectContextLayout } from "../core/seeds.ts";
 import { catalogue, isLanguage, type Messages } from "../core/i18n.ts";
 import { explainBlock, gaugeBlock, gaugeHeader } from "../ui/gauge.ts";
-import { planConfig, sizeWarning } from "./compile.ts";
-import { budget as budgetLine, combination, humanText, nextStep, riskWarnings } from "../ui/format.ts";
+import { planConfig } from "./compile.ts";
+import { artifactSize, combination, humanText, nextStep, riskWarnings } from "../ui/format.ts";
 import { maxCells, truncate, wrap } from "../ui/width.ts";
 import { inspectContextConsumers } from "../wiring/targets.ts";
 
@@ -56,17 +56,17 @@ export function runShow(ctx: Ctx, args: string[]): CommandResult {
     : 'tonedial save "My Tone"';
 
   const lines: string[] = [];
-  const budget = budgetLine(size, ctx.t);
+  const sizeLabel = artifactSize(size, ctx.t);
   // A display name has no length cap, so the title is the one row that can be pushed past the
   // budget by state alone. Truncating keeps the size at the right margin where it is read.
   const prefix = "ToneDial · show · ";
-  const nameBudget = ctx.ui.width - maxCells(budget) - maxCells(status) - maxCells(prefix) - 4;
+  const nameBudget = ctx.ui.width - maxCells(sizeLabel) - maxCells(status) - maxCells(prefix) - 4;
   if (nameBudget >= 2) {
-    lines.push(titleRow(prefix + truncate(humanText(activeName), nameBudget) + status, budget, size.overCap, ctx));
+    lines.push(titleRow(prefix + truncate(humanText(activeName), nameBudget) + status, sizeLabel, ctx));
   } else {
     const title = prefix + truncate(humanText(activeName), Math.max(2, ui.width - maxCells(status) - maxCells(prefix) - 2)) + status;
     for (const folded of wrap(title, ui.width - 2)) lines.push(`  ${ui.bold(folded)}`);
-    for (const folded of wrap(budget, ui.width - 2)) lines.push(`  ${(size.overCap ? ui.error : ui.dim)(folded)}`);
+    for (const folded of wrap(sizeLabel, ui.width - 2)) lines.push(`  ${ui.dim(folded)}`);
   }
 
   const p = shown.persona;
@@ -82,17 +82,15 @@ export function runShow(ctx: Ctx, args: string[]): CommandResult {
       p.address?.self_ref ? ctx.t.persona.callsItself(humanText(p.address.self_ref)) : null,
       p.address?.user_ref ? ctx.t.persona.callsYou(humanText(p.address.user_ref)) : null,
       p.note ? ctx.t.persona.noteChars([...p.note].length) : null,
-      p.user && p.agent && !ctx.flags.verbose ? ctx.t.persona.descriptionCounts([...p.user].length, [...p.agent].length, PERSONA_DESCRIPTION_MAX) : null,
-      p.user && !p.agent && !ctx.flags.verbose ? ctx.t.persona.descriptionChars("user", [...p.user].length) : null,
-      p.agent && !p.user && !ctx.flags.verbose ? ctx.t.persona.descriptionChars("agent", [...p.agent].length) : null,
+      p.user && p.agent ? ctx.t.persona.descriptionCounts([...p.user].length, [...p.agent].length, PERSONA_DESCRIPTION_MAX) : null,
+      p.user && !p.agent ? ctx.t.persona.descriptionChars("user", [...p.user].length) : null,
+      p.agent && !p.user ? ctx.t.persona.descriptionChars("agent", [...p.agent].length) : null,
     ].filter(Boolean);
     if (bits.length) for (const folded of wrap(bits.join(" · "), detailWidth)) details.push(ui.dim(folded));
-    if (ctx.flags.verbose) {
-      for (const [field, value] of [["user", p.user], ["agent", p.agent]] as const) {
-        if (value === null) continue;
-        for (const folded of wrap(ctx.t.persona.descriptionFull(field, humanText(value)), detailWidth)) {
-          details.push(ui.dim(folded));
-        }
+    for (const [field, value] of [["agent", p.agent], ["user", p.user]] as const) {
+      if (value === null) continue;
+      for (const folded of wrap(ctx.t.persona.descriptionFull(field, humanText(value)), detailWidth)) {
+        details.push(ui.dim(folded));
       }
     }
   }
@@ -149,7 +147,7 @@ export function runShow(ctx: Ctx, args: string[]): CommandResult {
         ...nextStep(saveCommand, ui).slice(1));
     }
   } else {
-    // Keep the short legend and action together so a one-row persona still fits 80×24.
+    // Keep the short legend and save action together after the settings.
     const legend = ctx.t.artifact.movedFromDefault + (needsSave ? ` · ${ctx.t.preset.changesNotSaved}` : "");
     const [first, ...rest] = wrap(legend, ui.width - 4);
     lines.push(`  ${ui.accent("*")} ${ui.dim(first!)}`, ...rest.map((line) => `    ${ui.dim(line)}`),
@@ -164,8 +162,6 @@ export function runShow(ctx: Ctx, args: string[]): CommandResult {
   warnings.push(...riskWarnings(axes, ctx.t));
   warnings.push(ctx.t.notice.modelExpectation);
   if (activeConflict && preview === null) warnings.push(ctx.t.preset.activeConflict(config.preset!));
-  // Through the same owner every other command uses, rather than a sentence composed here.
-  warnings.push(...sizeWarning(size, ctx.t));
 
   return {
     lines,
@@ -189,7 +185,6 @@ export function runShow(ctx: Ctx, args: string[]): CommandResult {
       // Interface language never changes the compiled tone.
       language: config.language,
       chars: size.chars,
-      cap: size.cap,
       artifact: { exists: artifactOnDisk },
     },
     warnings,
@@ -201,14 +196,13 @@ export function runShow(ctx: Ctx, args: string[]): CommandResult {
  * while both fit — on anything narrower they fall back to a single space rather than pushing
  * the line past its budget. Right alignment is worth having and never worth an overflow.
  */
-function titleRow(name: string, budget: string, overCap: boolean, ctx: Ctx): string {
-  const paint = overCap ? ctx.ui.error : ctx.ui.dim;
+function titleRow(name: string, sizeLabel: string, ctx: Ctx): string {
   // Measured pessimistically. A display name is user text and may hold ambiguous-width
   // characters, so a gap sized by the narrow measure is a gap that overflows on the terminals
   // this contract exists for.
-  const used = maxCells(name) + maxCells(budget) + 2;
+  const used = maxCells(name) + maxCells(sizeLabel) + 2;
   const gap = used <= ctx.ui.width ? " ".repeat(ctx.ui.width - used) : " ";
-  return `  ${ctx.ui.bold(name)}${gap}${paint(budget)}`;
+  return `  ${ctx.ui.bold(name)}${gap}${ctx.ui.dim(sizeLabel)}`;
 }
 
 /**

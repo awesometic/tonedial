@@ -13,7 +13,7 @@ For sensitive findings, use [private reporting](./SECURITY.md).
 | [Testing](./docs/TESTING.md) | Automated gates, candidate/native trials and measurements |
 | [Agent guide](./AGENTS.md) | Obligations for agent-assisted work |
 
-Prepare version 0.1.0 as the first release through the maintainer-controlled [publish workflow](./.github/workflows/publish.yml).
+Use the maintainer-controlled [publish workflow](./.github/workflows/publish.yml) for releases.
 Publication and native acceptance are separate checks; local passes do not establish either.
 
 <a id="setup-and-checks"></a>
@@ -146,3 +146,26 @@ Use synthetic/redacted reports.
 Exclude credentials, persona notes, saved personal config, provider files/history, recovery backups, local links and execution journals.
 [SECURITY.md](./SECURITY.md) owns sensitive reporting; the [release gate](./scripts/check-release.mjs) owns release checks.
 Publication requires maintainer authorization.
+
+## Maintainer releases
+
+Keep the version in `package.json`, both root entries in `package-lock.json` and `src/cli.ts` aligned.
+Prepare English release notes at `docs/releases/<version>.md`, including the pinned npm installation command and relevant changes.
+Commit the candidate to `main`, then run **Actions → Publish → Run workflow**.
+Pushing to `main` alone does not publish.
+
+The workflow runs the complete checks, publishes to npm using its trusted publisher,
+then creates `ToneDial v<version>` at that workflow's commit.
+It verifies npm's package identity, `gitHead` and SHA-512 integrity before attaching
+the published `tonedial-<version>.tgz` and `SHA256SUMS` to a draft, then publishes that release.
+GitHub supplies the source ZIP and tarball automatically.
+Only the release job receives `contents: write`; no long-lived publishing token is required.
+
+Configure npm's trusted publisher for `.github/workflows/publish.yml` with **Allow npm publish**.
+**Allow npm dist-tag** is unnecessary for this workflow.
+The package must already exist on npm before a trusted publisher can publish its next version.
+
+If npm succeeds but the GitHub job fails, use **Re-run failed jobs** to retry only that job.
+Matching draft assets are reused; existing notes and unrelated attachments are preserved.
+Conflicting tags/assets or incomplete published releases fail without overwriting them.
+Inspect those conflicts before resolving them manually; do not republish an existing npm version.

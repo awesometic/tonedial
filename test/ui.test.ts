@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
 import { COMMAND_NAMES, VERSION, run } from "../src/cli.ts";
 import { AXIS_DEFAULT, AXIS_GROUP, AXIS_KIND, AXIS_ORDER } from "../src/core/anchors.ts";
 import { LANGUAGES, catalogue } from "../src/core/i18n.ts";
-import { SETTING_KEYS } from "../src/core/config.ts";
+import { parseConfig, SETTING_KEYS } from "../src/core/config.ts";
 
 /** The catalogue for the unit-level render calls. Language coverage is asserted separately. */
 const EN = catalogue("en").cli;
@@ -319,14 +319,17 @@ test("an unreadable import keeps its path copyable and reflows the diagnostic", 
   }
 });
 
-test("default show keeps axes before settings and fits an 80 by 24 viewport", async () => {
+test("default show keeps all axes before complete role settings within 80 columns", async () => {
   await initializeState();
   await cli("use", "bratty-kid");
   out = [];
   await run(["show"], { HOME: home, TONEDIAL_HOME: join(home, "state"), PATH: "", COLUMNS: "80" }, join(home, "project"), false);
   const screen = out.join("");
   const lines = screen.trimEnd().split("\n");
-  assert.ok(lines.length <= 24, `show is ${lines.length} physical lines:\n${screen}`);
+  for (const line of lines) assert.ok(maxCells(line) <= 79 || isUnbreakable(line), line);
+  const role = parseConfig(readFileSync(join(home, "state", "config.json"), "utf8")).persona;
+  assert.ok(screen.replace(/\s+/g, " ").includes(role.agent!));
+  assert.ok(screen.replace(/\s+/g, " ").includes(role.user!));
   assert.ok(screen.indexOf("bravado") < screen.indexOf(EN.artifact.settingsHeading), "settings buried the last axis");
   const header = lines.find((line) => line.includes(EN.artifact.currentLevel));
   assert.ok(header?.includes(EN.artifact.defaultLevel), "the complete header identifies ToneDial defaults");
@@ -340,7 +343,7 @@ test("default show keeps axes before settings and fits an 80 by 24 viewport", as
   out = [];
   assert.equal(await run(["show"], { HOME: home, TONEDIAL_HOME: join(home, "state"), PATH: "", COLUMNS: "80" }, join(home, "project"), false), 0);
   const withPersona = out.join("");
-  assert.ok(withPersona.trimEnd().split("\n").length <= 24, withPersona);
+  for (const line of withPersona.trimEnd().split("\n")) assert.ok(maxCells(line) <= 79 || isUnbreakable(line), line);
   assert.ok(withPersona.includes("guide") && withPersona.includes("friend"), "the viewport hid the persona");
   assert.ok(withPersona.includes("bravado") && withPersona.includes('tonedial save "My Tone"'), "the viewport hid an axis or save action");
 });
@@ -363,7 +366,7 @@ test("show and explain stack cleanly at 60 columns without changing saved state"
 });
 
 for (const language of LANGUAGES) {
-  test(`show keeps role descriptions compact by default and exposes wrapped text in ${language}`, async () => {
+  test(`show exposes role descriptions and counts within terminal width in ${language}`, async () => {
     await initializeState();
     assert.equal(await cli("set", `language=${language}`), 0, err.join(""));
     out = [];
@@ -377,11 +380,11 @@ for (const language of LANGUAGES) {
 
     out = [];
     assert.equal(await run(["show"], env, join(home, "project"), false), 0);
-    const compact = out.join("");
-    assert.ok(visible(compact).includes(copy.persona.descriptionCounts([...user].length, [...agent].length, 200)));
-    assert.equal(compact.includes(user), false);
-    assert.equal(compact.includes(agent), false);
-    for (const line of compact.trimEnd().split("\n")) assert.ok(maxCells(line) <= 59 || isUnbreakable(line), line);
+    const shown = out.join("");
+    assert.ok(visible(shown).includes(copy.persona.descriptionCounts([...user].length, [...agent].length, 200)));
+    assert.ok(visible(shown).includes(user));
+    assert.ok(visible(shown).includes(agent));
+    for (const line of shown.trimEnd().split("\n")) assert.ok(maxCells(line) <= 59 || isUnbreakable(line), line);
 
     out = [];
     assert.equal(await run(["show", "--verbose"], env, join(home, "project"), false), 0);
@@ -496,7 +499,7 @@ test("every command's --json envelope keeps the keys a consumer reads", async ()
       axes: "object", defaults: "object", kinds: "object", groups: "object",
       riskAxes: "array", riskThresholds: "object", persona: "object", safeword: "null",
       speech_level: "string", language: "string",
-      chars: "number", cap: "number", artifact: "object",
+      chars: "number", artifact: "object",
     },
     list: { presets: "array", active: "string", skipped: "array" },
     use: {
@@ -504,8 +507,7 @@ test("every command's --json envelope keeps the keys a consumer reads", async ()
       riskAxes: "array", safeword: "null", notice: "object", project: "null",
     },
     compile: {
-      path: "string", written: "boolean", chars: "number", target: "number",
-      cap: "number", overTarget: "boolean", overCap: "boolean",
+      path: "string", written: "boolean", chars: "number",
     },
   };
   await initializeState();

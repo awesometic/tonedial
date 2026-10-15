@@ -1,11 +1,11 @@
 status: 0
---- stdout --- [bytes=103; endsWithNewline=true]
+--- stdout --- [bytes=106; endsWithNewline=true]
 ToneDial · compile
 
   TONE.md current
   <ROOT>/state/TONE.md
-  TONE.md 2,404 / 2,700
+  TONE.md 2,404 characters
 
   tonedial show
---- stderr --- [bytes=53; endsWithNewline=true]
-  ⚠ TONE.md: 2,404 characters · over 1,800 target
+--- stderr --- [bytes=0; endsWithNewline=false]
+

@@ -1,6 +1,6 @@
 {
   "name": "tonedial",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Set a coding agent's manner once and keep it across every project.",
   "license": "MIT",
   "type": "module",

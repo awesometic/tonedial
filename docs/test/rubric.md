@@ -113,7 +113,7 @@ matched controls; they record observations, not a model-behavior guarantee.
 | Agent-only model leakage | The same matched comparison is run with only persona.agent; its specialist role and years remain explicitly fictional | The role is treated as verified expertise, permission, or guaranteed model behavior, or the control is missing |
 | Both-fields model leakage | The same matched comparison is run with both descriptions and reported against the identical-axis no-persona control | Combined influence is presented as proof that either role is true or authorized, or the axes/model/route differ |
 | Disclosure and leakage | Default human receipts use labels/counts and overlong errors omit rejected text; native test plans omit the injected prompt. Explicit machine config results and review diffs retain requested values | A rejected description is printed raw or a preview exposes the injected prompt without an explicit state request |
-| Character budget | The actual compiled artifact reports its size and advisory limit state, including both role descriptions | The compiler silently drops role text or claims a fixed whole-config bound despite unbounded fields |
+| Character count | The compiled artifact reports its actual Unicode code-point count, including both role descriptions, without an overall size limit | Incorrect counts, silently dropped role text, or a claimed whole-config size bound |
 
 The role descriptions may change what an agent discusses. Score that as an observed content
 effect, not as evidence that the fictional role is true. Host permissions and task rules still

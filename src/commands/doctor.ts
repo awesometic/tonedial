@@ -27,7 +27,7 @@ import {
   type SeedState,
 } from "../core/seeds.ts";
 import { toCompileInput } from "../core/resolve.ts";
-import { budget, humanText, nextStep, receiptLines, recoveryRollbackLines, section } from "../ui/format.ts";
+import { artifactSize, humanText, nextStep, receiptLines, recoveryRollbackLines, section } from "../ui/format.ts";
 import { wrap } from "../ui/width.ts";
 import { applyRollback, assertFresh, planChange, previewRollback, type Change } from "../wiring/apply.ts";
 import { confirm } from "../ui/prompt.ts";
@@ -713,7 +713,7 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true, showCodexActi
       onDisk === null
         ? { name: "TONE.md", state: "problem", detail: ctx.t.doctor.toneNotWritten, repair: "tonedial compile" }
         : onDisk === expected
-          ? { name: "TONE.md", state: "ok", detail: budget(measure(expected), ctx.t) }
+          ? { name: "TONE.md", state: "ok", detail: artifactSize(measure(expected), ctx.t) }
           : {
               name: "TONE.md",
               state: "problem",

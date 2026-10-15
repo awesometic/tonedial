@@ -6,8 +6,7 @@ import { compile, measure, type SizeReport } from "../core/compile.ts";
 import { ConfigError, defaultConfig, parseConfig, type Config } from "../core/config.ts";
 import { toCompileInput } from "../core/resolve.ts";
 import { contextArtifactTargets } from "../core/seeds.ts";
-import type { Messages } from "../core/i18n.ts";
-import { budget, humanText, nextStep, num } from "../ui/format.ts";
+import { artifactSize, humanText, nextStep } from "../ui/format.ts";
 import { wrap } from "../ui/width.ts";
 import { confirm } from "../ui/prompt.ts";
 import { captureRawEntry, gate, planChange, rawReadChange, type Change } from "../wiring/apply.ts";
@@ -74,14 +73,6 @@ export async function applyPlanned(
   return result;
 }
 
-export function sizeWarning(size: SizeReport, t: Messages): string[] {
-  // It warns and never fails: a user is entitled to switch every axis on, and a budget that
-  // refuses to compile is a different product.
-  if (size.overCap) return [t.artifact.overCap(num(size.chars), num(size.cap))];
-  if (size.overTarget) return [t.artifact.overTarget(num(size.chars), num(size.target))];
-  return [];
-}
-
 export async function runCompile(ctx: Ctx): Promise<CommandResult> {
   const check = ctx.flags.check;
   const { change: configChange, config } = planConfig(ctx);
@@ -124,10 +115,10 @@ export async function runCompile(ctx: Ctx): Promise<CommandResult> {
     lines: [
       ...wrap(status, ctx.ui.width - 2).map(line => `  ${ctx.ui.bold((!check || current ? ctx.ui.success : ctx.ui.warn)(line))}`),
       `  ${humanText(ctx.paths.tone)}`,
-      `  ${size.overCap ? ctx.ui.error(budget(size, ctx.t)) : ctx.ui.dim(budget(size, ctx.t))}`,
+      `  ${ctx.ui.dim(artifactSize(size, ctx.t))}`,
       ...nextStep(check && !current ? "tonedial compile" : "tonedial show", ctx.ui),
     ],
     json: { path: ctx.paths.tone, agentsPath: ctx.paths.agents, written: !check, ...size },
-    warnings: sizeWarning(size, ctx.t),
+    warnings: [],
   };
 }

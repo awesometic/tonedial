@@ -6,7 +6,6 @@ ToneDial · address
   persona.self_ref  형 → self
   persona.user_ref  동생 → user
   TONE.md 생성됨
---- stderr --- [bytes=259; endsWithNewline=true]
+--- stderr --- [bytes=209; endsWithNewline=true]
   ⚠ 페르소나에는 고정된 행동 규칙이 없으며 축 설정이 우선합니다. 설명은
     내용에도 영향을 줄 수 있습니다. 역할극은 자격이나 권한을 주지 않습니다.
-  ⚠ TONE.md: 2,253자 · 목표 1,800자 초과

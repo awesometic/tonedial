@@ -1,0 +1,11 @@
+status: 0
+--- stdout --- [bytes=225; endsWithNewline=true]
+ToneDial · persona
+
+  설정 저장됨
+  persona.agent  가상 에이전트 역할 · 64자 → 가상 에이전트 역할 · 18자
+  persona.user   사용자 배경 · 22자 → 사용자 배경 · 9자
+  TONE.md 생성됨
+--- stderr --- [bytes=209; endsWithNewline=true]
+  ⚠ 페르소나에는 고정된 행동 규칙이 없으며 축 설정이 우선합니다. 설명은
+    내용에도 영향을 줄 수 있습니다. 역할극은 자격이나 권한을 주지 않습니다.

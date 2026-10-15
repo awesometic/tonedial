@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=3281; endsWithNewline=true]
+--- stdout --- [bytes=3352; endsWithNewline=true]
 tonedial — set a coding agent's manner once and keep using it
 
 tonedial <command> [options]
@@ -11,8 +11,9 @@ Set up your tone, then inspect it:
 Tone
   set <axis>=<level> …  change axes, role or settings · bare opens dial
   address [self user]    set names for each party · bare prompts
+  persona [agent user]   set agent and user roles · bare prompts
   reset [axis]           reset an axis · bare resets all axes
-  show [slug]            current settings · slug previews saved axes
+  show [slug]            current settings · slug previews a saved profile
   test [claude|codex]    try saved settings or a preset in a new conversation
 
 Preset library

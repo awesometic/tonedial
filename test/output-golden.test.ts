@@ -41,6 +41,7 @@ const scenarios: Record<string, Scenario> = {
   set: initialized(() => ["set", "warmth=5"]),
   test: initialized(() => ["test", "codex", "--dry-run"]),
   address: initialized(() => ["address", "self", "user"]),
+  persona: initialized(() => ["persona", "Fictional reviewer", "Developer"]),
   reset: {
     ...initialized(() => ["reset", "warmth"]),
     setup: async (workspace, language) => {
