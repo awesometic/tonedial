@@ -39,6 +39,7 @@ All locale assets live in `docs/media/readme/<language>/`:
 | `voice-examples.json` | Seven recorded replies and complete inputs/hashes |
 | `voice-examples.svg` | README: Royal Advisor + Ego Sword |
 | `voice-<preset>.svg` | Gallery: one conversation |
+| `use-cases.json` | Three README recipes, complete commands and recorded Codex replies |
 
 Use lowercase locale tags and kebab-case semantic stems: `ko/dial.svg`, not `dial-ko.svg`.
 Locales share stems, not necessarily extensions; preserve the appropriate PNG/JPG/SVG/JSON format.
@@ -75,7 +76,8 @@ Run generation/tests with disposable state; layout evidence does not prove nativ
 
 ## Recorded conversations
 
-The actual `tonedial test` handoff and a disposable exec adapter around native Codex produced the samples.
+The seven bundled-character samples came from the actual `tonedial test` handoff
+and a disposable exec adapter around native Codex.
 There is no product capture API or provider-UI imitation.
 Each locale JSON owns all seven **first completed** replies, complete compiler inputs and tone/reply hashes.
 Each README features Royal Advisor and Ego Sword; `docs/EXAMPLES.md` and its four localized pages show all seven images with expandable verbatim text.
@@ -92,3 +94,16 @@ Preserve each locale's actual date, product revision, model/client/effort, faile
 Never polish replies, rerun a completed response for preferred wording or inherit another locale's capture evidence.
 Keep provider journals/auth material private; samples prove neither hook activation nor scored adherence.
 The consumer test checks locale links, seven raw replies/hashes, current inputs, page text, featured selection and deterministic SVGs.
+
+The three custom recipes below each README's opening gallery are recorded separately in `use-cases.json`.
+Each locale owns its actual first completed replies to one shared question, full compiler inputs,
+copyable CLI commands and native invocation metadata.
+Run each recipe through the native interactive `tonedial test codex` client with `gpt-6.1-sol` and `high`.
+Keep the opening prompt unchanged, wait for its response, then enter the question as a separate turn.
+Use invocation-only model flags without saving personal defaults;
+record the native session's observed model, reasoning effort and turn count.
+Keep session journals private and publish only the selected verbatim response and relevant provenance.
+Keep the commands and verbatim Markdown replies aligned with that locale's README.
+The consumer test exercises every command with disposable state and checks the resulting compiler input and transcript hashes.
+These dialogue-only examples neither edit a project nor establish hook activation or scored adherence;
+preserve their recorded deviations as well as their replies.
