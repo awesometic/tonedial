@@ -194,6 +194,22 @@ test("the speech-level line comes after any composite, not before it", () => {
   assert.equal(rules.at(-4), "- Grumble without being passive; make the complaint itself clear.");
 });
 
+test("rough changes only the register request, preserving configured address and independent axes", () => {
+  const base = load("persona-leak-b").config;
+  const plainRule = "- In languages with honorifics, use plain address forms even with formal wording.";
+  const roughRule = "- In languages with honorifics, use rough, cheeky non-honorific sentence endings; keep the configured address terms and the selected formality, warmth, profanity and playfulness levels.";
+  for (const [formality, warmth, profanity, playfulness] of [[5, 1, 1, 1], [1, 5, 5, 5]] as const) {
+    const config: Config = { ...base, axes: { ...base.axes, formality, warmth, profanity, playfulness }, speech_level: "rough" };
+    const before = structuredClone(config);
+    const plain = compile({ ...config, speech_level: "plain" });
+    const rough = compile(config);
+    assert.deepEqual(config, before);
+    assert.ok(plain.includes(plainRule));
+    assert.equal(rough, plain.replace(plainRule, roughRule), "rough must not rewrite address, persona, axes, controls or permission scope");
+    assert.deepEqual(check(config.axes), []);
+  }
+});
+
 test("a persona field left unspecified is omitted, not rendered as a word", () => {
   // The spec stores "unspecified" as the default for age and gender, and section 6 rule 1 says
   // such a field is omitted. Gating on truthiness alone shipped "You are in your unspecified."
@@ -235,6 +251,7 @@ test("an input the compiler cannot honour throws rather than emitting nonsense",
   delete missing.warmth;
   assert.throws(bad({ axes: missing as Axes }), RangeError, "a missing axis");
   assert.throws(bad({ speech_level: "casual" as never }), RangeError, "an unknown speech_level");
+  assert.throws(bad({ speech_level: "toString" as never }), RangeError, "an inherited name is not a speech level");
   assert.throws(bad({ safeword: "   " }), RangeError, "a blank safeword would match everything");
 });
 

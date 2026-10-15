@@ -211,7 +211,7 @@ function titleRow(name: string, sizeLabel: string, ctx: Ctx): string {
  * painted and an escape sequence measures as characters while occupying no cell.
  */
 function stateRow(values: ReturnType<typeof settingValues>, t: Messages): string {
-  const safeword = values.safeword ? t.settings.safewordSet(humanText(values.safeword)).split(" — ")[0]! : t.settings.noSafeword.split(" — ")[0]!;
+  const safeword = values.safeword ? t.settings.safewordSet(humanText(values.safeword)) : t.settings.noSafeword;
   return `${safeword} · ${t.settings.register(values.speech_level)}`;
 }
 

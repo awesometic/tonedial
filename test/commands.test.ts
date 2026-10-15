@@ -767,14 +767,14 @@ test("use restores a bundled profile's complete settings, including clearing the
   assert.deepEqual(config().axes, applyPreset(BUNDLED.find((p) => p.slug === "eager-sycophant")!));
 });
 
-test("use announces safeword scope and advisory risky axes", async () => {
+test("use reports the safeword and advisory risky axes without repeating help", async () => {
   await initializeState();
   assert.equal(await cli("set", "safeword=연기 그만"), 0);
   out = [];
   assert.equal(await cli("use", "tough-love"), 0);
   const receipt = flat();
-  assert.match(receipt, /safeword 연기 그만 .*requests one plain answer/, "the safeword applies to one plain answer");
-  assert.match(receipt, /neither switches tone off nor grants authority/, "the safeword grants no permission");
+  assert.match(receipt, /safeword 연기 그만/, "the current safeword remains visible");
+  assert.doesNotMatch(receipt, /requests one plain answer|grants authority/, "ordinary receipts do not repeat setting help");
   assert.ok(!receipt.includes(EN.notice.risk), "a valid selection must not repeat the general product disclaimer");
   assert.match(receipt, /! critique · harsh language/);
   assert.doesNotMatch(stdout(), /guards|G[1-4]/i, "retired guard state is absent");
@@ -851,14 +851,17 @@ test("slugs are lowercase Latin letters, digits, and dashes", async () => {
 test("export and import round-trip full profiles without activating them", async () => {
   await initializeState();
   assert.equal(await cli("set", "safeword=연기 그만", "persona.note=A senior engineer.",
-    "persona.user=likes small tools", "persona.agent=plain-speaking reviewer"), 0);
+    "persona.user=likes small tools", "persona.agent=plain-speaking reviewer", "speech_level=rough"), 0);
   assert.equal(await cli("use", "terse-operator"), 0);
   assert.equal(await cli("save", "Portable"), 0);
   out = [];
   assert.equal(await cli("export", "portable"), 0);
   const exported = stdout();
   assert.equal(JSON.parse(exported).schema, 2);
-  assert.deepEqual(JSON.parse(exported).settings, { persona: config().persona, safeword: "연기 그만", speech_level: "auto" });
+  assert.deepEqual(JSON.parse(exported).settings, { persona: config().persona, safeword: "연기 그만", speech_level: "rough" });
+  assert.equal(await cli("set", "speech_level=plain"), 0);
+  const beforeImport = readFileSync(paths().config);
+  const beforeArtifact = tone();
 
   const sourceDirectory = join(home, `input files with spaces${" source".repeat(15)}`);
   mkdirSync(sourceDirectory);
@@ -876,6 +879,11 @@ test("export and import round-trip full profiles without activating them", async
   assert.equal(await cli("import", file), 0);
   assert.ok(stdout().includes(EN.preset.imported("portable", true)));
   assert.equal(stderr(), "", "a successful replacement is a receipt, not a warning");
+  assert.deepEqual(readFileSync(paths().config), beforeImport, "import must not activate the rough register");
+  assert.equal(tone(), beforeArtifact);
+  assert.equal(await cli("use", "portable"), 0);
+  assert.equal(config().speech_level, "rough");
+  assert.equal(tone(), compile(toCompileInput(config())));
 });
 
 test("import refuses to replace a bundled preset", async () => {
@@ -986,7 +994,7 @@ test("create saves and switches complete profiles while interface language stays
   out = [];
   assert.equal(await cli("create", "내 자비스", "--slug", "my-jarvis", "warmth=2",
     "persona.self_ref=저", "persona.user_ref=사용자님", "persona.user=Maintains services",
-    "persona.agent=A fictional reviewer", "speech_level=polite", "--auto", "--json"), 0, stderr());
+    "persona.agent=A fictional reviewer", "speech_level=rough", "--auto", "--json"), 0, stderr());
   const result = JSON.parse(stdout());
   assert.equal(result.created, true);
   assert.ok(result.diff.some((entry: { path: string }) => entry.path === paths().config));
@@ -997,6 +1005,7 @@ test("create saves and switches complete profiles while interface language stays
     settings: { persona: saved.persona, safeword: saved.safeword, speech_level: saved.speech_level } });
   assert.equal(saved.preset, "my-jarvis");
   assert.equal(saved.unsaved, false);
+  assert.equal(saved.speech_level, "rough");
   assert.equal(saved.persona.agent, "A fictional reviewer");
   assert.equal(saved.persona.user, "Maintains services");
   assert.deepEqual(saved.persona.address, { self_ref: "저", user_ref: "사용자님" });
@@ -1009,7 +1018,7 @@ test("create saves and switches complete profiles while interface language stays
   assert.equal(await cli("use", "my-jarvis"), 0);
   assert.deepEqual(config().persona, saved.persona);
   assert.equal(config().safeword, saved.safeword);
-  assert.equal(config().speech_level, "polite");
+  assert.equal(config().speech_level, "rough");
   assert.equal(config().language, "ko");
   assert.equal(await cli("use", "alternate"), 0);
   assert.equal(config().persona.agent, "Another reviewer");

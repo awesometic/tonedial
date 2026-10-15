@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=1121; endsWithNewline=true]
+--- stdout --- [bytes=1137; endsWithNewline=true]
 ToneDial · create
 
 
@@ -34,7 +34,7 @@ ToneDial · create
   fictional agent role: A caring older brother who helps his sibling through
   problems. Familiar expressions include 'hey, little sibling' and 'your big
   brother has your back'. (151/200 characters)
-  no safeword · register plain
+  no safeword · register plain (non-honorific)
   Saved preset: example
   Example  7 non-default axes
   TONE.md generated

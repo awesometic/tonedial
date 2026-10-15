@@ -121,6 +121,7 @@ interpolating it into shell code.
 | Persona manner or role note | \`tonedial set "persona.note=Patient guide" --json\` |
 | Safeword phrase | \`tonedial set "safeword=plain answer please" --json\` |
 | Honorific register system | \`tonedial set speech_level=polite --json\` |
+| Rough, cheeky non-honorific endings | \`tonedial set speech_level=rough --json\` |
 
 Age bands are \`unspecified\`, \`teens\`, \`20s\`, \`30s\`, \`40s\`, and \`50s+\`.
 Gender values are \`unspecified\`, \`masculine\`, \`feminine\`, and \`neutral\`.
@@ -141,9 +142,11 @@ ToneDial has no guard toggle or automatic emergency register. All axis levels 1�
 the user can request. Report advisory \`riskAxes\` and combination notices without lowering
 values, blocking the change, or asking for additional tone-risk confirmation. The host's task
 and permission rules still apply independently.
-For \`speech_level\`, choose \`polite\`, \`plain\`, or \`auto\` only when the user requests that
+For \`speech_level\`, choose \`auto\`, \`polite\`, \`plain\`, or \`rough\` only when the user requests that
 register system. \`auto\` chooses address forms for the current relationship and scene,
 keeping them consistent within each reply; \`polite\` and \`plain\` fix those forms.
+\`plain\` means ordinary non-honorific forms; \`rough\` requests rough, cheeky non-honorific
+sentence endings. Preserve the configured address terms and every independent axis.
 It has no effect where the language lacks an honorific distinction. A request for more or
 less formality changes wording and distance within the chosen forms, without silently changing
 \`speech_level\`. Familiar polite, formal plain and affectionate swearing are valid combinations;
@@ -247,7 +250,7 @@ Report the movement back to the user in their own terms, from the \`moves\` fiel
 - "stop flattering me" → \`flattery=1\`. Not \`warmth\`, which is a different observable.
 - "be brief" → \`verbosity\` down. Change \`care\` only for requested coverage or organization changes.
 - "more casual" → \`formality\` down. Change the register system only on an explicit request,
-  such as "use plain forms" → \`speech_level=plain\`.
+  such as "use plain forms" → \`speech_level=plain\`, or "use rough, cheeky plain forms" → \`speech_level=rough\`.
 
 For a named preset, run \`tonedial list --json\` then \`tonedial use <slug> --json\`.
 An explicit agent character or role request uses \`persona.agent\`; an explicit request to
@@ -398,9 +401,11 @@ do not prove actual host activation or model compliance.
 
 ## Settings that are not axes
 
-\`speech_level\` picks address forms — \`auto\`, \`polite\`, or \`plain\` — where the language
+\`speech_level\` picks address forms — \`auto\`, \`polite\`, \`plain\`, or \`rough\` — where the language
 has an honorific distinction, and does nothing where it does not. Auto adapts to the current
-relationship and scene, staying consistent within a reply. \`formality\` sets distance inside
+relationship and scene, staying consistent within a reply. Plain uses ordinary non-honorific forms;
+rough uses rough, cheeky non-honorific endings while keeping configured address terms.
+\`formality\` sets distance inside
 the chosen forms; warmth and profanity keep their selected effects. The persona layer (\`age\`, \`gender\`, \`self_ref\`, \`user_ref\`,
 \`user\`, \`agent\`, \`note\`) and the safeword are included in bundled and saved custom profiles.
 \`persona.user\` is user context and \`persona.agent\` a fictional agent role, each limited to
@@ -421,7 +426,7 @@ Profanity grades actual swearing; bravado grades effort claims.
  * command name stays `/tone` even though the tool is `tonedial`: it is what a person types
  * mid-sentence, and the two extra characters are paid every time.
  */
-export const TONE_COMMAND_VERSION = 10;
+export const TONE_COMMAND_VERSION = 11;
 
 export const TONE_COMMAND_MD = `---
 description: Check, change, or reload this agent's tone, preset, or ToneDial settings

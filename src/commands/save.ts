@@ -71,7 +71,7 @@ export async function savePreset(
         address?.user_ref ? ctx.t.persona.callsYou(humanText(address.user_ref)) : ""].filter(Boolean).join(" · "),
       ...(["user", "agent"] as const).map((field) =>
         `${ctx.t.persona.descriptionFull(field, humanText(config.persona[field] ?? ""))} (${ctx.t.create.descriptionCount([...(config.persona[field] ?? "")].length, PERSONA_DESCRIPTION_MAX)})`),
-      `${(config.safeword ? ctx.t.settings.safewordSet(humanText(config.safeword)) : ctx.t.settings.noSafeword).split(" — ")[0]} · ${ctx.t.settings.register(config.speech_level)}`,
+      `${config.safeword ? ctx.t.settings.safewordSet(humanText(config.safeword)) : ctx.t.settings.noSafeword} · ${ctx.t.settings.register(config.speech_level)}`,
     ];
     for (const detail of details.filter(Boolean)) review.push(...wrap(detail, ctx.ui.width - 2).map((line) => `  ${line}`));
   }

@@ -1,0 +1,24 @@
+{
+  "name": "rough",
+  "chars": 1596,
+  "config": {
+    "preset": null,
+    "axes": {
+      "formality": 3,
+      "verbosity": 3,
+      "profanity": 1,
+      "playfulness": 1,
+      "critique": 3,
+      "flattery": 1,
+      "warmth": 3,
+      "conviction": 3,
+      "care": 3,
+      "compliance": 3,
+      "refusal": 1,
+      "bravado": 1
+    },
+    "speech_level": "rough",
+    "persona": null,
+    "safeword": null
+  }
+}

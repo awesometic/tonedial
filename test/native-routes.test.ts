@@ -846,6 +846,7 @@ test("installed explicit-setting examples use the CLI without changing neighbour
     (config) => { config.persona.note = "Patient guide"; },
     (config) => { config.safeword = "plain answer please"; },
     (config) => { config.speech_level = "polite"; },
+    (config) => { config.speech_level = "rough"; },
   ];
   assert.equal(examples.length, changes.length, "each documented example needs its independent state expectation");
   for (const [index, example] of examples.entries()) {

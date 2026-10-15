@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=1287; endsWithNewline=true]
+--- stdout --- [bytes=1303; endsWithNewline=true]
   ToneDial · show · Example (저장하지 않은 변경)              TONE.md 2,213자
 
                          현재      ToneDial 기본값 · ! 위험 말투
@@ -21,7 +21,7 @@ status: 0
   가상 에이전트 역할: 동생을 다정하게 챙기는 형. '야, 동생', '형이 같이
   봐줄게', '밥은 챙겨 먹었냐' 같은 익숙한 표현을 쓴다.
   사용자 배경: 형에게 고민을 나누고 도움을 받는 동생.
-  세이프워드 없음 · 말씨 plain
+  세이프워드 없음 · 말씨 plain (일반 반말)
   화면 언어 ko
   연결: 없음
 

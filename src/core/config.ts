@@ -15,7 +15,7 @@ export const LEGACY_CONFIG_SCHEMA = 1 as const;
 
 export const AGE_BANDS = ["unspecified", "teens", "20s", "30s", "40s", "50s+"] as const;
 export const GENDERS = ["unspecified", "masculine", "feminine", "neutral"] as const;
-export const SPEECH_LEVELS = ["auto", "polite", "plain"] as const;
+export const SPEECH_LEVELS = ["auto", "polite", "plain", "rough"] as const;
 
 export const WIRING_SCOPES = ["global", "project"] as const;
 export type WiringScope = (typeof WIRING_SCOPES)[number];

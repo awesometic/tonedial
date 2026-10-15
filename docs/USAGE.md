@@ -87,7 +87,7 @@ tonedial persona                   # guided agent role, then user role/backgroun
 tonedial persona "A fictional SRE specialist" "A developer maintaining services"
 tonedial set persona.user="I maintain services and prefer direct trade-offs"
 tonedial set persona.agent="A fictional SRE specialist with 12 years' experience; speaks plainly"
-tonedial set speech_level=polite      # auto (default) | polite | plain
+tonedial set speech_level=polite      # auto (default) | polite | plain | rough
 tonedial set "safeword=plain answer please"
 tonedial set language=ko              # en | ko | ja | zh (Simplified) | es
 tonedial save                         # also update the selected user profile
@@ -132,7 +132,7 @@ Wiring, file paths and internal ownership records are diagnosed with `doctor`, o
 | `persona.age` | Age band | `unspecified`, `teens`, `20s`, `30s`, `40s`, `50s+`, or a number stored as a band |
 | `persona.gender` | Gender presentation | `unspecified`, `masculine`, `feminine`, `neutral` |
 | `persona.note` | Additional persona text | Existing free-text behavior; empty assignment clears |
-| `speech_level` | Honorific address forms | `auto`, `polite`, `plain` |
+| `speech_level` | Honorific address forms | `auto`, `polite`, `plain`, `rough` |
 | `safeword` | Request one plain answer | Empty assignment clears; grants no permission |
 | `language` | CLI interface | `en`, `ko`, `ja`, `zh`, `es`; `init` also accepts `--lang` |
 
@@ -148,9 +148,25 @@ The output-style header requests this scope but does not filter role meaning or 
 Explicit config JSON and review diffs can contain the descriptions; native test plans omit the injected prompt.
 
 `speech_level` chooses address forms; `formality` changes wording and distance within them.
-Auto adapts to the relationship/scene between replies and requests consistent forms within each reply.
+
+| Value | Requested forms |
+|---|---|
+| `auto` | Choose for the current relationship and scene; stay consistent within each reply |
+| `polite` | Polite honorific forms, including with familiar wording |
+| `plain` | Ordinary non-honorific forms, including with formal wording |
+| `rough` | Rough, cheeky non-honorific sentence endings; keep the configured names and address terms |
+
+```bash
+tonedial set speech_level=rough
+tonedial get speech_level
+```
+
+`rough` changes the register request, preserving the selected formality, warmth, profanity and playfulness.
+It does not add swearing, stronger criticism or role idioms by itself.
+The register request has no effect where a language lacks the relevant honorific distinction.
 Familiar polite, formal plain and affectionate swearing remain valid: warmth and profanity are independent.
 These are prompt requests, not measured adherence.
+Profiles containing `rough` require a CLI that supports that value; older versions reject them.
 
 ### Make the character louder
 

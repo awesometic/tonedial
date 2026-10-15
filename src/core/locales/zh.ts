@@ -93,7 +93,7 @@ const messages: Messages = {
     slug: "标识名（小写字母、数字、连字符）",
     user: "你的角色或背景（最多 200 字符）",
     agent: "代理角色（最多 200 字符）",
-    register: "敬语形式（auto, polite, plain）",
+    register: "敬语形式（auto, polite, plain, rough）",
     safeword: "安全词",
     needsName: "create 需要显示名称。请在终端运行 tonedial create，或提供名称、可选的 key=value 设置及 --auto。",
     exists: (slug) => `${slug}：预设已存在。请选择其他标识名，或用 save 更新。`,
@@ -161,9 +161,9 @@ const messages: Messages = {
     speechLevel: (options) => `speech_level · 可选：${options.join(", ")}`,
     safewordShort: (phrase) => `安全词 ${phrase}：太短，可能误触发`,
     safewordSet: (phrase) =>
-      `安全词 ${phrase} — 在感觉不对时请求一次平实回答，不会关闭语气或授予权限`,
-    noSafeword: "未设置安全词 — 仍可通过技能请求平实回答",
-    register: (level) => `敬语形式 ${level}`,
+      `安全词 ${phrase}`,
+    noSafeword: "未设置安全词",
+    register: (level) => `敬语形式 ${level} (${({ auto: "按关系选择", polite: "敬语", plain: "普通非敬语", rough: "粗鲁的非敬语" })[level]})`,
   },
   artifact: {
     size: (chars) => `TONE.md ${chars} 字符`,
@@ -658,7 +658,7 @@ export const zh: Catalogue = {
   },
   settingHints: {
     safeword: "对一条消息请求一次平实回答的短语",
-    speech_level: "auto：按关系选择 · polite：敬语 · plain：普通非敬语 · 措辞和距离感由 formality 调整",
+    speech_level: "auto：按关系选择 · polite：敬语 · plain：普通非敬语 · rough：粗鲁且带有不逊语气的非敬语 · 措辞和距离感由 formality 调整",
     language: "CLI 界面语言 · 与代理回答语言无关",
     "persona.age": "模型可能联想的年龄段",
     "persona.gender": "模型可能联想的性别",

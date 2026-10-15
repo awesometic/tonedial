@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=1153; endsWithNewline=true]
+--- stdout --- [bytes=1169; endsWithNewline=true]
   ToneDial · show · Caring Brot… (unsaved changes)  TONE.md 2,292 characters
 
                          Current   ToneDial default · ! risky tone
@@ -22,7 +22,7 @@ status: 0
   fictional agent role: Fictional database specialist with ten years of
   experience
   user context: Developer who likes concise technical answers
-  no safeword · register plain
+  no safeword · register plain (non-honorific)
   Interface en
   Connections: none
 

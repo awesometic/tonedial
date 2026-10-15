@@ -93,7 +93,7 @@ const messages: Messages = {
     slug: "スラッグ（英小文字・数字・ハイフン）",
     user: "あなたの役割や背景（200文字まで）",
     agent: "エージェントの役割（200文字まで）",
-    register: "敬語区分（auto, polite, plain）",
+    register: "敬語区分（auto, polite, plain, rough）",
     safeword: "合言葉",
     needsName: "create には表示名が必要です。ターミナルで tonedial create を実行するか、名前と任意の key=value 設定を --auto とともに指定してください。",
     exists: (slug) => `${slug}: 既に存在します。別のスラッグを選ぶか、save で更新してください。`,
@@ -161,9 +161,9 @@ const messages: Messages = {
     speechLevel: (options) => `speech_level · 選択肢：${options.join(", ")}`,
     safewordShort: (phrase) => `合言葉 ${phrase}: 短すぎるため、意図せず反応する可能性があります`,
     safewordSet: (phrase) =>
-      `合言葉 ${phrase} — 違和感があるときに一度だけ平易な回答を求めます。口調の無効化や権限の付与はしません`,
-    noSafeword: "合言葉なし — 平易な回答はスキルからのみ要求できます",
-    register: (level) => `敬語区分 ${level}`,
+      `合言葉 ${phrase}`,
+    noSafeword: "合言葉なし",
+    register: (level) => `敬語区分 ${level} (${({ auto: "関係に合わせる", polite: "敬語", plain: "通常の常体", rough: "荒っぽい常体" })[level]})`,
   },
   artifact: {
     size: (chars) => `TONE.md ${chars}文字`,
@@ -658,7 +658,7 @@ export const ja: Catalogue = {
   },
   settingHints: {
     safeword: "1つのメッセージに一度だけ平易な回答を求める文句",
-    speech_level: "auto: 関係に合わせる · polite: 敬語 · plain: 通常の常体 · 表現の格式と距離感は formality で調整",
+    speech_level: "auto: 関係に合わせる · polite: 敬語 · plain: 通常の常体 · rough: 荒っぽく生意気な常体 · 表現の格式と距離感は formality で調整",
     language: "CLIの表示言語 · エージェントの回答言語とは別",
     "persona.age": "モデルに連想させる年齢層",
     "persona.gender": "モデルに連想させるジェンダー",

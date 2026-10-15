@@ -183,6 +183,7 @@ export const SPEECH_LEVEL = {
   auto: "In languages with honorifics, choose address forms for the current relationship and scene; keep them consistent within each reply.",
   polite: "In languages with honorifics, use polite address forms even with familiar wording.",
   plain: "In languages with honorifics, use plain address forms even with formal wording.",
+  rough: "In languages with honorifics, use rough, cheeky non-honorific sentence endings; keep the configured address terms and the selected formality, warmth, profanity and playfulness levels.",
 } as const;
 
 export const CONTROLS = {

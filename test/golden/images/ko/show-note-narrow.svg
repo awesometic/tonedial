@@ -26,7 +26,7 @@
   사용자 배경: 형에게 고민을 나누고 도움을 받는 동생.
   추가 말투·역할: 설명은 간결하게 정리하고 불확실한 점과
   다음에 할 일을 빠짐없이 알려 주세요.
-  세이프워드 없음 · 말씨 plain
+  세이프워드 없음 · 말씨 plain (일반 반말)
   화면 언어 ko
   연결: 없음
 
@@ -97,7 +97,7 @@
 <text x="60" y="692" fill="#edf3f6" font-weight="400" opacity="1">사용자 배경: 형에게 고민을 나누고 도움을 받는 동생.</text>
 <text x="60" y="720" fill="#edf3f6" font-weight="400" opacity="1">추가 말투·역할: 설명은 간결하게 정리하고 불확실한 점과</text>
 <text x="60" y="748" fill="#edf3f6" font-weight="400" opacity="1">다음에 할 일을 빠짐없이 알려 주세요.</text>
-<text x="60" y="776" fill="#edf3f6" font-weight="400" opacity="1">세이프워드 없음 · 말씨 plain</text>
+<text x="60" y="776" fill="#edf3f6" font-weight="400" opacity="1">세이프워드 없음 · 말씨 plain (일반 반말)</text>
 <text x="60" y="804" fill="#edf3f6" font-weight="400" opacity="1">화면 언어 ko</text>
 <text x="60" y="832" fill="#edf3f6" font-weight="400" opacity="1">연결: 없음</text>
 <text x="60" y="888" fill="#edf3f6" font-weight="400" opacity="1">* ToneDial 기본값과 다름 · 프로필에 저장되지 않았습니다.</text>

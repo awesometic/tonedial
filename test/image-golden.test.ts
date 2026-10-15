@@ -103,7 +103,7 @@ async function captureSettings(language: GoldenLanguage, scenario: SettingsScena
   try {
     const initialized = await captureCli(workspace, ["init", "--lang", language, "--tools", "none", "--global", "--auto", "--json"]);
     assert.equal(initialized.status, 0, initialized.stdout + initialized.stderr);
-    const configured = await captureCli(workspace, ["set", "speech_level=plain",
+    const configured = await captureCli(workspace, ["set", `speech_level=${scenario === "get-speech-narrow" ? "rough" : "plain"}`,
       ...(scenario === "show-note-narrow" ? [`persona.note=${note}`] : []), "--json"]);
     assert.equal(configured.status, 0, configured.stdout + configured.stderr);
     const args = scenario === "show-note-narrow" ? ["show"] : scenario === "get" ? ["get"] : ["get", "speech_level"];

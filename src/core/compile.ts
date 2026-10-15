@@ -57,8 +57,8 @@ function validate(config: Config): void {
       throw new RangeError(`axis ${axis} is ${level}, not a level 1 to 5`);
     }
   }
-  if (!(config.speech_level in SPEECH_LEVEL)) {
-    throw new RangeError(`speech_level is ${config.speech_level}, not auto, polite, or plain`);
+  if (!Object.hasOwn(SPEECH_LEVEL, config.speech_level)) {
+    throw new RangeError(`speech_level is ${config.speech_level}, not auto, polite, plain, or rough`);
   }
   if (config.persona !== null) {
     for (const field of ["user", "agent"] as const) {

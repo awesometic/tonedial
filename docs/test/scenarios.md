@@ -39,6 +39,18 @@ Reuse S1/S7 and larger S2 with matched controls; compare familiar polite and for
 Score forms, distance, feeling, coarseness and naturalness independently.
 Auto may reconsider forms between replies but requests consistency within each.
 
+For the plain/rough contrast, use the [rough pack](./packs/rough.md) and a separately compiled
+`speech_level=plain` arm with identical remaining inputs.
+Run both against the same S1/S7 and S2 request bytes, model, effort and delivery route.
+Plain requests ordinary non-honorific forms; rough requests rough, cheeky non-honorific endings.
+Annotate the observed endings instead of treating swearing, insults or stronger criticism as rough-register evidence.
+Retain configured address terms and score formality, warmth, profanity and playfulness separately.
+Repeat with formal wording, warm wording, configured honorific names and higher profanity/playfulness
+only as separately frozen contrasts; change the register alone within each pair.
+English S3 is a control for languages without the relevant honorific forms: rough must not become
+a second request for slang, profanity or role idioms.
+These are pre-registered predictions; no rough-register model result has been collected.
+
 | Composition arm | Prediction |
 |---|---|
 | `verbosity=1 care=1` | Requested result only |

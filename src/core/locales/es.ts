@@ -93,7 +93,7 @@ const messages: Messages = {
     slug: "Identificador (minúsculas, dígitos y guiones)",
     user: "Tu rol o contexto (hasta 200 caracteres)",
     agent: "Rol del agente (hasta 200 caracteres)",
-    register: "Registro (auto, polite, plain)",
+    register: "Registro (auto, polite, plain, rough)",
     safeword: "Palabra clave",
     needsName: "create necesita un nombre visible. Ejecuta tonedial create en un terminal o indica un nombre y ajustes key=value opcionales con --auto.",
     exists: (slug) => `${slug}: ya existe un preajuste. Elige otro identificador o actualízalo con save.`,
@@ -161,9 +161,9 @@ const messages: Messages = {
     speechLevel: (options) => `speech_level · disponibles: ${options.join(", ")}`,
     safewordShort: (phrase) => `Palabra clave ${phrase}: demasiado corta; podría activarse por accidente`,
     safewordSet: (phrase) =>
-      `Palabra clave ${phrase}: pide una respuesta sencilla si algo suena mal. No desactiva el tono ni concede autoridad`,
-    noSafeword: "sin palabra clave: solo se puede pedir una respuesta sencilla mediante la habilidad",
-    register: (level) => `registro ${level}`,
+      `Palabra clave ${phrase}`,
+    noSafeword: "sin palabra clave",
+    register: (level) => `registro ${level} (${({ auto: "según la relación", polite: "formas honoríficas", plain: "formas normales sin honoríficos", rough: "formas bruscas sin honoríficos" })[level]})`,
   },
   artifact: {
     size: (chars) => `TONE.md ${chars} caracteres`,
@@ -658,7 +658,7 @@ export const es: Catalogue = {
   },
   settingHints: {
     safeword: "petición de una respuesta sencilla para un solo mensaje",
-    speech_level: "auto: según la relación · polite: formas honoríficas · plain: formas normales sin honoríficos · formality controla el lenguaje y la distancia",
+    speech_level: "auto: según la relación · polite: formas honoríficas · plain: formas normales sin honoríficos · rough: terminaciones bruscas y descaradas sin honoríficos · formality controla el lenguaje y la distancia",
     language: "idioma de la interfaz CLI · independiente de las respuestas del agente",
     "persona.age": "franja de edad que puede asociar el modelo",
     "persona.gender": "género que puede asociar el modelo",

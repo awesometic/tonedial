@@ -176,6 +176,7 @@ test("the rules section has twelve axis lines, selected composites, and shared c
       auto: "choose address forms for the current relationship and scene",
       polite: "use polite address forms even with familiar wording",
       plain: "use plain address forms even with formal wording",
+      rough: "use rough, cheeky non-honorific sentence endings",
     };
     assert.ok(lines.at(-1)!.includes(register[config.speech_level]!), `${name}: selected register`);
     for (const { fires, line } of COMPOSITES) {
@@ -253,7 +254,7 @@ test("a persona section appears when and only when a persona is configured", () 
 
 test("the fixture set covers the branches the compiler has to get right", () => {
   const configs = index.fixtures.map((n) => load(n).config);
-  assert.deepEqual([...new Set(configs.map(c => c.speech_level))].sort(), ["auto", "plain", "polite"], "all register forms are represented");
+  assert.deepEqual([...new Set(configs.map(c => c.speech_level))].sort(), ["auto", "plain", "polite", "rough"], "all register forms are represented");
   assert.ok(configs.some(c => c.safeword === null) && configs.some(c => c.safeword !== null), "both safeword states are represented");
   assert.ok(configs.some((c) => c.persona !== null), "an artifact with a persona");
   assert.ok(configs.some((c) => Boolean(c.persona?.user)), "an artifact with user context");

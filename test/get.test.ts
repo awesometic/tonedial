@@ -34,7 +34,7 @@ test("get reads the actual set values and agrees with show without changing file
   const value = workspace(t);
   await init(value);
   const note = "현재 역할의 전체 설명 — Unicode 👩‍💻";
-  const set = await captureCli(value, ["set", "warmth=2", "language=ko", "speech_level=polite", "safeword=plain answer please",
+  const set = await captureCli(value, ["set", "warmth=2", "language=ko", "speech_level=rough", "safeword=plain answer please",
     "persona.age=31", "persona.gender=neutral", "persona.self_ref=", "persona.user_ref=사용자님",
     `persona.note=${note}`, "persona.user=개발자", "persona.agent=Fictional reviewer", "--json"]);
   assert.equal(set.status, 0, set.stdout + set.stderr);
@@ -48,7 +48,7 @@ test("get reads the actual set values and agrees with show without changing file
   assert.deepEqual(payload.warnings, []);
   assert.deepEqual(Object.keys(payload.values), [...AXIS_ORDER, ...SETTING_KEYS]);
   assert.equal(payload.values.warmth, 2);
-  const expected = { safeword: "plain answer please", speech_level: "polite", language: "ko",
+  const expected = { safeword: "plain answer please", speech_level: "rough", language: "ko",
     "persona.age": "30s", "persona.gender": "neutral", "persona.self_ref": null, "persona.user_ref": "사용자님",
     "persona.note": note, "persona.user": "개발자", "persona.agent": "Fictional reviewer" };
   for (const [key, current] of Object.entries(expected)) assert.equal(payload.values[key], current, key);

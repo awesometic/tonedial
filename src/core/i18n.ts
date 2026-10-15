@@ -6,6 +6,7 @@ import { dirname } from "node:path";
 
 import type { SettingKey } from "./config.ts";
 import type { Persona } from "./combos.ts";
+import type { SpeechLevel } from "./compile.ts";
 import { ja } from "./locales/ja.ts";
 import { zh } from "./locales/zh.ts";
 import { es } from "./locales/es.ts";
@@ -230,7 +231,7 @@ export type Messages = {
     safewordShort: (phrase: string) => string;
     safewordSet: (phrase: string) => string;
     noSafeword: string;
-    register: (level: string) => string;
+    register: (level: SpeechLevel) => string;
   };
   artifact: {
     size: (chars: string) => string;
@@ -658,7 +659,7 @@ const enMessages: Messages = {
     slug: "Slug (lowercase letters, digits, dashes)",
     user: "Your role or background (up to 200 characters)",
     agent: "Agent role (up to 200 characters)",
-    register: "Register (auto, polite, plain)",
+    register: "Honorific forms (auto, polite, plain, rough)",
     safeword: "Safeword",
     needsName: "create needs a display name. Run tonedial create in a terminal, or supply a name and optional key=value settings with --auto.",
     exists: (slug) => `${slug}: a preset already exists. Choose another slug, or use save to update it.`,
@@ -726,9 +727,9 @@ const enMessages: Messages = {
     speechLevel: (options) => `speech_level · available: ${options.join(", ")}`,
     safewordShort: (phrase) => `safeword ${phrase}: too short and may trigger by accident`,
     safewordSet: (phrase) =>
-      `safeword ${phrase} — requests one plain answer when something reads wrong. It neither switches tone off nor grants authority`,
-    noSafeword: "no safeword — request a plain answer through the skill only",
-    register: (level) => `register ${level}`,
+      `safeword ${phrase}`,
+    noSafeword: "no safeword",
+    register: (level) => `register ${level} (${({ auto: "contextual", polite: "honorific", plain: "non-honorific", rough: "rough non-honorific" })[level]})`,
   },
   artifact: {
     size: (chars) => `TONE.md ${chars} characters`,
@@ -1231,7 +1232,7 @@ const en: Catalogue = {
   },
   settingHints: {
     safeword: "request for one plain answer to one message",
-    speech_level: "auto: adapt to the relationship · polite: honorific forms · plain: ordinary non-honorific forms · wording and distance: formality",
+    speech_level: "auto: adapt to the relationship · polite: honorific forms · plain: ordinary non-honorific forms · rough: rough, cheeky non-honorific endings · wording and distance: formality",
     language: "CLI interface language · unrelated to agent replies",
     "persona.age": "age band the model may associate with",
     "persona.gender": "gender the model may associate with",
@@ -1342,7 +1343,7 @@ const koMessages: Messages = {
     slug: "슬러그(영문 소문자·숫자·붙임표)",
     user: "사용자 역할·배경(최대 200자)",
     agent: "에이전트 역할(최대 200자)",
-    register: "말씨(auto, polite, plain)",
+    register: "말씨(auto, polite, plain, rough)",
     safeword: "세이프워드",
     needsName: "create에는 표시 이름이 필요합니다. 터미널에서 tonedial create를 실행하거나, 이름과 필요한 키=값 설정을 --auto와 함께 지정하세요.",
     exists: (slug) => `${slug}: 이미 있는 프리셋입니다. 다른 슬러그를 쓰거나 save로 갱신하세요.`,
@@ -1412,9 +1413,9 @@ const koMessages: Messages = {
     fixedWidthRetired: "fixed_width 설정은 더 이상 쓰지 않습니다. 출력은 터미널 폭에 자동으로 맞춥니다. 설정은 바꾸지 않았습니다.",
     speechLevel: (options) => `speech_level · 사용 가능: ${options.join(", ")}`,
     safewordShort: (phrase) => `세이프워드 ${phrase}: 너무 짧아 실수로 작동할 수 있습니다`,
-    safewordSet: (phrase) => `세이프워드 ${phrase} — 이상할 때 한 메시지만 담백하게 답해 달라는 요청입니다. 톤을 끄거나 권한을 주지는 않습니다`,
-    noSafeword: "세이프워드 없음 — 담백한 답은 스킬로만 요청할 수 있습니다",
-    register: (level) => `말씨 ${level}`,
+    safewordSet: (phrase) => `세이프워드 ${phrase}`,
+    noSafeword: "세이프워드 없음",
+    register: (level) => `말씨 ${level} (${({ auto: "관계에 맞게 선택", polite: "존댓말", plain: "일반 반말", rough: "거친 반말" })[level]})`,
   },
   artifact: {
     size: (chars) => `TONE.md ${chars}자`,
@@ -1920,7 +1921,7 @@ const ko: Catalogue = {
   },
   settingHints: {
     safeword: "한 메시지만 담백하게 답해 달라는 요청 문구",
-    speech_level: "auto: 관계에 맞게 선택 · polite: 존댓말 · plain: 일반 반말 · 표현의 격식과 거리감은 formality로 조절",
+    speech_level: "auto: 관계에 맞게 선택 · polite: 존댓말 · plain: 일반 반말 · rough: 거친 반말 · 표현의 격식과 거리감은 formality로 조절",
     language: "CLI 인터페이스 언어 · 에이전트 답변 언어와 무관",
     "persona.age": "모델이 연상할 나이대",
     "persona.gender": "모델이 연상할 성별",

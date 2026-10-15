@@ -203,7 +203,7 @@ function buildConfig(name: string, front: Front, artifact: string) {
   // persona, matching the preset contract. `name` and `chars` are fixture
   // metadata and stay outside `config`, so compile(fixture.config) receives only compiler inputs.
   const speech_level = front.speech_level ?? "auto";
-  if (!["auto", "polite", "plain"].includes(String(speech_level))) throw new Error("invalid speech_level");
+  if (!["auto", "polite", "plain", "rough"].includes(String(speech_level))) throw new Error("invalid speech_level");
   return {
     name,
     chars: [...artifact].length,

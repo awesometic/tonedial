@@ -284,8 +284,10 @@ export function recoverLegacyTone(text: string, t: Messages): SettingsRecovery |
     Number(styleMarker[1]) !== config.axes.verbosity || Number(styleMarker[2]) !== config.axes.care
   )) return null;
   const speech = rules.at(-1);
-  config.speech_level = speech === `- ${speechLevels.polite}` ? "polite"
+  config.speech_level = anchors === ANCHORS && styleMarker !== null && speech === `- ${SPEECH_LEVEL.rough}` ? "rough"
+    : speech === `- ${speechLevels.polite}` ? "polite"
     : speech === `- ${speechLevels.plain}` ? "plain" : "auto";
+  const speechRule = config.speech_level === "rough" ? SPEECH_LEVEL.rough : speechLevels[config.speech_level];
   const expectedRules = [
     ...AXIS_ORDER.map((axis) => `- ${anchors[axis][config.axes[axis] - 1]}`),
     ...(historical ? [
@@ -295,7 +297,7 @@ export function recoverLegacyTone(text: string, t: Messages): SettingsRecovery |
         ? ["Grumble without being passive; make the complaint itself clear."] : []),
     ] : composites(config.axes)).map((line) => `- ${line}`),
     ...(historical ? [] : [`- ${FORMAT_COMPOSITION}`, `- ${anchors === ANCHORS ? REGISTER_COMPOSITION : PREVIOUS_REGISTER_COMPOSITION}`]),
-    ...(speechLevels[config.speech_level] === null ? [] : [`- ${speechLevels[config.speech_level]}`]),
+    ...(speechRule === null ? [] : [`- ${speechRule}`]),
   ];
   const legacyExpectedRules = [
     ...AXIS_ORDER.map((axis) => `- ${LEGACY_CURRENT_ANCHORS[axis][config.axes[axis] - 1]}`),
@@ -303,7 +305,7 @@ export function recoverLegacyTone(text: string, t: Messages): SettingsRecovery |
       ? config.axes.warmth >= 4 && config.axes.profanity >= 4
       : config.axes.compliance <= 2 && config.axes.conviction <= 2).map((line) => `- ${line}`),
     `- ${PREVIOUS_REGISTER_COMPOSITION}`,
-    ...(speechLevels[config.speech_level] === null ? [] : [`- ${speechLevels[config.speech_level]}`]),
+    ...(speechRule === null ? [] : [`- ${speechRule}`]),
   ];
   const acceptedRules = historical || styleMarker ? [expectedRules] : [expectedRules, legacyExpectedRules];
   if (!acceptedRules.some((candidate) => rules.length === candidate.length &&

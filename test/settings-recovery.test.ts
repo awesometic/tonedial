@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { AXIS_DEFAULT } from "../src/core/anchors.ts";
+import { AXIS_DEFAULT, SPEECH_LEVEL } from "../src/core/anchors.ts";
 import { compile } from "../src/core/compile.ts";
 import {
   defaultConfig, parseConfig, recoverSettings, serializeConfig,
@@ -294,6 +294,26 @@ test("historical restricted profanity and folded resistance decode without becom
   const current = compile(toCompileInput(recovered.config));
   assert.doesNotMatch(current, /never at the person|never pretend to act|confess|Keep bluffs|situation only|On destructive-work warnings/);
   assert.match(current, /### Controls\n/);
+});
+
+test("current rough artifacts recover their exact register without widening historical producer evidence", () => {
+  const config = defaultConfig();
+  config.speech_level = "rough";
+  config.axes = { ...AXIS_DEFAULT, formality: 5, playfulness: 1, warmth: 5 };
+  config.persona.address = { self_ref: null, user_ref: "선생님" };
+  config.safeword = "dummy plain answer";
+  const artifact = compile(toCompileInput(config));
+  const result = recoverLegacyTone(artifact, EN);
+  assert.ok(result);
+  assert.equal(result.config.speech_level, "rough");
+  assert.deepEqual(toCompileInput(result.config), toCompileInput(config));
+  assert.equal(compile(toCompileInput(result.config)), artifact);
+  assert.equal(recoverLegacyTone(artifact.replace(SPEECH_LEVEL.rough, `${SPEECH_LEVEL.rough} Extra wording.`), EN), null,
+    "only the exact current anchor is a recovery source");
+  assert.equal(recoverLegacyTone(artifact.replace(/^<!-- tonedial-style:1[^\n]+-->\n/m, ""), EN), null,
+    "rough does not widen the unmarked historical producer format");
+  assert.equal(recoverLegacyTone(OLD_TONE.replace("Address the user with the language's polite forms.", SPEECH_LEVEL.rough), EN), null,
+    "a new register cannot be relabeled as a historical producer rule");
 });
 
 test("ambiguous unquoted address text never guesses original references and keeps its other rendered values", () => {

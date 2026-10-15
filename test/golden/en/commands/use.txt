@@ -1,11 +1,11 @@
 status: 0
---- stdout --- [bytes=169; endsWithNewline=true]
+--- stdout --- [bytes=119; endsWithNewline=true]
 ToneDial · use
 
   Ego Sword active
   TONE.md generated
 
-  no safeword — request a plain answer through the skill only
+  no safeword
   ! critique · harsh language
 
   tonedial show

@@ -14,12 +14,12 @@ ToneDial · wire
   + import {
 
   <ROOT>/state/skill/tonedial/SKILL.md
-  (새 파일)  289줄
+  (새 파일)  292줄
   + ---
   + name: tonedial
 
   <ROOT>/state/skill/tonedial/references/traits.md
-  (새 파일)  87줄
+  (새 파일)  89줄
   + Twelve axes, each 1 to 5. Read the live values with `tonedial get --json`; this file says what
   + each one **owns**, which is what tells you which axis a request is actually about.
 

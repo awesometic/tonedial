@@ -28,7 +28,7 @@
   older brother.
   persona note: Prefer direct explanations. Preserve
   uncertainty and mention concrete next steps.
-  no safeword · register plain
+  no safeword · register plain (non-honorific)
   Interface en
   Connections: none
 
@@ -102,7 +102,7 @@
 <text x="60" y="748" fill="#edf3f6" font-weight="400" opacity="1">older brother.</text>
 <text x="60" y="776" fill="#edf3f6" font-weight="400" opacity="1">persona note: Prefer direct explanations. Preserve</text>
 <text x="60" y="804" fill="#edf3f6" font-weight="400" opacity="1">uncertainty and mention concrete next steps.</text>
-<text x="60" y="832" fill="#edf3f6" font-weight="400" opacity="1">no safeword · register plain</text>
+<text x="60" y="832" fill="#edf3f6" font-weight="400" opacity="1">no safeword · register plain (non-honorific)</text>
 <text x="60" y="860" fill="#edf3f6" font-weight="400" opacity="1">Interface en</text>
 <text x="60" y="888" fill="#edf3f6" font-weight="400" opacity="1">Connections: none</text>
 <text x="60" y="944" fill="#edf3f6" font-weight="400" opacity="1">* differs from ToneDial's default · Not saved to a</text>

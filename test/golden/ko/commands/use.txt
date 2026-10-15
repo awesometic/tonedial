@@ -1,11 +1,11 @@
 status: 0
---- stdout --- [bytes=193; endsWithNewline=true]
+--- stdout --- [bytes=132; endsWithNewline=true]
 ToneDial · use
 
   Ego Sword 적용됨
   TONE.md 생성됨
 
-  세이프워드 없음 — 담백한 답은 스킬로만 요청할 수 있습니다
+  세이프워드 없음
   ! critique · 거친 표현
 
   tonedial show
