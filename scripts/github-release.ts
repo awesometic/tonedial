@@ -2,6 +2,7 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
+import timers from "node:timers/promises";
 import { fileURLToPath } from "node:url";
 
 type Asset = { name: string; state: string; digest: string; size: number };
@@ -21,9 +22,24 @@ export async function publishGitHubRelease(root: string, env: NodeJS.ProcessEnv,
   if (!body) throw new Error(`Release notes for ${version} are empty.`);
   const archiveName = `${name}-${version}.tgz`;
   const tarballUrl = `https://registry.npmjs.org/${name}/-/${archiveName}`;
-  const metadataResponse = await request(`https://registry.npmjs.org/${name}/${version}`, {
-    redirect: "error", signal: AbortSignal.timeout(30_000),
-  });
+  const deadline = Date.now() + 20 * 60_000;
+  async function publishedNpm(url: string, timeout: number): Promise<Response> {
+    while (true) {
+      const remaining = deadline - Date.now();
+      if (remaining <= 0) {
+        throw new Error("Published npm package is still unavailable after 20 minutes. Re-run only the failed GitHub Release job; do not republish this npm version.");
+      }
+      const response = await request(url, {
+        redirect: "error", headers: { "Cache-Control": "no-cache" },
+        signal: AbortSignal.timeout(Math.min(timeout, remaining)),
+      });
+      if (response.status !== 404) return response;
+      await response.body?.cancel();
+      process.stderr.write("Waiting for the published npm package to become available (HTTP 404).\n");
+      await timers.setTimeout(Math.min(15_000, Math.max(0, deadline - Date.now())));
+    }
+  }
+  const metadataResponse = await publishedNpm(`https://registry.npmjs.org/${name}/${version}`, 30_000);
   if (!metadataResponse.ok) throw new Error(`Published npm metadata is unavailable (HTTP ${metadataResponse.status}).`);
   const metadata = await metadataResponse.json() as {
     name?: string; version?: string; gitHead?: string; dist?: { tarball?: string; integrity?: string };
@@ -31,7 +47,7 @@ export async function publishGitHubRelease(root: string, env: NodeJS.ProcessEnv,
   if (metadata.name !== name || metadata.version !== version || metadata.gitHead !== sha || metadata.dist?.tarball !== tarballUrl) {
     throw new Error("Published npm metadata does not match this package, version and workflow commit.");
   }
-  const archiveResponse = await request(tarballUrl, { redirect: "error", signal: AbortSignal.timeout(60_000) });
+  const archiveResponse = await publishedNpm(tarballUrl, 60_000);
   if (!archiveResponse.ok) throw new Error(`Published npm archive is unavailable (HTTP ${archiveResponse.status}).`);
   const archive = Buffer.from(await archiveResponse.arrayBuffer());
   if (metadata.dist.integrity !== `sha512-${createHash("sha512").update(archive).digest("base64")}`) {

@@ -155,9 +155,11 @@ Commit the candidate to `main`, then run **Actions → Publish → Run workflow*
 Pushing to `main` alone does not publish.
 
 The workflow runs the complete checks, publishes to npm using its trusted publisher,
-then creates `ToneDial v<version>` at that workflow's commit.
-It verifies npm's package identity, `gitHead` and SHA-512 integrity before attaching
-the published `tonedial-<version>.tgz` and `SHA256SUMS` to a draft, then publishes that release.
+then checks npm availability immediately and retries HTTP 404 responses every 15 seconds
+for up to 20 minutes, sharing that limit across metadata and tarball requests.
+It verifies npm's package identity, `gitHead` and SHA-512 integrity before creating
+`ToneDial v<version>` at that workflow's commit, attaching the published
+`tonedial-<version>.tgz` and `SHA256SUMS` to a draft, and publishing that release.
 GitHub supplies the source ZIP and tarball automatically.
 Only the release job receives `contents: write`; no long-lived publishing token is required.
 

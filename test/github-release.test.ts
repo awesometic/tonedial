@@ -4,6 +4,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, test } from "node:test";
+import timers from "node:timers/promises";
 import { publishGitHubRelease } from "../scripts/github-release.ts";
 
 const sha = "a".repeat(40);
@@ -27,6 +28,8 @@ function fixture() {
   mkdirSync(join(root, "docs", "releases"), { recursive: true });
   writeFileSync(join(root, "docs", "releases", "1.2.3.md"), "Release notes from the reviewed commit.\n");
   const remote = {
+    metadataStatus: 200,
+    archiveStatus: 200,
     metadata: {
       name: "tonedial", version: "1.2.3", gitHead: sha,
       dist: { tarball: "https://registry.npmjs.org/tonedial/-/tonedial-1.2.3.tgz",
@@ -40,18 +43,18 @@ function fixture() {
     failedUpload: "",
     invalidUpload: false,
   };
-  const calls: { method: string; url: string; body: unknown }[] = [];
+  const calls: { method: string; url: string; body: unknown; at: number }[] = [];
   const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status });
   const request: typeof fetch = async (input, options) => {
     const url = String(input);
     const method = options?.method ?? "GET";
     const body = typeof options?.body === "string" ? JSON.parse(options.body) : options?.body;
-    calls.push({ method, url, body });
+    calls.push({ method, url, body, at: Date.now() });
     assert.equal(options?.redirect, "error");
     if (url.startsWith("https://registry.npmjs.org/")) {
       assert.equal(new Headers(options?.headers).get("Authorization"), null, "GitHub credentials must never reach npm");
-      if (url.endsWith("/1.2.3")) return json(remote.metadata);
-      if (url.endsWith("/tonedial-1.2.3.tgz")) return new Response(Uint8Array.from(remote.downloaded));
+      if (url.endsWith("/1.2.3")) return json(remote.metadata, remote.metadataStatus);
+      if (url.endsWith("/tonedial-1.2.3.tgz")) return new Response(Uint8Array.from(remote.downloaded), { status: remote.archiveStatus });
     }
     assert.equal(new Headers(options?.headers).get("Authorization"), "Bearer fixture-value");
     const path = new URL(url).pathname;
@@ -105,6 +108,59 @@ test("release publishes the verified npm archive and checksum after attaching bo
   assert.equal(f.remote.release?.draft, false);
   assert.deepEqual(f.remote.release?.assets, [asset("tonedial-1.2.3.tgz", archive), asset("SHA256SUMS", checksum)]);
   assert.equal(f.calls.at(-1)?.method, "PATCH");
+});
+
+test("npm metadata and archive 404s wait 15 seconds and publish as soon as both are available", async (t) => {
+  t.mock.timers.enable({ apis: ["Date", "setTimeout"], now: 0 });
+  const f = fixture();
+  f.remote.metadataStatus = 404;
+  f.remote.archiveStatus = 404;
+  const result = f.run();
+  await timers.setImmediate();
+  assert.equal(f.calls.length, 1, "the first availability check must be immediate");
+  t.mock.timers.tick(14_999);
+  await timers.setImmediate();
+  assert.equal(f.calls.length, 1, "do not poll before 15 seconds");
+  f.remote.metadataStatus = 200;
+  t.mock.timers.tick(1);
+  await timers.setImmediate();
+  assert.deepEqual(f.calls.map(call => call.at), [0, 15_000, 15_000]);
+  assert.ok(f.calls.every(call => call.url.startsWith("https://registry.npmjs.org/")));
+  f.remote.archiveStatus = 200;
+  t.mock.timers.tick(15_000);
+  await result;
+  assert.equal(Date.now(), 30_000);
+  assert.equal(f.remote.release?.draft, false);
+  assert.deepEqual(f.remote.release?.assets, [asset("tonedial-1.2.3.tgz", archive), asset("SHA256SUMS", checksum)]);
+});
+
+test("npm metadata and archive share a 20-minute deadline before any GitHub request", async (t) => {
+  t.mock.timers.enable({ apis: ["Date", "setTimeout"], now: 0 });
+  const f = fixture();
+  f.remote.metadataStatus = 404;
+  f.remote.archiveStatus = 404;
+  const result = assert.rejects(f.run(), /20 minutes.*Re-run only the failed GitHub Release job/);
+  await timers.setImmediate();
+  f.remote.metadataStatus = 200;
+  t.mock.timers.tick(20 * 60_000 - 10_000);
+  await timers.setImmediate();
+  assert.equal(f.calls.length, 3);
+  t.mock.timers.tick(9_999);
+  await timers.setImmediate();
+  assert.equal(f.calls.length, 3);
+  t.mock.timers.tick(1);
+  await result;
+  assert.equal(f.calls.length, 3, "do not issue another request at the deadline");
+  assert.ok(f.calls.every(call => call.url.startsWith("https://registry.npmjs.org/")));
+});
+
+test("npm errors other than 404 fail immediately without publishing", async (t) => {
+  t.mock.timers.enable({ apis: ["Date", "setTimeout"], now: 0 });
+  const f = fixture();
+  f.remote.metadataStatus = 403;
+  await assert.rejects(f.run(), /metadata is unavailable \(HTTP 403\)/);
+  assert.equal(f.calls.length, 1);
+  assert.equal(Date.now(), 0);
 });
 
 test("wrong npm identity, commit, archive URL or integrity refuses before any GitHub request", async () => {
@@ -205,5 +261,6 @@ test("publishing remains manual with a dependent release job and scoped write pe
   assert.match(github, /needs: publish/);
   assert.match(github, /contents: write/);
   assert.match(github, /ref: \$\{\{ github\.sha \}\}/);
+  assert.doesNotMatch(github, /run: sleep /, "npm availability polling replaces the fixed delay");
   assert.match(github, /run: node scripts\/github-release\.ts/);
 });
