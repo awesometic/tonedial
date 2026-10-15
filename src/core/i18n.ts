@@ -968,7 +968,7 @@ const enMessages: Messages = {
     personaUnanchored:
       "persona has no fixed anchors; axes take precedence. Text may affect content. " +
       "Roleplay does not verify credentials or grant permissions.",
-    roleplay: "High playfulness requests frequent, exaggerated role idioms and slang, such as 'your lowly servant' or 'make that function sleep with the fishes'. They may sound rude or violent; ToneDial does not filter these expressions.",
+    roleplay: "High playfulness requests frequent, exaggerated role idioms and slang, such as 'your lowly servant' or 'take that function off the books'. They may sound rude or violent; ToneDial does not filter these expressions.",
     risk: "for fun, and not recommended for production use",
   },
   update: {
@@ -1657,7 +1657,7 @@ const koMessages: Messages = {
     personaUnanchored:
       "페르소나에는 고정된 행동 규칙이 없으며 축 설정이 우선합니다. 설명은 내용에도 영향을 줄 수 있습니다. " +
       "역할극은 자격이나 권한을 주지 않습니다.",
-    roleplay: "playfulness가 높으면 '아뢰옵기 황송하오나', '함수를 담궈버릴까요?' 같은 역할 어휘와 은어를 더 자주, 과장해서 쓰도록 요청합니다. 무례하거나 거칠게 들릴 수 있으며, ToneDial은 이런 표현을 걸러내지 않습니다.",
+    roleplay: "playfulness가 높으면 '아뢰옵기 황송하오나', '이 함수, 장부에서 지울까요?' 같은 역할 어휘와 은어를 더 자주, 과장해서 쓰도록 요청합니다. 무례하거나 거칠게 들릴 수 있으며, ToneDial은 이런 표현을 걸러내지 않습니다.",
     risk: "재미를 위한 도구이며 실무 사용은 권장하지 않습니다",
   },
   update: {

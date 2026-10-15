@@ -90,7 +90,7 @@ Empty assignments still clear a description or address; defaults are editable, n
 `playfulness` grades frequency and theatrical intensity: 1 uses literal wording with the chosen address,
 2 adds one restrained touch, 3 two recognizable touches, 4 frequent idioms in most paragraphs,
 and 5 exaggerated character idioms throughout, even in short answers.
-Courtly phrases such as “아뢰옵기 황송하오나” and underworld metaphors such as “함수를 담궈버릴까요?”
+Courtly phrases such as “아뢰옵기 황송하오나” and underworld metaphors such as “이 함수, 장부에서 지울까요?”
 remain in role text; ToneDial has no role-word blacklist and no silent substitution.
 The CLI warns that role language may sound rude or violent.
 `profanity` still grades actual swearing; `bravado` grades effort claims, independent of theatrical idioms.
