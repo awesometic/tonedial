@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="932" viewBox="0 0 1120 932" role="img" aria-labelledby="title description">
+<title id="title">Codex의 실제 말투 응답</title>
+<desc id="description">`getActiveUsers(orgId)`를 `fetchData`로 바꿔도 될까?
+
+Royal Advisor
+전하, 이름을 다듬으려는 뜻을 잘 알겠사옵니다. 호출하는 쪽의 가독성까지 살피시는 점이 좋사옵니다.
+
+말씀하신 변경은 가능하오나, 신은 **`getActiveUsers(orgId)`를 유지하시길 권하옵니다.** 어느 조직의 활성 사용자를 가져오는지 이름만으로 드러나기 때문이옵니다.
+
+- **심각도: 낮음 — 의미가 흐려짐.** `fetchData`는 무엇을 가져오는지 알 수 없어, 호출부를 읽을 때 구현까지 들여다봐야 하옵니다.
+- 아울러 ‘활성’의 기준을 함수 설명에 짧게 명시하시면, 이름의 뜻을 더욱 단단히 지킬 수 있사옵니다.
+
+Ego Sword
+애송아, 나 같으면 `getActiveUsers(orgId)`를 유지한다. **[낮음]** `fetchData`로 바꾸면 이름에서 대상과 조건이 사라져, 호출부마다 검집을 열어봐야 한다.
+
+흥, 귀찮아도 한 군데는 더 짚어주지. 해당 조직의 활성 사용자만 반환하는 테스트가 있는지 확인해라.</desc>
+<rect width="1120" height="932" rx="16" fill="#171b20"/>
+<g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, system-ui"><text x="36" y="50" fill="#66d9dc" font-size="24" font-weight="700" xml:space="preserve">Codex CLI · gpt-6.1-sol · high</text>
+<text x="36" y="86" fill="#b8cbd4" font-size="23" font-weight="400" xml:space="preserve">질문: `getActiveUsers(orgId)`를 `fetchData`로 바꿔도 될까?</text>
+<path d="M36 112H1084" stroke="#34424d"/>
+<text x="36" y="158" fill="#66d9dc" font-size="28" font-weight="700" xml:space="preserve">Royal Advisor</text>
+<text x="36" y="202" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">전하, 이름을 다듬으려는 뜻을 잘 알겠사옵니다. 호출하는 쪽의</tspan></text>
+<text x="36" y="234" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">가독성까지 살피시는 점이 좋사옵니다.</tspan></text>
+<text x="36" y="266" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="298" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">말씀하신 변경은 가능하오나, 신은 </tspan><tspan font-weight="700" fill="#edf3f6"></tspan><tspan font-weight="700" fill="#b8e5df">getActiveUsers(orgId)</tspan><tspan font-weight="700" fill="#edf3f6">를</tspan></text>
+<text x="36" y="330" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="700" fill="#edf3f6">유지하시길 권하옵니다.</tspan><tspan font-weight="400" fill="#edf3f6"> 어느 조직의 활성 사용자를 가져오는지</tspan></text>
+<text x="36" y="362" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">이름만으로 드러나기 때문이옵니다.</tspan></text>
+<text x="36" y="394" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="426" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">- </tspan><tspan font-weight="700" fill="#edf3f6">심각도: 낮음 — 의미가 흐려짐.</tspan><tspan font-weight="400" fill="#edf3f6"> </tspan><tspan font-weight="400" fill="#b8e5df">fetchData</tspan><tspan font-weight="400" fill="#edf3f6">는 무엇을 가져오는지</tspan></text>
+<text x="36" y="458" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">알 수 없어, 호출부를 읽을 때 구현까지 들여다봐야 하옵니다.</tspan></text>
+<text x="36" y="490" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">- 아울러 ‘활성’의 기준을 함수 설명에 짧게 명시하시면, 이름의 뜻을</tspan></text>
+<text x="36" y="522" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">더욱 단단히 지킬 수 있사옵니다.</tspan></text>
+<path d="M36 578H1084" stroke="#34424d"/>
+<text x="36" y="624" fill="#66d9dc" font-size="28" font-weight="700" xml:space="preserve">Ego Sword</text>
+<text x="36" y="668" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">애송아, 나 같으면 </tspan><tspan font-weight="400" fill="#b8e5df">getActiveUsers(orgId)</tspan><tspan font-weight="400" fill="#edf3f6">를 유지한다. </tspan><tspan font-weight="700" fill="#edf3f6">[낮음]</tspan><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="700" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan><tspan font-weight="400" fill="#b8e5df">fetchData</tspan><tspan font-weight="400" fill="#edf3f6">로 바꾸면 이름에서 대상과 조건이 사라져, 호출부마다</tspan></text>
+<text x="36" y="732" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">검집을 열어봐야 한다.</tspan></text>
+<text x="36" y="764" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="796" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">흥, 귀찮아도 한 군데는 더 짚어주지. 해당 조직의 활성 사용자만</tspan></text>
+<text x="36" y="828" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">반환하는 테스트가 있는지 확인해라.</tspan></text>
+<text x="36" y="896" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">실제 응답 · 형식만 정리 · 프리셋당 1회 · 2026-10-14</text></g>
+</svg>

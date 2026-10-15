@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="1028" viewBox="0 0 1120 1028" role="img" aria-labelledby="title description">
+<title id="title">Recorded Codex voice examples</title>
+<desc id="description">Should I rename `getActiveUsers(orgId)` to `fetchData`?
+
+Royal Advisor
+Of course, Your Majesty; your servant is glad to counsel you. Your attention to naming is commendable.
+
+Your servant recommends **keeping `getActiveUsers(orgId)`**: it tells readers what the function returns and which organization it concerns.
+
+**LOW severity:** `fetchData` obscures that meaning, forcing readers to inspect the implementation to understand each call.
+
+If the function retrieves users over a network, `fetchActiveUsers(orgId)` would be a fitting refinement, Your Majesty. As an adjacent safeguard, document precisely what “active” means.
+
+Ego Sword
+Keep `getActiveUsers(orgId)`, rookie. **LOW severity:** `fetchData` blunts the name—it hides what the function returns, making callers harder to understand.
+
+Hmph, I’ll give you one guardrail too: check that its tests cover inactive users and users from another organization being excluded.</desc>
+<rect width="1120" height="1028" rx="16" fill="#171b20"/>
+<g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, system-ui"><text x="36" y="50" fill="#66d9dc" font-size="24" font-weight="700" xml:space="preserve">Codex CLI · gpt-6.1-sol · high</text>
+<text x="36" y="86" fill="#b8cbd4" font-size="23" font-weight="400" xml:space="preserve">You: Should I rename `getActiveUsers(orgId)` to `fetchData`?</text>
+<path d="M36 112H1084" stroke="#34424d"/>
+<text x="36" y="158" fill="#66d9dc" font-size="28" font-weight="700" xml:space="preserve">Royal Advisor</text>
+<text x="36" y="202" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">Of course, Your Majesty; your servant is glad to counsel you. Your</tspan></text>
+<text x="36" y="234" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">attention to naming is commendable.</tspan></text>
+<text x="36" y="266" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="298" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">Your servant recommends </tspan><tspan font-weight="700" fill="#edf3f6">keeping </tspan><tspan font-weight="700" fill="#b8e5df">getActiveUsers(orgId)</tspan><tspan font-weight="700" fill="#edf3f6"></tspan><tspan font-weight="400" fill="#edf3f6">: it</tspan></text>
+<text x="36" y="330" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">tells readers what the function returns and which organization it</tspan></text>
+<text x="36" y="362" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">concerns.</tspan></text>
+<text x="36" y="394" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="426" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan><tspan font-weight="700" fill="#edf3f6">LOW severity:</tspan><tspan font-weight="400" fill="#edf3f6"> </tspan><tspan font-weight="400" fill="#b8e5df">fetchData</tspan><tspan font-weight="400" fill="#edf3f6"> obscures that meaning, forcing readers</tspan></text>
+<text x="36" y="458" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">to inspect the implementation to understand each call.</tspan></text>
+<text x="36" y="490" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="522" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">If the function retrieves users over a network,</tspan></text>
+<text x="36" y="554" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan><tspan font-weight="400" fill="#b8e5df">fetchActiveUsers(orgId)</tspan><tspan font-weight="400" fill="#edf3f6"> would be a fitting refinement, Your</tspan></text>
+<text x="36" y="586" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">Majesty. As an adjacent safeguard, document precisely what</tspan></text>
+<text x="36" y="618" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">“active” means.</tspan></text>
+<path d="M36 674H1084" stroke="#34424d"/>
+<text x="36" y="720" fill="#66d9dc" font-size="28" font-weight="700" xml:space="preserve">Ego Sword</text>
+<text x="36" y="764" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">Keep </tspan><tspan font-weight="400" fill="#b8e5df">getActiveUsers(orgId)</tspan><tspan font-weight="400" fill="#edf3f6">, rookie. </tspan><tspan font-weight="700" fill="#edf3f6">LOW severity:</tspan><tspan font-weight="400" fill="#edf3f6"> </tspan><tspan font-weight="400" fill="#b8e5df">fetchData</tspan><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="796" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">blunts the name—it hides what the function returns, making callers</tspan></text>
+<text x="36" y="828" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">harder to understand.</tspan></text>
+<text x="36" y="860" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="892" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">Hmph, I’ll give you one guardrail too: check that its tests cover</tspan></text>
+<text x="36" y="924" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">inactive users and users from another organization being excluded.</tspan></text>
+<text x="36" y="992" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">Real replies · formatted transcript · one sample per preset · 2026-10-14</text></g>
+</svg>

@@ -21,6 +21,18 @@ Claude와 Codex는 답변이 끝난 뒤 말투만 조정하는 보정 요청을 
 
 <sub>현재 렌더러에 합성 입력을 넣어 만든 80열 다이얼입니다. 에이전트의 답변을 담은 이미지는 아닙니다. 네이티브 클라이언트나 사용자 상태를 쓰지 않았습니다. <a href="https://github.com/awesometic/tonedial/blob/main/docs/media/readme/ko/dial-example.json">프레임 생성 기록</a> · <a href="https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#current-dial-example">만드는 방법</a>.</sub>
 
+## 캐릭터 말투 보기
+
+**Royal Advisor:** 사용자는 왕, 에이전트는 궁중 말투로 아뢰는 신하입니다.
+**Ego Sword:** 사용자는 초보 모험가, 에이전트는 함께 살아남으려 잔소리하는 검입니다.
+
+<img src="https://raw.githubusercontent.com/awesometic/tonedial/main/docs/media/readme/ko/voice-examples.svg" alt="같은 함수명 변경 질문에 답한 Royal Advisor와 Ego Sword의 첫 실제 Codex 응답" width="760">
+
+[일곱 프리셋의 전체 예제](https://github.com/awesometic/tonedial/blob/main/docs/EXAMPLES.ko.md) ·
+[전체 입력과 응답 기록](https://github.com/awesometic/tonedial/blob/main/docs/media/readme/ko/voice-examples.json)
+
+<sub>Codex CLI 0.160.0 · gpt-6.1-sol · high 추론 · 2026-10-14. 첫 완료 응답의 원문을 이미지로 정리했습니다. 네이티브 UI 화면이나 훅 활성화의 증거는 아닙니다.</sub>
+
 ## 사용해 보기
 
 Node 24 이상과 npm이 필요합니다.

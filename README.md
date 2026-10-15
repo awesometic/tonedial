@@ -19,6 +19,18 @@ See [refresh and bounded style feedback](https://github.com/awesometic/tonedial/
 
 <sub>Current synthetic dial at 80 columns, not an agent response. No native client or user state was used. <a href="https://github.com/awesometic/tonedial/blob/main/docs/media/readme/en/dial-example.json">Frame provenance</a> · <a href="https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#current-dial-example">Recipe</a>.</sub>
 
+## Hear the characters
+
+**Royal Advisor:** you are the monarch; your subject reports with courtly ceremony.
+**Ego Sword:** you are a novice adventurer; your sentient sword nags to keep you both alive.
+
+<img src="https://raw.githubusercontent.com/awesometic/tonedial/main/docs/media/readme/en/voice-examples.svg" alt="First real Codex replies from Royal Advisor and Ego Sword to the same function-renaming question" width="760">
+
+[All seven recorded examples](https://github.com/awesometic/tonedial/blob/main/docs/EXAMPLES.md) ·
+[Complete inputs and response records](https://github.com/awesometic/tonedial/blob/main/docs/media/readme/en/voice-examples.json)
+
+<sub>Codex CLI 0.160.0 · gpt-6.1-sol · high effort · 2026-10-14. First completed responses, formatted as a transcript. This is not a native UI screenshot or hook-activation proof.</sub>
+
 ## Try it
 
 Requires Node 24+ and npm. From this checkout:

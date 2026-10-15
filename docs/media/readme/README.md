@@ -13,9 +13,13 @@ docs/media/readme/
   en/
     dial.png
     dial-example.json
+    voice-examples.json
+    voice-examples.svg
   ko/
     dial.svg
     dial-example.json
+    voice-examples.json
+    voice-examples.svg
 ```
 
 Use lowercase language tags for directories and lowercase-kebab-case semantic file stems.
@@ -42,3 +46,17 @@ The Korean SVG is generated with `node scripts/dial-svg.ts ko 80`.
 Use terminal cells to position glyphs; do not stretch glyph outlines to fill those cells.
 Keep prose runs together; fixed cell positions belong to column boundaries, not each letter or word.
 Run generation and media tests from the repository root with disposable state, and inspect glyph alignment before claiming a current image.
+
+
+Recorded voice examples use the actual ToneDial test handoff and a disposable exec adapter
+around the native Codex client, with no provider/UI imitation and no product capture API.
+Each locale JSON owns all seven first completed replies, complete compiler inputs and tone/reply hashes.
+README features only Royal Advisor and Ego Sword; `docs/EXAMPLES.md` and the declared Korean
+translation `docs/EXAMPLES.ko.md` show every reply verbatim.
+Generate the two-role image with `node scripts/voice-svg.ts en` or `node scripts/voice-svg.ts ko`.
+These SVGs format transcripts; they are not screenshots of the native provider interface.
+Retain model/client/effort/date metadata, failed-request notes and any unobserved evidence boundary.
+Never polish model wording, retry a completed response for a preferred result, publish raw provider
+journals or auth material, or treat these samples as hook activation or a scored measurement.
+The consumer test checks locale links, all seven replies, exact hashes, current compiler inputs,
+verbatim page content, featured selection and deterministic SVG output.
