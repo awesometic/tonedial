@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=1357; endsWithNewline=true]
+--- stdout --- [bytes=1159; endsWithNewline=true]
 ToneDial · wire
 
   Connection scope: project
@@ -9,25 +9,21 @@ ToneDial · wire
   Changes: 6
 
   <ROOT>/state/reader.mjs
-  → <ROOT>/state/reader.mjs
   (new file)  395 lines
   + #!/usr/bin/env node
   + import {
 
   <ROOT>/state/skill/tonedial/SKILL.md
-  → <ROOT>/state/skill/tonedial/SKILL.md
   (new file)  277 lines
   + ---
   + name: tonedial
 
   <ROOT>/state/skill/tonedial/references/traits.md
-  → <ROOT>/state/skill/tonedial/references/traits.md
   (new file)  88 lines
   + Twelve axes, each 1 to 5. Read the live values with `tonedial show --json`; this file says what
   + each one **owns**, which is what tells you which axis a request is actually about.
 
   <ROOT>/project/.codex/hooks.json
-  → <ROOT>/project/.codex/hooks.json
   (new file)  39 lines
   +   "description": "ToneDial: load saved response tone",
   +   "hooks": {
@@ -36,7 +32,6 @@ ToneDial · wire
     <ROOT>/project/.agents/skills/tonedial
 
   <ROOT>/state/config.json
-  → <ROOT>/state/config.json
   (modified)  +169 -51
   -     "registrations": {},
   -     "resources": {}

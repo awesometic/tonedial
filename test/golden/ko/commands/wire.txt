@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=1413; endsWithNewline=true]
+--- stdout --- [bytes=1215; endsWithNewline=true]
 ToneDial · wire
 
   연결 범위: 프로젝트
@@ -9,25 +9,21 @@ ToneDial · wire
   변경 항목 6개
 
   <ROOT>/state/reader.mjs
-  → <ROOT>/state/reader.mjs
   (새 파일)  395줄
   + #!/usr/bin/env node
   + import {
 
   <ROOT>/state/skill/tonedial/SKILL.md
-  → <ROOT>/state/skill/tonedial/SKILL.md
   (새 파일)  277줄
   + ---
   + name: tonedial
 
   <ROOT>/state/skill/tonedial/references/traits.md
-  → <ROOT>/state/skill/tonedial/references/traits.md
   (새 파일)  88줄
   + Twelve axes, each 1 to 5. Read the live values with `tonedial show --json`; this file says what
   + each one **owns**, which is what tells you which axis a request is actually about.
 
   <ROOT>/project/.codex/hooks.json
-  → <ROOT>/project/.codex/hooks.json
   (새 파일)  39줄
   +   "description": "ToneDial: load saved response tone",
   +   "hooks": {
@@ -36,7 +32,6 @@ ToneDial · wire
     <ROOT>/project/.agents/skills/tonedial
 
   <ROOT>/state/config.json
-  → <ROOT>/state/config.json
   (수정)  +169 -51
   -     "registrations": {},
   -     "resources": {}

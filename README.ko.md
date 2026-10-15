@@ -80,4 +80,4 @@ tonedial test codex --preset my-sword
 
 [사용법과 전체 명령어](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md) · [프리셋·수정 기여하기](https://github.com/awesometic/tonedial/blob/main/CONTRIBUTING.md) · [테스트](https://github.com/awesometic/tonedial/blob/main/docs/TESTING.md) · [보안](https://github.com/awesometic/tonedial/blob/main/SECURITY.md)
 
-[소스 빌드](https://github.com/awesometic/tonedial/blob/main/CONTRIBUTING.md#build-and-run-from-source) · [에이전트 작업 가이드](https://github.com/awesometic/tonedial/blob/main/AGENTS.md) · [MIT 라이선스](https://github.com/awesometic/tonedial/blob/main/LICENSE) · [서드파티 고지](https://github.com/awesometic/tonedial/blob/main/THIRD_PARTY_NOTICES.md)
+[에이전트 작업 가이드](https://github.com/awesometic/tonedial/blob/main/AGENTS.md) · [MIT 라이선스](https://github.com/awesometic/tonedial/blob/main/LICENSE) · [서드파티 고지](https://github.com/awesometic/tonedial/blob/main/THIRD_PARTY_NOTICES.md)

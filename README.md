@@ -80,4 +80,4 @@ tonedial test codex --preset my-sword
 
 [Usage & reference](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md) · [Contribute a preset or fix](https://github.com/awesometic/tonedial/blob/main/CONTRIBUTING.md) · [Testing](https://github.com/awesometic/tonedial/blob/main/docs/TESTING.md) · [Security](https://github.com/awesometic/tonedial/blob/main/SECURITY.md)
 
-[Build from source](https://github.com/awesometic/tonedial/blob/main/CONTRIBUTING.md#build-and-run-from-source) · [Agent guide](https://github.com/awesometic/tonedial/blob/main/AGENTS.md) · [MIT license](https://github.com/awesometic/tonedial/blob/main/LICENSE) · [Third-party notices](https://github.com/awesometic/tonedial/blob/main/THIRD_PARTY_NOTICES.md)
+[Agent guide](https://github.com/awesometic/tonedial/blob/main/AGENTS.md) · [MIT license](https://github.com/awesometic/tonedial/blob/main/LICENSE) · [Third-party notices](https://github.com/awesometic/tonedial/blob/main/THIRD_PARTY_NOTICES.md)

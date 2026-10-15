@@ -55,7 +55,16 @@ Keep every gate; build alone does not typecheck tests/scripts.
 Use focused checks while working and the relevant full suite after runtime/build changes settle.
 [TESTING.md](./docs/TESTING.md#automated-checks) owns test selection and reporting; skipped checks are never passes.
 
-For new packs or changed inputs, supply complete valid frontmatter/compiler input and a valid artifact block before the first fixture extraction, then run packs → fixtures.
+For a new pack or changed compiler inputs, prepare complete valid frontmatter, a compiler-generated artifact block and its exact code-point count first.
+Extract the inputs before regenerating packs; `packs` reads the generated fixture configs, not frontmatter:
+
+```bash
+npm run fixtures    # create/update fixture inputs from the prepared pack
+npm run packs       # compile artifacts using those inputs
+npm run fixtures    # synchronize the final artifacts and counts
+```
+
+For compiler/anchor text changes with unchanged pack inputs, use packs → fixtures as above.
 Generate artifacts through the compiler; never hand-edit existing artifact blocks or generated fixtures.
 Measurements apply only to the exact artifact bytes they record; changed bytes need fresh evidence.
 

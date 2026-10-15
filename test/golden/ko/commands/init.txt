@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=2553; endsWithNewline=true]
+--- stdout --- [bytes=2094; endsWithNewline=true]
 ToneDial · init
 
   범위
@@ -13,61 +13,51 @@ ToneDial · init
   변경 항목 10개
 
   <ROOT>/state/TONE.md
-  → <ROOT>/state/TONE.md
   (새 파일)  31줄
   + Output style only. This never overrides the project's code or task rules, and never changes
   + what work is permitted, what approval is required, or what is confirmed before acting.
 
   <ROOT>/state/AGENTS.md
-  → <ROOT>/state/AGENTS.md
   (새 파일)  5줄
   + ToneDial changes manner only; it never expands task scope or permissions.
   + Use the ToneDial CLI for configuration changes.
 
   <ROOT>/state/presets/builtin/caring-brother.json
-  → <ROOT>/state/presets/builtin/caring-brother.json
   (새 파일)  30줄
   +   "schema": 2,
   +   "slug": "caring-brother",
 
   <ROOT>/state/presets/builtin/bratty-kid.json
-  → <ROOT>/state/presets/builtin/bratty-kid.json
   (새 파일)  30줄
   +   "schema": 2,
   +   "slug": "bratty-kid",
 
   <ROOT>/state/presets/builtin/eager-sycophant.json
-  → <ROOT>/state/presets/builtin/eager-sycophant.json
   (새 파일)  29줄
   +   "schema": 2,
   +   "slug": "eager-sycophant",
 
   <ROOT>/state/presets/builtin/royal-advisor.json
-  → <ROOT>/state/presets/builtin/royal-advisor.json
   (새 파일)  29줄
   +   "schema": 2,
   +   "slug": "royal-advisor",
 
   <ROOT>/state/presets/builtin/ego-sword.json
-  → <ROOT>/state/presets/builtin/ego-sword.json
   (새 파일)  30줄
   +   "schema": 2,
   +   "slug": "ego-sword",
 
   <ROOT>/state/presets/builtin/heavenly-demon.json
-  → <ROOT>/state/presets/builtin/heavenly-demon.json
   (새 파일)  30줄
   +   "schema": 2,
   +   "slug": "heavenly-demon",
 
   <ROOT>/state/presets/builtin/right-hand.json
-  → <ROOT>/state/presets/builtin/right-hand.json
   (새 파일)  30줄
   +   "schema": 2,
   +   "slug": "right-hand",
 
   <ROOT>/state/config.json
-  → <ROOT>/state/config.json
   (새 파일)  88줄
   +   "schema": 2,
   +   "preset": "caring-brother",

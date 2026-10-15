@@ -126,6 +126,7 @@ td_trial curl "$curl_cli" --version --json
 Require a human install receipt followed by the CLI's schema-3 version result.
 Installation must not initialize tone state, modify provider files or add shell PATH lines.
 Report bare-command reachability separately from state/native health.
+In this redirected layout, curl doctor can report a missing shell PATH line even when the helper resolves the command; inspect `appHealthy` and individual checks separately.
 
 ### Check state and preservation
 
@@ -135,17 +136,16 @@ Run both channels:
 check_state() {
   channel="$1"
   cli="$2"
-  td_trial "$channel" "$cli" init --lang en --tools none --global --auto --dry-run --json
-  td_trial "$channel" "$cli" init --lang en --tools none --global --auto --json
-  td_trial "$channel" "$cli" compile --check --json
-  td_trial "$channel" "$cli" set warmth=4 --json
-  td_trial "$channel" "$cli" save "Trial Preset" --json
-  td_trial "$channel" "$cli" export trial-preset --json
-  td_trial "$channel" "$cli" list --json
-  td_trial "$channel" "$cli" doctor --global --json
+  td_trial "$channel" "$cli" init --lang en --tools none --global --auto --dry-run --json || return
+  td_trial "$channel" "$cli" init --lang en --tools none --global --auto --json || return
+  td_trial "$channel" "$cli" compile --check --json || return
+  td_trial "$channel" "$cli" set warmth=4 --json || return
+  td_trial "$channel" "$cli" save "Trial Preset" --json || return
+  td_trial "$channel" "$cli" export trial-preset --json || return
+  td_trial "$channel" "$cli" list --json || return
+  td_trial "$channel" "$cli" doctor --global --json || return
 }
-check_state npm "$npm_cli"
-check_state curl "$curl_cli"
+check_state npm "$npm_cli" && check_state curl "$curl_cli"
 ```
 
 Stop on any failure. Inspect files/modes as well as receipts:

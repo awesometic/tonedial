@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=635; endsWithNewline=true]
+--- stdout --- [bytes=565; endsWithNewline=true]
 ToneDial · unwire
 
   Connection scope: project
@@ -9,7 +9,6 @@ ToneDial · unwire
   Changes: 3
 
   <ROOT>/project/.codex/hooks.json
-  → <ROOT>/project/.codex/hooks.json
   (modified)  +0 -39
   - {
   -   "description": "ToneDial: load saved response tone",
@@ -20,7 +19,6 @@ ToneDial · unwire
     <ROOT>/project/.agents/skills/tonedial
 
   <ROOT>/state/config.json
-  → <ROOT>/state/config.json
   (modified)  +2 -102
   -     "registrations": {
   -       "[\"codex\",\"project\",\"<ROOT>/project\"]": {

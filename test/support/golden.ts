@@ -69,7 +69,8 @@ export function goldenUpdateEnabled(env: NodeJS.ProcessEnv = process.env): boole
 
 /** The golden suite owns only its disposable root; it never observes the maintainer's home. */
 export function createGoldenWorkspace(language: GoldenLanguage): GoldenWorkspace {
-  const root = mkdtempSync(join(tmpdir(), "tonedial-golden-"));
+  // Host tmpdir aliases must not add real-path receipt lines to otherwise identical fixtures.
+  const root = realpathSync(mkdtempSync(join(tmpdir(), "tonedial-golden-")));
   const project = join(root, "project");
   const state = join(root, "state");
   const bin = join(root, "bin");

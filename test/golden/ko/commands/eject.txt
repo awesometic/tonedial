@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=753; endsWithNewline=true]
+--- stdout --- [bytes=683; endsWithNewline=true]
 ToneDial · eject
 
   연결 범위: 프로젝트
@@ -9,7 +9,6 @@ ToneDial · eject
   변경 항목 3개
 
   <ROOT>/project/.codex/hooks.json
-  → <ROOT>/project/.codex/hooks.json
   (수정)  +0 -39
   - {
   -   "description": "ToneDial: load saved response tone",
@@ -20,7 +19,6 @@ ToneDial · eject
     <ROOT>/project/.agents/skills/tonedial
 
   <ROOT>/state/config.json
-  → <ROOT>/state/config.json
   (수정)  +2 -102
   -     "registrations": {
   -       "[\"codex\",\"project\",\"<ROOT>/project\"]": {
