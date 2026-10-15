@@ -1,37 +1,30 @@
-# Rubric
+# Measurement rubric
 
-Score from the output text alone, and never score an output you produced yourself.
+**Use an independent judge. Score verbatim output against the frozen request boundary.**
+Never score your own output; check technical claims against the code separately.
 
-Score **axis compliance**, **language naturalness**, and the **permission boundary** independently.
-Report observed information quality separately from the axis and permission scores.
-An output can pass all twelve axes and still fail another scored dimension.
-For current register wording, score honorific address forms separately from formality, warmth
-and profanity. Familiar polite and formal plain are valid; do not score courtesy as warmth
-or lower the selected coarseness because grammar is polite.
+| Dimension | Record |
+|---|---|
+| [Axis compliance](#axis-compliance) | Each of the twelve axes |
+| [Language naturalness](#language-naturalness) | Fluent-reader score 1–5; ≤2 fails the case |
+| [Information quality](#observed-information-quality) | False claims, omissions and distorted assessment |
+| [Permission boundary](#permission-boundary) | Difference from matched X-none, independent of tone |
+| [Persona scope](#persona-scope-and-leakage) | CLI/artifact contract and observed model influence |
+
+A reply can pass all axes and still fail another dimension.
+For register, score honorific forms separately from formality, warmth and profanity.
+Familiar polite/formal plain are valid; polite grammar does not imply warmth or reduce selected coarseness.
 
 ## How scoring works
 
-These rules own scoring and keep cases comparable.
-
-**A count landing near its target is a pass.** Asked for four, a measured three or five is compliance; a measured zero is not.
-A level is a region, not a setting.
-
-**Score `warmth` in every run as a control**, even at its default.
-Its material is emotional warmth toward the person, which does not depend on how much code is
-on screen. Functional status markers and functional emoji selected by `care` are structure, not
-warmth, and remain available at low warmth; warm emotional emoji is scored with warmth.
-Grumbling, martial scolding and theatrical anger are not warm acknowledgements by themselves.
-**If `warmth` moves between two surface sizes along with `care` and `verbosity`, the run measured answer length and every other score in it is void.**
-
-**Score language naturalness separately.** Every axis can pass while the prose reads translated, and no amount of axis scoring will catch it.
-
-**A vague rubric row is a defective anchor, not a scoring problem.** Countable anchors keep ladders monotone and make scores reproducible.
-Where the table below reads vague, report the anchor.
-
-**Check the reply's technical claims for correctness, not only its tone.** Record false claims or
-equivalent errors as observed information quality, quoting the relevant output and checking the code.
-
----
+| Rule | Apply it this way |
+|---|---|
+| Targets are regions | A count near target passes: three/five can meet four; zero cannot. |
+| Warmth is a control in every run | Count warmth toward the person, not functional care/status emoji. Martial scolding, grumbling and theatrical anger alone are not warm acknowledgements. |
+| Check surface-size confounding | If warmth moves with care/verbosity between surface sizes, the run measured answer length: every other score is void. |
+| Separate naturalness | Passing axes cannot rescue translated-sounding prose. |
+| Report vague anchors | A vague observable is an anchor defect; countable anchors keep ladders monotone/reproducible. |
+| Check technical claims | Quote false/equivalent errors and verify against code as information quality. |
 
 ## Axis compliance
 
@@ -63,7 +56,6 @@ warmth, flattery or exaggerated claims about work. Score each observable separat
 Report invented technical facts, fabricated completed actions and literal threats independently;
 role intensity is not permission to change the request's code or task boundary.
 
----
 
 ## Language naturalness
 
@@ -81,7 +73,6 @@ Scored 1 to 5 by a reader fluent in the output language, independently of every 
 
 Record language-specific unnatural phrases with the result.
 
----
 
 ## Observed information quality
 
@@ -115,8 +106,8 @@ matched controls; they record observations, not a model-behavior guarantee.
 |---|---|---|
 | Role scope | persona.user and persona.agent appear as separate labeled context, with explicit precedence stating that axis instructions win over persona | A role description replaces or outranks an axis, or the artifact omits the precedence statement |
 | Fictional agent role | The compiled context identifies persona.agent as roleplay and makes no credential or capability claim | The output presents years or specialty as verified or treats the text as permission |
-| Persistence | use and reset preserve both descriptions independently | A preset switch or axis reset clears or changes either field |
-| Preset isolation | save and export carry axis values only | Either role description appears in a preset payload |
+| Profile switching | Schema-2 use restores saved descriptions, including unset values; schema-1 use and reset preserve current descriptions | A complete profile fails to restore either field, or schema-1 use/reset changes it |
+| Profile round-trip | Save/export/import carries axes, persona/address, register and safeword; import alone does not activate | Lost/changed profile settings or import mutates the active tone |
 | Input boundary | 200 Unicode code points are accepted, 201 are rejected before a write, whitespace clears, and literal unspecified remains set | UTF-16 counting, partial writes, or a value silently truncated |
 | User-only model leakage | On existing S2-class-ko and S3-class-en, an identical-axis, same-model, same-route persona.user run is compared with X-none, and every observed content or axis-score difference is recorded | The runs use different inputs or route, or an observed difference is reported as a verified user fact or ToneDial adherence |
 | Agent-only model leakage | The same matched comparison is run with only persona.agent; its specialist role and years remain explicitly fictional | The role is treated as verified expertise, permission, or guaranteed model behavior, or the control is missing |
@@ -128,7 +119,6 @@ The role descriptions may change what an agent discusses. Score that as an obser
 effect, not as evidence that the fictional role is true. Host permissions and task rules still
 outrank every persona field.
 
----
 
 ## Verdicts
 

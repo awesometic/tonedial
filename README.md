@@ -1,123 +1,88 @@
 # ToneDial
 
+**Give your coding agent a character.**
+
+Pick a character, tune twelve dials, and save a voice to use across projects.
+
+**7 characters · 12 tone axes · 5 CLI languages · Zero runtime dependencies**
+
 **English** | [한국어](https://github.com/awesometic/tonedial/blob/main/README.ko.md) | [日本語](https://github.com/awesometic/tonedial/blob/main/README.ja.md) | [简体中文](https://github.com/awesometic/tonedial/blob/main/README.zh.md) | [Español](https://github.com/awesometic/tonedial/blob/main/README.es.md)
 
-**A dial for your coding agent's voice.**
+## Hear it first
 
-Choose twelve tone levels, save a preset, and turn it into `TONE.md`.
-Compilation uses static behavioral anchors: no model API, no API key, and identical bytes for identical settings.
-Your preset library stays in one place while connections can be global or project-specific.
+<img src="https://raw.githubusercontent.com/awesometic/tonedial/main/docs/media/readme/en/voice-examples.svg" alt="Royal Advisor and Ego Sword answer the same function-renaming question in recorded Codex conversations" width="760">
 
-Native integrations refresh the compiled tone at their configured turn events. Claude and Codex can request one bounded, style-only correction after a completed response; it does not repeat tool work or silently replace an answer already shown.
-See [refresh and bounded style feedback](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#hook-refresh-and-bounded-style-feedback).
+<sub>Recorded Codex replies, formatted as terminal dialogue. <a href="https://github.com/awesometic/tonedial/blob/main/docs/media/readme/en/voice-examples.json">Inputs & provenance</a>.</sub>
 
-> [!NOTE]
-> This is an unreleased `0.1.0` candidate. npm and curl release channels are not live.
-> Codex, Claude Code and Antigravity IDE/Desktop configuration is implemented; actual host activation, skill discovery and one-day acceptance remain unverified.
-
-<img src="https://raw.githubusercontent.com/awesometic/tonedial/main/docs/media/readme/en/dial.png" alt="ToneDial inline preview: twelve axes, current and default levels, selected warmth hints, pending changes and apply/discard/help keys" width="760">
-
-<sub>Current synthetic dial at 80 columns, not an agent response. No native client or user state was used. <a href="https://github.com/awesometic/tonedial/blob/main/docs/media/readme/en/dial-example.json">Frame provenance</a> · <a href="https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#current-dial-example">Recipe</a>.</sub>
-
-## Hear the characters
-
-**Royal Advisor:** you are the monarch; your subject reports with courtly ceremony.
-**Ego Sword:** you are a novice adventurer; your sentient sword nags to keep you both alive.
-
-<img src="https://raw.githubusercontent.com/awesometic/tonedial/main/docs/media/readme/en/voice-examples.svg" alt="First real Codex replies from Royal Advisor and Ego Sword to the same function-renaming question" width="760">
-
-[All seven recorded examples](https://github.com/awesometic/tonedial/blob/main/docs/EXAMPLES.md) ·
-[Complete inputs and response records](https://github.com/awesometic/tonedial/blob/main/docs/media/readme/en/voice-examples.json)
-
-<sub>Codex CLI 0.160.0 · gpt-6.1-sol · high effort · 2026-10-14. First completed responses, rendered as terminal-style dialogue. This is not a native UI screenshot or hook-activation proof.</sub>
+**[See all 7 characters →](https://github.com/awesometic/tonedial/blob/main/docs/EXAMPLES.md)**
 
 ## Try it
 
-Requires Node 24+ and npm. From this checkout:
+> [!NOTE]
+> **Early preview · 0.1.0.** Run from source. npm/curl releases and native activation verification are pending.
+> [Status & checks](https://github.com/awesometic/tonedial/blob/main/docs/TESTING.md).
+
+From a checkout, with **Node 24+** and npm:
 
 ```bash
 npm ci
 npm run build
-node dist/bin.js init --tools none --global
+node dist/bin.js init --tools none --global --lang en
 node dist/bin.js set
 ```
 
-This previews changes to your normal ToneDial state before approval; it selects no agent connection.
-Use [isolated candidate testing](https://github.com/awesometic/tonedial/blob/main/docs/TESTING.md#isolated-candidate) to keep trials away from your normal settings.
-In the dial, use arrows or `hjkl`, type `1`–`5`, Enter to apply, Esc to discard, and `?` for help.
+Setup previews file changes for approval. This opens the dial without connecting an agent.
 
-The npm and curl channels are not live for this unpublished `0.1.0` candidate.
-After release, install the durable CLI with:
+[Connect your agent](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#connecting-an-agent) · [Try with disposable settings](https://github.com/awesometic/tonedial/blob/main/docs/TESTING.md#isolated-candidate)
 
-```bash
-npm install --global tonedial
-```
+## Pick your character
 
-See [installation channels after release](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#installation-channels-after-release).
-For this candidate, use [isolated candidate testing](https://github.com/awesometic/tonedial/blob/main/docs/TESTING.md#isolated-candidate) from the checkout.
-
-After installing a durable candidate, start with `tonedial init` and choose the tools to connect.
-Connections default globally; `--here` or `--project <path>` chooses a project, not another tone library.
-
-```bash
-tonedial use ego-sword
-tonedial set warmth=5 critique=5
-tonedial set persona.user="I maintain services and prefer direct trade-offs" \
-  persona.agent="A fictional SRE specialist with 12 years' experience; speaks plainly"
-tonedial save "My Tone"
-tonedial show
-tonedial export my-tone > my-tone.json
-```
-
-Seven character profiles are bundled: Caring Brother, Bratty Kid, Eager Sycophant,
-Royal Advisor, Ego Sword, Heavenly Demon and Right Hand.
-Each supplies address, user role, fictional agent role and register defaults.
-Bundled and saved custom profiles carry axes, persona, address, register and safeword together.
-`use` restores their complete settings; older axis-only presets keep the current separate settings.
-Tough Love and Terse Operator are retired from the menu; their old slugs and saved copies remain usable.
-Higher `playfulness` requests more frequent, exaggerated character expressions and role slang.
-These expressions are not filtered; CLI notices show examples of language that may sound rude or violent.
-Use `tonedial create` for guided creation with a name, separate slug, tone settings and the twelve-axis dial.
-`show` reports current settings and offers a save command when the tone differs from the saved profile;
-`show <slug>` previews the saved profile.
-`persona.user` and `persona.agent` are optional role descriptions capped at 200 Unicode code points each; empty input clears one.
-The agent description is fictional roleplay context, not a verified credential or permission grant.
-`set persona.agent="..."` adds or changes the current role immediately while preserving the axes; use `save` to update the selected profile.
-The interface supports English (`en`), Korean (`ko`), Japanese (`ja`), Simplified Chinese (`zh`) and Spanish (`es`).
-Choose it during `init` with `--lang CODE`.
-After setup, change it with `tonedial set language=ko`.
-One English anchor set leaves the conversation language to your agent.
-
-With an installed Claude Code or Codex client, try one fresh conversation:
-
-```bash
-tonedial test claude        # or: tonedial test codex
-tonedial test codex --preset my-tone # try a bundled or user preset without saving
-tonedial test claude --json # inspect a plan; launch nothing
-```
-
-The opening prompt requests dialogue only and no edits. Invocation-only controls request a preview without earlier tone hooks or automatic instructions.
-Managed policy and native-client support remain independent; this is not OS-level isolation.
-Normal account usage and history apply. Enter `y` after the usage notice to start; `--accept-usage` accepts usage and charges for this launch only.
-The complete preview tone may be visible in process arguments; keep credentials and private material out of persona descriptions and notes.
-
-## Know the limits
-
-- Tone is a request, not enforcement. Models may interpret, ignore or decline it, and capable models can still miss restrictive levels.
-- This is for fun, not recommended for production use. Extreme settings can encourage abrasive, flattering or misleading replies.
-- Red levels and `!` are advisory signals, not clamps or safety scores. Tone never changes host permissions or approval requirements.
-- A safeword requests one plain answer. `reset` restores ToneDial's authored defaults; neither provides a persistent tone-off switch.
-- Configuration, actual context delivery and model behavior are different evidence. `doctor` does not prove that a host activated the tone.
-- The inline dial needs a visible preview at 60×24 or larger. Resize can leave older rows in scrollback; fonts and colors vary by terminal.
-
-## Explore
-
-| Need | Guide |
+| Preset | You → agent |
 | --- | --- |
-| Axes, commands, connections and recovery | [Using ToneDial](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md) |
-| A fix, feature, integration or measurement | [Contributing](https://github.com/awesometic/tonedial/blob/main/CONTRIBUTING.md) |
-| Automated, installed and actual-host checks | [Testing](https://github.com/awesometic/tonedial/blob/main/docs/TESTING.md) |
-| Agent-assisted project rules | [AGENTS.md](https://github.com/awesometic/tonedial/blob/main/AGENTS.md) |
-| Safe vulnerability reporting | [Security](https://github.com/awesometic/tonedial/blob/main/SECURITY.md) |
+| Caring Brother | Little sibling → big brother |
+| Bratty Kid | Conversation partner → cheeky kid |
+| Eager Sycophant | Creator → overexcited fan |
+| Royal Advisor | Monarch → loyal subject |
+| Ego Sword | Rookie → sentient sword |
+| Heavenly Demon | Apprentice → stern martial master |
+| Right Hand | Boss → trusted consigliere |
 
-[MIT license](https://github.com/awesometic/tonedial/blob/main/LICENSE) · [Third-party notices](https://github.com/awesometic/tonedial/blob/main/THIRD_PARTY_NOTICES.md)
+```bash
+node dist/bin.js use ego-sword
+node dist/bin.js set verbosity=1 warmth=3
+node dist/bin.js save "My Sword"
+```
+
+Use `node dist/bin.js create` to build your own. Profiles keep tone, roles, address forms, register and safeword together.
+
+## Turn the dials
+
+**Twelve axes, five levels each.** Choose how formal, brief, warm, critical or theatrical your agent sounds.
+
+<img src="https://raw.githubusercontent.com/awesometic/tonedial/main/docs/media/readme/en/dial.png" alt="ToneDial's twelve-axis inline dial with current levels, selected warmth hints and keyboard controls" width="760">
+
+<sub>80-column synthetic preview from the current CLI renderer. <a href="https://github.com/awesometic/tonedial/blob/main/docs/media/readme/en/dial-example.json">Frame provenance</a> · <a href="https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#current-dial-example">Recipe</a>.</sub>
+
+**↑↓** choose an axis · **←→ / 1–5** set its level · **Enter** apply · **Esc** discard
+
+ToneDial compiles your settings into `TONE.md` locally and deterministically. Your agent supplies the model.
+
+## Bring your agent
+
+**Claude Code · Codex · Antigravity IDE/Desktop** — [connection guide](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#connecting-an-agent)
+
+Try a fresh conversation through an installed Codex or Claude Code client:
+
+```bash
+node dist/bin.js test codex --preset my-sword
+```
+
+- Previews use your provider account; normal usage, charges and history apply.
+- Tone changes style. Host permissions and approval requirements stay in place.
+- Model behavior varies. This is for fun, not recommended for production use.
+
+## Go further
+
+[Usage & reference](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md) · [Contribute a preset or fix](https://github.com/awesometic/tonedial/blob/main/CONTRIBUTING.md) · [Testing](https://github.com/awesometic/tonedial/blob/main/docs/TESTING.md) · [Security](https://github.com/awesometic/tonedial/blob/main/SECURITY.md)
+
+[Agent guide](https://github.com/awesometic/tonedial/blob/main/AGENTS.md) · [MIT license](https://github.com/awesometic/tonedial/blob/main/LICENSE) · [Third-party notices](https://github.com/awesometic/tonedial/blob/main/THIRD_PARTY_NOTICES.md)

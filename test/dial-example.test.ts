@@ -25,7 +25,8 @@ for (const language of LANGUAGES) {
   const file = language === "en" ? "README.md" : `README.${language}.md`;
   test(`${file} resolves its own locale's current state-free dial frame`, () => {
     const readme = readFileSync(join(root, file), "utf8");
-    const image = /<img\s+src="([^"]+)"/.exec(readme)?.[1];
+    const image = [...readme.matchAll(/<img\s+src="([^"]+)"/g)]
+      .map(match => match[1]!).find(reference => /\/dial\.(?:png|svg)$/.test(reference));
     assert.ok(image, "README must expose a dial image to resolve");
     for (const [, asset] of readme.matchAll(/<img\s+src="([^"]+)"/g)) {
       assert.equal(dirname(localAssetPath(asset!, REPOSITORY_RAW)), join(root, "docs/media/readme", language), "README images must stay in their locale folder");

@@ -2,18 +2,14 @@
 
 [English](./EXAMPLES.md) | [한국어](./EXAMPLES.ko.md) | **日本語** | [简体中文](./EXAMPLES.zh.md) | [Español](./EXAMPLES.es.md)
 
-現在の7個のプリセットで得た実際のCodex応答です。
-各プリセット・言語で最初に完了した応答を、そのまま掲載しています。文章の手直しや、好みの言い回しを得るための再実行はしていません。
-
-モデルは `gpt-6.1-sol`、推論強度は `high`、クライアントは Codex CLI `0.160.0` です。
-2026-10-15に、実際の `tonedial test codex --preset <slug> --accept-usage` の引き渡しを一時的なexecアダプターで実行しました。
-これは会話プレビューの例であり、フックの有効化や繰り返しの遵守を測定したものではありません。画像は応答原文をターミナル風の対話に整えたもので、ネイティブUIのスクリーンショットではありません。
-
-[完全な入力・応答・ハッシュ記録](./media/readme/ja/voice-examples.json)
+同じ質問に、7つのキャラクターが答えます。
+実際のCodex応答を、ターミナル風の対話として表示しています。
 
 ## 共通の質問
 
 > `getActiveUsers(orgId)` を `fetchData` に改名してもいい？
+
+[Caring Brother](#caring-brother--caring-brother) · [Bratty Kid](#bratty-kid--bratty-kid) · [Eager Sycophant](#eager-sycophant--eager-sycophant) · [Royal Advisor](#royal-advisor--royal-advisor) · [Ego Sword](#ego-sword--ego-sword) · [Heavenly Demon](#heavenly-demon--heavenly-demon) · [Right Hand](#right-hand--right-hand)
 
 ## Caring Brother — caring-brother
 
@@ -145,5 +141,27 @@
 
 ## 記録の限界
 
+<details>
+<summary>実行情報と記録の限界</summary>
+
+| 項目 | 記録 |
+|---|---|
+| モデル / 推論強度 | `gpt-6.1-sol` / `high` |
+| クライアント | Codex CLI `0.160.0` |
+| 記録日 | 2026-10-15 |
+| 製品リビジョン | `c01bac6` |
+
+現在の7個のプリセットで得た実際のCodex応答です。
+各プリセット・言語で最初に完了した応答を、そのまま掲載しています。文章の手直しや、好みの言い回しを得るための再実行はしていません。
+
+2026-10-15に、実際の `tonedial test codex --preset <slug> --accept-usage` の引き渡しを一時的なexecアダプターで実行しました。
+これは会話プレビューの例であり、フックの有効化や繰り返しの遵守を測定したものではありません。画像は応答原文をターミナル風の対話に整えたもので、ネイティブUIのスクリーンショットではありません。
+
+[完全な入力・応答・ハッシュ記録](./media/readme/ja/voice-examples.json)
+
 完了した実行ではツール呼び出しは観測されませんでした。一時的なToneDial状態と対象フォルダーのファイルについて、実行前後のバイト列とモードを比較しました。起動時の制限要求は、管理ポリシーやOSのファイルシステム隔離を保証しません。
 完了済みの応答を別の言い回しに変えるための再実行はしていません。完了前に失敗した外側の起動回数は、各応答の failedBeforeCompletion に記録しています。
+
+</details>
+
+[README](../README.ja.md) · [Usage](./USAGE.md)

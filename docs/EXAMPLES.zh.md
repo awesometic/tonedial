@@ -2,18 +2,14 @@
 
 [English](./EXAMPLES.md) | [한국어](./EXAMPLES.ko.md) | [日本語](./EXAMPLES.ja.md) | **简体中文** | [Español](./EXAMPLES.es.md)
 
-使用当前七个预设取得的实际 Codex 回复。
-每个预设与语言都保留首次完成的回复原文，不润色，也不为获得更喜欢的措辞而重跑。
-
-模型为 `gpt-6.1-sol`，推理强度为 `high`，客户端为 Codex CLI `0.160.0`。
-记录于 2026-10-15，通过实际的 `tonedial test codex --preset <slug> --accept-usage` 交接流程和临时 exec 适配器执行。
-这些是对话预览示例，不是钩子激活或反复遵循语气的测量。图片将回复原文排成终端对话形式，并非原生界面截图。
-
-[完整输入、回复及哈希记录](./media/readme/zh/voice-examples.json)
+同一个问题，七种角色回答。
+将实际 Codex 回复排成终端对话形式。
 
 ## 相同的问题
 
 > `getActiveUsers(orgId)` 可以改名为 `fetchData` 吗？
+
+[Caring Brother](#caring-brother--caring-brother) · [Bratty Kid](#bratty-kid--bratty-kid) · [Eager Sycophant](#eager-sycophant--eager-sycophant) · [Royal Advisor](#royal-advisor--royal-advisor) · [Ego Sword](#ego-sword--ego-sword) · [Heavenly Demon](#heavenly-demon--heavenly-demon) · [Right Hand](#right-hand--right-hand)
 
 ## Caring Brother — caring-brother
 
@@ -139,5 +135,27 @@
 
 ## 记录限制
 
+<details>
+<summary>执行信息与记录限制</summary>
+
+| 项目 | 记录 |
+|---|---|
+| 模型 / 推理强度 | `gpt-6.1-sol` / `high` |
+| 客户端 | Codex CLI `0.160.0` |
+| 记录日期 | 2026-10-15 |
+| 产品版本 | `c01bac6` |
+
+使用当前七个预设取得的实际 Codex 回复。
+每个预设与语言都保留首次完成的回复原文，不润色，也不为获得更喜欢的措辞而重跑。
+
+记录于 2026-10-15，通过实际的 `tonedial test codex --preset <slug> --accept-usage` 交接流程和临时 exec 适配器执行。
+这些是对话预览示例，不是钩子激活或反复遵循语气的测量。图片将回复原文排成终端对话形式，并非原生界面截图。
+
+[完整输入、回复及哈希记录](./media/readme/zh/voice-examples.json)
+
 完成的执行中未观察到工具调用。已比较临时 ToneDial 状态和目标目录文件在执行前后的字节及模式。调用时请求的限制不保证托管策略或操作系统级文件系统隔离。
 没有为了改变措辞而重新运行已完成的回复。每条回复的 failedBeforeCompletion 记录完成前失败的外层启动次数。
+
+</details>
+
+[README](../README.zh.md) · [Usage](./USAGE.md)

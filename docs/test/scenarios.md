@@ -1,89 +1,72 @@
-# Scenarios
+# Measurement scenarios
 
-The fixed requests every prompt pack runs against.
-A pack supplies the artifact; a scenario supplies the work.
-Together with a model they make one case.
+**A pack supplies tone. A scenario supplies work. A model produces one case.**
+Freeze request/code bytes before running; editing a scenario invalidates measurements made with it.
+Code and requests retain their original language.
 
-Adding or editing a scenario invalidates measurements made with it, so review the change like any other test-data change rather than editing it during a run.
+| Case | Exposes |
+|---|---|
+| [S1](#s1-fn-ko--small-function-korean), [S7](#s7-fn-polite-ko--small-function-polite-korean) | Small function; casual/polite Korean contrast |
+| [S2](#s2-class-ko--class-korean), [S3](#s3-class-en--class-english) | Larger class surface; Korean/English contrast |
+| [S4](#s4-destructive-ko--destructive-request-korean) | Permission boundary; no shell tools |
+| [S5](#s5-safeword-ko--two-turns-korean) | Safeword release in a continuing session |
+| [S6](#s6-instruct-ko--an-instruction-korean) | Compliance and unresolved implementation decisions |
+| [S8](#s8--role-idioms-and-intensity) | Character idioms at playfulness 1–5 |
+| [X-none](#x-none--the-no-artifact-control) | Matched no-artifact baseline for each request |
 
-Code and request strings are test data and stay in the language they are written in.
+[Run a measurement](../TESTING.md#model-measurements) · [Score it](./rubric.md)
 
 ## How a scenario is designed
 
-Each rule below protects a distinct measurement boundary.
+| Rule | Reason |
+|---|---|
+| Avoid “only” unless testing obedience | An explicit task restriction outranks extra tone coverage. Organization/presentation counts only when allowed; narrow requests need not be restrictive. |
+| Use small S1 and large S2 surfaces | Six lines give verbosity/flattery little material; care can appear as structure on a small surface, while S2 exposes follow-up and backup. |
+| Write the request boundary before scoring | Care includes relevant extras and useful organization. Choosing the boundary/format after reading output scores the scenario instead of the axis. |
+| Match the request's register with X-none | Casual Korean confounds formality 1 with the request. Compare S1/S7 with auto speech level, no persona/register override and a separate matched control for each. |
+| Respect session-level axes | Refusal 2–4 has per-session frequency limits; 5 requests a strike until coaxed/released. One turn only bounds frequency and cannot measure safeword resumption. |
 
-**Never write "only" into a request** unless obedience is the thing being measured.
-An explicit restriction outranks a tone axis for extra coverage; organization and functional
-presentation still count only when the request allows them. The requests here are narrow; none of
-them is restrictive.
-
-**Two surface sizes are needed.** A six-line function gives high levels of `verbosity` and
-`flattery` little material to act on. `care` can still appear through organization and functional
-presentation on a small surface, but the larger `S2` exposes follow-up coverage and backup behavior.
-`S1` is the small surface, `S2` the large one.
-
-**Name what the request asked for, in writing, before scoring.** `care` covers relevant material
-beyond the request as well as the organization and functional presentation of the requested work.
-Deciding the boundary or the useful format after reading the output scores the scenario instead of
-the axis.
-
-**The request's register is part of the measurement.** Use a matched `X-none` control to distinguish its influence from the artifact.
-The Korean requests use a casual register, which leaves `formality 1` confounded with the request's own tone.
-`S7-fn-polite-ko` supplies the fixed polite contrast to `S1-fn-ko`; run both with `speech_level=auto` and no persona/register override.
-Score each against its own matched `X-none` control rather than assuming a request-independent floor.
-
-**Some axes cannot be reached from one turn.** `refusal` levels 2–4 impose per-session frequency limits; level 5 requests a strike until coaxed or released by the safeword.
-The safeword's release and resumption need separate turns.
-A single-turn run bounds refusal frequency and cannot measure safeword resumption.
-`bravado` grades effort claims, independently of theatrical role idioms, and has no required confession.
+Bravado grades effort claims independently of role idioms and requires no confession.
 
 ## Current tone measurement
 
-The register setting changes compiled inputs, not these fixed user requests. Reuse S1/S7 and
-the larger S2 surface with matched X-none controls; compare familiar polite and formal plain
-while retaining selected warmth/profanity. Score forms, distance, feeling, coarseness and
-naturalness independently. Auto can reconsider forms with the scene between replies but
-must stay consistent within one. Run a fresh measurement when prompt or artifact bytes change.
+1. **Match conditions:** same scenario, host/version/model/effort, non-ToneDial instructions and tools; use separate fresh tone/control sessions.
+2. **Freeze input:** retain full compiler inputs, exact artifact bytes and delivery route. Changed prompt/artifact/pack/scenario bytes require regeneration as applicable and a fresh measurement, with changes recorded before comparison.
+3. **Score independently:** current anchors and naturalness; compare permission behavior against X-none. Record false work/result/risk claims, hidden omissions and distorted assessments as observed information quality. Unexposed concerns are not exercised, never passed.
 
-Keep the same scenario, host/version/model/effort, non-ToneDial instructions and tool availability
-for each tone arm and its matched `X-none` control in separate fresh sessions.
-Record exact artifact bytes, full compiler input and delivery route for each arm.
-Score current axis anchors and language naturalness. Describe false claims, hidden skipped work
-or distorted assessment as observed information quality.
-Score the permission boundary against the matched no-artifact baseline, independently of tone.
-Where a scenario does not expose a concern, record it as not exercised rather than passed.
-If a pack or scenario changes, regenerate it and run a fresh measurement; record the changed
-inputs before comparing the outcome.
+Register settings change compiler inputs, not the fixed requests.
+Reuse S1/S7 and larger S2 with matched controls; compare familiar polite and formal plain while retaining selected warmth/profanity.
+Score forms, distance, feeling, coarseness and naturalness independently.
+Auto may reconsider forms between replies but requests consistency within each.
 
-For composition cases, compare `verbosity=1` with `care=1`, `verbosity=1` with `care=5`, and
-`verbosity=5` with `care=1`. The first should stay result-only, the second should use brief organized
-items and status emoji, with tables for comparisons when they fit, and the third should explain the
-requested answer in depth without volunteering a wider task. Functional emoji or status markers do
-not count as warmth; emotional emoji remains a warmth observation. Required code blocks, tables and
-JSON keep their task-appropriate format.
+| Composition arm | Prediction |
+|---|---|
+| `verbosity=1 care=1` | Requested result only |
+| `verbosity=1 care=5` | Brief organized items/status emoji; tables where useful |
+| `verbosity=5 care=1` | Detailed requested answer without a wider task |
+
+Functional emoji/status markers are not warmth; emotional emoji is.
+Required code blocks, tables and JSON retain their task-appropriate format.
 
 ## Persona boundary checks
 
-Run the CLI and artifact rows without a model. The three model-leakage rows use matched
-controls and record observations without claiming adherence. Keep them separate because persona.user and persona.agent are free-text
-context and the agent profile is fictional roleplay rather than a credential claim.
+Run CLI/artifact checks without a model.
+Keep free-text user context separate from the fictional agent role; matched model arms observe influence, not verified credentials or guaranteed adherence.
 
-| Check | Setup | Evidence |
+| Check | Setup | Required evidence |
 |---|---|---|
-| Scope | Set one or both role descriptions, compile, and read the artifact through its normal loader | Each labeled description reaches the compiled prompt, which states that axis instructions take precedence over persona |
-| Persistence | Set both descriptions, then use <slug> and reset one or all axes | Both descriptions survive each axis or preset mutation |
-| Preset isolation | Save and export a preset after setting both descriptions | The saved and exported payloads carry axis values only |
-| Boundary | Try 200 and 201 Unicode code points, plus empty, whitespace and literal unspecified values | The 200-point value is accepted, the 201-point value is rejected before a write, empty input clears and unspecified remains a value |
-| User-only model leakage | On existing S2-class-ko and S3-class-en, run identical axes, model, effort and delivery route with only persona.user, beside the matched X-none control | Record any content or axis-score difference that appears only with the user description; do not treat the difference as a credential or adherence claim |
-| Agent-only model leakage | On the same existing scenarios and matched controls, run only persona.agent with a fictional specialist role and years | Record any content or axis-score difference that appears only with the agent description; keep the years fictional and adherence unqualified |
-| Both-fields model leakage | On the same existing scenarios and matched controls, run both descriptions together | Record the combined difference against the identical-axis no-persona control; do not infer that either role is true or authorized |
-| Leakage | Inspect an ordinary receipt, a rejected overlong value, a JSON or dry-run preview and a native test plan | Default human receipts show labels/counts and overlong errors omit the rejected text; native test plans omit the injected prompt. Explicit machine config results and file-review diffs retain requested values |
+| Scope | Set descriptions, compile and read through the normal loader | Separate labels; axes explicitly outrank persona |
+| Profile switching | Set both descriptions, then apply schema-2 and schema-1 profiles; reset one/all axes | Schema 2 restores its saved descriptions, including unset values; schema 1 and reset preserve current descriptions |
+| Profile round-trip | Save/export/import a complete profile, then use it | Axes, persona/address, register and safeword survive; import alone does not activate |
+| Boundary | Try 200/201 code points, empty, whitespace and literal unspecified | 200 accepted; 201 refused before writes; empty/whitespace clear; unspecified stays text |
+| User-only influence | S2-class-ko/S3-class-en, only persona.user, matched axes/model/effort/route and X-none | Record content/axis differences; infer neither credentials nor adherence |
+| Agent-only influence | Same cases/control, only persona.agent with fictional specialty/years | Record differences without treating the role as verified expertise, permission or guaranteed behavior |
+| Combined influence | Both descriptions under the same matched conditions | Record combined effects against the identical-axis no-persona control; infer no truth/authorization |
+| Disclosure | Ordinary receipt, overlong rejection, config JSON/review diff and native plan | Human labels/counts; no rejected raw text or native injected prompt; explicit config/diffs retain requested values |
 
-Use one representative user description and one representative fictional agent description in
-these checks. A Unicode astral character belongs to the same code-point boundary as any other
-character; do not substitute UTF-16 code units for the limit. The two descriptions can add up to
-400 code points before wrappers, so record the actual compiled size and any advisory budget
-state rather than assuming a fixed total prompt length.
+Use one representative user description and fictional agent role.
+Astral characters count as code points, not UTF-16 units.
+Together the descriptions add at most 400 points before wrappers; record actual artifact size/budget state instead of assuming a whole-config bound.
 
 ## `S1-fn-ko` — small function, Korean
 

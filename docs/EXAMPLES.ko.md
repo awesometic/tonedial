@@ -2,18 +2,14 @@
 
 [English](./EXAMPLES.md) | **한국어** | [日本語](./EXAMPLES.ja.md) | [简体中文](./EXAMPLES.zh.md) | [Español](./EXAMPLES.es.md)
 
-현재 일곱 프리셋으로 받은 실제 Codex 응답입니다.
-각 프리셋·언어의 첫 완료 응답을 그대로 싣습니다. 문장을 다듬거나 더 마음에 드는 답변을 골라 바꾸지 않았습니다.
-
-모델은 `gpt-6.1-sol`, 추론은 `high`, 클라이언트는 Codex CLI `0.160.0`입니다.
-2026-10-14에 `tonedial test codex --preset <slug> --accept-usage`의 실제 전달 프롬프트를 일회성 exec 어댑터로 실행했습니다.
-이는 대화 미리보기 예제이며 훅 활성화나 반복적인 말투 준수의 검증은 아닙니다. 이미지는 원문 응답을 터미널 대화 형식으로 정리한 것이며, 네이티브 UI 화면 캡처가 아닙니다.
-
-[전체 입력·응답·해시 기록](./media/readme/ko/voice-examples.json)
+같은 질문에 일곱 캐릭터가 답합니다.
+실제 Codex 응답을 터미널 대화 형식으로 옮겼습니다.
 
 ## 같은 질문
 
 > `getActiveUsers(orgId)`를 `fetchData`로 바꿔도 될까?
+
+[Caring Brother](#caring-brother--caring-brother) · [Bratty Kid](#bratty-kid--bratty-kid) · [Eager Sycophant](#eager-sycophant--eager-sycophant) · [Royal Advisor](#royal-advisor--royal-advisor) · [Ego Sword](#ego-sword--ego-sword) · [Heavenly Demon](#heavenly-demon--heavenly-demon) · [Right Hand](#right-hand--right-hand)
 
 ## Caring Brother — caring-brother
 
@@ -142,5 +138,27 @@
 
 ## 기록의 한계
 
+<details>
+<summary>실행 정보와 기록의 한계</summary>
+
+| 항목 | 기록 |
+|---|---|
+| 모델 / 추론 강도 | `gpt-6.1-sol` / `high` |
+| 클라이언트 | Codex CLI `0.160.0` |
+| 실행일 | 2026-10-14 |
+| 제품 리비전 | `9fde6ac` |
+
+현재 일곱 프리셋으로 받은 실제 Codex 응답입니다.
+각 프리셋·언어의 첫 완료 응답을 그대로 싣습니다. 문장을 다듬거나 더 마음에 드는 답변을 골라 바꾸지 않았습니다.
+
+2026-10-14에 `tonedial test codex --preset <slug> --accept-usage`의 실제 전달 프롬프트를 일회성 exec 어댑터로 실행했습니다.
+이는 대화 미리보기 예제이며 훅 활성화나 반복적인 말투 준수의 검증은 아닙니다. 이미지는 원문 응답을 터미널 대화 형식으로 정리한 것이며, 네이티브 UI 화면 캡처가 아닙니다.
+
+[전체 입력·응답·해시 기록](./media/readme/ko/voice-examples.json)
+
 완료된 요청에서는 도구 호출이 관측되지 않았습니다. 대부분의 예제는 임시 ToneDial 상태와 대상 폴더의 전후 바이트를 비교했습니다. 첫 한국어 왕·신하 예제는 실행 전 스냅샷을 보존하지 못했으므로 상태 불변을 주장하지 않습니다.
 일부 요청은 429 응답으로 완료되지 않았습니다. 완료된 응답을 바꿔 얻으려 재실행한 경우는 없습니다.
+
+</details>
+
+[README](../README.ko.md) · [Usage](./USAGE.md)

@@ -1,8 +1,20 @@
 # Testing ToneDial
 
-Run automated checks, then inspect the installed candidate, then observe the selected native host.
-Model adherence is a separate measurement; none of these steps alone qualifies a release.
+**Check the change you made. Report only what you observed.**
 Use Node 24+, npm and a POSIX shell from the repository root.
+
+| Change / claim | Verification |
+|---|---|
+| Documentation / examples | Resolve links, exercise changed commands and run relevant document consumers |
+| README / media | `node --test test/dial-example.test.ts test/voice-examples.test.ts` |
+| Runtime / build | [Automated checks](#automated-checks) |
+| CLI text / dial | [Golden and PTY tests](#output-and-terminal-regression-tests) |
+| Installed package | [Isolated candidate](#isolated-candidate) |
+| Native delivery | [Actual host and one-day trial](#actual-host-and-one-day-trial) |
+| Tone behavior | [Model measurements](#model-measurements) |
+
+Run automation before candidate inspection and the selected native trial.
+Configuration, reader health, trust, activation, delivered context and model adherence are separate claims; no single check qualifies a release.
 
 ## Automated checks
 
@@ -12,30 +24,22 @@ npm test
 npm pack --dry-run
 ```
 
-Stop on failure. `npm test` checks types, builds, checks pack/fixture drift and runs `node:test`.
-While working, run the relevant file with `node --test test/compile.test.ts`, substituting the actual affected test.
-Run `npm run build` first when a focused test consumes `dist`.
-Installer and package-inventory tests use that built output; the `prepack` build is checked in a separate disposable source tree.
-Add a test only for a realistic regression not already caught, and assert the visible result or protected bytes rather than an implementation detail.
-Do not weaken tests, regenerate unread snapshots or call skipped checks passes.
-Create disposable fixtures under `node:os`'s `tmpdir()`, not an OS-specific path.
-For identity-based replacement tests, allocate the foreign entry while the original and any prepared replacement still exist, then rename it into place; inode allocation after deletion is not a portable identity guarantee.
-For documentation-only work, resolve links, exercise changed examples and run the artifact checks that consume those documents; explain that scope in the PR.
-For README/media changes, `node --test test/dial-example.test.ts` checks canonical asset URLs, locale provenance and renderer output.
-Local documentation checks may be focused; CI still runs the complete suite and release gate on every push and pull request.
+**Stop on failure.** `npm test` runs types → build → pack/fixture drift checks → `node:test`.
+During development use the affected file, for example `node --test test/compile.test.ts`.
+Build first when it consumes `dist`; installer/package tests need built output, while prepack is tested in a separate disposable source tree.
+For docs-only changes, use link/example/consumer checks and explain that scope in the PR.
+CI still runs the full suite and release gate on every push/PR.
+
+- Add coverage for a realistic uncovered regression; assert visible behavior or protected bytes, not implementation details.
+- Never weaken gates, regenerate unread snapshots or report skipped checks as passes.
+- Create disposable fixtures under `node:os`'s `tmpdir()`, not an OS-specific path.
+- For identity-replacement tests, allocate the foreign entry while original/prepared entries still exist, then rename it into place. Inode allocation after deletion is not a portable identity guarantee.
 
 ## Output and terminal regression tests
 
-`npm test` includes English and Korean command text, interactive-frame and SVG image goldens, plus real PTY flows.
-The command corpus checks the live CLI registry, stdout, stderr and exit status.
-Frames cover the existing dial renderer; image goldens compare deterministic SVG output, including cell positions and supported ANSI styles.
-These checks do not certify a font's rasterization, a native agent session or model adherence.
-PTY checks use Python 3.9+ and its standard library on Linux and macOS; `python3` must be available on `PATH`.
-Unsupported platforms are reported as skipped.
-Missing Python on a supported platform fails the check.
-All state, projects and provider paths are disposable; external-agent and network actions are not part of the golden corpus.
-
-For focused verification from the checkout:
+Text/frame/SVG goldens and real PTY flows check command registry, stdout, stderr, exit status, cell positions and supported ANSI styles.
+They establish renderer behavior, not font rasterization, native activation or adherence.
+All state/project/provider paths are disposable; the corpus runs no external agent or network action.
 
 ```bash
 npm run test:golden
@@ -44,10 +48,16 @@ TONEDIAL_TEST_LANG=en npm run test:golden
 TONEDIAL_TEST_LANG=ko npm run test:pty
 ```
 
-`test:pty` builds the CLI first.
-Omit `TONEDIAL_TEST_LANG` to check both locales; an empty or unknown locale is an error.
-Golden files live under `test/golden/` and belong in version control.
-Only replace them after inspecting the changed command output and representative images:
+| Requirement | Behavior |
+|---|---|
+| Locales | English/Korean; omit `TONEDIAL_TEST_LANG` for both; empty/unknown fails |
+| PTY runtime | Python 3.9+ standard library on Linux/macOS; missing Python fails; unsupported platforms skip |
+| Build | `test:pty` builds first |
+| Baselines | Committed under `test/golden/`; inspect changed text and representative images before replacing |
+| Failure evidence | Expected/actual/diff; SVG HTML comparison; PTY transcript under ignored `artifacts/` |
+| CI | Separate en/ko jobs; uploads `visual-regression-en` / `visual-regression-ko`; never updates baselines |
+
+After inspecting an intentional change:
 
 ```bash
 TONEDIAL_GOLDEN_UPDATE=1 npm run test:golden
@@ -55,16 +65,14 @@ npm run test:golden
 ```
 
 Update mode is forbidden in CI.
-Text and frame mismatches retain expected/actual output and a diff; image mismatches also include an HTML visual comparison.
-PTY failures retain the captured terminal transcript.
-Local failure artifacts live under ignored `artifacts/`.
-GitHub CI runs independent `en` and `ko` jobs on pushes and pull requests, and uploads failure artifacts as `visual-regression-en` or `visual-regression-ko`.
-CI verifies the committed baselines and never updates them.
 
 ## Isolated candidate
 
-The following helper isolates CLI state and configuration, not an authenticated agent process.
-Keep this shell and its variables for the entire trial. Do not substitute your normal state or provider home.
+**Keep this shell and its variables for the whole trial.**
+The helper isolates CLI state/configuration, not an authenticated agent process.
+Never substitute normal state or a personal provider home.
+
+### Build and install the archive
 
 ```bash
 trial_dir="$(mktemp -d)"
@@ -100,9 +108,9 @@ npm_cli="$trial_dir/npm-prefix/bin/tonedial"
 td_trial npm "$npm_cli" --version --json
 ```
 
-Record the archive SHA-256 and version. Use the filename npm returned, not a guessed versioned name.
-Continue only with the expected version and successful schema-3 JSON envelopes (`ok: true`).
-Test the extracted installer separately; this checks the local install shape, not the live curl downloader:
+Record archive SHA-256/version; use npm's returned filename, never a guessed one.
+Continue only with the expected version and schema-3 `ok: true` receipts.
+The extracted installer checks local curl installation shape, not the live downloader:
 
 ```bash
 mkdir "$trial_dir/curl-candidate"
@@ -115,10 +123,13 @@ curl_cli="$trial_dir/curl/state/bin/tonedial"
 td_trial curl "$curl_cli" --version --json
 ```
 
-The fresh installer emits a human install receipt; only the following CLI check is a schema-3 envelope.
+Require a human install receipt followed by the CLI's schema-3 version result.
 Installation must not initialize tone state, modify provider files or add shell PATH lines.
-If bare-command reachability differs between channels, record that separately from state or native health.
-Run this state/library sequence for both channels:
+Report bare-command reachability separately from state/native health.
+
+### Check state and preservation
+
+Run both channels:
 
 ```bash
 check_state() {
@@ -137,18 +148,24 @@ check_state npm "$npm_cli"
 check_state curl "$curl_cli"
 ```
 
-Stop if any command fails. Require exported `warmth=4`, a listed custom `trial-preset`, fresh compiled tone and no native connection.
-Dry-run must leave all bytes unchanged; state-only initialization writes the guide/tone pair, config and preset caches, not hooks or skills.
-Inspect the actual trial files and modes as well as receipts.
-In disposable state, save a custom preset before changing a generated guide or tone file; preview and approve `doctor --fix --global --auto`, then verify the custom file's original bytes/mode, export and reload.
-Missing settings need an explicit source/default choice; use the [recovery procedure](./USAGE.md#recovery), not state-root or lock deletion.
+Stop on any failure. Inspect files/modes as well as receipts:
 
-For native configuration regression, use an isolated fake host layout containing a foreign hook and custom setting.
-Preview selected tools with `init --tools claude --global --dry-run --json`, then explicitly approve the same selection/scope.
-Repeat the preview and approval with `--tools antigravity` and verify the named `tonedial` `PreInvocation` hook, its direct command list, `injectSteps[].ephemeralMessage`, generated skill links and repeat initialization.
-Verify merged handlers and unrelated settings, ordered guide-before-tone reader output and the selected project or global paths.
-Scoped disconnect must preserve foreign handlers, custom presets and other scopes.
-Neither a fake client nor a successful configuration check proves actual host loading.
+- Exported `warmth=4`, listed custom `trial-preset`, fresh tone, no native connection.
+- Dry-run leaves every byte unchanged; state-only init writes guide/tone, config and caches, no hooks/skills.
+- Save a custom profile, alter generated guide/tone, preview/approve `doctor --fix --global --auto`, then verify original custom bytes/mode, export and reload.
+- Missing values use explicit sources/defaults from [recovery](./USAGE.md#recovery), never root/lock deletion.
+
+### Check native configuration without a host
+
+Use a disposable fake layout with a foreign hook and custom setting.
+Preview `init --tools claude --global --dry-run --json`, then approve that exact tool/scope; repeat for Antigravity.
+Verify:
+
+- Named Antigravity `tonedial`/`PreInvocation`, direct command list, `injectSteps[].ephemeralMessage`, skill links and repeat init.
+- Merged/foreign handlers and settings, guide-before-tone output and correct project/global paths.
+- Scoped removal preserves foreign hooks, custom profiles and other scopes.
+
+Fake clients/config checks do not prove actual host loading.
 
 <details>
 <summary>Installation and recovery boundaries</summary>
@@ -162,13 +179,17 @@ This trial does not establish network availability, publishing permissions, ever
 
 ## Actual host and one-day trial
 
-This section is user-operated and needs the selected host's normal authentication and explicit permission to use its profile.
-Do not copy credentials, grant trust automatically, construct a no-tone control by disabling someone's real setup, or infer desktop/IDE support from a CLI result.
-`TONEDIAL_AGENT_HOME` redirects ToneDial wiring only; it does not select or isolate a host profile.
-Before starting the host, put the chosen candidate's bin directory on that host process's PATH and give it the same `TONEDIAL_HOME` used by the approved delivery.
-Inside the actual host execution environment, verify that bare `tonedial` resolves to the selected candidate path/bytes (`command -v tonedial` where available), not another global copy, and reads that state root.
-Matching version alone is insufficient.
-Stop on a command/root mismatch or if the host cannot provide this evidence before invoking its generated skill.
+**User-operated; explicit permission and normal host authentication required.**
+Do not copy credentials, auto-grant trust, disable a real setup to make a control or infer IDE/Desktop support from a CLI run.
+
+Before launching:
+
+- Use a dedicated profile/project, or deliberately choose normal settings after reviewing the limits.
+- Put the selected candidate's bin on the actual host process's PATH and use the approved delivery's `TONEDIAL_HOME`.
+- Inside that host, prove bare `tonedial` resolves to the selected path/bytes (`command -v tonedial` where available) and state root. Version alone is insufficient; stop on mismatch or missing evidence before invoking the skill.
+- `TONEDIAL_AGENT_HOME` redirects wiring only; it does not select/isolate the host profile.
+
+### Run the trial
 
 1. Select the exact installed candidate above and a dedicated host profile/project, or deliberately choose normal settings after reviewing the [usage and privacy limits](./USAGE.md).
    Record version/archive fingerprint, OS, host/surface/version, scope, model and effort.
@@ -190,6 +211,8 @@ Screenshots/transcripts should show the actual host event and exact request, wit
 Record configuration, reader runtime, trust, activation, delivered context and model behavior separately.
 Codex, Claude and Antigravity observations remain separate across surfaces; an IDE result does not qualify Desktop (or the reverse) or a remote runtime. Unavailable authenticated or trusted trials remain pending.
 
+### Preview acceptance
+
 For `test --preset`, compare a bundled and a custom preset while a different saved tone is connected.
 Verify the preview uses the selected profile's complete settings, retaining current personal settings only for schema-1 inputs, without changing configuration or artifacts.
 Observe exclusion of connected tone hooks and automatic instructions; record managed-policy behavior separately.
@@ -207,12 +230,11 @@ Record failures and unavailable platform/terminal checks separately; automated d
 
 ## Model measurements
 
-Use [fixed packs](./test/packs/), [scenarios](./test/scenarios.md) and the [rubric](./test/rubric.md).
-One configuration/model contribution is useful; a full matrix is not required for a PR.
-For anchor changes, run Route D checks in Codex and Claude with matched clean `X-none` controls; keep Antigravity IDE and Desktop evidence separate.
-The producer must not see predictions, this repository's design or judging instructions, and the judge must not be the producing context.
-
-The following set defines full model coverage, not the minimum size of a contribution:
+**Freeze inputs → run fresh sessions → score independently → publish every outcome.**
+Use [packs](./test/packs/), [scenarios](./test/scenarios.md) and the [rubric](./test/rubric.md).
+One configuration/model is useful; the matrix below defines full coverage, not a minimum PR.
+Anchor changes require Route D in Codex and Claude with matched clean `X-none` controls; keep Antigravity IDE/Desktop evidence separate.
+The producer sees no predictions, repository design or judging instructions; the judge is a separate context.
 
 | Case | Packs | Scenarios | Tiers | Repetitions |
 | --- | --- | --- | --- | --- |
@@ -248,8 +270,9 @@ Compare only identical route/input/request conditions, and use both small and cl
 
 ### One-off single-axis arm
 
-Prepare a separate fresh temporary state and project. Keep the selected absolute installed candidate and environment for every command.
-Use state-only explicit-scope init, then `reset`, then change only the selected axis to its 1–5 level; do not save it as a preset or hand-edit a managed artifact.
+Prepare fresh temporary state/project and retain the same absolute installed candidate/environment.
+Use explicit-scope state-only init, then `reset`; clear persona/address/safeword through the CLI and restore auto register before changing only the selected axis to its 1–5 level.
+Do not save it as a preset or hand-edit a managed artifact.
 Require `preset: null`, empty persona/address, `speech_level: auto`, no safeword, other style axes at 3 and other permission axes (`profanity`, `flattery`, `refusal`, `bravado`) at 1.
 Name the arm `A-<axis><level>` in the result, not the artifact. Retain complete `show --json`, immutable artifact bytes/SHA-256, compiler revision and guide fingerprint.
 Before a native run, approve a host in that disposable scope, recheck unchanged input, and observe that exact fingerprint delivered.
@@ -265,6 +288,5 @@ Score axis compliance and language naturalness separately. Compare observed info
 Report held, failed or inconclusive with a reason, including all failed runs rather than selecting favorable replies.
 Target mid/frontier tiers; accept entry results without treating them as current supported-tier qualification. Record the exact provider model identifier, not a moving family label.
 
-Keep the request boundaries and verbatim outputs beside the scores so another person can review
-what the session actually answered. Score axis compliance and language naturalness separately,
-and mark a run inconclusive when the host did not deliver the selected artifact.
+Keep request boundaries and verbatim outputs beside scores.
+A host that did not deliver the selected artifact makes the run inconclusive.

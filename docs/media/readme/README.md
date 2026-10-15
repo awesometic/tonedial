@@ -1,92 +1,94 @@
 # README languages and media
 
-English is the default and editing source: `README.md` at the repository root.
-Translations are `README.ko.md` (Korean), `README.ja.md` (Japanese),
-`README.zh.md` (Simplified Chinese) and `README.es.md` (Spanish).
-Each README links to all five languages beside the title.
-Do not create a second `README.en.md`, auto-select a language or translate command names, preset names or axis keys.
-Other maintained guides remain English unless they declare their own language contract.
+**English first. Same facts in every locale. Real replies stay verbatim.**
 
-```text
-README.md
-README.ko.md
-README.ja.md
-README.zh.md
-README.es.md
-docs/media/readme/
-  README.md
-  en/
-    dial.png
-    dial-example.json
-    voice-examples.json
-    voice-examples.svg
-    voice-<preset>.svg
-  ko/
-    dial.svg
-    dial-example.json
-    voice-examples.json
-    voice-examples.svg
-    voice-<preset>.svg
-  ja/
-    dial.svg
-    dial-example.json
-    voice-examples.json
-    voice-examples.svg
-    voice-<preset>.svg
-  zh/
-    dial.svg
-    dial-example.json
-    voice-examples.json
-    voice-examples.svg
-    voice-<preset>.svg
-  es/
-    dial.svg
-    dial-example.json
-    voice-examples.json
-    voice-examples.svg
-    voice-<preset>.svg
+[README copy](#readme-copy) · [Paths & links](#paths-and-links) · [Dial images](#dial-images) · [Recorded conversations](#recorded-conversations)
+
+## README copy
+
+| Language | README | Media directory |
+|---|---|---|
+| English, editing source | `README.md` | `en/` |
+| Korean | `README.ko.md` | `ko/` |
+| Japanese | `README.ja.md` | `ja/` |
+| Simplified Chinese | `README.zh.md` | `zh/` |
+| Spanish | `README.es.md` | `es/` |
+
+Each README links to all five beside the title.
+Do not add `README.en.md`, auto-select a locale or translate commands, preset names or axis keys.
+Other guides stay English unless they declare a locale contract.
+The CLI language and single English anchor set are independent of README language.
+
+1. Edit English, then translate every maintained locale; polish Korean through the project's copy pipeline.
+2. Keep commands, links, product facts and limitations aligned.
+3. Update matching localized images and accessible text in the same change.
+4. Run the consumer checks and inspect images:
+
+```bash
+node --test test/dial-example.test.ts test/voice-examples.test.ts
 ```
 
-Use lowercase language tags for directories and lowercase-kebab-case semantic file stems.
-The directory carries the language: use `dial`, not `dial-en` or `dial-ko`.
-Keep the appropriate format (`png`, `jpg`, `svg`, `json`); translations share stems, not necessarily extensions.
-Add a `shared/` directory only when an actual language-neutral asset needs it, never as an empty placeholder.
-Locale-specific images must resolve inside that README's locale directory; link to metadata rather than duplicate provenance in captions.
+## Paths and links
 
-The npm package does not ship `docs/` or `docs/media/`, so links that can appear on npm must use the public repository.
-Use `https://github.com/awesometic/tonedial/blob/main/<path>` for guides and JSON metadata.
-Use `https://raw.githubusercontent.com/awesometic/tonedial/main/<path>` for image `src` values;
-an image's surrounding link may use the GitHub `blob` URL.
-Keep the path's locale and file name identical to the repository asset.
+All locale assets live in `docs/media/readme/<language>/`:
 
-Edit English first, translate each maintained locale, then check natural wording and every command, link and factual limitation.
-Polish Korean according to the project's copy pipeline.
-Update the matching localized image and its accessible text in the same change.
-The dial provenance test requires these canonical URLs and maps them back to local files before checking locale, hashes and renderer output.
-Keep those checks when changing link forms.
-The CLI's language setting and single English tone-anchor set are independent of README language.
+| File | Purpose |
+|---|---|
+| `dial.png` (en) / `dial.svg` (other locales) | Synthetic dial preview |
+| `dial-example.json` | Dial input/frame/image hashes |
+| `voice-examples.json` | Seven recorded replies and complete inputs/hashes |
+| `voice-examples.svg` | README: Royal Advisor + Ego Sword |
+| `voice-<preset>.svg` | Gallery: one conversation |
 
-Dial images use the current state-free recipe and per-locale input/frame/image hashes.
-Regenerate the affected dial image when its renderer changes.
-The Korean SVG is generated with `node scripts/dial-svg.ts ko 80`.
-Use terminal cells to position glyphs; do not stretch glyph outlines to fill those cells.
-Keep prose runs together; fixed cell positions belong to column boundaries, not each letter or word.
-Run generation and media tests from the repository root with disposable state, and inspect glyph alignment before claiming a current image.
+Use lowercase locale tags and kebab-case semantic stems: `ko/dial.svg`, not `dial-ko.svg`.
+Locales share stems, not necessarily extensions; preserve the appropriate PNG/JPG/SVG/JSON format.
+Add `shared/` only for an actual language-neutral asset.
+Locale-specific images stay inside their locale directory; link provenance instead of repeating it in captions.
 
+Npm omits `docs/`, so links visible there must use canonical repository URLs:
 
-Recorded voice examples use the actual ToneDial test handoff and a disposable exec adapter
-around the native Codex client, with no provider/UI imitation and no product capture API.
-Each locale JSON owns all seven first completed replies, complete compiler inputs and tone/reply hashes.
-Each README features only Royal Advisor and Ego Sword.
-`docs/EXAMPLES.md` and its declared `.ko.md`, `.ja.md`, `.zh.md` and `.es.md` translations
-show all seven conversations as individual images, with verbatim text in expandable blocks.
-Generate the two-role image with `node scripts/voice-svg.ts LANGUAGE`, using `en`, `ko`, `ja`, `zh` or `es`.
-Generate each `voice-<preset>.svg` with `node scripts/voice-svg.ts LANGUAGE PRESET`.
-Commands and speaker markers are presentation labels, not extra recorded response text.
-Preserve each locale's actual capture date and product revision; a translation does not inherit another run's evidence.
-These SVGs present terminal-style dialogue from recorded transcripts; they are not screenshots of the native provider interface.
-Retain model/client/effort/date metadata, failed-request notes and any unobserved evidence boundary.
-Never polish model wording, retry a completed response for a preferred result, publish raw provider
-journals or auth material, or treat these samples as hook activation or a scored measurement.
-The consumer test checks locale links, all seven replies, exact hashes, current compiler inputs,
-verbatim page content, featured selection and deterministic SVG output.
+| Target | URL prefix |
+|---|---|
+| Guides, JSON, image wrapper links | `https://github.com/awesometic/tonedial/blob/main/` |
+| Image `src` | `https://raw.githubusercontent.com/awesometic/tonedial/main/` |
+
+Keep locale and filename identical to the repository asset.
+The dial test resolves these URLs back to local files to verify provenance and renderer output; retain those checks.
+
+## Dial images
+
+Use the state-free current renderer from the repository root; these commands start no provider and read no saved state:
+
+```bash
+node scripts/dial-frame.ts en 80 > frame.ansi
+node scripts/dial-frame.ts ko 120 > frame-ko.ansi
+node scripts/dial-svg.ts ko 80 > dial-ko.svg
+node scripts/demo.ts --list
+node scripts/demo.ts sycophant ko
+```
+
+Demo scenes are isolated 80-column output; unknown options refuse before rendering/child startup.
+Rasterization is optional development tooling: render ANSI with an image tool and inspect glyph/cell alignment.
+Regenerate affected assets when the renderer changes; retain each locale's input/frame/image hashes in `dial-example.json`.
+Use terminal cells at column boundaries, keep prose runs together and never stretch glyph outlines to fill cells.
+Run generation/tests with disposable state; layout evidence does not prove native activation or adherence.
+
+## Recorded conversations
+
+The actual `tonedial test` handoff and a disposable exec adapter around native Codex produced the samples.
+There is no product capture API or provider-UI imitation.
+Each locale JSON owns all seven **first completed** replies, complete compiler inputs and tone/reply hashes.
+Each README features Royal Advisor and Ego Sword; `docs/EXAMPLES.md` and its four localized pages show all seven images with expandable verbatim text.
+
+```bash
+node scripts/voice-svg.ts en > voice-examples.svg
+node scripts/voice-svg.ts ko royal-advisor > voice-royal-advisor.svg
+```
+
+Choose any supported locale (`en`, `ko`, `ja`, `zh`, `es`) and recorded preset slug.
+These SVGs render terminal-style transcripts, not screenshots of the native provider UI.
+Commands/speaker markers are presentation labels, not extra recorded reply text.
+Preserve each locale's actual date, product revision, model/client/effort, failed-request notes and unobserved evidence limits.
+Never polish replies, rerun a completed response for preferred wording or inherit another locale's capture evidence.
+Keep provider journals/auth material private; samples prove neither hook activation nor scored adherence.
+The consumer test checks locale links, seven raw replies/hashes, current inputs, page text, featured selection and deterministic SVGs.

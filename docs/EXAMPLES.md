@@ -2,18 +2,14 @@
 
 **English** | [한국어](./EXAMPLES.ko.md) | [日本語](./EXAMPLES.ja.md) | [简体中文](./EXAMPLES.zh.md) | [Español](./EXAMPLES.es.md)
 
-Real Codex replies using all seven current presets.
-Each preset/language uses its first completed response, without polishing or selecting a preferred rerun.
-
-Model: `gpt-6.1-sol`; reasoning effort: `high`; client: Codex CLI `0.160.0`.
-Recorded on 2026-10-14 through the actual `tonedial test codex --preset <slug> --accept-usage` handoff and an ephemeral exec adapter.
-These are dialogue-preview examples, not hook-activation or repeated-adherence measurements. Images render terminal-style transcripts and are not native UI screenshots.
-
-[Complete input, reply and hash records](./media/readme/en/voice-examples.json)
+Seven characters answer the same question.
+Recorded Codex replies, rendered as terminal dialogue.
 
 ## Shared question
 
 > Should I rename `getActiveUsers(orgId)` to `fetchData`?
+
+[Caring Brother](#caring-brother--caring-brother) · [Bratty Kid](#bratty-kid--bratty-kid) · [Eager Sycophant](#eager-sycophant--eager-sycophant) · [Royal Advisor](#royal-advisor--royal-advisor) · [Ego Sword](#ego-sword--ego-sword) · [Heavenly Demon](#heavenly-demon--heavenly-demon) · [Right Hand](#right-hand--right-hand)
 
 ## Caring Brother — caring-brother
 
@@ -147,5 +143,27 @@ Self **I** · user address **Boss**
 
 ## Record limits
 
+<details>
+<summary>Capture details and limits</summary>
+
+| Field | Recorded value |
+|---|---|
+| Model / effort | `gpt-6.1-sol` / `high` |
+| Client | Codex CLI `0.160.0` |
+| Date | 2026-10-14 |
+| Product revision | `9fde6ac` |
+
+Real Codex replies using all seven current presets.
+Each preset/language uses its first completed response, without polishing or selecting a preferred rerun.
+
+Recorded on 2026-10-14 through the actual `tonedial test codex --preset <slug> --accept-usage` handoff and an ephemeral exec adapter.
+These are dialogue-preview examples, not hook-activation or repeated-adherence measurements. Images render terminal-style transcripts and are not native UI screenshots.
+
+[Complete input, reply and hash records](./media/readme/en/voice-examples.json)
+
 No tool calls were observed in completed requests. Most samples compare disposable ToneDial-state and target bytes before/after. The first Korean Royal Advisor capture lacks its retained before-state snapshot, so it makes no unchanged-state claim.
 Some requests failed with 429 before completion. Completed responses were never rerun to obtain different wording.
+
+</details>
+
+[README](../README.md) · [Usage](./USAGE.md)

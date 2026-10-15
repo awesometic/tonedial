@@ -1,7 +1,13 @@
 # Agent guidance
 
 Use any authoring agent, model and optional skills; the product contracts and verification requirements apply equally.
-Start with [CONTRIBUTING.md](./CONTRIBUTING.md), then read the guides relevant to the change: [README.md](./README.md) for product status, [USAGE.md](./docs/USAGE.md) for user behavior and [TESTING.md](./docs/TESTING.md) for automated checks, native trials and measurements.
+Start with [CONTRIBUTING.md](./CONTRIBUTING.md), then select the relevant guide:
+
+| Need | Owner |
+|---|---|
+| Product status | [README.md](./README.md) |
+| Commands and user behavior | [USAGE.md](./docs/USAGE.md) |
+| Checks, native trials and measurements | [TESTING.md](./docs/TESTING.md) |
 
 ## Keep the implementation small
 

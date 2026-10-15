@@ -2,18 +2,14 @@
 
 [English](./EXAMPLES.md) | [한국어](./EXAMPLES.ko.md) | [日本語](./EXAMPLES.ja.md) | [简体中文](./EXAMPLES.zh.md) | **Español**
 
-Respuestas reales de Codex con los siete preajustes actuales.
-Se conserva la primera respuesta completada de cada preajuste e idioma, sin pulirla ni repetirla para obtener otra redacción.
-
-Modelo: `gpt-6.1-sol`; razonamiento: `high`; cliente: Codex CLI `0.160.0`.
-Grabadas el 2026-10-15 mediante la invocación real de `tonedial test codex --preset <slug> --accept-usage` y un adaptador exec efímero.
-Son ejemplos de diálogo, no mediciones de activación de hooks ni de cumplimiento repetido. Las imágenes presentan un diálogo de terminal a partir de la transcripción; no son capturas de la interfaz nativa.
-
-[Entradas, respuestas y hashes completos](./media/readme/es/voice-examples.json)
+Una pregunta, siete personajes.
+Respuestas reales de Codex presentadas como diálogo de terminal.
 
 ## La misma pregunta
 
 > ¿Debería cambiar el nombre de `getActiveUsers(orgId)` a `fetchData`?
+
+[Caring Brother](#caring-brother--caring-brother) · [Bratty Kid](#bratty-kid--bratty-kid) · [Eager Sycophant](#eager-sycophant--eager-sycophant) · [Royal Advisor](#royal-advisor--royal-advisor) · [Ego Sword](#ego-sword--ego-sword) · [Heavenly Demon](#heavenly-demon--heavenly-demon) · [Right Hand](#right-hand--right-hand)
 
 ## Caring Brother — caring-brother
 
@@ -150,5 +146,27 @@ Nombre propio **yo** · Trato al usuario **Jefe**
 
 ## Límites del registro
 
+<details>
+<summary>Datos de ejecución y límites</summary>
+
+| Campo | Valor registrado |
+|---|---|
+| Modelo / razonamiento | `gpt-6.1-sol` / `high` |
+| Cliente | Codex CLI `0.160.0` |
+| Fecha | 2026-10-15 |
+| Revisión del producto | `c01bac6` |
+
+Respuestas reales de Codex con los siete preajustes actuales.
+Se conserva la primera respuesta completada de cada preajuste e idioma, sin pulirla ni repetirla para obtener otra redacción.
+
+Grabadas el 2026-10-15 mediante la invocación real de `tonedial test codex --preset <slug> --accept-usage` y un adaptador exec efímero.
+Son ejemplos de diálogo, no mediciones de activación de hooks ni de cumplimiento repetido. Las imágenes presentan un diálogo de terminal a partir de la transcripción; no son capturas de la interfaz nativa.
+
+[Entradas, respuestas y hashes completos](./media/readme/es/voice-examples.json)
+
 No se observaron llamadas a herramientas en las ejecuciones completadas. Se compararon los bytes y modos de los archivos del estado temporal de ToneDial y de la carpeta de trabajo antes y después. Los controles de invocación no garantizan las políticas administradas ni el aislamiento del sistema de archivos.
 No se repitió ninguna respuesta completada para cambiar su redacción. failedBeforeCompletion registra los inicios externos fallidos antes de completar cada respuesta.
+
+</details>
+
+[README](../README.es.md) · [Usage](./USAGE.md)
