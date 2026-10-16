@@ -113,6 +113,8 @@ provider's run do not fill that evidence gap.
 
 ## Current tone measurement
 
+Latest recorded evidence: [Codex high tone calibration — 2026-10-16](../results/2026-10-16-codex-high-tone-calibration.md).
+
 1. **Match conditions:** same scenario, host/version/model/effort, non-ToneDial instructions and tools; use separate fresh tone/control sessions.
 2. **Freeze input:** retain full compiler inputs, exact artifact bytes and delivery route. Changed prompt/artifact/pack/scenario bytes require regeneration as applicable and a fresh measurement, with changes recorded before comparison.
 3. **Score independently:** current anchors and naturalness; compare permission behavior against X-none. Record false work/result/risk claims, hidden omissions and distorted assessments as observed information quality. Unexposed concerns are not exercised, never passed.
