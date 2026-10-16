@@ -91,6 +91,8 @@ Choose any supported locale (`en`, `ko`, `ja`, `zh`, `es`) and recorded preset s
 These SVGs render terminal-style transcripts, not screenshots of the native provider UI.
 Commands/speaker markers are presentation labels, not extra recorded reply text.
 Preserve each locale's actual date, product revision, model/client/effort, failed-request notes and unobserved evidence limits.
+When only some replies are recorded again, put their new metadata in each reply's `capture` object.
+Keep the original batch metadata for unchanged replies; single-reply images use the capture override.
 Never polish replies, rerun a completed response for preferred wording or inherit another locale's capture evidence.
 Keep provider journals/auth material private; samples prove neither hook activation nor scored adherence.
 The consumer test checks locale links, seven raw replies/hashes, current inputs, page text, featured selection and deterministic SVGs.

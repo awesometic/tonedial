@@ -20,11 +20,13 @@ const escape = (value: string) => value.replace(/&/g, "&amp;").replace(/</g, "&l
 const text: string[] = [];
 const line = (value: string, y: number, size = 24, colour = "#edf3f6", weight = 400) =>
   text.push(`<text x="36" y="${y}" fill="${colour}" font-size="${size}" font-weight="${weight}" xml:space="preserve">${value}</text>`);
-line(escape(`Codex CLI · ${data.model} · ${data.reasoningEffort}`), 50, 24, "#66d9dc", 700);
 let y = 80;
-const replies = (data.replies as { preset: string; displayName: string; text: string }[])
+const replies = (data.replies as { preset: string; displayName: string; text: string;
+  capture?: { model: string; reasoningEffort: string; recordedOn: string } }[])
   .filter(reply => selectedPreset === undefined ? data.featured.includes(reply.preset) : reply.preset === selectedPreset);
 if (replies.length !== (selectedPreset === undefined ? 2 : 1)) throw new Error("Select one recorded preset, or omit PRESET for the two README roles");
+const metadata = selectedPreset === undefined ? data : (replies[0]!.capture ?? data);
+line(escape(`Codex CLI · ${metadata.model} · ${metadata.reasoningEffort}`), 50, 24, "#66d9dc", 700);
 for (const reply of replies) {
   text.push(`<path d="M36 ${y}H1084" stroke="#34424d"/>`);
   y += 46;
@@ -60,7 +62,7 @@ for (const reply of replies) {
   }
   y += 24;
 }
-line(escape(`${copy.footer} · ${data.recordedOn}`), y + 12, 20, "#b8cbd4");
+line(escape(`${copy.footer} · ${metadata.recordedOn}`), y + 12, 20, "#b8cbd4");
 const raw = replies.map((reply: { displayName: string; text: string }) => `${reply.displayName}\n${reply.text}`).join("\n\n");
 process.stdout.write(`<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="${y + 48}" viewBox="0 0 1120 ${y + 48}" role="img" aria-labelledby="title description">
 <title id="title">${escape(copy.title)}</title>

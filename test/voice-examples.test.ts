@@ -27,7 +27,33 @@ type Reply = {
   samples: number;
   nativeExit: number;
   toolCallsObserved: number;
+  promptSha256?: string;
+  openingResponseSha256?: string;
+  nativeModel?: string;
+  nativeReasoningEffort?: string;
+  nativeTurnCount?: number;
+  capture?: {
+    model: string; reasoningEffort: string; recordedOn: string;
+    productRevision: string; delivery: string; clientVersion: string;
+    questionSha256: string;
+  };
 };
+
+function assertRecapture(reply: Reply, question: string): void {
+  assert.ok(reply.capture, "changed recordings need their own capture metadata");
+  assert.equal(reply.capture.delivery, "tonedial-test-native-interactive");
+  assert.equal(reply.capture.model, "gpt-6.1-sol");
+  assert.equal(reply.capture.reasoningEffort, "high");
+  assert.equal(reply.capture.questionSha256, hash(question));
+  assert.match(reply.capture.productRevision, /^[a-f0-9]{40}$/);
+  assert.match(reply.capture.recordedOn, /^\d{4}-\d{2}-\d{2}$/);
+  assert.ok(reply.capture.clientVersion.trim());
+  assert.equal(reply.nativeModel, reply.capture.model);
+  assert.equal(reply.nativeReasoningEffort, reply.capture.reasoningEffort);
+  assert.equal(reply.nativeTurnCount, 2);
+  assert.match(reply.promptSha256 ?? "", /^[a-f0-9]{64}$/);
+  assert.match(reply.openingResponseSha256 ?? "", /^[a-f0-9]{64}$/);
+}
 
 type Recipe = Omit<Reply, "preset"> & {
   slug: string;
@@ -79,6 +105,9 @@ for (const language of LANGUAGES) {
     const initialized = await captureCli(workspace, ["init", "--global", "--tools", "none", "--lang", language, "--auto", "--json"]);
     assert.equal(initialized.status, 0, initialized.stdout + initialized.stderr);
     for (const recipe of data.recipes) {
+      if (recipe.capture || (["ko", "zh"].includes(language) && recipe.slug === "steady-companion")) {
+        assertRecapture({ ...recipe, preset: recipe.slug }, data.question);
+      }
       assert.equal(recipe.samples, 1);
       assert.equal(recipe.nativeExit, 0);
       assert.equal(recipe.toolCallsObserved, 0);
@@ -115,7 +144,7 @@ for (const language of LANGUAGES) {
   test("recorded " + language + " examples preserve seven native replies and feature only two roles", () => {
     const dir = join(root, "docs/media/readme", language);
     const data = JSON.parse(readFileSync(join(dir, "voice-examples.json"), "utf8")) as {
-      kind: string; language: string; question: string; featured: string[]; replies: Reply[];
+      kind: string; language: string; question: string; recordedOn: string; featured: string[]; replies: Reply[];
     };
     assert.equal(data.kind, "recorded-native-replies");
     assert.equal(data.language, language);
@@ -125,6 +154,7 @@ for (const language of LANGUAGES) {
     const page = readFileSync(join(root, "docs", pageName), "utf8");
     assert.equal((page.match(/<img src=/g) ?? []).length, data.replies.length, "each preset needs its own visible conversation image");
     for (const reply of data.replies) {
+      if (reply.capture || (language === "ko" && reply.preset === "right-hand")) assertRecapture(reply, data.question);
       assert.equal(reply.samples, 1);
       assert.equal(reply.nativeExit, 0);
       assert.equal(reply.toolCallsObserved, 0);
@@ -140,6 +170,7 @@ for (const language of LANGUAGES) {
       const single = spawnSync(process.execPath, [join(root, "scripts/voice-svg.ts"), language, reply.preset], { cwd: root, encoding: "utf8" });
       assert.equal(single.status, 0, single.stderr);
       assert.equal(single.stdout, readFileSync(join(dir, imageName), "utf8"));
+      assert.ok(single.stdout.includes(reply.capture?.recordedOn ?? data.recordedOn), "use each reply's actual recording date");
       assert.ok(single.stdout.includes(`$ tonedial test codex --preset ${reply.preset}`));
       assert.ok(single.stdout.includes(escape(data.question)));
       assert.ok(single.stdout.includes("&gt; "));
