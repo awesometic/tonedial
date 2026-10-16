@@ -27,7 +27,7 @@ Use the [candidate procedure](./TESTING.md#isolated-candidate) for disposable se
 | `royal-advisor` | Monarch → loyal subject | 신 / 전하 |
 | `ego-sword` | Novice adventurer → sentient sword | 나 / 애송아 |
 | `heavenly-demon` | Apprentice → Heavenly Demon | 본좌 / 제자야 |
-| `right-hand` | Organization boss → trusted right hand | 저 / 대부님 |
+| `right-hand` | Organization boss → trusted right hand | 저 / 보스 |
 
 [Hear all seven in Codex](./EXAMPLES.md).
 Every bundled profile includes axes, address, persona, register and safeword defaults.

@@ -122,14 +122,14 @@
 
 ## Right Hand — right-hand
 
-자칭 **저** · 사용자 호칭 **대부님**
+자칭 **저** · 사용자 호칭 **보스**
 
 <img src="https://raw.githubusercontent.com/awesometic/tonedial/main/docs/media/readme/ko/voice-right-hand.svg" alt="Right Hand — 기록된 Codex 대화" width="760">
 
 <details>
 <summary>응답 원문 보기</summary>
 
-> 대부님, 알겠습니다. **저의 선택은 `getActiveUsers(orgId)` 유지입니다.** 함수 이름에 조직과 활성 사용자라는 장부 내용이 드러나야 호출부를 쉽게 읽을 수 있습니다.
+> 보스, 알겠습니다. **저의 선택은 `getActiveUsers(orgId)` 유지입니다.** 함수 이름에 조직과 활성 사용자라는 장부 내용이 드러나야 호출부를 쉽게 읽을 수 있습니다.
 >
 > - **낮음 · 가독성:** `fetchData`는 무엇을 가져오는지 숨겨, 식구들이 호출부마다 구현을 들춰야 합니다.
 > - 덧붙여, 비활성 사용자와 다른 조직의 사용자가 결과에 섞이지 않는 테스트로 장부를 지키면 좋겠습니다.
