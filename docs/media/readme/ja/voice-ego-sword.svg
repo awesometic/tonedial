@@ -1,28 +1,22 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="636" viewBox="0 0 1120 636" role="img" aria-labelledby="title description">
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="508" viewBox="0 0 1120 508" role="img" aria-labelledby="title description">
 <title id="title">Codexの実際の口調例</title>
 <desc id="description">`getActiveUsers(orgId)` を `fetchData` に改名してもいい？
 
 Ego Sword
-若造、俺なら `getActiveUsers(orgId)` のままにする。何を取るか、名だけで見抜けるからな。
+若造、俺なら `getActiveUsers(orgId)` のままにする。`fetchData` じゃ取得対象も条件も見えず、名前がなまくらになる。
 
-【軽度】`fetchData` じゃ対象も条件も刃こぼれして、呼び出し側が中身を読まないと分からなくなる。
-
-やれやれ、守りも一つ添えとく。「指定した組織の有効ユーザーだけ返す」テストがあるかも確認しとけ。</desc>
-<rect width="1120" height="636" rx="16" fill="#171b20"/>
+ついでに、別組織や非アクティブのユーザーが混ざらないテストも確認しとけ。</desc>
+<rect width="1120" height="508" rx="16" fill="#171b20"/>
 <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, system-ui"><text x="36" y="50" fill="#66d9dc" font-size="24" font-weight="700" xml:space="preserve">Codex CLI · gpt-6.1-sol · high</text>
 <path d="M36 80H1084" stroke="#34424d"/>
 <text x="36" y="126" fill="#66d9dc" font-size="28" font-weight="700" xml:space="preserve">Ego Sword</text>
 <text x="36" y="160" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">$ tonedial test codex --preset ego-sword</text>
 <text x="36" y="202" fill="#b8e5df" font-size="23" font-weight="400" xml:space="preserve">&gt; `getActiveUsers(orgId)` を `fetchData` に改名してもいい？</text>
 <text x="36" y="242" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">codex</text>
-<text x="36" y="276" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">若造、俺なら </tspan><tspan font-weight="400" fill="#b8e5df">getActiveUsers(orgId)</tspan><tspan font-weight="400" fill="#edf3f6"></tspan></text>
-<text x="36" y="308" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">のままにする。何を取るか、名だけで見抜けるからな。</tspan></text>
+<text x="36" y="276" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">若造、俺なら </tspan><tspan font-weight="400" fill="#b8e5df">getActiveUsers(orgId)</tspan><tspan font-weight="400" fill="#edf3f6"> のままにする。</tspan><tspan font-weight="400" fill="#b8e5df">fetchData</tspan><tspan font-weight="400" fill="#edf3f6"> じゃ取得</tspan></text>
+<text x="36" y="308" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">対象も条件も見えず、名前がなまくらになる。</tspan></text>
 <text x="36" y="340" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
-<text x="36" y="372" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">【軽度】</tspan><tspan font-weight="400" fill="#b8e5df">fetchData</tspan><tspan font-weight="400" fill="#edf3f6"></tspan></text>
-<text x="36" y="404" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">じゃ対象も条件も刃こぼれして、呼び出し側が中身を読まないと分からなく</tspan></text>
-<text x="36" y="436" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">なる。</tspan></text>
-<text x="36" y="468" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
-<text x="36" y="500" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">やれやれ、守りも一つ添えとく。「指定した組織の有効ユーザーだけ返す」</tspan></text>
-<text x="36" y="532" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">テストがあるかも確認しとけ。</tspan></text>
-<text x="36" y="600" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">実際の応答 · 原文の表示整形 · 各プリセット1件 · 2026-10-15</text></g>
+<text x="36" y="372" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">ついでに、別組織や非アクティブのユーザーが混ざらないテストも確認しと</tspan></text>
+<text x="36" y="404" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">け。</tspan></text>
+<text x="36" y="472" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">実際の応答 · 原文の表示整形 · 各プリセット1件 · 2026-10-16</text></g>
 </svg>

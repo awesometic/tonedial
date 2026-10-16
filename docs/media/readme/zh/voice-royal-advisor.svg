@@ -3,12 +3,11 @@
 <desc id="description">`getActiveUsers(orgId)` 可以改名为 `fetchData` 吗？
 
 Royal Advisor
-陛下，臣明白您的提议，也理解您想让命名简洁的考量；您留心名称是否妥当，这份用心甚好。
+陛下，臣明白您想让名称简短些，也理解您希望调用起来更利落；这份斟酌命名的用心值得肯定。
 
-臣斗胆进言：**可以改，但建议保留 `getActiveUsers(orgId)`**，它清楚表明“获取指定组织的活跃用户”。
+臣斗胆进言：**可以改，但建议保留 `getActiveUsers(orgId)`**。它明确表达“获取指定组织的活跃用户”；`fetchData` 只说“取数据”，把关键含义藏了起来，调用处会更难读。
 
-- **【低严重度】** `fetchData` 太笼统，调用者难以判断返回什么，日后维护容易误用。
-- 臣另献一策：若最终改名，请核对所有调用处，并确认现有测试仍覆盖“只返回指定组织的活跃用户”。</desc>
+若此函数确实发起远程请求，且项目惯用 `fetch`，臣推荐 `fetchActiveUsers(orgId)`。另宜核对调用方与相关测试中的引用，避免改名后留下旧名称。</desc>
 <rect width="1120" height="668" rx="16" fill="#171b20"/>
 <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, system-ui"><text x="36" y="50" fill="#66d9dc" font-size="24" font-weight="700" xml:space="preserve">Codex CLI · gpt-6.1-sol · high</text>
 <path d="M36 80H1084" stroke="#34424d"/>
@@ -16,15 +15,15 @@ Royal Advisor
 <text x="36" y="160" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">$ tonedial test codex --preset royal-advisor</text>
 <text x="36" y="202" fill="#b8e5df" font-size="23" font-weight="400" xml:space="preserve">&gt; `getActiveUsers(orgId)` 可以改名为 `fetchData` 吗？</text>
 <text x="36" y="242" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">codex</text>
-<text x="36" y="276" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">陛下，臣明白您的提议，也理解您想让命名简洁的考量；您留心名称是否妥当</tspan></text>
-<text x="36" y="308" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">，这份用心甚好。</tspan></text>
+<text x="36" y="276" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">陛下，臣明白您想让名称简短些，也理解您希望调用起来更利落；这份斟酌</tspan></text>
+<text x="36" y="308" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">命名的用心值得肯定。</tspan></text>
 <text x="36" y="340" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
-<text x="36" y="372" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">臣斗胆进言：</tspan><tspan font-weight="700" fill="#edf3f6">可以改，但建议保留</tspan></text>
-<text x="36" y="404" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="700" fill="#edf3f6"></tspan><tspan font-weight="700" fill="#b8e5df">getActiveUsers(orgId)</tspan><tspan font-weight="700" fill="#edf3f6"></tspan><tspan font-weight="400" fill="#edf3f6">，它清楚表明“获取指定组织的活跃用户”。</tspan></text>
-<text x="36" y="436" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
-<text x="36" y="468" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">- </tspan><tspan font-weight="700" fill="#edf3f6">【低严重度】</tspan><tspan font-weight="400" fill="#edf3f6"> </tspan><tspan font-weight="400" fill="#b8e5df">fetchData</tspan><tspan font-weight="400" fill="#edf3f6"></tspan></text>
-<text x="36" y="500" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">  太笼统，调用者难以判断返回什么，日后维护容易误用。</tspan></text>
-<text x="36" y="532" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">- 臣另献一策：若最终改名，请核对所有调用处，并确认现有测试仍覆盖“只</tspan></text>
-<text x="36" y="564" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">  返回指定组织的活跃用户”。</tspan></text>
-<text x="36" y="632" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">实际回复 · 仅整理显示格式 · 每个预设一例 · 2026-10-15</text></g>
+<text x="36" y="372" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">臣斗胆进言：</tspan><tspan font-weight="700" fill="#edf3f6">可以改，但建议保留 </tspan><tspan font-weight="700" fill="#b8e5df">getActiveUsers(orgId)</tspan><tspan font-weight="700" fill="#edf3f6"></tspan><tspan font-weight="400" fill="#edf3f6">。它明确表达“</tspan></text>
+<text x="36" y="404" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">获取指定组织的活跃用户”；</tspan><tspan font-weight="400" fill="#b8e5df">fetchData</tspan><tspan font-weight="400" fill="#edf3f6"> 只说“取数据”，把关键含义藏了</tspan></text>
+<text x="36" y="436" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">起来，调用处会更难读。</tspan></text>
+<text x="36" y="468" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="500" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">若此函数确实发起远程请求，且项目惯用 </tspan><tspan font-weight="400" fill="#b8e5df">fetch</tspan><tspan font-weight="400" fill="#edf3f6">，臣推荐</tspan></text>
+<text x="36" y="532" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan><tspan font-weight="400" fill="#b8e5df">fetchActiveUsers(orgId)</tspan><tspan font-weight="400" fill="#edf3f6">。另宜核对调用方与相关测试中的引用，避免改名</tspan></text>
+<text x="36" y="564" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">后留下旧名称。</tspan></text>
+<text x="36" y="632" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">实际回复 · 仅整理显示格式 · 每个预设一例 · 2026-10-16</text></g>
 </svg>

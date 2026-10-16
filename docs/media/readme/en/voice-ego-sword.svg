@@ -1,23 +1,22 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="540" viewBox="0 0 1120 540" role="img" aria-labelledby="title description">
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="508" viewBox="0 0 1120 508" role="img" aria-labelledby="title description">
 <title id="title">Recorded Codex voice examples</title>
 <desc id="description">Should I rename `getActiveUsers(orgId)` to `fetchData`?
 
 Ego Sword
-Keep `getActiveUsers(orgId)`, rookie. **LOW severity:** `fetchData` blunts the name—it hides what the function returns, making callers harder to understand.
+Keep `getActiveUsers(orgId)`, rookie. `fetchData` throws the map away: it hides which data you’re fetching.
 
-Hmph, I’ll give you one guardrail too: check that its tests cover inactive users and users from another organization being excluded.</desc>
-<rect width="1120" height="540" rx="16" fill="#171b20"/>
+Check that “active” matches the function’s actual filter—I’d keep that edge sharp, too.</desc>
+<rect width="1120" height="508" rx="16" fill="#171b20"/>
 <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, system-ui"><text x="36" y="50" fill="#66d9dc" font-size="24" font-weight="700" xml:space="preserve">Codex CLI · gpt-6.1-sol · high</text>
 <path d="M36 80H1084" stroke="#34424d"/>
 <text x="36" y="126" fill="#66d9dc" font-size="28" font-weight="700" xml:space="preserve">Ego Sword</text>
 <text x="36" y="160" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">$ tonedial test codex --preset ego-sword</text>
 <text x="36" y="202" fill="#b8e5df" font-size="23" font-weight="400" xml:space="preserve">&gt; Should I rename `getActiveUsers(orgId)` to `fetchData`?</text>
 <text x="36" y="242" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">codex</text>
-<text x="36" y="276" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">Keep </tspan><tspan font-weight="400" fill="#b8e5df">getActiveUsers(orgId)</tspan><tspan font-weight="400" fill="#edf3f6">, rookie. </tspan><tspan font-weight="700" fill="#edf3f6">LOW severity:</tspan><tspan font-weight="400" fill="#edf3f6"> </tspan><tspan font-weight="400" fill="#b8e5df">fetchData</tspan><tspan font-weight="400" fill="#edf3f6"></tspan></text>
-<text x="36" y="308" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">blunts the name—it hides what the function returns, making callers</tspan></text>
-<text x="36" y="340" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">harder to understand.</tspan></text>
-<text x="36" y="372" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
-<text x="36" y="404" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">Hmph, I’ll give you one guardrail too: check that its tests cover</tspan></text>
-<text x="36" y="436" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">inactive users and users from another organization being excluded.</tspan></text>
-<text x="36" y="504" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">Real replies · formatted transcript · one sample per preset · 2026-10-14</text></g>
+<text x="36" y="276" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">Keep </tspan><tspan font-weight="400" fill="#b8e5df">getActiveUsers(orgId)</tspan><tspan font-weight="400" fill="#edf3f6">, rookie. </tspan><tspan font-weight="400" fill="#b8e5df">fetchData</tspan><tspan font-weight="400" fill="#edf3f6"> throws the map away:</tspan></text>
+<text x="36" y="308" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">it hides which data you’re fetching.</tspan></text>
+<text x="36" y="340" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="372" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">Check that “active” matches the function’s actual filter—I’d</tspan></text>
+<text x="36" y="404" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">keep that edge sharp, too.</tspan></text>
+<text x="36" y="472" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">Real replies · formatted transcript · one sample per preset · 2026-10-16</text></g>
 </svg>

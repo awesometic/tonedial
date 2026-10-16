@@ -45,6 +45,8 @@ Use lowercase locale tags and kebab-case semantic stems: `ko/dial.svg`, not `dia
 Locales share stems, not necessarily extensions; preserve the appropriate PNG/JPG/SVG/JSON format.
 Add `shared/` only for an actual language-neutral asset.
 Locale-specific images stay inside their locale directory; link provenance instead of repeating it in captions.
+The shared public-v7 batch manifest is `docs/media/readme/capture-v7-manifest.json`;
+it records candidate file hashes and path-redacted before/after capture manifests.
 
 Npm omits `docs/`, so links visible there must use canonical repository URLs:
 
@@ -77,7 +79,7 @@ Run generation/tests with disposable state; layout evidence does not prove nativ
 ## Recorded conversations
 
 The seven bundled-character samples came from the actual `tonedial test` handoff
-and a disposable exec adapter around native Codex.
+to the native interactive Codex client.
 There is no product capture API or provider-UI imitation.
 Each locale JSON owns all seven **first completed** replies, complete compiler inputs and tone/reply hashes.
 Each README features Royal Advisor and Ego Sword; `docs/EXAMPLES.md` and its four localized pages show all seven images with expandable verbatim text.
@@ -95,6 +97,8 @@ When only some replies are recorded again, put their new metadata in each reply'
 Keep the original batch metadata for unchanged replies; single-reply images use the capture override.
 Never polish replies, rerun a completed response for preferred wording or inherit another locale's capture evidence.
 Keep provider journals/auth material private; samples prove neither hook activation nor scored adherence.
+The public JSON retains every assistant response before the fixed question and any explicit
+intensity-approval turn, so their order can be audited without publishing the native journal.
 The consumer test checks locale links, seven raw replies/hashes, current inputs, page text, featured selection and deterministic SVGs.
 
 The three custom recipes below each README's opening gallery are recorded separately in `use-cases.json`.

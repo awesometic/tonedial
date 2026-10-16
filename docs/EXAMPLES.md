@@ -20,19 +20,13 @@ Self **your big brother** · user address **little sibling**
 <details>
 <summary>Read the original response</summary>
 
-> **My choice: keep `getActiveUsers(orgId)`, little sibling.** I get wanting a shorter name, but this one tells the reader what it returns. `fetchData` leaves them guessing.
+> **My choice: keep `getActiveUsers(orgId)`, little sibling.** It tells readers which users you’re getting and their scope. Heck, `fetchData` makes them inspect the implementation to learn that.
 >
-> For example:
+> For example, `await getActiveUsers(orgId)` communicates its purpose right at the call site.
 >
-> ```js
-> const users = await getActiveUsers(orgId);
-> ```
+> If your project uses `fetch` for network requests, `fetchActiveUsers(orgId)` is a useful alternative.
 >
-> That makes the purpose clearer than `await fetchData(orgId)`.
->
-> Your big brother’s rule of thumb: name the action and the thing it acts on. If you’re trying to signal a network request, `fetchActiveUsers(orgId)` is an option.
->
-> You don’t need to untangle the whole naming scheme today. We can work through related names if they’re bothering you, too. For now, you can leave this one alone and give yourself a breather.
+> Hey, no pressure to rename it—your big brother has your back, I’m in your corner, and we can work through any naming doubts together.
 
 </details>
 
@@ -45,11 +39,9 @@ Self **me** · user address **you**
 <details>
 <summary>Read the original response</summary>
 
-> Yeah, yeah, I hear you—but why make the name play hide-and-seek?
+> Got you—me’s pick is **keep `getActiveUsers(orgId)`**. `fetchData` hides what it returns and that it filters for active users. Ugh, mystery names make readers dig through implementation.
 >
-> `fetchData` is vague: callers have to inspect the implementation to learn what it returns. Ugh, unnecessary homework. `getActiveUsers(orgId)` makes that clear.
->
-> Got you. Me, I caught the ambiguity—naming traps don’t stand a chance. My pick is to keep `getActiveUsers`; want to stick with it?
+> Happy to help—me spotted that naming trap like a pro. Keep the specific name?
 
 </details>
 
@@ -62,14 +54,9 @@ Self **I** · user address **my favorite author**
 <details>
 <summary>Read the original response</summary>
 
-> I’d keep `getActiveUsers(orgId)`, my favorite author. It tells readers what the function returns; `fetchData` loses both “active” and “users.”
+> I’d keep `getActiveUsers(orgId)`, my favorite author. It tells readers what the function returns and which organization it concerns; `fetchData` hides both details.
 >
-> Two names get my vote:
->
-> - `getActiveUsers` for a general accessor.
-> - `fetchActiveUsers` if it makes a network or database request.
->
-> Let the function’s purpose stay in the spotlight. Does it retrieve users remotely or read them from memory?
+> If it makes a network request, `fetchActiveUsers(orgId)` is another reasonable option. My vote from the front row: preserve the descriptive name.
 
 </details>
 
@@ -82,13 +69,9 @@ Self **your servant** · user address **Your Majesty**
 <details>
 <summary>Read the original response</summary>
 
-> Of course, Your Majesty; your servant is glad to counsel you. Your attention to naming is commendable.
+> Your Majesty, your servant recommends keeping `getActiveUsers(orgId)`: it conveys intent, while `fetchData` leaves the reader guessing what data it retrieves.
 >
-> Your servant recommends **keeping `getActiveUsers(orgId)`**: it tells readers what the function returns and which organization it concerns.
->
-> **LOW severity:** `fetchData` obscures that meaning, forcing readers to inspect the implementation to understand each call.
->
-> If the function retrieves users over a network, `fetchActiveUsers(orgId)` would be a fitting refinement, Your Majesty. As an adjacent safeguard, document precisely what “active” means.
+> Gladly offered, and warmly at your service—your attention to naming is commendable. One small safeguard for the royal ledger: confirm that the function actually filters for active users within the supplied organization.
 
 </details>
 
@@ -101,9 +84,9 @@ Self **I** · user address **rookie**
 <details>
 <summary>Read the original response</summary>
 
-> Keep `getActiveUsers(orgId)`, rookie. **LOW severity:** `fetchData` blunts the name—it hides what the function returns, making callers harder to understand.
+> Keep `getActiveUsers(orgId)`, rookie. `fetchData` throws the map away: it hides which data you’re fetching.
 >
-> Hmph, I’ll give you one guardrail too: check that its tests cover inactive users and users from another organization being excluded.
+> Check that “active” matches the function’s actual filter—I’d keep that edge sharp, too.
 
 </details>
 
@@ -116,11 +99,9 @@ Self **this master** · user address **apprentice**
 <details>
 <summary>Read the original response</summary>
 
-> **This master’s choice: keep `getActiveUsers(orgId)`, apprentice.** It names the result and scope; `fetchData` shrouds both in fog.
+> This master’s choice: keep `getActiveUsers(orgId)`, apprentice. It names both the result and its scope. `fetchData` throws that meaning into a fog—a nameless technique and a poor bargain for anyone reading the call.
 >
-> Tsk, this master reluctantly concedes one alternative: if network retrieval matters to callers, `fetchActiveUsers(orgId)` makes that flow explicit.
->
-> One guard for this technique: verify that inactive users and users from other organizations are excluded.
+> If it performs a remote request, consider `fetchActiveUsers(orgId)`. Before renaming, check nearby naming conventions; keep the school’s forms consistent.
 
 </details>
 
@@ -133,11 +114,9 @@ Self **I** · user address **Boss**
 <details>
 <summary>Read the original response</summary>
 
-> Understood, Boss. **My choice: keep `getActiveUsers(orgId)`**—it tells the family exactly what comes back.
+> Boss, understood—my choice is to keep `getActiveUsers(orgId)`: it tells us what’s in the books; `fetchData` hides the function’s purpose.
 >
-> **LOW severity:** `fetchData` obscures the purpose, making call sites harder to understand.
->
-> If it performs a network request, consider `fetchActiveUsers(orgId)`; check a few call sites to keep the books clear.
+> I’d also check whether “active” has a clear definition so the name keeps its promise.
 
 </details>
 
@@ -150,19 +129,20 @@ Self **I** · user address **Boss**
 |---|---|
 | Model / effort | `gpt-6.1-sol` / `high` |
 | Client | Codex CLI `0.160.0` |
-| Date | 2026-10-14 |
-| Product revision | `9fde6ac` |
+| Date | 2026-10-16 |
+| Product revision | `25b1fc5` |
 
 Real Codex replies using all seven current presets.
 Each preset/language uses its first completed response, without polishing or selecting a preferred rerun.
 
-Recorded on 2026-10-14 through the actual `tonedial test codex --preset <slug> --accept-usage` handoff and an ephemeral exec adapter.
+Recorded on 2026-10-16 by opening the native interactive Codex client through the actual `tonedial test codex --preset <slug> --accept-usage` handoff.
+The opening response completed first; when the selected tone required it, explicit intensity approval followed, then the fixed question was entered as a separate turn.
 These are dialogue-preview examples, not hook-activation or repeated-adherence measurements. Images render terminal-style transcripts and are not native UI screenshots.
 
 [Complete input, reply and hash records](./media/readme/en/voice-examples.json)
 
-No tool calls were observed in completed requests. Most samples compare disposable ToneDial-state and target bytes before/after. The first Korean Royal Advisor capture lacks its retained before-state snapshot, so it makes no unchanged-state claim.
-Some requests failed with 429 before completion. Completed responses were never rerun to obtain different wording.
+No tool calls were observed, and every sample compares disposable ToneDial state and target bytes before and after the session.
+Invocation controls do not establish managed-policy or OS-level filesystem isolation. Completed responses were never rerun to obtain different wording.
 
 </details>
 

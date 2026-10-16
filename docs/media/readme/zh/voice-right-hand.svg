@@ -1,26 +1,22 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="604" viewBox="0 0 1120 604" role="img" aria-labelledby="title description">
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="508" viewBox="0 0 1120 508" role="img" aria-labelledby="title description">
 <title id="title">Codex 实际语气示例</title>
 <desc id="description">`getActiveUsers(orgId)` 可以改名为 `fetchData` 吗？
 
 Right Hand
-老大，收到。**我选保留 `getActiveUsers(orgId)`**，这名字能把“查谁、查什么状态”这笔账交代清楚。
+老大，明白。我首选保留 `getActiveUsers(orgId)`：`fetchData` 把“获取组织内活跃用户”这笔账藏了起来，调用处更难看懂。
 
-- **低严重度**：`fetchData` 太笼统，调用方难辨用途，后续查账更费劲。
-- 若要强调远程获取，我建议用 `fetchActiveUsers(orgId)`；改名时核对所有引用，别漏掉其他兄弟的调用。</desc>
-<rect width="1120" height="604" rx="16" fill="#171b20"/>
+若确实从远端请求，可考虑 `fetchActiveUsers(orgId)`；改名前再查一遍调用处，确保名称与实际行为对得上。</desc>
+<rect width="1120" height="508" rx="16" fill="#171b20"/>
 <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, system-ui"><text x="36" y="50" fill="#66d9dc" font-size="24" font-weight="700" xml:space="preserve">Codex CLI · gpt-6.1-sol · high</text>
 <path d="M36 80H1084" stroke="#34424d"/>
 <text x="36" y="126" fill="#66d9dc" font-size="28" font-weight="700" xml:space="preserve">Right Hand</text>
 <text x="36" y="160" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">$ tonedial test codex --preset right-hand</text>
 <text x="36" y="202" fill="#b8e5df" font-size="23" font-weight="400" xml:space="preserve">&gt; `getActiveUsers(orgId)` 可以改名为 `fetchData` 吗？</text>
 <text x="36" y="242" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">codex</text>
-<text x="36" y="276" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">老大，收到。</tspan><tspan font-weight="700" fill="#edf3f6">我选保留</tspan></text>
-<text x="36" y="308" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="700" fill="#edf3f6"></tspan><tspan font-weight="700" fill="#b8e5df">getActiveUsers(orgId)</tspan><tspan font-weight="700" fill="#edf3f6"></tspan><tspan font-weight="400" fill="#edf3f6">，这名字能把“查谁、查什么状态”这笔账交代</tspan></text>
-<text x="36" y="340" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">清楚。</tspan></text>
-<text x="36" y="372" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
-<text x="36" y="404" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">- </tspan><tspan font-weight="700" fill="#edf3f6">低严重度</tspan><tspan font-weight="400" fill="#edf3f6">：</tspan><tspan font-weight="400" fill="#b8e5df">fetchData</tspan><tspan font-weight="400" fill="#edf3f6"> 太笼统，调用方难辨用途，后续查账更费劲。</tspan></text>
-<text x="36" y="436" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">- 若要强调远程获取，我建议用</tspan></text>
-<text x="36" y="468" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">  </tspan><tspan font-weight="400" fill="#b8e5df">fetchActiveUsers(orgId)</tspan><tspan font-weight="400" fill="#edf3f6">；改名时核对所有引用，别漏掉其他兄弟的调</tspan></text>
-<text x="36" y="500" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">  用。</tspan></text>
-<text x="36" y="568" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">实际回复 · 仅整理显示格式 · 每个预设一例 · 2026-10-15</text></g>
+<text x="36" y="276" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">老大，明白。我首选保留 </tspan><tspan font-weight="400" fill="#b8e5df">getActiveUsers(orgId)</tspan><tspan font-weight="400" fill="#edf3f6">：</tspan><tspan font-weight="400" fill="#b8e5df">fetchData</tspan><tspan font-weight="400" fill="#edf3f6"> 把“获取组织</tspan></text>
+<text x="36" y="308" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">内活跃用户”这笔账藏了起来，调用处更难看懂。</tspan></text>
+<text x="36" y="340" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="372" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">若确实从远端请求，可考虑 </tspan><tspan font-weight="400" fill="#b8e5df">fetchActiveUsers(orgId)</tspan><tspan font-weight="400" fill="#edf3f6">；改名前再查一遍调</tspan></text>
+<text x="36" y="404" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">用处，确保名称与实际行为对得上。</tspan></text>
+<text x="36" y="472" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">实际回复 · 仅整理显示格式 · 每个预设一例 · 2026-10-16</text></g>
 </svg>

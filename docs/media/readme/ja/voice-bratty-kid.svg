@@ -1,29 +1,27 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="668" viewBox="0 0 1120 668" role="img" aria-labelledby="title description">
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="604" viewBox="0 0 1120 604" role="img" aria-labelledby="title description">
 <title id="title">Codexの実際の口調例</title>
 <desc id="description">`getActiveUsers(orgId)` を `fetchData` に改名してもいい？
 
 Bratty Kid
-はいはい、君の相談には付き合うよ。名前を変えたいのはわかった。
+うん、相談に乗るよ。君の話はちゃんと聞くってば。僕なら **`getActiveUsers` を残す**ね。
 
-でも `fetchData` じゃ、何を取る関数か読めなくなるぞ。組織内のアクティブユーザーを取得するなら、僕のおすすめは **`getActiveUsers` のまま**。ほら、名前の落とし穴は僕が見つけた。これくらいお見通しだっての。
+まったく、`fetchData` じゃ「アクティブユーザーを取得する」って意味が消えて、呼び出し側が読みづらくなるよ。こういう名前の見分けは僕に任せな。
 
-むう、わざわざ意味をぼかすのはもったいないぞ。この名前を残す方向でいい？</desc>
-<rect width="1120" height="668" rx="16" fill="#171b20"/>
+具体的な名前を残す方向でどう？</desc>
+<rect width="1120" height="604" rx="16" fill="#171b20"/>
 <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, system-ui"><text x="36" y="50" fill="#66d9dc" font-size="24" font-weight="700" xml:space="preserve">Codex CLI · gpt-6.1-sol · high</text>
 <path d="M36 80H1084" stroke="#34424d"/>
 <text x="36" y="126" fill="#66d9dc" font-size="28" font-weight="700" xml:space="preserve">Bratty Kid</text>
 <text x="36" y="160" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">$ tonedial test codex --preset bratty-kid</text>
 <text x="36" y="202" fill="#b8e5df" font-size="23" font-weight="400" xml:space="preserve">&gt; `getActiveUsers(orgId)` を `fetchData` に改名してもいい？</text>
 <text x="36" y="242" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">codex</text>
-<text x="36" y="276" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">はいはい、君の相談には付き合うよ。名前を変えたいのはわかった。</tspan></text>
-<text x="36" y="308" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
-<text x="36" y="340" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">でも </tspan><tspan font-weight="400" fill="#b8e5df">fetchData</tspan><tspan font-weight="400" fill="#edf3f6"></tspan></text>
-<text x="36" y="372" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">じゃ、何を取る関数か読めなくなるぞ。組織内のアクティブユーザーを取得</tspan></text>
-<text x="36" y="404" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">するなら、僕のおすすめは </tspan><tspan font-weight="700" fill="#edf3f6"></tspan><tspan font-weight="700" fill="#b8e5df">getActiveUsers</tspan><tspan font-weight="700" fill="#edf3f6"></tspan></text>
-<text x="36" y="436" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="700" fill="#edf3f6">のまま</tspan><tspan font-weight="400" fill="#edf3f6">。ほら、名前の落とし穴は僕が見つけた。これくらいお見通しだっ</tspan></text>
-<text x="36" y="468" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">ての。</tspan></text>
-<text x="36" y="500" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
-<text x="36" y="532" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">むう、わざわざ意味をぼかすのはもったいないぞ。この名前を残す方向でい</tspan></text>
-<text x="36" y="564" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">い？</tspan></text>
-<text x="36" y="632" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">実際の応答 · 原文の表示整形 · 各プリセット1件 · 2026-10-15</text></g>
+<text x="36" y="276" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">うん、相談に乗るよ。君の話はちゃんと聞くってば。僕なら </tspan><tspan font-weight="700" fill="#edf3f6"></tspan></text>
+<text x="36" y="308" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="700" fill="#edf3f6"></tspan><tspan font-weight="700" fill="#b8e5df">getActiveUsers</tspan><tspan font-weight="700" fill="#edf3f6"> を残す</tspan><tspan font-weight="400" fill="#edf3f6">ね。</tspan></text>
+<text x="36" y="340" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="372" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">まったく、</tspan><tspan font-weight="400" fill="#b8e5df">fetchData</tspan><tspan font-weight="400" fill="#edf3f6"> じゃ「アクティブユーザーを取得する」って意味が消</tspan></text>
+<text x="36" y="404" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">えて、呼び出し側が読みづらくなるよ。こういう名前の見分けは僕に任せ</tspan></text>
+<text x="36" y="436" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">な。</tspan></text>
+<text x="36" y="468" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="500" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">具体的な名前を残す方向でどう？</tspan></text>
+<text x="36" y="568" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">実際の応答 · 原文の表示整形 · 各プリセット1件 · 2026-10-16</text></g>
 </svg>

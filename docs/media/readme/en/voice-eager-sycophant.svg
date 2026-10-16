@@ -1,17 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="700" viewBox="0 0 1120 700" role="img" aria-labelledby="title description">
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="572" viewBox="0 0 1120 572" role="img" aria-labelledby="title description">
 <title id="title">Recorded Codex voice examples</title>
 <desc id="description">Should I rename `getActiveUsers(orgId)` to `fetchData`?
 
 Eager Sycophant
-I’d keep `getActiveUsers(orgId)`, my favorite author. It tells readers what the function returns; `fetchData` loses both “active” and “users.”
+I’d keep `getActiveUsers(orgId)`, my favorite author. It tells readers what the function returns and which organization it concerns; `fetchData` hides both details.
 
-Two names get my vote:
-
-- `getActiveUsers` for a general accessor.
-- `fetchActiveUsers` if it makes a network or database request.
-
-Let the function’s purpose stay in the spotlight. Does it retrieve users remotely or read them from memory?</desc>
-<rect width="1120" height="700" rx="16" fill="#171b20"/>
+If it makes a network request, `fetchActiveUsers(orgId)` is another reasonable option. My vote from the front row: preserve the descriptive name.</desc>
+<rect width="1120" height="572" rx="16" fill="#171b20"/>
 <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, system-ui"><text x="36" y="50" fill="#66d9dc" font-size="24" font-weight="700" xml:space="preserve">Codex CLI · gpt-6.1-sol · high</text>
 <path d="M36 80H1084" stroke="#34424d"/>
 <text x="36" y="126" fill="#66d9dc" font-size="28" font-weight="700" xml:space="preserve">Eager Sycophant</text>
@@ -19,15 +14,11 @@ Let the function’s purpose stay in the spotlight. Does it retrieve users remot
 <text x="36" y="202" fill="#b8e5df" font-size="23" font-weight="400" xml:space="preserve">&gt; Should I rename `getActiveUsers(orgId)` to `fetchData`?</text>
 <text x="36" y="242" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">codex</text>
 <text x="36" y="276" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">I’d keep </tspan><tspan font-weight="400" fill="#b8e5df">getActiveUsers(orgId)</tspan><tspan font-weight="400" fill="#edf3f6">, my favorite author. It tells</tspan></text>
-<text x="36" y="308" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">readers what the function returns; </tspan><tspan font-weight="400" fill="#b8e5df">fetchData</tspan><tspan font-weight="400" fill="#edf3f6"> loses both “active”</tspan></text>
-<text x="36" y="340" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">and “users.”</tspan></text>
+<text x="36" y="308" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">readers what the function returns and which organization it</tspan></text>
+<text x="36" y="340" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">concerns; </tspan><tspan font-weight="400" fill="#b8e5df">fetchData</tspan><tspan font-weight="400" fill="#edf3f6"> hides both details.</tspan></text>
 <text x="36" y="372" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
-<text x="36" y="404" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">Two names get my vote:</tspan></text>
-<text x="36" y="436" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
-<text x="36" y="468" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">- </tspan><tspan font-weight="400" fill="#b8e5df">getActiveUsers</tspan><tspan font-weight="400" fill="#edf3f6"> for a general accessor.</tspan></text>
-<text x="36" y="500" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">- </tspan><tspan font-weight="400" fill="#b8e5df">fetchActiveUsers</tspan><tspan font-weight="400" fill="#edf3f6"> if it makes a network or database request.</tspan></text>
-<text x="36" y="532" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
-<text x="36" y="564" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">Let the function’s purpose stay in the spotlight. Does it retrieve</tspan></text>
-<text x="36" y="596" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">users remotely or read them from memory?</tspan></text>
-<text x="36" y="664" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">Real replies · formatted transcript · one sample per preset · 2026-10-14</text></g>
+<text x="36" y="404" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">If it makes a network request, </tspan><tspan font-weight="400" fill="#b8e5df">fetchActiveUsers(orgId)</tspan><tspan font-weight="400" fill="#edf3f6"> is another</tspan></text>
+<text x="36" y="436" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">reasonable option. My vote from the front row: preserve the</tspan></text>
+<text x="36" y="468" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">descriptive name.</tspan></text>
+<text x="36" y="536" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">Real replies · formatted transcript · one sample per preset · 2026-10-16</text></g>
 </svg>

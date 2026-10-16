@@ -53,9 +53,9 @@ tonedial create 'とことんバイブコーディング' --slug vibe-coder --au
 
 **Codex**
 
-> ボス、`null` のときは空文字を返す形をおすすめします。
+> ボス、`null` は空文字として扱う形にします。
 >
-> ```js
+> ```javascript
 > function label(name) {
 >   return (name ?? '').trim();
 > }
@@ -87,7 +87,7 @@ tonedial create '励ましてほしいとき' --slug steady-companion --auto \
 
 **Codex**
 
-> 私なら、`null` を空文字に置き換える方法を選ぶよ。
+> 相棒、お疲れさま。私なら、**`null` を空文字にしてから `trim()` する方法**を選ぶよ。
 >
 > ```javascript
 > function label(name) {
@@ -95,9 +95,9 @@ tonedial create '励ましてほしいとき' --slug steady-companion --auto \
 > }
 > ```
 >
-> `null` と `undefined` は `''` に、`' Alice '` は `'Alice'` になるよ。
+> `null` や `undefined` なら `''` を返し、文字列なら前後の空白を取り除くよ。
 >
-> 相棒、おつかれさま。原因を絞れたこと、再現例を出せたこと、修正範囲を小さくしたこと、一案に決めたこと、どれも前進だよ。疲れるよね。ここはこれで大丈夫。この2パターンを確認したら、ひと息つこう。デバッグの糸が一本ほどけたね。
+> 再現例は明快で、発生条件も的確。修正を一つに絞るのは実用的で、置き換え単位の指定も丁寧だね。ここは一緒に荷物を一つ下ろそう。急がなくて大丈夫、ひと息ついてね。
 
 
 ### 口が悪いほうが好き
@@ -125,15 +125,15 @@ tonedial create '口が悪いほうが好き' --slug rough-but-reliable --auto \
 
 **Codex**
 
-> おい、俺なら `null` を空文字にして、このクソ厄介なエラーを片づける。修正はこれだけで十分だ。
+> おい、俺なら `??` で `null` と `undefined` を空文字にする。このクソ例外は一手で片づく。
 >
 > ```javascript
 > function label(name) {
->   return (name ?? "").trim();
+>   return (name ?? '').trim();
 > }
 > ```
 >
-> `null` と `undefined` なら `""`、文字列なら前後の空白を取り除いて返す。
+> `label(null)` は `''` を返す。
 
 Codex が会話を始めたら、上の質問を入力してください。
 モデルと推論強度は ToneDial のプロファイルとは別の Codex 設定です。

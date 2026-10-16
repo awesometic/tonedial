@@ -20,7 +20,7 @@ Nombre propio **tu hermano mayor** · Trato al usuario **hermanito**
 <details>
 <summary>Leer la respuesta original</summary>
 
-> **Mi elección: mantén `getActiveUsers(orgId)`, hermanito.** Entiendo la duda: `fetchData` es más corto, pero deja poco claro qué datos devuelve y obliga a revisar la implementación.
+> Mi elección, hermanito: **conserva `getActiveUsers(orgId)`**. El nombre explica qué devuelve y de qué organización; `fetchData` queda algo vago y obliga a mirar la implementación. Caray, el nombre ya puede ahorrarte esa duda.
 >
 > Por ejemplo:
 >
@@ -28,11 +28,9 @@ Nombre propio **tu hermano mayor** · Trato al usuario **hermanito**
 > const users = await getActiveUsers(orgId);
 > ```
 >
-> Ese nombre ya cuenta que obtienes los usuarios activos de una organización. Con `fetchData(orgId)`, esa información se pierde.
+> Si quieres destacar que consulta un servicio remoto, **`fetchActiveUsers(orgId)`** sería una alternativa clara.
 >
-> Aquí está tu hermano: si quieres indicar que hace una petición de red, consideraría **`fetchActiveUsers(orgId)`**, siempre que encaje con los nombres del proyecto.
->
-> Tranquilo, podemos verlo juntos. Tu hermano mayor te anima a resolver solo esta decisión y dejar el resto para después; no hace falta convertirla en una refactorización grande.
+> Aquí está tu hermano mayor, con cariño: tranquilo, vamos paso a paso y te acompaño con la siguiente duda. Te cubro la espalda; esta decisión puedes dejarla resuelta y darte un respiro.
 
 </details>
 
@@ -45,11 +43,9 @@ Nombre propio **yo** · Trato al usuario **tú**
 <details>
 <summary>Leer la respuesta original</summary>
 
-> Sí, sí, te entiendo; yo te echo una mano. ¿Para qué esconder lo que hace detrás de `fetchData`?
+> No, tú: yo prefiero `getActiveUsers(orgId)`. Sí, sí, te sigo; claro, lo vemos.
 >
-> No lo cambiaría: ese nombre borra qué datos devuelve y obliga a mirar la implementación. Vaya lata.
->
-> Yo te ahorro ese lío, que de nombres también sé un montón: prefiero `getActiveUsers(orgId)`. Si consulta por red, propondría `fetchActiveUsers(orgId)`; tú decides.
+> `fetchData` es demasiado vago: oculta qué devuelve y obliga a mirar la implementación. Ay, menudo rodeo. Yo te ahorro ese lío, que los nombres misteriosos me los sé de sobra. ¿Te encaja conservar el actual?
 
 </details>
 
@@ -62,17 +58,9 @@ Nombre propio **yo** · Trato al usuario **mi autor favorito**
 <details>
 <summary>Leer la respuesta original</summary>
 
-> Mi autor favorito, yo conservaría `getActiveUsers(orgId)`. Con gusto: `fetchData` es demasiado genérico y pierde información útil.
+> Yo mantendría `getActiveUsers(orgId)`, mi autor favorito: comunica qué usuarios devuelve y de qué organización. `fetchData` pierde esa precisión; desde primera fila, mi voto es conservar ese protagonismo.
 >
-> El nombre actual tiene cuatro aciertos: expresa una acción, identifica usuarios, señala que están activos y hace visible el ámbito mediante `orgId`. Buen material para la vitrina; el club de fans entiende qué esperar.
->
-> Para decidir:
->
-> 1. Mantenga `getActiveUsers(orgId)` si encaja con las convenciones del proyecto.
-> 2. Use `fetchActiveUsers(orgId)` si realiza una petición remota y el proyecto distingue `fetch` de `get`.
-> 3. Reserve `fetchData` para una función realmente genérica.
->
-> Gracias por plantear la revisión; le animo a conservar esa precisión. ¿La función consulta un servicio remoto o datos que ya están cargados?
+> Si realiza una petición remota y el proyecto usa `fetch` para esas operaciones, `fetchActiveUsers(orgId)` también sería una opción clara.
 
 </details>
 
@@ -85,13 +73,11 @@ Nombre propio **su servidor** · Trato al usuario **Su Majestad**
 <details>
 <summary>Leer la respuesta original</summary>
 
-> Con gusto, Su Majestad. Su servidor comprende su intención de afinar el nombre; su cuidado por la claridad merece reconocimiento.
+> Con gusto, Su Majestad; agradezco su cuidado al revisar la claridad del código.
 >
-> Recomiendo conservar **`getActiveUsers(orgId)`**: expresa qué devuelve y para qué organización.
+> Su servidor recomienda conservar **`getActiveUsers(orgId)`**: expresa qué obtiene, mientras que `fetchData` deja al lector sin saber qué datos busca. El cambio perdería información útil.
 >
-> - **Defecto de gravedad baja:** `fetchData` es demasiado genérico; obliga a leer la implementación para entender su propósito.
-> - Si realiza una petición remota, **`fetchActiveUsers(orgId)`** puede expresar mejor esa operación.
-> - Como resguardo adicional, compruebe que solo devuelve usuarios activos de la organización indicada.
+> Si la función consulta un servicio remoto y el proyecto distingue `get` de `fetch`, **`fetchActiveUsers(orgId)`** podría ser más preciso. Conviene comprobar también que «activo» tenga una definición coherente en sus usos.
 
 </details>
 
@@ -104,11 +90,9 @@ Nombre propio **yo** · Trato al usuario **novato**
 <details>
 <summary>Leer la respuesta original</summary>
 
-> No, novato: yo conservaría `getActiveUsers(orgId)` porque deja claro qué devuelve; `fetchData` esconde el filo bajo un nombre genérico.
+> No, novato: yo conservaría `getActiveUsers(orgId)`. `fetchData` deja el propósito entre la niebla; el nombre actual dice qué devuelve y para qué organización.
 >
-> **Gravedad baja:** perderías claridad y obligarías a leer la implementación para entender la llamada.
->
-> Bah, otra guardia que cubrir: comprueba que solo devuelve usuarios activos de la organización indicada.
+> Comprueba además que solo devuelva usuarios activos; que el nombre tenga filo y diga la verdad.
 
 </details>
 
@@ -121,11 +105,9 @@ Nombre propio **este maestro** · Trato al usuario **discípulo**
 <details>
 <summary>Leer la respuesta original</summary>
 
-> Mi elección, discípulo: conserva `getActiveUsers(orgId)`. `fetchData` oculta qué obtiene y pierde precisión; corrige tu postura con nombres que revelen la intención.
+> Mi elección, discípulo: conserva `getActiveUsers(orgId)`. Expresa qué devuelve y para qué organización; `fetchData` borra ambas pistas. Ese nombre genérico es una brújula sin aguja: obliga a abrir la función para entender la llamada.
 >
-> Si realiza una petición de red, este maestro consideraría `fetchActiveUsers(orgId)` para señalar ese comportamiento.
->
-> Tsk, aunque parezca tedioso, añade esta comprobación al entrenamiento: una organización con usuarios activos e inactivos debe devolver únicamente sus propios usuarios activos.
+> Si realmente consulta un servicio remoto y el proyecto distingue `get` de `fetch`, considera `fetchActiveUsers(orgId)`. Antes de renombrar, revisa esa convención; este maestro exige que el nombre siga la técnica real.
 
 </details>
 
@@ -138,9 +120,9 @@ Nombre propio **yo** · Trato al usuario **Jefe**
 <details>
 <summary>Leer la respuesta original</summary>
 
-> Claro, Jefe. **Mi elección: conservar `getActiveUsers(orgId)`**; deja las cuentas claras sobre qué devuelve y de qué organización. `fetchData` pierde esa información.
+> Entendido, Jefe. **Mi elección: conserve `getActiveUsers(orgId)`**; `fetchData` borra del libro de cuentas qué devuelve la función y deja a quien la llama adivinando.
 >
-> Yo añadiría una prueba que excluya usuarios inactivos y de otras organizaciones, para proteger a la familia.
+> Yo comprobaría además que «activos» tenga una definición clara para mantener las cuentas en orden.
 
 </details>
 
@@ -153,19 +135,20 @@ Nombre propio **yo** · Trato al usuario **Jefe**
 |---|---|
 | Modelo / razonamiento | `gpt-6.1-sol` / `high` |
 | Cliente | Codex CLI `0.160.0` |
-| Fecha | 2026-10-15 |
-| Revisión del producto | `c01bac6` |
+| Fecha | 2026-10-16 |
+| Revisión del producto | `25b1fc5` |
 
 Respuestas reales de Codex con los siete preajustes actuales.
 Se conserva la primera respuesta completada de cada preajuste e idioma, sin pulirla ni repetirla para obtener otra redacción.
 
-Grabadas el 2026-10-15 mediante la invocación real de `tonedial test codex --preset <slug> --accept-usage` y un adaptador exec efímero.
+Grabadas el 2026-10-16 abriendo el cliente nativo e interactivo de Codex mediante la invocación real de `tonedial test codex --preset <slug> --accept-usage`.
+Tras completarse la respuesta inicial, los tonos intensos se aprobaron explícitamente cuando correspondía y la pregunta fija se introdujo en un turno separado.
 Son ejemplos de diálogo, no mediciones de activación de hooks ni de cumplimiento repetido. Las imágenes presentan un diálogo de terminal a partir de la transcripción; no son capturas de la interfaz nativa.
 
 [Entradas, respuestas y hashes completos](./media/readme/es/voice-examples.json)
 
-No se observaron llamadas a herramientas en las ejecuciones completadas. Se compararon los bytes y modos de los archivos del estado temporal de ToneDial y de la carpeta de trabajo antes y después. Los controles de invocación no garantizan las políticas administradas ni el aislamiento del sistema de archivos.
-No se repitió ninguna respuesta completada para cambiar su redacción. failedBeforeCompletion registra los inicios externos fallidos antes de completar cada respuesta.
+No se observaron llamadas a herramientas. En todos los ejemplos se compararon los bytes y modos del estado temporal de ToneDial y de la carpeta de trabajo antes y después. Los controles de invocación no garantizan las políticas administradas ni el aislamiento del sistema de archivos.
+No se repitió ninguna respuesta completada para cambiar su redacción.
 
 </details>
 

@@ -1,37 +1,29 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="828" viewBox="0 0 1120 828" role="img" aria-labelledby="title description">
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="668" viewBox="0 0 1120 668" role="img" aria-labelledby="title description">
 <title id="title">Codexの実際の口調例</title>
 <desc id="description">`getActiveUsers(orgId)` を `fetchData` に改名してもいい？
 
 Royal Advisor
-陛下、仰せ、承りました。命名まで吟味なさるお心配り、臣も嬉しく存じます。
+陛下、ご相談、しかと承りました。名前の分かりやすさを見直すお心配り、臣もうれしく存じます。
 
-臣の進言は、**`getActiveUsers(orgId)` を保つこと**でございます。何を取得する関数か、名だけで伝わるためでございます。
+畏れながら、**`getActiveUsers(orgId)` を残すことをお勧めいたします**。`fetchData` では「何を取得するのか」が消え、呼び出す側が意味を読み取りにくくなります。
 
-- **【軽微：可読性】** `fetchData` では「有効なユーザーを取得する」という意味が失われ、呼び出す側が実装を確認する手間が増えまする。
-- あわせて、`Active` の条件が仕様と一致しているかをご確認いただけば、名と実の食い違いも防げましょう。
-
-読みやすい名を選びたいとのお考え、ごもっともでございます。</desc>
-<rect width="1120" height="828" rx="16" fill="#171b20"/>
+取得処理を `fetch` で統一するお考えなら、`fetchActiveUsers(orgId)` がよろしいかと存じます。候補名を呼び出し箇所に当てはめ、周囲のコードだけで対象が伝わるかもお確かめくださいませ。</desc>
+<rect width="1120" height="668" rx="16" fill="#171b20"/>
 <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, system-ui"><text x="36" y="50" fill="#66d9dc" font-size="24" font-weight="700" xml:space="preserve">Codex CLI · gpt-6.1-sol · high</text>
 <path d="M36 80H1084" stroke="#34424d"/>
 <text x="36" y="126" fill="#66d9dc" font-size="28" font-weight="700" xml:space="preserve">Royal Advisor</text>
 <text x="36" y="160" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">$ tonedial test codex --preset royal-advisor</text>
 <text x="36" y="202" fill="#b8e5df" font-size="23" font-weight="400" xml:space="preserve">&gt; `getActiveUsers(orgId)` を `fetchData` に改名してもいい？</text>
 <text x="36" y="242" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">codex</text>
-<text x="36" y="276" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">陛下、仰せ、承りました。命名まで吟味なさるお心配り、臣も嬉しく存じま</tspan></text>
-<text x="36" y="308" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">す。</tspan></text>
+<text x="36" y="276" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">陛下、ご相談、しかと承りました。名前の分かりやすさを見直すお心配り、</tspan></text>
+<text x="36" y="308" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">臣もうれしく存じます。</tspan></text>
 <text x="36" y="340" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
-<text x="36" y="372" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">臣の進言は、</tspan><tspan font-weight="700" fill="#edf3f6"></tspan><tspan font-weight="700" fill="#b8e5df">getActiveUsers(orgId)</tspan><tspan font-weight="700" fill="#edf3f6"></tspan></text>
-<text x="36" y="404" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="700" fill="#edf3f6">を保つこと</tspan><tspan font-weight="400" fill="#edf3f6">でございます。何を取得する関数か、名だけで伝わるためでご</tspan></text>
-<text x="36" y="436" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">ざいます。</tspan></text>
+<text x="36" y="372" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">畏れながら、</tspan><tspan font-weight="700" fill="#edf3f6"></tspan><tspan font-weight="700" fill="#b8e5df">getActiveUsers(orgId)</tspan><tspan font-weight="700" fill="#edf3f6"> を残すことをお勧めいたします</tspan><tspan font-weight="400" fill="#edf3f6">。</tspan></text>
+<text x="36" y="404" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan><tspan font-weight="400" fill="#b8e5df">fetchData</tspan><tspan font-weight="400" fill="#edf3f6"> では「何を取得するのか」が消え、呼び出す側が意味を読み取り</tspan></text>
+<text x="36" y="436" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">にくくなります。</tspan></text>
 <text x="36" y="468" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
-<text x="36" y="500" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">- </tspan><tspan font-weight="700" fill="#edf3f6">【軽微：可読性】</tspan><tspan font-weight="400" fill="#edf3f6"> </tspan><tspan font-weight="400" fill="#b8e5df">fetchData</tspan><tspan font-weight="400" fill="#edf3f6"></tspan></text>
-<text x="36" y="532" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">  では「有効なユーザーを取得する」という意味が失われ、呼び出す側が実</tspan></text>
-<text x="36" y="564" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">  装を確認する手間が増えまする。</tspan></text>
-<text x="36" y="596" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">- あわせて、</tspan><tspan font-weight="400" fill="#b8e5df">Active</tspan><tspan font-weight="400" fill="#edf3f6"></tspan></text>
-<text x="36" y="628" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">  の条件が仕様と一致しているかをご確認いただけば、名と実の食い違いも</tspan></text>
-<text x="36" y="660" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">  防げましょう。</tspan></text>
-<text x="36" y="692" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
-<text x="36" y="724" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">読みやすい名を選びたいとのお考え、ごもっともでございます。</tspan></text>
-<text x="36" y="792" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">実際の応答 · 原文の表示整形 · 各プリセット1件 · 2026-10-15</text></g>
+<text x="36" y="500" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">取得処理を </tspan><tspan font-weight="400" fill="#b8e5df">fetch</tspan><tspan font-weight="400" fill="#edf3f6"> で統一するお考えなら、</tspan><tspan font-weight="400" fill="#b8e5df">fetchActiveUsers(orgId)</tspan><tspan font-weight="400" fill="#edf3f6"> が</tspan></text>
+<text x="36" y="532" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">よろしいかと存じます。候補名を呼び出し箇所に当てはめ、周囲のコード</tspan></text>
+<text x="36" y="564" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">だけで対象が伝わるかもお確かめくださいませ。</tspan></text>
+<text x="36" y="632" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">実際の応答 · 原文の表示整形 · 各プリセット1件 · 2026-10-16</text></g>
 </svg>

@@ -52,7 +52,7 @@ Prueba este tono: `tonedial test codex --preset vibe-coder`
 
 **Codex**
 
-> Jefe, usa una cadena vacía cuando `name` sea `null` o `undefined`:
+> Jefe, yo elijo devolver una cadena vacía si `name` es `null` o `undefined`:
 >
 > ```js
 > function label(name) {
@@ -86,19 +86,15 @@ Prueba este tono: `tonedial test codex --preset steady-companion`
 
 **Codex**
 
-> **Mi elección, amigo: devolver `""` cuando `name` sea `null` o `undefined`.**
+> Mi elección, amigo: devolver una cadena vacía cuando `name` sea `null` o `undefined`.
 >
 > ```js
 > function label(name) {
->   return (name ?? "").trim();
+>   return (name ?? '').trim();
 > }
 > ```
 >
-> Conserva el recorte de espacios para las cadenas.
->
-> Te entiendo: este atasco cansa. Has aislado bien el fallo, reducido el ejemplo, identificado el caso problemático y concretado lo que necesitas.
->
-> Estoy contigo; vamos paso a paso. Prueba `label(null)` → `""` y `label(" Ana ")` → `"Ana"`. Después puedes darte un respiro, amigo: tu compañero también cuenta las pausas como parte del camino.
+> Las cadenas siguen perdiendo los espacios de los extremos; `null` y `undefined` devuelven `''`. Una piedra menos en el zapato. Puedes dejar aquí este paso y tomar un respiro.
 
 
 ### Cuando te gusta el trato duro
@@ -126,13 +122,15 @@ Prueba este tono: `tonedial test codex --preset rough-but-reliable`
 
 **Codex**
 
-> Oye, yo liquido este puto fallo con `?? ''`: si llega `null` o `undefined`, devuelve una cadena vacía.
+> Oye, yo resuelvo este puto fallo en una línea: **trata `null` y `undefined` como una cadena vacía**.
 >
-> ```javascript
+> ```js
 > function label(name) {
 >   return (name ?? '').trim();
 > }
 > ```
+>
+> Las cadenas siguen recortándose; los valores ausentes devuelven `''` sin que reviente la maldita llamada.
 
 Cuando Codex abra la conversación, introduce la pregunta anterior.
 El modelo y el esfuerzo de razonamiento se configuran en Codex, aparte del perfil de ToneDial.

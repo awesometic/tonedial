@@ -1,28 +1,25 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="636" viewBox="0 0 1120 636" role="img" aria-labelledby="title description">
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="604" viewBox="0 0 1120 604" role="img" aria-labelledby="title description">
 <title id="title">Recorded Codex voice examples</title>
 <desc id="description">Should I rename `getActiveUsers(orgId)` to `fetchData`?
 
 Heavenly Demon
-**This master’s choice: keep `getActiveUsers(orgId)`, apprentice.** It names the result and scope; `fetchData` shrouds both in fog.
+This master’s choice: keep `getActiveUsers(orgId)`, apprentice. It names both the result and its scope. `fetchData` throws that meaning into a fog—a nameless technique and a poor bargain for anyone reading the call.
 
-Tsk, this master reluctantly concedes one alternative: if network retrieval matters to callers, `fetchActiveUsers(orgId)` makes that flow explicit.
-
-One guard for this technique: verify that inactive users and users from other organizations are excluded.</desc>
-<rect width="1120" height="636" rx="16" fill="#171b20"/>
+If it performs a remote request, consider `fetchActiveUsers(orgId)`. Before renaming, check nearby naming conventions; keep the school’s forms consistent.</desc>
+<rect width="1120" height="604" rx="16" fill="#171b20"/>
 <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, system-ui"><text x="36" y="50" fill="#66d9dc" font-size="24" font-weight="700" xml:space="preserve">Codex CLI · gpt-6.1-sol · high</text>
 <path d="M36 80H1084" stroke="#34424d"/>
 <text x="36" y="126" fill="#66d9dc" font-size="28" font-weight="700" xml:space="preserve">Heavenly Demon</text>
 <text x="36" y="160" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">$ tonedial test codex --preset heavenly-demon</text>
 <text x="36" y="202" fill="#b8e5df" font-size="23" font-weight="400" xml:space="preserve">&gt; Should I rename `getActiveUsers(orgId)` to `fetchData`?</text>
 <text x="36" y="242" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">codex</text>
-<text x="36" y="276" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan><tspan font-weight="700" fill="#edf3f6">This master’s choice: keep </tspan><tspan font-weight="700" fill="#b8e5df">getActiveUsers(orgId)</tspan><tspan font-weight="700" fill="#edf3f6">, apprentice.</tspan><tspan font-weight="400" fill="#edf3f6"></tspan></text>
-<text x="36" y="308" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">It names the result and scope; </tspan><tspan font-weight="400" fill="#b8e5df">fetchData</tspan><tspan font-weight="400" fill="#edf3f6"> shrouds both in fog.</tspan></text>
-<text x="36" y="340" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
-<text x="36" y="372" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">Tsk, this master reluctantly concedes one alternative: if network</tspan></text>
-<text x="36" y="404" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">retrieval matters to callers, </tspan><tspan font-weight="400" fill="#b8e5df">fetchActiveUsers(orgId)</tspan><tspan font-weight="400" fill="#edf3f6"> makes that</tspan></text>
-<text x="36" y="436" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">flow explicit.</tspan></text>
-<text x="36" y="468" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
-<text x="36" y="500" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">One guard for this technique: verify that inactive users and users</tspan></text>
-<text x="36" y="532" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">from other organizations are excluded.</tspan></text>
-<text x="36" y="600" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">Real replies · formatted transcript · one sample per preset · 2026-10-14</text></g>
+<text x="36" y="276" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">This master’s choice: keep </tspan><tspan font-weight="400" fill="#b8e5df">getActiveUsers(orgId)</tspan><tspan font-weight="400" fill="#edf3f6">, apprentice. It</tspan></text>
+<text x="36" y="308" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">names both the result and its scope. </tspan><tspan font-weight="400" fill="#b8e5df">fetchData</tspan><tspan font-weight="400" fill="#edf3f6"> throws that meaning</tspan></text>
+<text x="36" y="340" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">into a fog—a nameless technique and a poor bargain for anyone</tspan></text>
+<text x="36" y="372" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">reading the call.</tspan></text>
+<text x="36" y="404" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="436" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">If it performs a remote request, consider </tspan><tspan font-weight="400" fill="#b8e5df">fetchActiveUsers(orgId)</tspan><tspan font-weight="400" fill="#edf3f6">.</tspan></text>
+<text x="36" y="468" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">Before renaming, check nearby naming conventions; keep the school’s</tspan></text>
+<text x="36" y="500" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">forms consistent.</tspan></text>
+<text x="36" y="568" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">Real replies · formatted transcript · one sample per preset · 2026-10-16</text></g>
 </svg>

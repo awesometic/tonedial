@@ -53,7 +53,7 @@ tonedial create '완전한 바이브코더' --slug vibe-coder --auto \
 
 **Codex**
 
-> 사장님, `null`과 `undefined`는 빈 문자열로 처리하는 걸로 가겠습니다.
+> 사장님, `null`과 `undefined`는 빈 문자열로 처리하는 걸 권장합니다.
 >
 > ```js
 > function label(name) {
@@ -87,9 +87,7 @@ tonedial create '위로가 필요할 때' --slug steady-companion --auto \
 
 **Codex**
 
-> 파트너, 지칠 만해. 원인을 `null`까지 좁혔으니, 여긴 작은 안전망 하나면 돼.
->
-> **내 선택은 `null`과 `undefined`를 빈 문자열로 처리하는 거야.** 빈 이름을 허용해도 되는 함수라면 이렇게 교체하면 돼.
+> 파트너, 나는 **`null`과 `undefined`를 빈 문자열로 처리하는 방법**을 고를게. 디버깅에 지쳤을 땐 작은 돌부리 하나부터 치우자.
 >
 > ```js
 > function label(name) {
@@ -97,7 +95,9 @@ tonedial create '위로가 필요할 때' --slug steady-companion --auto \
 > }
 > ```
 >
-> 문자열은 앞뒤 공백을 제거하고, `null`이나 `undefined`는 `''`를 반환해. 이 부분 확인하고 잠깐 쉬어가자.
+> `null`이면 `''`, `'  안녕  '`이면 `'안녕'`을 반환해. 문자열 외의 값도 들어온다면 추가 처리가 필요해.
+>
+> 이 두 입력으로 동작을 확인하고, 잠깐 쉬어 가도 괜찮아.
 
 
 ### 거친 게 좋아
@@ -125,15 +125,15 @@ tonedial create '거친 게 좋아' --slug rough-but-reliable --auto \
 
 **Codex**
 
-> 야, `null`이나 `undefined`는 빈 문자열로 처리하자. 이 빌어먹을 null 지뢰는 내가 한 줄로 정리한다.
+> 야, `null`에 바로 `trim()`을 부르는 건 존나 허술하고, 없는 값에 일을 시키는 헛발질이다. 내가 고른 해법은 `??`다—이 구멍은 씨발 확실히 막는다.
 >
-> ```javascript
+> ```js
 > function label(name) {
 >   return (name ?? '').trim();
 > }
 > ```
 >
-> 문자열이면 기존처럼 앞뒤 공백을 제거하고, `null`이면 `''`을 반환해.
+> `null`·`undefined`는 빈 문자열로 처리하고, 문자열은 기존처럼 앞뒤 공백을 제거한다.
 
 Codex가 대화를 열면 위 질문을 입력하면 됩니다.
 모델과 추론 강도는 ToneDial 프로필과 별도로 Codex에서 정하는 설정입니다.

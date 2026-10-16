@@ -1,51 +1,40 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="1208" viewBox="0 0 1120 1208" role="img" aria-labelledby="title description">
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="984" viewBox="0 0 1120 984" role="img" aria-labelledby="title description">
 <title id="title">Recorded Codex voice examples</title>
 <desc id="description">Should I rename `getActiveUsers(orgId)` to `fetchData`?
 
 Royal Advisor
-Of course, Your Majesty; your servant is glad to counsel you. Your attention to naming is commendable.
+Your Majesty, your servant recommends keeping `getActiveUsers(orgId)`: it conveys intent, while `fetchData` leaves the reader guessing what data it retrieves.
 
-Your servant recommends **keeping `getActiveUsers(orgId)`**: it tells readers what the function returns and which organization it concerns.
-
-**LOW severity:** `fetchData` obscures that meaning, forcing readers to inspect the implementation to understand each call.
-
-If the function retrieves users over a network, `fetchActiveUsers(orgId)` would be a fitting refinement, Your Majesty. As an adjacent safeguard, document precisely what “active” means.
+Gladly offered, and warmly at your service—your attention to naming is commendable. One small safeguard for the royal ledger: confirm that the function actually filters for active users within the supplied organization.
 
 Ego Sword
-Keep `getActiveUsers(orgId)`, rookie. **LOW severity:** `fetchData` blunts the name—it hides what the function returns, making callers harder to understand.
+Keep `getActiveUsers(orgId)`, rookie. `fetchData` throws the map away: it hides which data you’re fetching.
 
-Hmph, I’ll give you one guardrail too: check that its tests cover inactive users and users from another organization being excluded.</desc>
-<rect width="1120" height="1208" rx="16" fill="#171b20"/>
+Check that “active” matches the function’s actual filter—I’d keep that edge sharp, too.</desc>
+<rect width="1120" height="984" rx="16" fill="#171b20"/>
 <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, system-ui"><text x="36" y="50" fill="#66d9dc" font-size="24" font-weight="700" xml:space="preserve">Codex CLI · gpt-6.1-sol · high</text>
 <path d="M36 80H1084" stroke="#34424d"/>
 <text x="36" y="126" fill="#66d9dc" font-size="28" font-weight="700" xml:space="preserve">Royal Advisor</text>
 <text x="36" y="160" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">$ tonedial test codex --preset royal-advisor</text>
 <text x="36" y="202" fill="#b8e5df" font-size="23" font-weight="400" xml:space="preserve">&gt; Should I rename `getActiveUsers(orgId)` to `fetchData`?</text>
 <text x="36" y="242" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">codex</text>
-<text x="36" y="276" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">Of course, Your Majesty; your servant is glad to counsel you. Your</tspan></text>
-<text x="36" y="308" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">attention to naming is commendable.</tspan></text>
-<text x="36" y="340" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
-<text x="36" y="372" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">Your servant recommends </tspan><tspan font-weight="700" fill="#edf3f6">keeping </tspan><tspan font-weight="700" fill="#b8e5df">getActiveUsers(orgId)</tspan><tspan font-weight="700" fill="#edf3f6"></tspan><tspan font-weight="400" fill="#edf3f6">: it</tspan></text>
-<text x="36" y="404" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">tells readers what the function returns and which organization it</tspan></text>
-<text x="36" y="436" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">concerns.</tspan></text>
-<text x="36" y="468" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
-<text x="36" y="500" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan><tspan font-weight="700" fill="#edf3f6">LOW severity:</tspan><tspan font-weight="400" fill="#edf3f6"> </tspan><tspan font-weight="400" fill="#b8e5df">fetchData</tspan><tspan font-weight="400" fill="#edf3f6"> obscures that meaning, forcing readers</tspan></text>
-<text x="36" y="532" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">to inspect the implementation to understand each call.</tspan></text>
-<text x="36" y="564" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
-<text x="36" y="596" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">If the function retrieves users over a network,</tspan></text>
-<text x="36" y="628" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan><tspan font-weight="400" fill="#b8e5df">fetchActiveUsers(orgId)</tspan><tspan font-weight="400" fill="#edf3f6"> would be a fitting refinement, Your</tspan></text>
-<text x="36" y="660" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">Majesty. As an adjacent safeguard, document precisely what</tspan></text>
-<text x="36" y="692" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">“active” means.</tspan></text>
-<path d="M36 748H1084" stroke="#34424d"/>
-<text x="36" y="794" fill="#66d9dc" font-size="28" font-weight="700" xml:space="preserve">Ego Sword</text>
-<text x="36" y="828" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">$ tonedial test codex --preset ego-sword</text>
-<text x="36" y="870" fill="#b8e5df" font-size="23" font-weight="400" xml:space="preserve">&gt; Should I rename `getActiveUsers(orgId)` to `fetchData`?</text>
-<text x="36" y="910" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">codex</text>
-<text x="36" y="944" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">Keep </tspan><tspan font-weight="400" fill="#b8e5df">getActiveUsers(orgId)</tspan><tspan font-weight="400" fill="#edf3f6">, rookie. </tspan><tspan font-weight="700" fill="#edf3f6">LOW severity:</tspan><tspan font-weight="400" fill="#edf3f6"> </tspan><tspan font-weight="400" fill="#b8e5df">fetchData</tspan><tspan font-weight="400" fill="#edf3f6"></tspan></text>
-<text x="36" y="976" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">blunts the name—it hides what the function returns, making callers</tspan></text>
-<text x="36" y="1008" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">harder to understand.</tspan></text>
-<text x="36" y="1040" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
-<text x="36" y="1072" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">Hmph, I’ll give you one guardrail too: check that its tests cover</tspan></text>
-<text x="36" y="1104" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">inactive users and users from another organization being excluded.</tspan></text>
-<text x="36" y="1172" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">Real replies · formatted transcript · one sample per preset · 2026-10-14</text></g>
+<text x="36" y="276" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">Your Majesty, your servant recommends keeping </tspan><tspan font-weight="400" fill="#b8e5df">getActiveUsers(orgId)</tspan><tspan font-weight="400" fill="#edf3f6">:</tspan></text>
+<text x="36" y="308" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">it conveys intent, while </tspan><tspan font-weight="400" fill="#b8e5df">fetchData</tspan><tspan font-weight="400" fill="#edf3f6"> leaves the reader guessing what</tspan></text>
+<text x="36" y="340" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">data it retrieves.</tspan></text>
+<text x="36" y="372" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="404" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">Gladly offered, and warmly at your service—your attention to naming</tspan></text>
+<text x="36" y="436" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">is commendable. One small safeguard for the royal ledger: confirm</tspan></text>
+<text x="36" y="468" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">that the function actually filters for active users within the</tspan></text>
+<text x="36" y="500" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">supplied organization.</tspan></text>
+<path d="M36 556H1084" stroke="#34424d"/>
+<text x="36" y="602" fill="#66d9dc" font-size="28" font-weight="700" xml:space="preserve">Ego Sword</text>
+<text x="36" y="636" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">$ tonedial test codex --preset ego-sword</text>
+<text x="36" y="678" fill="#b8e5df" font-size="23" font-weight="400" xml:space="preserve">&gt; Should I rename `getActiveUsers(orgId)` to `fetchData`?</text>
+<text x="36" y="718" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">codex</text>
+<text x="36" y="752" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">Keep </tspan><tspan font-weight="400" fill="#b8e5df">getActiveUsers(orgId)</tspan><tspan font-weight="400" fill="#edf3f6">, rookie. </tspan><tspan font-weight="400" fill="#b8e5df">fetchData</tspan><tspan font-weight="400" fill="#edf3f6"> throws the map away:</tspan></text>
+<text x="36" y="784" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">it hides which data you’re fetching.</tspan></text>
+<text x="36" y="816" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="848" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">Check that “active” matches the function’s actual filter—I’d</tspan></text>
+<text x="36" y="880" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">keep that edge sharp, too.</tspan></text>
+<text x="36" y="948" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">Real replies · formatted transcript · one sample per preset · 2026-10-16</text></g>
 </svg>

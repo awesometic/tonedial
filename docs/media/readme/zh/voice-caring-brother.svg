@@ -1,29 +1,39 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="668" viewBox="0 0 1120 668" role="img" aria-labelledby="title description">
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="764" viewBox="0 0 1120 764" role="img" aria-labelledby="title description">
 <title id="title">Codex 实际语气示例</title>
 <desc id="description">`getActiveUsers(orgId)` 可以改名为 `fetchData` 吗？
 
 Caring Brother
-弟弟，**哥的建议是：保留 `getActiveUsers(orgId)`。** 哥懂你想把名字简化，咱们一起捋捋：现在的名字能看出“获取活跃用户”，`fetchData` 的含义有点宽，调用时就得多翻一层实现。
+弟弟，**哥选：保留 `getActiveUsers(orgId)`；如果要强调远程请求，就用 `fetchActiveUsers(orgId)`。**
 
-比如 `await getActiveUsers(orgId)`，一眼能看懂拿到什么；换成 `await fetchData(orgId)`，就不太容易判断返回的是用户、订单还是别的数据。如果想强调网络请求，可以考虑 `fetchActiveUsers(orgId)`。
+靠，`fetchData` 有点太笼统了：看调用处时，读代码的人不知道取的是什么，还得跳进实现里找。
 
-不用为这个反复纠结，先保留清楚的名字就行。有哥在呢，后面遇到类似命名也能一起理；累了就先歇会儿。</desc>
-<rect width="1120" height="668" rx="16" fill="#171b20"/>
+比如：
+
+```ts
+await fetchActiveUsers(orgId); // 能看出：获取该组织的活跃用户
+await fetchData(orgId);        // 数据类型和筛选条件都不清楚
+```
+
+拿不准很正常，放心，哥陪你捋，有哥在呢。真要统一命名，哥给你搭把手：先确定项目里 `get` 和 `fetch` 各表示什么，再按同一套约定选。</desc>
+<rect width="1120" height="764" rx="16" fill="#171b20"/>
 <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, system-ui"><text x="36" y="50" fill="#66d9dc" font-size="24" font-weight="700" xml:space="preserve">Codex CLI · gpt-6.1-sol · high</text>
 <path d="M36 80H1084" stroke="#34424d"/>
 <text x="36" y="126" fill="#66d9dc" font-size="28" font-weight="700" xml:space="preserve">Caring Brother</text>
 <text x="36" y="160" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">$ tonedial test codex --preset caring-brother</text>
 <text x="36" y="202" fill="#b8e5df" font-size="23" font-weight="400" xml:space="preserve">&gt; `getActiveUsers(orgId)` 可以改名为 `fetchData` 吗？</text>
 <text x="36" y="242" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">codex</text>
-<text x="36" y="276" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">弟弟，</tspan><tspan font-weight="700" fill="#edf3f6">哥的建议是：保留 </tspan><tspan font-weight="700" fill="#b8e5df">getActiveUsers(orgId)</tspan><tspan font-weight="700" fill="#edf3f6">。</tspan><tspan font-weight="400" fill="#edf3f6"></tspan></text>
-<text x="36" y="308" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">哥懂你想把名字简化，咱们一起捋捋：现在的名字能看出“获取活跃用户”，</tspan></text>
-<text x="36" y="340" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan><tspan font-weight="400" fill="#b8e5df">fetchData</tspan><tspan font-weight="400" fill="#edf3f6"> 的含义有点宽，调用时就得多翻一层实现。</tspan></text>
-<text x="36" y="372" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
-<text x="36" y="404" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">比如 </tspan><tspan font-weight="400" fill="#b8e5df">await getActiveUsers(orgId)</tspan><tspan font-weight="400" fill="#edf3f6">，一眼能看懂拿到什么；换成 </tspan><tspan font-weight="400" fill="#b8e5df">await</tspan></text>
-<text x="36" y="436" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#b8e5df">fetchData(orgId)</tspan><tspan font-weight="400" fill="#edf3f6">，就不太容易判断返回的是用户、订单还是别的数据。如</tspan></text>
-<text x="36" y="468" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">果想强调网络请求，可以考虑 </tspan><tspan font-weight="400" fill="#b8e5df">fetchActiveUsers(orgId)</tspan><tspan font-weight="400" fill="#edf3f6">。</tspan></text>
+<text x="36" y="276" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">弟弟，</tspan><tspan font-weight="700" fill="#edf3f6">哥选：保留 </tspan><tspan font-weight="700" fill="#b8e5df">getActiveUsers(orgId)</tspan><tspan font-weight="700" fill="#edf3f6">；如果要强调远程请求，就用</tspan></text>
+<text x="36" y="308" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="700" fill="#edf3f6"></tspan><tspan font-weight="700" fill="#b8e5df">fetchActiveUsers(orgId)</tspan><tspan font-weight="700" fill="#edf3f6">。</tspan><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="340" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="372" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">靠，</tspan><tspan font-weight="400" fill="#b8e5df">fetchData</tspan><tspan font-weight="400" fill="#edf3f6"> 有点太笼统了：看调用处时，读代码的人不知道取的是什么，</tspan></text>
+<text x="36" y="404" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">还得跳进实现里找。</tspan></text>
+<text x="36" y="436" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="468" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">比如：</tspan></text>
 <text x="36" y="500" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
-<text x="36" y="532" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">不用为这个反复纠结，先保留清楚的名字就行。有哥在呢，后面遇到类似命名</tspan></text>
-<text x="36" y="564" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">也能一起理；累了就先歇会儿。</tspan></text>
-<text x="36" y="632" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">实际回复 · 仅整理显示格式 · 每个预设一例 · 2026-10-15</text></g>
+<text x="36" y="532" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan fill="#b8e5df">await fetchActiveUsers(orgId); // 能看出：获取该组织的活跃用户</tspan></text>
+<text x="36" y="564" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan fill="#b8e5df">await fetchData(orgId);        // 数据类型和筛选条件都不清楚</tspan></text>
+<text x="36" y="596" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="628" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">拿不准很正常，放心，哥陪你捋，有哥在呢。真要统一命名，哥给你搭把手：</tspan></text>
+<text x="36" y="660" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">先确定项目里 </tspan><tspan font-weight="400" fill="#b8e5df">get</tspan><tspan font-weight="400" fill="#edf3f6"> 和 </tspan><tspan font-weight="400" fill="#b8e5df">fetch</tspan><tspan font-weight="400" fill="#edf3f6"> 各表示什么，再按同一套约定选。</tspan></text>
+<text x="36" y="728" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">实际回复 · 仅整理显示格式 · 每个预设一例 · 2026-10-16</text></g>
 </svg>

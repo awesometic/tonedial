@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { cells, wrap } from "../src/ui/width.ts";
 import { isLanguage, LANGUAGES, type Language } from "../src/core/i18n.ts";
+import { wrapTranscript } from "./voice-wrap.ts";
 
 const language = process.argv[2];
 const selectedPreset = process.argv[3];
@@ -48,7 +49,8 @@ for (const reply of replies) {
   const rows = reply.text.split("\n").flatMap(source => {
     if (/^```\w*\s*$/u.test(source)) { fenced = !fenced; return []; }
     const marker = fenced ? "" : /^(?:[-*] |\d+\. )/u.exec(source)?.[0] ?? "";
-    return wrap(source.slice(marker.length), 68 - cells(marker))
+    return (fenced ? wrap(source.slice(marker.length), 68 - cells(marker))
+      : wrapTranscript(source.slice(marker.length), 68 - cells(marker), language))
       .map((row, index) => ({ row: (index === 0 ? marker : " ".repeat(cells(marker))) + row, fenced }));
   });
   for (const { row, fenced } of rows) {

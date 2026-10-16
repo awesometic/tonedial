@@ -3,11 +3,11 @@
 <desc id="description">`getActiveUsers(orgId)` を `fetchData` に改名してもいい？
 
 Heavenly Demon
-弟子よ、**本座の選択は `getActiveUsers(orgId)` の維持だ。** `fetchData` では何を取得する技か分からず、呼び出す側が中身を読む羽目になる。
+弟子よ、本座の選択は **`getActiveUsers(orgId)` を残すこと**だ。
 
-やむを得ん、別名を挙げよう。通信で取得することを明示したいなら、`fetchActiveUsers(orgId)` が候補だ。技の目的は名に残せ。
+`fetchData` では「有効なユーザーを取得する」という意味が消える。看板を「何か」に塗り替えるような命名だ。抽象化のつもりなら、情報を削っただけの粗雑な策よ。
 
-改名するなら、「指定した組織の有効ユーザーだけを返す」既存テストも確認せよ。名と振る舞いの筋を通すのだ。</desc>
+外部からの取得を強調したいなら、`fetchActiveUsers(orgId)` が筋だ。併せて、呼び出し側だけを読んでも対象が分かるか確かめよ。実装は未確認ゆえ、これは提示された名前に基づく判断だ。</desc>
 <rect width="1120" height="636" rx="16" fill="#171b20"/>
 <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, system-ui"><text x="36" y="50" fill="#66d9dc" font-size="24" font-weight="700" xml:space="preserve">Codex CLI · gpt-6.1-sol · high</text>
 <path d="M36 80H1084" stroke="#34424d"/>
@@ -15,14 +15,14 @@ Heavenly Demon
 <text x="36" y="160" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">$ tonedial test codex --preset heavenly-demon</text>
 <text x="36" y="202" fill="#b8e5df" font-size="23" font-weight="400" xml:space="preserve">&gt; `getActiveUsers(orgId)` を `fetchData` に改名してもいい？</text>
 <text x="36" y="242" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">codex</text>
-<text x="36" y="276" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">弟子よ、</tspan><tspan font-weight="700" fill="#edf3f6">本座の選択は </tspan><tspan font-weight="700" fill="#b8e5df">getActiveUsers(orgId)</tspan><tspan font-weight="700" fill="#edf3f6"> の維持だ。</tspan><tspan font-weight="400" fill="#edf3f6"></tspan></text>
-<text x="36" y="308" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan><tspan font-weight="400" fill="#b8e5df">fetchData</tspan><tspan font-weight="400" fill="#edf3f6"></tspan></text>
-<text x="36" y="340" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">では何を取得する技か分からず、呼び出す側が中身を読む羽目になる。</tspan></text>
-<text x="36" y="372" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
-<text x="36" y="404" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">やむを得ん、別名を挙げよう。通信で取得することを明示したいなら、</tspan><tspan font-weight="400" fill="#b8e5df">fet</tspan></text>
-<text x="36" y="436" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#b8e5df">chActiveUsers(orgId)</tspan><tspan font-weight="400" fill="#edf3f6"> が候補だ。技の目的は名に残せ。</tspan></text>
-<text x="36" y="468" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
-<text x="36" y="500" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">改名するなら、「指定した組織の有効ユーザーだけを返す」既存テストも確</tspan></text>
-<text x="36" y="532" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">認せよ。名と振る舞いの筋を通すのだ。</tspan></text>
-<text x="36" y="600" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">実際の応答 · 原文の表示整形 · 各プリセット1件 · 2026-10-15</text></g>
+<text x="36" y="276" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">弟子よ、本座の選択は </tspan><tspan font-weight="700" fill="#edf3f6"></tspan><tspan font-weight="700" fill="#b8e5df">getActiveUsers(orgId)</tspan><tspan font-weight="700" fill="#edf3f6"> を残すこと</tspan><tspan font-weight="400" fill="#edf3f6">だ。</tspan></text>
+<text x="36" y="308" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="340" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan><tspan font-weight="400" fill="#b8e5df">fetchData</tspan><tspan font-weight="400" fill="#edf3f6"> では「有効なユーザーを取得する」という意味が消える。看板を</tspan></text>
+<text x="36" y="372" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">「何か」に塗り替えるような命名だ。抽象化のつもりなら、情報を削った</tspan></text>
+<text x="36" y="404" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">だけの粗雑な策よ。</tspan></text>
+<text x="36" y="436" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6"></tspan></text>
+<text x="36" y="468" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">外部からの取得を強調したいなら、</tspan><tspan font-weight="400" fill="#b8e5df">fetchActiveUsers(orgId)</tspan><tspan font-weight="400" fill="#edf3f6"> が筋だ。</tspan></text>
+<text x="36" y="500" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">併せて、呼び出し側だけを読んでも対象が分かるか確かめよ。実装は未確認</tspan></text>
+<text x="36" y="532" fill="#edf3f6" font-size="24" font-weight="400" xml:space="preserve"><tspan font-weight="400" fill="#edf3f6">ゆえ、これは提示された名前に基づく判断だ。</tspan></text>
+<text x="36" y="600" fill="#b8cbd4" font-size="20" font-weight="400" xml:space="preserve">実際の応答 · 原文の表示整形 · 各プリセット1件 · 2026-10-16</text></g>
 </svg>

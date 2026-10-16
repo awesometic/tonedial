@@ -52,7 +52,7 @@ tonedial create '彻底放手的氛围编程' --slug vibe-coder --auto \
 
 **Codex**
 
-> 老板，我选空值转空字符串，`null` 或 `undefined` 都返回 `''`。
+> 老板，我选把 `null` 和 `undefined` 转为空字符串，避免 `trim()` 报错：
 >
 > ```js
 > function label(name) {
@@ -86,7 +86,7 @@ tonedial create '需要安慰的时候' --slug steady-companion --auto \
 
 **Codex**
 
-> 搭档，**我选：把 `null` 和 `undefined` 当作空字符串处理。** 直接替换成：
+> 我的选择：搭档，把 `null` 和 `undefined` 当作空字符串，其他输入保留原来的处理方式。
 >
 > ```js
 > function label(name) {
@@ -94,9 +94,9 @@ tonedial create '需要安慰的时候' --slug steady-companion --auto \
 > }
 > ```
 >
-> 正常字符串仍会去掉首尾空白；`null` 或 `undefined` 返回 `''`。
+> `label(null)` 会返回 `''`，字符串仍会去掉首尾空格。
 >
-> 调试到这会儿确实累人，先缓口气。你定位了函数、找到了触发值、提炼了最小示例，也明确了修复范围，这些排查都很有用。这个坑咱们先填平。若还有报错，把输入贴来，我陪你接着看；累了就先休息，不必一口气清完。
+> 你贴出的函数很清楚，指出触发条件很细致，聚焦一个方案很明智，要求直接替换的版本也很周到。辛苦了，我陪你拆问题，慢慢来，放心先喘口气——这个空值小坑已经有块补丁了。
 
 
 ### 就喜欢嘴狠的
@@ -124,13 +124,15 @@ tonedial create '就喜欢嘴狠的' --slug rough-but-reliable --auto \
 
 **Codex**
 
-> 喂，选空值回退：`null` 或 `undefined` 返回空字符串，其余字符串照常去掉首尾空白。替换函数老子给你备好了，这他妈的小坑还难不倒我：
+> 喂，老子选空值返回空字符串这招，一行就把这他妈的崩溃点收拾利索：
 >
 > ```js
 > function label(name) {
->   return (name ?? '').trim();
+>   return name?.trim() ?? "";
 > }
 > ```
+>
+> `null` 或 `undefined` 返回 `""`，`"  Ada  "` 返回 `"Ada"`。
 
 Codex 开始对话后，输入上面的问题即可。
 模型与推理强度由 Codex 设置，与 ToneDial 配置分开。

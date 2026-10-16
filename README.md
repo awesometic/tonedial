@@ -52,11 +52,11 @@ Try this voice: `tonedial test codex --preset vibe-coder`
 
 **Codex**
 
-> Boss, default null or undefined to an empty string.
+> Boss, use an empty string for `null` or `undefined`:
 >
 > ```js
 > function label(name) {
->   return (name ?? "").trim();
+>   return (name ?? '').trim();
 > }
 > ```
 
@@ -86,7 +86,7 @@ Try this voice: `tonedial test codex --preset steady-companion`
 
 **Codex**
 
-> **My choice, friend: return an empty string for `null` or `undefined`.**
+> My choice, friend: treat `null` and `undefined` as an empty label.
 >
 > ```js
 > function label(name) {
@@ -94,9 +94,7 @@ Try this voice: `tonedial test codex --preset steady-companion`
 > }
 > ```
 >
-> That sounds draining. You’ve isolated the function, identified the troublesome input, shared a clear example, and kept the next step focused—helpful debugging work.
->
-> This keeps trimming strings as before. If missing names should count as errors, explicit validation is the backup. Your teammate’s here; one small knot loosened. A breather is welcome.
+> Strings still get trimmed, and missing names return `''`. One less debugging tripwire—you can take a breather here.
 
 
 ### When you like it rough
@@ -124,11 +122,11 @@ Try this voice: `tonedial test codex --preset rough-but-reliable`
 
 **Codex**
 
-> My pick, hey: default missing names to `''` and shut down the damn null crash.
+> Use `''` for null or undefined, hey. That unguarded call is a fucking crash trap with the resilience of wet cardboard; my fix handles this shit in one goddamn line.
 >
 > ```js
 > function label(name) {
->   return (name ?? '').trim();
+>   return name?.trim() ?? '';
 > }
 > ```
 
