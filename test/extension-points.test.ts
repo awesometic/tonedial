@@ -8,6 +8,7 @@ import { AGENT_TOOLS, resolveAgentPaths } from "../src/core/paths.ts";
 import { TARGETS, orderedHook, parseToolSelection } from "../src/wiring/targets.ts";
 import { BUNDLED, SLUG_PATTERN } from "../src/core/presets.ts";
 import { LANGUAGES, catalogue } from "../src/core/i18n.ts";
+import { SKILL_MD, SKILL_TRAITS_MD, TONE_COMMAND_MD } from "../src/core/skill.ts";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const EN = catalogue("en").cli;
@@ -57,6 +58,24 @@ test("no two agents claim the same label or the same settings file", () => {
   // accidental collision means one tool's setup silently reads as the other's.
   const files = AGENT_TOOLS.map((tool) => agent.hookFile(tool));
   assert.equal(new Set(files).size, files.length, `two agents share a settings file: ${files.join(", ")}`);
+});
+
+test("the shipped controls keep intense-tone confirmation session-local and permission-neutral", () => {
+  for (const [surface, contents] of [["skill", SKILL_MD], ["optional /tone command", TONE_COMMAND_MD]] as const) {
+    assert.match(contents, /The four components that require confirmation are strong\s+profanity, harsh mocking, fictional violent imagery and theatrical menace/, `${surface} leaves confirmation scope ambiguous`);
+    assert.match(contents, /Before using one\s+requested by axes, persona or later instructions/, `${surface} lets persona intensity bypass confirmation`);
+    assert.match(contents, /first answer the current request without it/, `${surface} can withhold the task while asking`);
+    assert.match(contents, /Warmth, praise,\s+ordinary criticism and ordinary role idioms need no confirmation/, `${surface} over-gates ordinary character language`);
+    assert.match(contents, /Profiles store requested settings, never\s+session confirmation/, `${surface} persists confirmation`);
+    assert.match(contents, /`--auto`.*safeword.*another session do not count/s, `${surface} treats another consent as tone confirmation`);
+    assert.match(contents, /authorizes no work/, `${surface} lets tone confirmation expand the task`);
+    assert.match(contents, /hate speech aimed at\s+protected traits or realistic or credible threats/, `${surface} omits the hard exclusions`);
+    assert.match(contents, /Non-protected profanity,\s+consensual insults, fictional violent imagery and theatrical menace remain available/, `${surface} silently narrows approved intensity`);
+  }
+
+  assert.match(SKILL_TRAITS_MD, /Risk display and intense-tone confirmation are separate/);
+  assert.match(SKILL_TRAITS_MD, /increase or change requires it\s+again/);
+  assert.match(SKILL_TRAITS_MD, /rough uses curt, blunt non-honorific endings/);
 });
 
 // ── adding a preset ──────────────────────────────────────────────────────────────────────

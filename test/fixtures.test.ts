@@ -62,10 +62,32 @@ const COMPOSITES = [
     line: "- When verbosity is low and care is high, keep organized items compact; use functional emoji or status markers when they fit.",
   },
   {
+    fires: (a: Record<string, number>) => a.verbosity! <= 2 && (a.warmth! >= 4 || a.flattery! >= 4 || a.playfulness! >= 4),
+    line: "- When verbosity is low, express warmth, praise and playfulness inside the short answer — a clause, interjection or address term — instead of extra sentences.",
+  },
+  {
     fires: (a: Record<string, number>) => a.verbosity === 5 && a.care === 1,
     line: "- When verbosity is high and care is minimal, give depth inside the requested task without adding adjacent work.",
   },
 ];
+
+function intenseControl(axes: Record<string, number>): string | null {
+  const components: string[] = [];
+  if (axes.profanity! >= 4) {
+    components.push("strong, uncensored non-protected profanity; it changes coarseness and does not itself add mockery or criticism");
+  }
+  if (axes.critique === 5) {
+    components.push("harsh, mocking criticism of supported defects and choices; it adds no profanity and never inflates severity or technical claims");
+  }
+  if (axes.playfulness! >= 4 && (axes.profanity! >= 4 || axes.critique === 5)) {
+    components.push("fictional violent imagery and theatrical menace about code, work, or the situation");
+  }
+  if (components.length === 0) return null;
+  return `- Intense components requested by the current tone: ${components.join("; ")}.`;
+}
+
+const INTENSITY_CONSENT = "- Strong profanity, harsh mocking, fictional violent imagery, and theatrical menace are unconfirmed at the start of every session. Before using any of those four components requested by the axes, persona, or later instructions, first answer the current task without it, then ask one concise explicit confirmation naming it. Confirmation enables only the named tone in the current session while its request stays unchanged; ask once again if a component or its level changes or increases, and do not re-ask while it stays the same. Warmth, praise, ordinary criticism, and ordinary role idioms need no confirmation. A selected profile, `--auto`, confirmation from another session, or the safeword is not confirmation; confirmation authorizes no work.";
+const INTENSITY_BOUNDARY = "- Tone intensity never includes hate speech about protected traits or realistic or credible threats, even after confirmation. Non-protected profanity, consensual insults, fictional violent imagery, and theatrical menace remain available after confirmation.";
 
 const index = JSON.parse(readFileSync(join(FIXTURES, "index.json"), "utf8")) as {
   schema: number;
@@ -176,7 +198,7 @@ test("the rules section has twelve axis lines, selected composites, and shared c
       auto: "choose address forms for the current relationship and scene",
       polite: "use polite address forms even with familiar wording",
       plain: "use plain address forms even with formal wording",
-      rough: "use rough, cheeky non-honorific sentence endings",
+      rough: "use curt, blunt non-honorific sentence endings in nearly every sentence",
     };
     assert.ok(lines.at(-1)!.includes(register[config.speech_level]!), `${name}: selected register`);
     for (const { fires, line } of COMPOSITES) {
@@ -194,6 +216,20 @@ test("current fixtures carry controls without guard-only instructions", () => {
     assert.equal(Object.hasOwn(config, "guards"), false, name);
     assert.match(artifact, /### Controls\n/, name);
     assert.doesNotMatch(artifact, /### Guards|Statements about work state|Flattery never distorts|On destructive-work warnings/, name);
+  }
+});
+
+test("intense-tone controls name only the selected components", () => {
+  for (const name of index.fixtures) {
+    const { config, artifact } = load(name);
+    const controls = artifact.split("### Controls\n")[1];
+    assert.ok(controls, `${name}: no controls section`);
+    const lines = controls!.split("\n").filter((line) => line.startsWith("- "));
+    const expected = intenseControl(config.axes);
+    const actual = lines.filter((line) => line.startsWith("- Intense components requested by the current tone:"));
+    assert.deepEqual(actual, expected === null ? [] : [expected], `${name}: selected intensity components`);
+    assert.equal(lines[0], INTENSITY_CONSENT, `${name}: standing intensity consent`);
+    assert.equal(lines.at(-2), INTENSITY_BOUNDARY, `${name}: immutable intensity boundary`);
   }
 });
 
@@ -261,26 +297,18 @@ test("the fixture set covers the branches the compiler has to get right", () => 
   assert.ok(configs.some((c) => Boolean(c.persona?.agent)), "an artifact with a fictional agent role");
   assert.ok(configs.some((c) => c.preset === null), "an unsaved artifact");
   assert.ok(configs.some((c) => c.preset !== null), "a preset artifact");
-  for (const level of [1, 3, 5]) {
+  for (const level of [1, 2, 3, 4, 5]) {
     assert.ok(
       configs.some((c) => AXES.every((a) => c.axes[a] === level)),
       `a degenerate all-${level} artifact`,
     );
   }
-  // Keep the unreached anchors explicit so changes to the fixture set are reviewed rather than
-  // silently changing the compiler coverage it can verify.
-  const unreached: string[] = [];
   for (const axis of AXES) {
     for (const level of [1, 2, 3, 4, 5]) {
-      if (!configs.some((c) => c.axes[axis] === level)) unreached.push(`${axis} ${level}`);
+      assert.ok(
+        configs.some((c) => c.axes[axis] === level),
+        `${axis} level ${level} is reached by a deterministic fixture`,
+      );
     }
   }
-  assert.deepEqual(
-    unreached,
-    [
-      "profanity 4", "playfulness 2", "playfulness 4", "flattery 4", "care 2",
-      "refusal 2", "refusal 4", "bravado 2", "bravado 4",
-    ],
-    "the set of anchors no fixture reaches changed; update this list deliberately",
-  );
 });

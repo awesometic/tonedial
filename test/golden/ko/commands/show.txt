@@ -1,6 +1,6 @@
 status: 0
 --- stdout --- [bytes=1259; endsWithNewline=true]
-  ToneDial · show · Caring Brother                            TONE.md 2,255자
+  ToneDial · show · Caring Brother                            TONE.md 3,550자
 
                          현재      ToneDial 기본값 · ! 위험 말투
   form      formality    ▮▯▯▯▯  1   *3

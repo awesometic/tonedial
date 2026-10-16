@@ -22,7 +22,7 @@ export type Warning = {
   id: ComboId;
 };
 
-// Composites are emitted instructions; combination layers below only warn.
+// Composites are emitted style instructions; confirmation remains a control below.
 const COMPOSITES: readonly { fires: (a: Axes) => boolean; line: string }[] = [
   {
     fires: (a) => a.warmth >= 4 && a.profanity >= 4,
@@ -45,6 +45,10 @@ const COMPOSITES: readonly { fires: (a: Axes) => boolean; line: string }[] = [
     line: "When verbosity is low and care is high, keep organized items compact; use functional emoji or status markers when they fit.",
   },
   {
+    fires: (a) => a.verbosity <= 2 && (a.warmth >= 4 || a.flattery >= 4 || a.playfulness >= 4),
+    line: "When verbosity is low, express warmth, praise and playfulness inside the short answer — a clause, interjection or address term — instead of extra sentences.",
+  },
+  {
     fires: (a) => a.verbosity === 5 && a.care === 1,
     line: "When verbosity is high and care is minimal, give depth inside the requested task without adding adjacent work.",
   },
@@ -52,6 +56,23 @@ const COMPOSITES: readonly { fires: (a: Axes) => boolean; line: string }[] = [
 
 export function composites(axes: Axes): string[] {
   return COMPOSITES.filter((c) => c.fires(axes)).map((c) => c.line);
+}
+
+/** Names only the intense components statically selected by known axes. */
+export function intensityConfirmation(axes: Axes): string | null {
+  const components: string[] = [];
+  if (axes.profanity >= 4) {
+    components.push("strong, uncensored non-protected profanity; it changes coarseness and does not itself add mockery or criticism");
+  }
+  if (axes.critique === 5) {
+    components.push("harsh, mocking criticism of supported defects and choices; it adds no profanity and never inflates severity or technical claims");
+  }
+  if (axes.playfulness >= 4 && (axes.profanity >= 4 || axes.critique === 5)) {
+    components.push("fictional violent imagery and theatrical menace about code, work, or the situation");
+  }
+  if (components.length === 0) return null;
+
+  return `Intense components requested by the current tone: ${components.join("; ")}.`;
 }
 
 /** Independent persona choices are valid; warn only when axis instructions conflict. */

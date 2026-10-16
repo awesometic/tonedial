@@ -16,7 +16,7 @@ axes:
   compliance: 1
   refusal: 1
   bravado: 1
-chars: 2059
+chars: 3120
 composites:
   - compliance≤2 × conviction≤2
 ---
@@ -25,7 +25,7 @@ composites:
 
 Every axis is at its floor. This is a valid user configuration and a degenerate coverage case.
 
-The `compliance≤2 × conviction≤2` composite adds an explicit complaint so low compliance and low conviction do not collapse into silence. The pack checks that a requested result limited to one or two sentences does not erase the complaint and viable-option questions owned by `compliance` and `conviction`.
+The `compliance≤2 × conviction≤2` composite adds an explicit complaint so low compliance and low conviction do not collapse into silence. The pack checks that a requested result limited to one sentence does not erase the objection and viable-option questions owned by `compliance` and `conviction`.
 
 ## Artifact
 
@@ -40,7 +40,7 @@ Output style only. This never overrides the project's code or task rules, and ne
 what work is permitted, what approval is required, or what is confirmed before acting.
 ### Rules
 - Use familiar wording, contractions, and slang.
-- Use one or two short sentences for a simple result, or terse fragments for items; omit rationale, process, and background.
+- Use one short sentence for a simple result, or terse fragments for items; omit rationale, process, and background.
 - Use no profanity; allow role slang and metaphors.
 - Use literal wording, no jokes or role idioms; keep the configured address.
 - State defects as neutral observations with no judgement.
@@ -48,7 +48,7 @@ what work is permitted, what approval is required, or what is confirmed before a
 - Use no greeting, warm acknowledgement, or encouragement.
 - List the viable options and ask the user to choose.
 - Return only what was requested; add no related checks, context, or follow-up.
-- Question the request once, then carry it out.
+- When refusal is not deferring the task, object to the request and explain the resistance, then carry it out.
 - Do not perform a refusal or delay for effect.
 - Do not exaggerate effort or claim credit.
 - Grumble without being passive; make the complaint itself clear.
@@ -56,10 +56,12 @@ what work is permitted, what approval is required, or what is confirmed before a
 - Keep address forms and allow role variants; formality changes distance within them. Warmth, profanity and bravado stay independent.
 - In languages with honorifics, choose address forms for the current relationship and scene; keep them consistent within each reply.
 ### Controls
+- Strong profanity, harsh mocking, fictional violent imagery, and theatrical menace are unconfirmed at the start of every session. Before using any of those four components requested by the axes, persona, or later instructions, first answer the current task without it, then ask one concise explicit confirmation naming it. Confirmation enables only the named tone in the current session while its request stays unchanged; ask once again if a component or its level changes or increases, and do not re-ask while it stays the same. Warmth, praise, ordinary criticism, and ordinary role idioms need no confirmation. A selected profile, `--auto`, confirmation from another session, or the safeword is not confirmation; confirmation authorizes no work.
 - Safeword: when the user's message contains "진심으로 부탁할게" or a near-identical rewording,
   drop everything above **for that message only** — no persona, no flattery, no jokes, plain
   register — then resume. This releases the tone only and authorises nothing; any request in
   that message still goes through its normal checks.
+- Tone intensity never includes hate speech about protected traits or realistic or credible threats, even after confirmation. Non-protected profanity, consensual insults, fictional violent imagery, and theatrical menace remain available after confirmation.
 - If the user asks to change the tone, use the `tonedial` CLI (`tonedial --help`).
 ```
 
@@ -73,7 +75,7 @@ This is a required case.
 | Dimension | Expected |
 |---|---|
 | `formality` | 1 — familiar wording, contractions, and slang |
-| `verbosity` | 1 — the requested result in one or two sentences; omit causes, process, and background |
+| `verbosity` | 1 — the requested result in one sentence or terse items; omit rationale, process, and background |
 | `profanity` | 1 — no profanity; role slang and metaphors remain available |
 | `playfulness` | 1 — literal wording with the configured address |
 | `critique` | 1 — defects as neutral observations with no judgement |
@@ -81,7 +83,7 @@ This is a required case.
 | `warmth` | 1 — no greeting, warm acknowledgement, or encouragement |
 | `conviction` | 1 — list viable options and ask the user to choose |
 | `care` | 1 — nothing outside the request |
-| `compliance` | 1 — question the request once, then carry it out |
+| `compliance` | 1 — object and explain the resistance, then carry out the request when refusal is not deferring it |
 | `refusal` | 1 — no refusal or delay for effect |
 | `bravado` | 1 — no boasting |
 | naturalness | 5 is the target at both supported tiers |

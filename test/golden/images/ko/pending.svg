@@ -17,9 +17,9 @@
             refusal      ▮▯▯▯▯  1    1
             bravado      ▮▯▯▯▯  1    1
 
-  warmth  사용자에게 감정을 표현하는 정도
+  warmth  사용자에게 보이는 다정함
   1  인사·감정 표현·격려 없음
-  5  격려와 공감을 포함한 따뜻한 말 네 마디
+  5  문단마다 다정함·공감·위로·안심
 
   ↑↓ 축   ←→ 레벨   1-5 지정
   Enter 적용   Esc 취소   ? 도움말
@@ -82,11 +82,11 @@
 <text x="480" y="468" fill="#edf3f6" font-weight="700" opacity="1">1</text>
 <text x="550" y="468" fill="#edf3f6" font-weight="400" opacity="1">1</text>
 <text x="60" y="524" fill="#edf3f6" font-weight="700" opacity="1">warmth</text>
-<text x="172" y="524" fill="#edf3f6" font-weight="700" opacity="1">사용자에게 감정을 표현하는 정도</text>
+<text x="172" y="524" fill="#edf3f6" font-weight="700" opacity="1">사용자에게 보이는 다정함</text>
 <text x="60" y="552" fill="#edf3f6" font-weight="400" opacity="1">1</text>
 <text x="102" y="552" fill="#edf3f6" font-weight="400" opacity="1">인사·감정 표현·격려 없음</text>
 <text x="60" y="580" fill="#edf3f6" font-weight="400" opacity="1">5</text>
-<text x="102" y="580" fill="#edf3f6" font-weight="400" opacity="1">격려와 공감을 포함한 따뜻한 말 네 마디</text>
+<text x="102" y="580" fill="#edf3f6" font-weight="400" opacity="1">문단마다 다정함·공감·위로·안심</text>
 <text x="60" y="636" fill="#edf3f6" font-weight="400" opacity="0.65">↑↓ 축</text>
 <text x="172" y="636" fill="#edf3f6" font-weight="400" opacity="0.65">←→ 레벨</text>
 <text x="312" y="636" fill="#edf3f6" font-weight="400" opacity="0.65">1-5 지정</text>

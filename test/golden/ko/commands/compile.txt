@@ -4,7 +4,7 @@ ToneDial · compile
 
   TONE.md 최신
   <ROOT>/state/TONE.md
-  TONE.md 2,255자
+  TONE.md 3,550자
 
   tonedial show
 --- stderr --- [bytes=0; endsWithNewline=false]

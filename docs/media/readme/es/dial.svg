@@ -19,7 +19,7 @@
 
   warmth  calidez hacia el usuario
   1  sin saludo, acogida cálida ni ánimo
-  5  cuatro comentarios cálidos, con ánimo y empatía
+  5  amabilidad, empatía y consuelo en cada párrafo
 
   ↑↓ eje   ←→ nivel   1-5 fijar
   Enter aplicar   Esc descartar   ? ayuda
@@ -86,7 +86,7 @@
 <text x="60" y="552" fill="#edf3f6" font-weight="400" opacity="1">1</text>
 <text x="102" y="552" fill="#edf3f6" font-weight="400" opacity="1">sin saludo, acogida cálida ni ánimo</text>
 <text x="60" y="580" fill="#edf3f6" font-weight="400" opacity="1">5</text>
-<text x="102" y="580" fill="#edf3f6" font-weight="400" opacity="1">cuatro comentarios cálidos, con ánimo y empatía</text>
+<text x="102" y="580" fill="#edf3f6" font-weight="400" opacity="1">amabilidad, empatía y consuelo en cada párrafo</text>
 <text x="60" y="636" fill="#edf3f6" font-weight="400" opacity="0.65">↑↓ eje</text>
 <text x="186" y="636" fill="#edf3f6" font-weight="400" opacity="0.65">←→ nivel</text>
 <text x="340" y="636" fill="#edf3f6" font-weight="400" opacity="0.65">1-5 fijar</text>

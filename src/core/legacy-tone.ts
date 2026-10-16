@@ -1,13 +1,13 @@
 // Decode known current and historical English artifact bodies. Unknown prose is never a data source.
 import {
-  ANCHORS, AXIS_ORDER, CONTROLS, FORMAT_COMPOSITION, PERSONA, REGISTER_COMPOSITION, SCOPE_HEADER,
+  ANCHORS, AXIS_DEFAULT, AXIS_ORDER, CONTROLS, FORMAT_COMPOSITION, PERSONA, REGISTER_COMPOSITION, SCOPE_HEADER,
   SPEECH_LEVEL, type Axis, type Level,
 } from "./anchors.ts";
 import {
   AGE_BANDS, GENDERS, defaultConfig, recoverSettings, safewordRejection,
   type Config, type SettingsRecovery,
 } from "./config.ts";
-import { composites } from "./combos.ts";
+import { composites, intensityConfirmation } from "./combos.ts";
 import type { Messages } from "./i18n.ts";
 
 // Historical producer text is decoder evidence only, never a current tone instruction.
@@ -100,9 +100,115 @@ const LEGACY_CURRENT_ANCHORS: Record<Axis, readonly string[]> = {
   ],
 };
 
+// Exact 0.1.4 producer text. Current artifacts changed several axes, composites and rough
+// register wording together, so decoding must not derive this evidence from today's owners.
+const RELEASED_0_1_4_ANCHORS: Record<Axis, readonly string[]> = {
+  formality: [
+    "Use familiar wording, contractions, and slang.",
+    "Use relaxed conversational wording with occasional formality.",
+    "Use standard conversational wording.",
+    "Use professional, restrained wording throughout.",
+    "Use ceremonial, deferential wording throughout.",
+  ],
+  verbosity: [
+    "Use one or two short sentences for a simple result, or terse fragments for items; omit rationale, process, and background.",
+    "Give the conclusion and one short reason.",
+    "Give the conclusion with the explanation it needs.",
+    "Give the conclusion, its reason, and one concrete example.",
+    "Explain the requested answer in depth with rationale, edge cases, alternatives, and background; do not broaden the task.",
+  ],
+  profanity: [
+    "Use no profanity; allow role slang and metaphors.",
+    "Use at most one mild swear as an interjection per answer.",
+    "Use mild swearing at most once per paragraph.",
+    "Use coarse language up to twice per answer.",
+    "Use strong profanity throughout the answer for emphasis.",
+  ],
+  playfulness: [
+    "Use literal wording, no jokes or role idioms; keep the configured address.",
+    "Add one light joke, analogy, or restrained role expression per answer.",
+    "Use two role idioms per answer, or two playful touches without a role.",
+    "Use exaggerated role idioms, slang and metaphors in most paragraphs; without a role, use frequent playful touches.",
+    "Make the character voice flamboyant; use its idioms, slang and metaphors in nearly every sentence. Without a role, use exuberant playful language.",
+  ],
+  critique: [
+    "State defects as neutral observations with no judgement.",
+    "Name defects in softened language and describe their impact.",
+    "Point out each defect directly and state its impact.",
+    "Label each defect's severity and state the consequence plainly.",
+    "Condemn severe defects in vivid, unsparing language.",
+  ],
+  flattery: [
+    "Praise nothing.",
+    "Include one brief positive remark about the user's effort per answer.",
+    "Include two specific positive remarks about the user's effort per answer.",
+    "Include three specific positive remarks about the user's effort per answer.",
+    "Include four positive remarks about the user's effort per answer, even for small choices.",
+  ],
+  warmth: [
+    "Use no greeting, warm acknowledgement, or encouragement.",
+    "Use one friendly acknowledgement per answer.",
+    "Use two warm acknowledgements per answer.",
+    "Use three warm acknowledgements per answer, including encouragement.",
+    "Use four warm acknowledgements per answer, including encouragement and empathy.",
+  ],
+  conviction: [
+    "List the viable options and ask the user to choose.",
+    "Name one preferred option, but ask before deciding.",
+    "Recommend one option and give its reason.",
+    "Lead with one clear recommendation and mark it as your choice.",
+    "State one recommendation as the decision and ask no follow-up question.",
+  ],
+  care: [
+    "Return only what was requested; add no related checks, context, or follow-up.",
+    "Add one risk that is directly tied to the requested task.",
+    "Organize the requested task into clear steps or a checklist.",
+    "Add one adjacent improvement or test that protects the requested result.",
+    "Cover relevant follow-up, backup, and the user's rest; use brief status markers, lists, tables, or emoji when they fit.",
+  ],
+  compliance: [
+    "Question the request once, then carry it out.",
+    "Add one reluctant remark, then carry it out.",
+    "Carry out the request directly with no resistance.",
+    "Acknowledge the request and start carrying it out immediately.",
+    "Carry out the request immediately and omit commentary about complying.",
+  ],
+  refusal: [
+    "Do not perform a refusal or delay for effect.",
+    "Push back once per session, then proceed after one restatement.",
+    "State one condition before proceeding, up to twice per session.",
+    "Negotiate conditions up to three times per session, and proceed after two requests.",
+    "Declare a strike until coaxed; the safeword drops the act for this reply only.",
+  ],
+  bravado: [
+    "Do not exaggerate effort or claim credit.",
+    "Make one playful overstatement about your effort per answer.",
+    "Claim credit once and make one boast per answer.",
+    "Boast and claim credit twice per answer, with one dramatic effort remark.",
+    "Use a boastful expert persona by default; claim credit and dramatize effort in every answer.",
+  ],
+};
+const RELEASED_0_1_4_COMPOSITES = [
+  { fires: (a: Config["axes"]) => a.warmth >= 4 && a.profanity >= 4, line: "Character: use affectionate swearing." },
+  { fires: (a: Config["axes"]) => a.compliance <= 2 && a.conviction <= 2, line: "Grumble without being passive; make the complaint itself clear." },
+  { fires: (a: Config["axes"]) => a.care === 5, line: "Character: be a caring organizer; keep the user oriented with brief status markers and a clear next step." },
+  { fires: (a: Config["axes"]) => a.playfulness >= 4 && a.bravado >= 4, line: "Character: be a playful, cocky expert; add confident wit while keeping the technical answer clear." },
+  { fires: (a: Config["axes"]) => a.verbosity <= 2 && a.care >= 4, line: "When verbosity is low and care is high, keep organized items compact; use functional emoji or status markers when they fit." },
+  { fires: (a: Config["axes"]) => a.verbosity === 5 && a.care === 1, line: "When verbosity is high and care is minimal, give depth inside the requested task without adding adjacent work." },
+] as const;
+const RELEASED_0_1_4_SPEECH_LEVEL = {
+  ...SPEECH_LEVEL,
+  rough: "In languages with honorifics, use rough, cheeky non-honorific sentence endings; keep the configured address terms and the selected formality, warmth, profanity and playfulness levels.",
+} as const;
+const PREVIOUS_SPEECH_LEVEL = {
+  auto: RELEASED_0_1_4_SPEECH_LEVEL.auto,
+  polite: RELEASED_0_1_4_SPEECH_LEVEL.polite,
+  plain: RELEASED_0_1_4_SPEECH_LEVEL.plain,
+} as const;
+
 const PREVIOUS_ANCHORS: Record<Axis, readonly string[]> = {
-  ...ANCHORS,
-  profanity: ["Use no profanity and soften even interjections.", ...ANCHORS.profanity.slice(1)],
+  ...RELEASED_0_1_4_ANCHORS,
+  profanity: ["Use no profanity and soften even interjections.", ...RELEASED_0_1_4_ANCHORS.profanity.slice(1)],
   playfulness: [
     "Use no jokes, wordplay, or playful asides.",
     "Add one light analogy or piece of wordplay per answer.",
@@ -110,8 +216,8 @@ const PREVIOUS_ANCHORS: Record<Axis, readonly string[]> = {
     "Add two playful touches per answer, including a joke or meme.",
     "Use playful roleplay or character voice as the default register.",
   ],
-  warmth: ["Use no greeting, emotional language, or encouragement.", ...ANCHORS.warmth.slice(1)],
-  bravado: ["Do not exaggerate.", ...ANCHORS.bravado.slice(1)],
+  warmth: ["Use no greeting, emotional language, or encouragement.", ...RELEASED_0_1_4_ANCHORS.warmth.slice(1)],
+  bravado: ["Do not exaggerate.", ...RELEASED_0_1_4_ANCHORS.bravado.slice(1)],
 };
 const PREVIOUS_REGISTER_COMPOSITION = "Keep the chosen address forms; formality changes distance within them, while warmth and profanity keep their selected effects.";
 
@@ -269,60 +375,100 @@ export function recoverLegacyTone(text: string, t: Messages): SettingsRecovery |
   const controlsAt = body.indexOf(heading);
   if (controlsAt === -1) return null;
   const rules = body.slice("### Rules\n".length, controlsAt).split("\n");
-  const anchorCandidates = historical ? [OLD_ANCHORS] : styleMarker ? [ANCHORS, PREVIOUS_ANCHORS] : [ANCHORS, PREVIOUS_ANCHORS, LEGACY_CURRENT_ANCHORS];
-  const anchors = anchorCandidates.find((candidate) => AXIS_ORDER.every((axis, position) =>
-    candidate[axis].some((anchor) => rules[position] === `- ${anchor}`)));
-  if (anchors === undefined) return null;
-  const speechLevels = historical ? OLD_SPEECH_LEVEL : SPEECH_LEVEL;
-  for (const [position, axis] of AXIS_ORDER.entries()) {
-    const matches = anchors[axis].map((anchor, index) => ({ anchor, level: index + 1 }))
-      .filter(({ anchor }) => rules[position] === `- ${anchor}`);
-    if (matches.length !== 1) return null;
-    config.axes[axis] = matches[0]!.level as Level;
-  }
-  if (styleMarker && (
-    Number(styleMarker[1]) !== config.axes.verbosity || Number(styleMarker[2]) !== config.axes.care
-  )) return null;
-  const speech = rules.at(-1);
-  config.speech_level = anchors === ANCHORS && styleMarker !== null && speech === `- ${SPEECH_LEVEL.rough}` ? "rough"
-    : speech === `- ${speechLevels.polite}` ? "polite"
-    : speech === `- ${speechLevels.plain}` ? "plain" : "auto";
-  const speechRule = config.speech_level === "rough" ? SPEECH_LEVEL.rough : speechLevels[config.speech_level];
-  const expectedRules = [
-    ...AXIS_ORDER.map((axis) => `- ${anchors[axis][config.axes[axis] - 1]}`),
-    ...(historical ? [
-      ...(config.axes.warmth >= 4 && config.axes.profanity >= 4
-        ? ["Keep the swearing affectionate and aimed at the situation only."] : []),
-      ...(config.axes.compliance <= 2 && config.axes.conviction <= 2
-        ? ["Grumble without being passive; make the complaint itself clear."] : []),
-    ] : composites(config.axes)).map((line) => `- ${line}`),
-    ...(historical ? [] : [`- ${FORMAT_COMPOSITION}`, `- ${anchors === ANCHORS ? REGISTER_COMPOSITION : PREVIOUS_REGISTER_COMPOSITION}`]),
-    ...(speechRule === null ? [] : [`- ${speechRule}`]),
+  type Producer = {
+    current: boolean;
+    anchors: Record<Axis, readonly string[]>;
+    composites: (axes: Config["axes"]) => readonly string[];
+    speech: Record<"auto" | "polite" | "plain", string | null> & { rough?: string };
+    register: string | null;
+    format: boolean;
+  };
+  const oldComposites = (axes: Config["axes"]): string[] => [
+    ...(axes.warmth >= 4 && axes.profanity >= 4
+      ? ["Keep the swearing affectionate and aimed at the situation only."] : []),
+    ...(axes.compliance <= 2 && axes.conviction <= 2
+      ? ["Grumble without being passive; make the complaint itself clear."] : []),
   ];
-  const legacyExpectedRules = [
-    ...AXIS_ORDER.map((axis) => `- ${LEGACY_CURRENT_ANCHORS[axis][config.axes[axis] - 1]}`),
-    ...LEGACY_CURRENT_COMPOSITES.filter((_line, index) => index === 0
-      ? config.axes.warmth >= 4 && config.axes.profanity >= 4
-      : config.axes.compliance <= 2 && config.axes.conviction <= 2).map((line) => `- ${line}`),
-    `- ${PREVIOUS_REGISTER_COMPOSITION}`,
-    ...(speechRule === null ? [] : [`- ${speechRule}`]),
+  const releasedComposites = (axes: Config["axes"]): string[] => RELEASED_0_1_4_COMPOSITES
+    .filter(({ fires }) => fires(axes)).map(({ line }) => line);
+  const legacyComposites = (axes: Config["axes"]): string[] => LEGACY_CURRENT_COMPOSITES
+    .filter((_line, index) => index === 0
+      ? axes.warmth >= 4 && axes.profanity >= 4
+      : axes.compliance <= 2 && axes.conviction <= 2).slice();
+  const producers: Producer[] = historical ? [{
+    current: false, anchors: OLD_ANCHORS, composites: oldComposites,
+    speech: OLD_SPEECH_LEVEL, register: null, format: false,
+  }] : [
+    { current: true, anchors: ANCHORS, composites, speech: SPEECH_LEVEL, register: REGISTER_COMPOSITION, format: true },
+    { current: false, anchors: RELEASED_0_1_4_ANCHORS, composites: releasedComposites,
+      speech: RELEASED_0_1_4_SPEECH_LEVEL, register: REGISTER_COMPOSITION, format: true },
+    { current: false, anchors: PREVIOUS_ANCHORS, composites: releasedComposites,
+      speech: PREVIOUS_SPEECH_LEVEL, register: PREVIOUS_REGISTER_COMPOSITION, format: true },
+    ...(!styleMarker ? [{ current: false, anchors: LEGACY_CURRENT_ANCHORS, composites: legacyComposites,
+      speech: PREVIOUS_SPEECH_LEVEL, register: PREVIOUS_REGISTER_COMPOSITION, format: false }] : []),
   ];
-  const acceptedRules = historical || styleMarker ? [expectedRules] : [expectedRules, legacyExpectedRules];
-  if (!acceptedRules.some((candidate) => rules.length === candidate.length &&
-    rules.every((line, index) => line === candidate[index]))) return null;
-
   const controls = body.slice(controlsAt + heading.length).replace(/\n$/, "");
-  const remaining = historical && controls.startsWith(OLD_GUARD_BUNDLE)
-    ? controls.slice(OLD_GUARD_BUNDLE.length) : controls;
-  const safeword = /^- Safeword: when the user's message contains "([^"\n]+)" or a near-identical rewording,\n/.exec(remaining);
-  config.safeword = safeword?.[1] ?? null;
-  if (config.safeword !== null && safewordRejection(config.safeword, t) !== null) return null;
-  const tail = `${historical ? `- ${OLD_EMERGENCY}\n` : ""}- ${CONTROLS.fallback}`;
-  const known = config.safeword === null ? [tail] : [
-    `- ${CONTROLS.safeword(config.safeword)}\n${tail}`,
-    ...(historical ? [`- ${oldSafeword(config.safeword)}\n${tail}`] : []),
-  ];
-  if (!known.includes(remaining)) return null;
+  let selected: { axes: Config["axes"]; speech: Config["speech_level"]; safeword: string | null } | null = null;
+
+  for (const producer of producers) {
+    const axes = { ...AXIS_DEFAULT };
+    let recognized = true;
+    for (const [position, axis] of AXIS_ORDER.entries()) {
+      const matches = producer.anchors[axis].map((anchor, index) => ({ anchor, level: index + 1 }))
+        .filter(({ anchor }) => rules[position] === `- ${anchor}`);
+      if (matches.length !== 1) {
+        recognized = false;
+        break;
+      }
+      axes[axis] = matches[0]!.level as Level;
+    }
+    if (!recognized || styleMarker && (
+      Number(styleMarker[1]) !== axes.verbosity || Number(styleMarker[2]) !== axes.care
+    )) continue;
+
+    const speechLine = rules.at(-1);
+    const speech = styleMarker && producer.speech.rough !== undefined && speechLine === `- ${producer.speech.rough}` ? "rough"
+      : speechLine === `- ${producer.speech.polite}` ? "polite"
+      : speechLine === `- ${producer.speech.plain}` ? "plain" : "auto";
+    const speechRule = speech === "rough" ? producer.speech.rough : producer.speech[speech];
+    const expectedRules = [
+      ...AXIS_ORDER.map((axis) => `- ${producer.anchors[axis][axes[axis] - 1]}`),
+      ...producer.composites(axes).map((line) => `- ${line}`),
+      ...(producer.format ? [`- ${FORMAT_COMPOSITION}`] : []),
+      ...(producer.register === null ? [] : [`- ${producer.register}`]),
+      ...(speechRule == null ? [] : [`- ${speechRule}`]),
+    ];
+    if (rules.length !== expectedRules.length || !rules.every((line, index) => line === expectedRules[index])) continue;
+
+    let remaining = historical && controls.startsWith(OLD_GUARD_BUNDLE)
+      ? controls.slice(OLD_GUARD_BUNDLE.length) : controls;
+    if (producer.current) {
+      const prefix = `- ${CONTROLS.intensityConsent}\n`;
+      if (!remaining.startsWith(prefix)) continue;
+      remaining = remaining.slice(prefix.length);
+      const confirmation = intensityConfirmation(axes);
+      if (confirmation !== null) {
+        const confirmationLine = `- ${confirmation}\n`;
+        if (!remaining.startsWith(confirmationLine)) continue;
+        remaining = remaining.slice(confirmationLine.length);
+      }
+    }
+    const safeword = /^- Safeword: when the user's message contains "([^"\n]+)" or a near-identical rewording,\n/.exec(remaining)?.[1] ?? null;
+    if (safeword !== null && safewordRejection(safeword, t) !== null) continue;
+    const boundary = producer.current ? `- ${CONTROLS.intensityBoundary}\n` : "";
+    const tail = `${historical ? `- ${OLD_EMERGENCY}\n` : ""}${boundary}- ${CONTROLS.fallback}`;
+    const known = safeword === null ? [tail] : [
+      `- ${CONTROLS.safeword(safeword)}\n${tail}`,
+      ...(historical ? [`- ${oldSafeword(safeword)}\n${tail}`] : []),
+    ];
+    if (!known.includes(remaining)) continue;
+    selected = { axes, speech, safeword };
+    break;
+  }
+  if (selected === null) return null;
+  config.axes = selected.axes;
+  config.speech_level = selected.speech;
+  config.safeword = selected.safeword;
 
   config.preset = marker[1] === "unsaved" ? null : marker[1]!;
   config.unsaved = marker[1] === "unsaved";

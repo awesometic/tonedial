@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=1214; endsWithNewline=true]
+--- stdout --- [bytes=1215; endsWithNewline=true]
 ToneDial · wire
 
   연결 범위: 프로젝트
@@ -14,12 +14,12 @@ ToneDial · wire
   + import {
 
   <ROOT>/state/skill/tonedial/SKILL.md
-  (새 파일)  300줄
+  (새 파일)  314줄
   + ---
   + name: tonedial
 
   <ROOT>/state/skill/tonedial/references/traits.md
-  (새 파일)  89줄
+  (새 파일)  104줄
   + Twelve axes, each 1 to 5. Read the live values with `tonedial get --json`; this file says what
   + each one **owns**, which is what tells you which axis a request is actually about.
 

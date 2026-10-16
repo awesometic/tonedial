@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=1158; endsWithNewline=true]
+--- stdout --- [bytes=1159; endsWithNewline=true]
 ToneDial · wire
 
   Connection scope: project
@@ -14,12 +14,12 @@ ToneDial · wire
   + import {
 
   <ROOT>/state/skill/tonedial/SKILL.md
-  (new file)  300 lines
+  (new file)  314 lines
   + ---
   + name: tonedial
 
   <ROOT>/state/skill/tonedial/references/traits.md
-  (new file)  89 lines
+  (new file)  104 lines
   + Twelve axes, each 1 to 5. Read the live values with `tonedial get --json`; this file says what
   + each one **owns**, which is what tells you which axis a request is actually about.
 

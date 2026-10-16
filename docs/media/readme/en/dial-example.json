@@ -14,8 +14,8 @@
   "font": "Menlo",
   "fontRedistributed": false,
   "renderer": "rasterized current dial SVG text at its cell positions with Menlo 22px, regular/bold weights and fixed palette; actual terminal appearance varies",
-  "frameSha256": "c3289263f53b7cda4c11a95d560e896ce063dd98989714ed22f5ebc36809a8df",
-  "imageSha256": "74814ce1a39d711a004c801f64659a408b9fb1d5bb7a58504c84cca2d78857e1",
+  "frameSha256": "f1f2e13ba6f22868fe3033cda016557fb7ff7ef412c3a68332fb2a72b7ce4831",
+  "imageSha256": "0e311df88303f43151c14f46be1da14833d7a37710cdc1d81dfab1d872d35b49",
   "inputs": {
     "scripts/dial-frame.ts": "71ba709632f41d76e5d36bdcf7bdcdb864459b56b9e351622d6e54117dc1205a",
     "src/ui/dial.ts": "89be03aa196219d24ce36b286287f1cd586e58b6417eff433f82c1c3fd70f98c",
@@ -23,12 +23,12 @@
     "src/ui/prompt.ts": "9e7e02e17aea1158203b9e584d90aba5213902b0c246fe281d91f3290231b50d",
     "src/ui/style.ts": "2dc560ebc69677d391ec8ab39817c3a89545d6b8b603c080a7f6d09a75450a8e",
     "src/ui/width.ts": "eb1013f8511ccfc8b9eca78e3d74433cfcf30096b7faf71ba118a5cd42163acd",
-    "src/core/i18n.ts": "59a8a423b37313589e45cc6a991cb3a1e2255cf49fa3bf4aea95bc934adf3547",
-    "src/core/anchors.ts": "37629efb5a486af48be7e9ae1b5a8411cac13ceb2b1482426f594ae8f67f4cf5",
+    "src/core/i18n.ts": "b4fd61708cc04c4cd4f96dc56fbbe017ef010276c0bf54d3bd854efa532be687",
+    "src/core/anchors.ts": "3bf4c79bf24039be720d7c431a3a34dd194dae8d6fc7469e5589ce8c1063b6e6",
     "src/core/presets.ts": "d1ba21c02c7e8bfea29f20ef170243e09d05d775b812caf8c41c3bc41622d8d3",
     "scripts/dial-svg.ts": "eb81cde392f472ea8df8b251150afccfcf02e5adf936221a174ab17d965e13a4",
-    "src/core/locales/ja.ts": "31a42907ed1b00d1b9a42a54e222dd5e445a6914e5df499f82b87df6d52131ec",
-    "src/core/locales/zh.ts": "0c2be91bd2c36e8b6ea0d7f224a55c0851bdd47f2a589ed492ef521f10dfc523",
-    "src/core/locales/es.ts": "fddf9ed41b9e8485305be43bea8f5a5151ff57a9de6384cbe472764b7a3708d4"
+    "src/core/locales/ja.ts": "26224879be7510aacde722382f5c3f826ecc4baccff63ebd08aee40dc3f13f90",
+    "src/core/locales/zh.ts": "d9d3fb2d1153cc6a3260224439c6a08a4819637f64d90884101f754154054e16",
+    "src/core/locales/es.ts": "2cf1e14114137cacc8a443d27091b21ba9c6c94fe5081be1a2b62987c79338c0"
   }
 }

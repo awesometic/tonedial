@@ -22,12 +22,18 @@ Keep changes within the requested boundary and preserve unrelated edits.
 - Keep the compiler pure, deterministic and free of LLM, filesystem, environment, clock and network access.
   Emit every axis from the single English anchor set; all twelve axes and levels 1–5 remain selectable.
   Keep address forms separate from formality's wording/distance, warmth and profanity; familiar polite and formal plain are valid combinations.
-  Risk metadata and combination notices are advisory: they never clamp values, add tone approval or change host permissions.
+  Risk metadata and combination notices are advisory: they never clamp values or change host permissions.
+  Intense tone (strong profanity, harsh mocking, violent figurative language, theatrical noncredible menace) is available only after the user's explicit approval in the current session.
+  Profiles record the requested settings, never that approval; using, importing, creating or saving a profile, `--auto`, a safeword or a prior session does not supply it.
+  Before any intense element requested by axes, persona or later instructions, answer the current request without it and ask once for explicit approval naming it; approval lasts only while that request remains unchanged, and an increase or change requires it again.
+  Ordinary role idioms need no approval.
+  Approval grants tone intensity only; it never covers hate speech against protected traits or realistic or credible threats, and it authorizes no work.
+  The compiler requests this conversation behavior; it stores no approval state and cannot prove that approval occurred or that a model followed it.
   The safeword requests one plain answer and authorizes nothing; `reset` restores axes rather than disabling delivery.
 - Bundled and custom profiles save axes, persona, address, register and safeword together.
   Applying a profile restores its full tone settings; legacy axis-only presets preserve the current separate settings.
   Role idioms and slang are not filtered; playfulness grades their frequency and theatrical intensity.
-  Profanity grades swearing, while bravado grades claims about effort; neither suppresses figurative role language.
+  Profanity grades swearing without inventing insults or criticism, while preserving those selected by critique or persona; bravado grades claims about effort without replacing the persona.
   Interface language and wiring remain outside profiles.
   State belongs to the shared state root; project scope chooses wiring, not a separate tone library.
   Tone-changing mutations recompile in the same action.

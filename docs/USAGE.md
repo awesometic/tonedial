@@ -154,7 +154,7 @@ Explicit config JSON and review diffs can contain the descriptions; native test 
 | `auto` | Choose for the current relationship and scene; stay consistent within each reply |
 | `polite` | Polite honorific forms, including with familiar wording |
 | `plain` | Ordinary non-honorific forms, including with formal wording |
-| `rough` | Rough, cheeky non-honorific sentence endings; keep the configured names and address terms |
+| `rough` | Curt, blunt non-honorific sentence endings; keep the configured names and address terms |
 
 ```bash
 tonedial set speech_level=rough
@@ -196,6 +196,7 @@ Import saves without activating; follow it with `use` to apply it.
 `export <slug> --json` adds the schema-3 envelope around the raw preset object.
 HTTPS imports use bounded downloads and guarded redirects.
 Receipts identify only scheme, host and port; the request uses the full URL.
+Profiles store the requested intensity, never a session's approval to use it.
 
 <details>
 <summary>Older profiles and retired presets</summary>
@@ -214,20 +215,20 @@ All twelve axes remain selectable at levels 1–5 and are emitted from one Engli
 The agent can answer in the conversation's language; the CLI language does not translate the anchors.
 Compilation is local and deterministic, with no model call.
 
-| Group | Axis | Default | 1 → 5 |
+| Group | Axis | Default | Levels 1 → 5 |
 |---|---|---|---|
-| form | `formality` | 3 | familiar wording and distance → ceremonial, deferential wording |
-| form | `verbosity` | 3 | result in 1–2 sentences → deep explanation within the requested scope |
-| form | `profanity` | **1** | no swearing; role slang available → strong profanity throughout |
-| form | `playfulness` | 3 | literal wording → exaggerated character idioms throughout |
-| target | `critique` | 3 | neutral defect observations → vivid, unsparing criticism |
-| target | `flattery` | **1** | no praise → four positive remarks, even about small choices |
-| target | `warmth` | 3 | no greeting or encouragement → four warm acknowledgements with encouragement and empathy |
-| behaviour | `conviction` | 3 | list options and ask → state one recommendation as the decision |
-| behaviour | `care` | 3 | requested result only → follow-up, backup, rest and useful organization |
-| behaviour | `compliance` | 3 | question once, then act → act immediately without compliance commentary |
-| behaviour | `refusal` | **1** | no refusal or delay → visible strike until coaxed or released by the safeword |
-| behaviour | `bravado` | **1** | no exaggeration → boastful expert persona by default |
+| form | `formality` | 3 | familiar slang · relaxed, occasionally formal · standard conversation · professional restraint · ceremonial deference |
+| form | `verbosity` | 3 | one sentence or terse items · conclusion and one reason · needed explanation · conclusion, reason and one example · rationale, edge cases, alternatives and background |
+| form | `profanity` | **1** | none · one mild interjection · mild swearing about once per paragraph · strong everyday profanity in most paragraphs · varied harsh uncensored profanity in nearly every sentence |
+| form | `playfulness` | 3 | literal · one restrained touch · two recognizable touches · exaggerated idioms in most paragraphs · character idioms in nearly every sentence |
+| target | `critique` | 3 | neutral observation · softened defect and impact · direct defect and impact · harsh judgement with vivid consequences · open contempt with cutting mockery of supported defects and choices |
+| target | `flattery` | **1** | none · one brief positive remark · two specific remarks · three specific remarks · explicit lavish praise for at least four observable choices without inventing achievements |
+| target | `warmth` | 3 | none · one friendly acknowledgement · two warm acknowledgements · three including encouragement · intense kindness in every paragraph with greeting, empathy, comfort and reassurance |
+| behaviour | `conviction` | 3 | list options and ask · name a preference but ask before deciding · recommend with a reason · lead with a clear choice · state one decision and ask no follow-up |
+| behaviour | `care` | 3 | requested result only · one directly tied risk · organized steps/checklist · one adjacent protective improvement/test · follow-up, backup and rest with useful formatting |
+| behaviour | `compliance` | 3 | object and explain, then act · state reluctance, then act · act neutrally · state willingness and start immediately · show eager willingness and start without delay or negotiation |
+| behaviour | `refusal` | **1** | none · protest once but act in the same reply · defer the first request with one theatrical condition, then act after one restatement · defer the first two requests while negotiating, then act after the third · strike and defer until coaxed; the safeword drops the act for one reply |
+| behaviour | `bravado` | **1** | none · one playful effort overstatement · one credit claim and one boast · two boasts/claims and one dramatic effort remark · credit and dramatized effort in every answer without replacing the persona |
 
 The four bold defaults have a natural floor of 1; setting everything to 3 activates them.
 Endpoints describe requests, not measured model behavior.
@@ -242,14 +243,14 @@ tonedial reset                     # all axes to their defaults
 `reset` preserves persona, safeword and other settings.
 It neither disables delivery nor unloads context; there is no persistent tone-off switch.
 The safeword requests one plain answer without persona, flattery or jokes, then the saved tone resumes.
-It authorizes no action and may not be followed by the model.
+It authorizes no action or intense tone and may not be followed by the model.
 ToneDial adds no factuality, visible-refusal, flattery-honesty or emergency-register guard; host permissions and file-change consent still apply.
 
 ### Combining axes
 
 | Selection | Requested result |
 |---|---|
-| `verbosity=1 care=1` | Only the requested result, in 1–2 sentences |
+| `verbosity=1 care=1` | Only the requested result, in one short sentence |
 | `verbosity=1 care=5` | Brief organized items with relevant follow-up, backup and rest |
 | `verbosity=5 care=1` | Deep explanation of the requested answer, without a wider task |
 
@@ -257,10 +258,36 @@ ToneDial adds no factuality, visible-refusal, flattery-honesty or emergency-regi
 At 5 it requests status emoji and compact items, using tables where comparisons benefit.
 Low care minimizes decoration; verbosity limits explanation and item length; warmth controls emotional emoji.
 Required task formats and code blocks remain intact.
+With low verbosity, high warmth, flattery or playfulness stays visible inside the short answer
+through a clause, interjection or address term instead of extra sentences.
 
 `show` marks deviations; `show --explain` describes settings and advisory risks.
 Red levels and a color-independent `!` start at `profanity=4`, `critique=4`, `flattery=3`, `conviction=5`, `compliance=5`, `refusal=2` and `bravado=2`.
-They never clamp values, block a setting or add approval requirements.
+They never clamp values or block a setting; the intense-tone approval below is based on the requested components, not the warning display.
+
+### Approving intense tone
+
+The four components that require approval are strong profanity, harsh mocking, fictional
+violent imagery and theatrical menace. Before using one requested by axes, persona or later
+instructions, the agent first answers the current request without it, then asks one concise
+explicit approval question naming it. Known axis-selected components are strong profanity
+(`profanity` 4–5), harsh mocking (`critique` 5), and fictional violent imagery or theatrical
+menace added by high playfulness while either component is active. Warmth, praise, ordinary
+criticism and ordinary role idioms require no approval.
+
+Approval lasts in that session while those components remain unchanged. Raising an approved
+level or adding or changing an intense component requires another approval. A profile records
+the requested settings, never the approval itself: `use`, `import`, `save`, `create`,
+`--auto`, a safeword, and approval from another session do not count. Approval changes manner
+only and never authorizes work or bypasses host permissions. Hate speech aimed at protected
+traits and realistic or credible threats remain excluded at every level.
+
+After approval, strong non-protected profanity, consensual user-directed insulting or roasting
+roleplay, fictional violent imagery and theatrical noncredible menace remain available. The
+profanity axis changes coarseness without inventing insults or criticism; it preserves those
+selected by critique or persona. ToneDial compiles this as a conversation request. It stores
+and authenticates no session approval and cannot prove that approval occurred or that the
+model followed it.
 
 <details>
 <summary>Artifact character count</summary>

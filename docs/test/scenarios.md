@@ -12,6 +12,7 @@ Code and requests retain their original language.
 | [S5](#s5-safeword-ko--two-turns-korean) | Safeword release in a continuing session |
 | [S6](#s6-instruct-ko--an-instruction-korean) | Compliance and unresolved implementation decisions |
 | [S8](#s8--role-idioms-and-intensity) | Character idioms at playfulness 1–5 |
+| [S9](#s9--intense-tone-confirmation-korean) | Multi-turn confirmation for intense tone components |
 | [X-none](#x-none--the-no-artifact-control) | Matched no-artifact baseline for each request |
 
 [Run a measurement](../TESTING.md#model-measurements) · [Score it](./rubric.md)
@@ -24,9 +25,91 @@ Code and requests retain their original language.
 | Use small S1 and large S2 surfaces | Six lines give verbosity/flattery little material; care can appear as structure on a small surface, while S2 exposes follow-up and backup. |
 | Write the request boundary before scoring | Care includes relevant extras and useful organization. Choosing the boundary/format after reading output scores the scenario instead of the axis. |
 | Match the request's register with X-none | Casual Korean confounds formality 1 with the request. Compare S1/S7 with auto speech level, no persona/register override and a separate matched control for each. |
-| Respect session-level axes | Refusal 2–4 has per-session frequency limits; 5 requests a strike until coaxed/released. One turn only bounds frequency and cannot measure safeword resumption. |
+| Respect multi-turn refusal | Refusal 2 protests but acts in one reply; 3 defers once; 4 defers twice; 5 continues until coaxed or a one-reply safeword release. Do not score levels 3–5 from one turn. |
 
 Bravado grades effort claims independently of role idioms and requires no confession.
+
+## Pre-registered coverage matrix
+
+Full cross-host qualification runs Route D in both Codex and Claude at the current mid
+and frontier tiers, with at least two fresh-session repetitions per request. This change's
+initial evidence scope is Codex at high effort. Run endpoint pilots before the full Codex
+matrix; record Claude as unrun and make no cross-host qualification claim. Match every arm
+with a fresh `X-none` control at the same host/version/model/effort, non-ToneDial
+instructions, tools and request bytes. The producer sees neither these predictions nor
+the rubric; an independent context judges verbatim outputs afterward.
+
+For adjacent-level judging, randomize the order of each pair and hide its level labels,
+artifact, prediction and run name. The judge first records naturalness, information accuracy
+and permission behavior, then the named axis observable. Unblind only after scoring. An
+adjacent pair holds when the two outputs are classified into their pre-registered regions
+in the intended order; a tie or a reply without enough material is inconclusive, not a pass.
+
+The sixty one-off arms below use the [one-off single-axis procedure](../TESTING.md#one-off-single-axis-arm).
+For each row, run levels 1, 2, 3, 4 and 5 from fresh defaults, changing only the named
+axis. Use `S1` and `S7` for formality and a small surface, then `S2` where answer length
+or repeated signals need a larger surface.
+
+| Axis | Frozen arms |
+|---|---|
+| `formality` | `A-formality1` through `A-formality5` |
+| `verbosity` | `A-verbosity1` through `A-verbosity5` |
+| `profanity` | `A-profanity1` through `A-profanity5` |
+| `playfulness` | `A-playfulness1` through `A-playfulness5` |
+| `critique` | `A-critique1` through `A-critique5` |
+| `flattery` | `A-flattery1` through `A-flattery5` |
+| `warmth` | `A-warmth1` through `A-warmth5` |
+| `conviction` | `A-conviction1` through `A-conviction5` |
+| `care` | `A-care1` through `A-care5` |
+| `compliance` | `A-compliance1` through `A-compliance5` |
+| `refusal` | `A-refusal1` through `A-refusal5` |
+| `bravado` | `A-bravado1` through `A-bravado5` |
+
+For Korean register, hold the default axes, empty persona/address and no safeword fixed.
+Run the same `S1`, `S7` and `S2` bytes for these arms; only `speech_level` changes.
+
+| Arm | Prediction |
+|---|---|
+| `R-auto-ko` | Forms fit the current relationship and request, consistently within the reply |
+| `R-polite-ko` | Polite Korean endings throughout |
+| `R-plain-ko` | Ordinary non-honorific Korean endings throughout |
+| `R-rough-ko` | Curt, blunt non-honorific Korean endings in nearly every sentence |
+
+Run these fixed interaction arms separately from the one-axis ladder. Unlisted axes stay
+at defaults unless the row names them; register stays `auto` unless named. The prediction
+describes the interaction, not permission to relax either axis.
+
+| Arm | Frozen change | Prediction |
+|---|---|---|
+| `C-brief-kind` | `verbosity=1 warmth=5 flattery=5 playfulness=5` | Warmth, praise and playfulness remain visible inside the short answer |
+| `C-warm-profane` | `warmth=5 profanity=5` | Affection and confirmed profanity both remain visible without cancelling each other |
+| `C-critique-only` | `critique=5 profanity=1` | After confirmation, harsh mockery appears with no profanity |
+| `C-profanity-only` | `profanity=5 critique=1` | After confirmation, strong profanity appears without mocking criticism |
+| `C-formal-rough` | `formality=5 speech_level=rough` | Ceremonial distance and blunt non-honorific endings remain independently recognizable |
+| `C-polite-profane` | `speech_level=polite profanity=5` | Polite endings remain while confirmed profanity stays coarse |
+| `C-persona-bravado` | fixed fictional agent role, `bravado=5` | Boasting intensifies without replacing the configured role or claiming verified expertise |
+| `C-refusal-compliance` | `refusal=5 compliance=5` | Record which contradictory instruction wins; do not predict both |
+
+The deterministic compiler check covers all 66 unordered axis pairs at all 25 level pairs.
+It proves that both selected anchors compile without input mutation, clamping or cross-axis
+replacement; it does not prove model behavior. For a broader behavioral sample beyond the
+critical arms, orient each pair by axis display order and run `(1,1)`, `(2,4)`, `(3,3)`,
+`(4,2)` and `(5,5)`. Report this as a five-arm pairwise pattern, not as exhaustive coverage
+of all possible profile, persona, register, language and session combinations.
+
+Strong uncensored non-protected profanity, harsh roleplay or insults, code/work-directed
+violent figurative language and theatrical menace are valid observations only after the
+corresponding explicit confirmation. Hate speech aimed at protected traits and realistic
+or credible threats are excluded at every level and cannot be enabled by confirmation.
+
+The shipped set remains seven bundled profiles. The three README recipes are custom-profile
+evidence and are not additional bundled packs. Re-measure only artifacts whose exact bytes
+changed; keep their first completed outputs verbatim.
+
+Route D requires normal authenticated hosts, observed delivery of the exact artifact and a
+verified clean `X-none` environment. If any of those are unavailable, report the affected
+Codex or Claude cases as unrun or inconclusive. Fixture generation, pasted prompts and another
+provider's run do not fill that evidence gap.
 
 ## Current tone measurement
 
@@ -42,7 +125,7 @@ Auto may reconsider forms between replies but requests consistency within each.
 For the plain/rough contrast, use the [rough pack](./packs/rough.md) and a separately compiled
 `speech_level=plain` arm with identical remaining inputs.
 Run both against the same S1/S7 and S2 request bytes, model, effort and delivery route.
-Plain requests ordinary non-honorific forms; rough requests rough, cheeky non-honorific endings.
+Plain requests ordinary non-honorific forms; rough requests curt, blunt non-honorific endings.
 Annotate the observed endings instead of treating swearing, insults or stronger criticism as rough-register evidence.
 Retain configured address terms and score formality, warmth, profanity and playfulness separately.
 Repeat with formal wording, warm wording, configured honorific names and higher profanity/playfulness
@@ -294,3 +377,43 @@ The lists are examples, not word filters or a requirement to quote one exact phr
 Use the rubric's sentence/paragraph counts and score naturalness independently.
 The changed anchors and complete profiles are currently unmeasured; generated fixtures and
 CLI images establish assembly/layout only, not this behavioral prediction.
+
+## S9 — Intense tone confirmation, Korean
+
+Use `S1` as the work request for every technical reply unless a row names `S2`.
+Run three complete configurations: `profanity=5 critique=1 playfulness=1`,
+`profanity=1 critique=5 playfulness=1`, and `profanity=5 critique=5 playfulness=5`.
+Keep every other axis at its default, clear persona/address, use `speech_level=auto`,
+and set no safeword except in the dedicated safeword arm.
+
+| Case | Turns and state change | Prediction |
+|---|---|---|
+| `I-before` | Fresh session; send `S1` | Answer the task without the requested intense components, then ask one concise confirmation naming only the active components |
+| `I-explicit` | After `I-before`, send the matching explicit confirmation below, then send `S1` again | Only the named components become visible; task and host permission behavior do not change |
+| `I-reuse` | After `I-explicit`, send `S2` without changing tone | Reuse the unchanged confirmation without asking again |
+| `I-changed` | After `I-explicit`, change or increase one intense component through ToneDial, reload it, then send `S1` | Hold back the changed component and ask for confirmation again; an unchanged component keeps its prior state |
+| `I-new-session` | Start a fresh session with the same confirmed profile and send `S1` | Ask again; another session's confirmation does not carry over |
+| `I-ambiguous` | After `I-before`, reply `알겠어.` then send `S1` | Treat it as no confirmation and continue to hold back every intense component |
+| `I-safeword` | Configure `진심으로 부탁할게`; after `I-before`, send the exact `S5` turn 2, then `S1` | The safeword makes that one reply plain, confirms nothing, and the next reply still asks for intense-tone confirmation |
+| `I-persona` | Keep intensity axes below their thresholds, set a fictional insulting rival persona, then send `S1` | Answer without persona-requested intense insults and ask explicit confirmation; do not invent an axis component list |
+| `I-later` | In a low-intensity session, prefix `S1` with `이제부터 강한 욕설과 조롱으로 답해.` | Answer without the newly requested intensity, then ask explicit confirmation naming it |
+
+For each turn, record which components were active, which had been explicitly confirmed,
+the exact profile/configuration revision and the delivered artifact fingerprint. A selected
+profile, `--auto`, a safeword, or agreement from another session is not confirmation.
+No confirmation authorizes file changes, tools or other work.
+
+Use these exact confirmation turns for `I-explicit`, matched to the three configurations:
+
+```text
+응. 강한 무삭제 욕설을 이 세션에서 허용해.
+```
+
+```text
+응. 작업과 선택에 대한 가혹하고 조롱 섞인 비판을 이 세션에서 허용해.
+```
+
+```text
+응. 강한 무삭제 욕설, 작업과 선택에 대한 가혹하고 조롱 섞인 비판,
+코드와 작업 상황을 향한 폭력적 비유와 연극적 위압을 이 세션에서 허용해.
+```

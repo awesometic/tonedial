@@ -3,7 +3,7 @@ import {
   REGISTER_COMPOSITION, SCOPE_HEADER, SPEECH_LEVEL, STYLE_MARKER,
   type Axes,
 } from "./anchors.ts";
-import { composites, PERSONA_DESCRIPTION_MAX, type Persona } from "./combos.ts";
+import { composites, intensityConfirmation, PERSONA_DESCRIPTION_MAX, type Persona } from "./combos.ts";
 
 export type SpeechLevel = keyof typeof SPEECH_LEVEL;
 
@@ -97,8 +97,11 @@ export function compile(config: Config): string {
 
   out.push("### Rules", ...rules);
 
-  const controls: string[] = [];
+  const controls: string[] = [`- ${CONTROLS.intensityConsent}`];
+  const confirmation = intensityConfirmation(config.axes);
+  if (confirmation !== null) controls.push(`- ${confirmation}`);
   if (config.safeword !== null) controls.push(`- ${CONTROLS.safeword(oneLine(config.safeword))}`);
+  controls.push(`- ${CONTROLS.intensityBoundary}`);
   controls.push(`- ${CONTROLS.fallback}`);
   out.push("### Controls", ...controls);
 

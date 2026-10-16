@@ -1,6 +1,6 @@
 status: 0
 --- stdout --- [bytes=1303; endsWithNewline=true]
-  ToneDial · show · Example (저장하지 않은 변경)              TONE.md 2,213자
+  ToneDial · show · Example (저장하지 않은 변경)              TONE.md 3,397자
 
                          현재      ToneDial 기본값 · ! 위험 말투
   form      formality    ▮▯▯▯▯  1   *3

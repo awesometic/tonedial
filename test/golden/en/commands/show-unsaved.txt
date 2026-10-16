@@ -1,6 +1,6 @@
 status: 0
 --- stdout --- [bytes=1266; endsWithNewline=true]
-  ToneDial · show · Example (unsaved changes)        TONE.md 2,362 characters
+  ToneDial · show · Example (unsaved changes)        TONE.md 3,546 characters
 
                          Current   ToneDial default · ! risky tone
   form      formality    ▮▯▯▯▯  1   *3

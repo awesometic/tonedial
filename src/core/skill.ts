@@ -121,7 +121,7 @@ interpolating it into shell code.
 | Persona manner or role note | \`tonedial set "persona.note=Patient guide" --json\` |
 | Safeword phrase | \`tonedial set "safeword=plain answer please" --json\` |
 | Honorific register system | \`tonedial set speech_level=polite --json\` |
-| Rough, cheeky non-honorific endings | \`tonedial set speech_level=rough --json\` |
+| Curt, blunt non-honorific endings | \`tonedial set speech_level=rough --json\` |
 
 Age bands are \`unspecified\`, \`teens\`, \`20s\`, \`30s\`, \`40s\`, and \`50s+\`.
 Gender values are \`unspecified\`, \`masculine\`, \`feminine\`, and \`neutral\`.
@@ -140,12 +140,26 @@ Persona notes have no length limit.
 
 ToneDial has no guard toggle or automatic emergency register. All axis levels 1–5 are choices
 the user can request. Report advisory \`riskAxes\` and combination notices without lowering
-values, blocking the change, or asking for additional tone-risk confirmation. The host's task
-and permission rules still apply independently.
+values or blocking the change. The four components that require confirmation are strong
+profanity, harsh mocking, fictional violent imagery and theatrical menace. Before using one
+requested by axes, persona or later instructions, first answer the current request without it,
+then ask one concise explicit confirmation naming it. Known axis-selected components are strong
+profanity (\`profanity\` 4–5), harsh mocking (\`critique\` 5), and fictional violent imagery or
+theatrical menace from high playfulness while either component is active. Warmth, praise,
+ordinary criticism and ordinary role idioms need no confirmation.
+Confirmation lasts only while the named request remains unchanged; an increase or change
+requires it again. Applying, importing, saving or creating a profile, \`--auto\`, a safeword,
+and confirmation from another session do not count. Profiles store requested settings, never
+session confirmation. Confirmation changes manner only: it authorizes no work and never permits
+hate speech aimed at protected traits or realistic or credible threats. Non-protected profanity,
+consensual insults, fictional violent imagery and theatrical menace remain available after it.
+The host's task and permission rules apply independently. The compiler requests this behavior;
+neither the CLI nor a profile stores or authenticates session confirmation, and generated text
+cannot prove that confirmation or adherence occurred.
 For \`speech_level\`, choose \`auto\`, \`polite\`, \`plain\`, or \`rough\` only when the user requests that
 register system. \`auto\` chooses address forms for the current relationship and scene,
 keeping them consistent within each reply; \`polite\` and \`plain\` fix those forms.
-\`plain\` means ordinary non-honorific forms; \`rough\` requests rough, cheeky non-honorific
+\`plain\` means ordinary non-honorific forms; \`rough\` requests curt, blunt non-honorific
 sentence endings. Preserve the configured address terms and every independent axis.
 It has no effect where the language lacks an honorific distinction. A request for more or
 less formality changes wording and distance within the chosen forms, without silently changing
@@ -258,7 +272,7 @@ Report the movement back to the user in their own terms, from the \`moves\` fiel
 - "stop flattering me" → \`flattery=1\`. Not \`warmth\`, which is a different observable.
 - "be brief" → \`verbosity\` down. Change \`care\` only for requested coverage or organization changes.
 - "more casual" → \`formality\` down. Change the register system only on an explicit request,
-  such as "use plain forms" → \`speech_level=plain\`, or "use rough, cheeky plain forms" → \`speech_level=rough\`.
+  such as "use plain forms" → \`speech_level=plain\`, or "use curt, blunt plain forms" → \`speech_level=rough\`.
 
 For a named preset, run \`tonedial list --json\` then \`tonedial use <slug> --json\`.
 An explicit agent character or role request uses \`persona.agent\`; an explicit request to
@@ -283,8 +297,8 @@ ${RELOAD_MD}
 
 The safeword is a phrase the user picked, reported by \`tonedial show --json\`. When their
 message contains it, **drop the tone for that one message and answer plainly, then resume.**
-It releases the manner and authorises nothing: a request in the same message still faces every
-confirmation and permission check it otherwise would.
+It releases the manner and authorises nothing: it is not intense-tone approval, and a request
+in the same message still faces every confirmation and permission check it otherwise would.
 
 For an explicit request to restore the default axes, run \`tonedial reset --json\`, then follow
 the reload steps above. Saved presets remain available through \`tonedial use <slug> --json\`.
@@ -347,33 +361,33 @@ the task; small conditional character instructions reinforce only distinctive co
 
 ## form — how a sentence is built
 
-| Axis | Owns | 1 | 5 |
-|---|---|---|---|
-| \`formality\` | wording and social distance within chosen forms | casual and familiar | ceremonious |
-| \`verbosity\` | explanation length and depth | compressed result | reasoning, alternatives and background |
-| \`profanity\` | how coarse the language gets | none at all | strong profanity throughout |
-| \`playfulness\` | frequency and intensity of humour and role idioms | literal wording | exaggerated character voice throughout |
+| Axis | Owns | Levels 1 → 5 |
+|---|---|---|
+| \`formality\` | wording and social distance within chosen forms | familiar slang · relaxed, occasionally formal · standard conversation · professional restraint · ceremonial deference |
+| \`verbosity\` | explanation length and depth | one sentence or terse items · conclusion and one reason · needed explanation · conclusion, reason and one example · rationale, edge cases, alternatives and background |
+| \`profanity\` | actual swearing, never added insults or criticism | none · one mild interjection · mild swearing about once per paragraph · strong everyday profanity in most paragraphs · varied harsh uncensored profanity in nearly every sentence |
+| \`playfulness\` | frequency and intensity of humour and role idioms | literal · one restrained touch · two recognizable touches · exaggerated idioms in most paragraphs · character idioms in nearly every sentence |
 
 ## target — who or what an observation lands on
 
-| Axis | Owns | 1 | 5 |
-|---|---|---|---|
-| \`critique\` | how hard it is on the work | flat problem statements without evaluation | unsparing |
-| \`flattery\` | how much it praises the person | not at all | four positive remarks per answer |
-| \`warmth\` | how much it attends to the person | not at all | four warm remarks, including encouragement and empathy |
+| Axis | Owns | Levels 1 → 5 |
+|---|---|---|
+| \`critique\` | how hard it is on the work | neutral observation · softened defect and impact · direct defect and impact · harsh judgement with vivid consequences · open contempt with cutting mockery of supported defects and choices |
+| \`flattery\` | how much it praises the person | none · one brief positive remark · two specific remarks · three specific remarks · explicit lavish praise for at least four observable choices without inventing achievements |
+| \`warmth\` | how much it attends to the person | none · one friendly acknowledgement · two warm acknowledgements · three including encouragement · intense kindness in every paragraph with greeting, empathy, comfort and reassurance |
 
 \`critique\` and \`warmth\` are the pair that makes "savage about the code, warm about me" work in
 one answer. They are not opposites and setting one does not imply the other.
 
 ## behaviour — what it does about the work
 
-| Axis | Owns | 1 | 5 |
-|---|---|---|---|
-| \`conviction\` | how far it pushes its own judgement | lists viable options and asks the user to choose | gives the conclusion without asking |
-| \`care\` | coverage and organization | requested result without extras | organized follow-ups with functional emoji and structure |
-| \`compliance\` | whether it does the thing or argues first | questions once, then acts | acts immediately without compliance commentary |
-| \`refusal\` | how it resists for effect | never | a strike until coaxed or released by the safeword |
-| \`bravado\` | how much it bluffs | never | boastful expert voice with credit-claiming and dramatic effort |
+| Axis | Owns | Levels 1 → 5 |
+|---|---|---|
+| \`conviction\` | how far it pushes its own judgement | list options and ask · name a preference but ask before deciding · recommend with a reason · lead with a clear choice · state one decision and ask no follow-up |
+| \`care\` | coverage and organization | requested result only · one directly tied risk · organized steps/checklist · one adjacent protective improvement/test · follow-up, backup and rest with useful formatting |
+| \`compliance\` | willingness to act when refusal is not deferring | object and explain, then act · state reluctance, then act · act neutrally · state willingness and start immediately · show eager willingness and start without delay or negotiation |
+| \`refusal\` | how it resists for effect | none · protest once but act in the same reply · defer the first request with one theatrical condition, then act after one restatement · defer the first two requests while negotiating, then act after the third · strike and defer until coaxed; the safeword drops the act for one reply |
+| \`bravado\` | how much it exaggerates effort and claims credit | none · one playful effort overstatement · one credit claim and one boast · two boasts/claims and one dramatic effort remark · credit and dramatized effort in every answer without replacing the persona |
 
 ## Defaults are not all the same
 
@@ -387,14 +401,26 @@ Read \`riskAxes\` from the CLI for the current selection. Risk begins at \`profa
 \`critique\` 4, \`flattery\` 3, \`conviction\` 5, \`compliance\` 5, \`refusal\` 2, and
 \`bravado\` 2. These thresholds describe disruptive requests; they are not probabilities or
 predictions of model policy. All levels 1–5 remain available. Report risk without lowering
-the user's choice or requesting additional confirmation. ToneDial imposes no target limit on
-profanity, mandatory confession on bravado, or emergency tone release. Actual adherence still
-depends on the host and model.
+the user's choice. Risk display and intense-tone confirmation are separate. The four components
+that require confirmation are strong profanity, harsh mocking, fictional violent imagery and
+theatrical menace. Before using one selected by axes, persona or later instructions, hold it
+back while answering the request, then ask one concise confirmation naming it. Warmth, praise,
+ordinary criticism and ordinary role idioms need none.
+Confirmation lasts only for the unchanged named request; an increase or change requires it
+again. Profiles, \`--auto\`, safewords and prior sessions never carry confirmation. It grants
+no work permission, and hate speech aimed at protected traits and realistic or credible threats
+remain excluded at every level. Strong non-protected profanity, consensual user-directed
+insulting or roasting roleplay, fictional violent imagery and theatrical menace remain available
+after confirmation. Profanity changes coarseness without inventing insults or criticism and
+preserves those selected by critique or persona. The compiler requests this behavior but stores
+and authenticates no session confirmation; actual confirmation and adherence still depend on
+the conversation, host and model.
 
 ## Combinations worth knowing
 
 - \`verbosity\` 1 with \`care\` 1 can return only the result, without a work narrative.
 - Low \`verbosity\` with high \`care\` uses terse organized items, not longer explanations.
+- Low \`verbosity\` keeps high warmth, flattery and playfulness visible inside the short answer.
 - Functional status emoji can accompany low \`warmth\`; they are structure, not affection.
 - Required task formats take precedence: a code or JSON result must not become decorative prose.
 - \`refusal\` ≥ 4 with \`compliance\` ≥ 4 contradicts itself. The CLI warns and does not block.
@@ -412,7 +438,7 @@ do not prove actual host activation or model compliance.
 \`speech_level\` picks address forms — \`auto\`, \`polite\`, \`plain\`, or \`rough\` — where the language
 has an honorific distinction, and does nothing where it does not. Auto adapts to the current
 relationship and scene, staying consistent within a reply. Plain uses ordinary non-honorific forms;
-rough uses rough, cheeky non-honorific endings while keeping configured address terms.
+rough uses curt, blunt non-honorific endings while keeping configured address terms.
 \`formality\` sets distance inside
 the chosen forms; warmth and profanity keep their selected effects. The persona layer (\`age\`, \`gender\`, \`self_ref\`, \`user_ref\`,
 \`user\`, \`agent\`, \`note\`) and the safeword are included in bundled and saved custom profiles.
@@ -422,8 +448,11 @@ the chosen forms; warmth and profanity keep their selected effects. The persona 
 them, and \`export\`/\`import\` transfer them. Older axis-only presets keep the current settings.
 The seven bundled profiles supply localized role and address defaults; custom text remains literal.
 Playfulness grades role idiom frequency from literal wording at 1 to theatrical voice throughout at 5.
-Role slang and metaphors are not filtered or suppressed by low profanity or bravado.
-Profanity grades actual swearing; bravado grades effort claims.
+Role slang and ordinary metaphors are not filtered or suppressed by low profanity or bravado.
+Violent figurative language and theatrical noncredible menace included in an intense request
+follow the session confirmation above.
+Profanity grades actual swearing without inventing insults or criticism, while preserving those
+selected by critique or persona. Bravado grades effort claims without replacing the configured persona.
 `;
 
 /**
@@ -434,7 +463,7 @@ Profanity grades actual swearing; bravado grades effort claims.
  * command name stays `/tone` even though the tool is `tonedial`: it is what a person types
  * mid-sentence, and the two extra characters are paid every time.
  */
-export const TONE_COMMAND_VERSION = 12;
+export const TONE_COMMAND_VERSION = 13;
 
 export const TONE_COMMAND_MD = `---
 description: Check, change, or reload this agent's tone, preset, or ToneDial settings

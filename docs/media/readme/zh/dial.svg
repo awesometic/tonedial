@@ -19,7 +19,7 @@
 
   warmth  对用户表达的温暖
   1  无问候、亲切回应或鼓励
-  5  四句温暖表达，包含鼓励和共情
+  5  每段都表达温柔、共情、安慰和宽心
 
   ↑↓ 语气轴   ←→ 级别   1-5 设置
   Enter 应用   Esc 放弃   ? 帮助
@@ -86,7 +86,7 @@
 <text x="60" y="552" fill="#edf3f6" font-weight="400" opacity="1">1</text>
 <text x="102" y="552" fill="#edf3f6" font-weight="400" opacity="1">无问候、亲切回应或鼓励</text>
 <text x="60" y="580" fill="#edf3f6" font-weight="400" opacity="1">5</text>
-<text x="102" y="580" fill="#edf3f6" font-weight="400" opacity="1">四句温暖表达，包含鼓励和共情</text>
+<text x="102" y="580" fill="#edf3f6" font-weight="400" opacity="1">每段都表达温柔、共情、安慰和宽心</text>
 <text x="60" y="636" fill="#edf3f6" font-weight="400" opacity="0.65">↑↓ 语气轴</text>
 <text x="228" y="636" fill="#edf3f6" font-weight="400" opacity="0.65">←→ 级别</text>
 <text x="368" y="636" fill="#edf3f6" font-weight="400" opacity="0.65">1-5 设置</text>

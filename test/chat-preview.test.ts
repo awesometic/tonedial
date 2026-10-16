@@ -504,7 +504,7 @@ test("bundled previews restore their full roles while axis-only custom and legac
     const prompt = nativeCalls().at(-1)!.argv.at(-1)!;
     assert.ok(prompt.includes(`preset: ${slug}`));
     assert.match(prompt, /Use no greeting, warm acknowledgement, or encouragement\./);
-    assert.match(prompt, slug === "ego-sword" ? /Give the conclusion and one short reason\./ : /Use one or two short sentences for a simple result, or terse fragments for items; omit rationale, process, and background\./);
+    assert.match(prompt, slug === "ego-sword" ? /Give the conclusion and one short reason\./ : /Use one short sentence for a simple result, or terse fragments for items; omit rationale, process, and background\./);
     for (const savedValue of [PRIVATE_NOTE, PRIVATE_USER, PRIVATE_AGENT, "dummy assistant", "dummy reader", "dummy release phrase"]) {
       assert.equal(prompt.includes(savedValue), slug !== "ego-sword", "only axis-only presets retain saved personal settings");
       assert.ok(!result.stdout.includes(savedValue) && !result.stderr.includes(savedValue));

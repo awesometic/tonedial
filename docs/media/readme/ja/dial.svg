@@ -19,7 +19,7 @@
 
   warmth  ユーザーに向ける温かさ
   1  挨拶・親しい受け止め・励ましなし
-  5  励ましと共感を含む温かい言葉4つ
+  5  段落ごとに優しさ・共感・慰め・安心
 
   ↑↓ 軸   ←→ レベル   1-5 設定
   Enter 適用   Esc 破棄   ? ヘルプ
@@ -86,7 +86,7 @@
 <text x="60" y="552" fill="#edf3f6" font-weight="400" opacity="1">1</text>
 <text x="102" y="552" fill="#edf3f6" font-weight="400" opacity="1">挨拶・親しい受け止め・励ましなし</text>
 <text x="60" y="580" fill="#edf3f6" font-weight="400" opacity="1">5</text>
-<text x="102" y="580" fill="#edf3f6" font-weight="400" opacity="1">励ましと共感を含む温かい言葉4つ</text>
+<text x="102" y="580" fill="#edf3f6" font-weight="400" opacity="1">段落ごとに優しさ・共感・慰め・安心</text>
 <text x="60" y="636" fill="#edf3f6" font-weight="400" opacity="0.65">↑↓ 軸</text>
 <text x="172" y="636" fill="#edf3f6" font-weight="400" opacity="0.65">←→ レベル</text>
 <text x="340" y="636" fill="#edf3f6" font-weight="400" opacity="0.65">1-5 設定</text>

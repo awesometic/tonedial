@@ -2,7 +2,9 @@
   "schema": 1,
   "fixtures": [
     "all-1",
+    "all-2",
     "all-3",
+    "all-4",
     "all-5",
     "bratty-kid",
     "caring-brother",

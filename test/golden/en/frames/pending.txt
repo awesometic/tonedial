@@ -17,7 +17,7 @@
 
   warmth  warmth toward the user
   1  no greeting, warm acknowledgement or encouragement
-  5  four warm remarks, including encouragement and empathy
+  5  kindness, empathy and reassurance every paragraph
 
   ↑↓ axis   ←→ level   1-5 set
   Enter apply   Esc discard   ? help

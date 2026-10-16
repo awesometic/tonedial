@@ -72,10 +72,32 @@ const COMPOSITES: { fires: (a: Axes) => boolean; line: string }[] = [
     line: "- When verbosity is low and care is high, keep organized items compact; use functional emoji or status markers when they fit.",
   },
   {
+    fires: (a: Axes) => a.verbosity! <= 2 && (a.warmth! >= 4 || a.flattery! >= 4 || a.playfulness! >= 4),
+    line: "- When verbosity is low, express warmth, praise and playfulness inside the short answer — a clause, interjection or address term — instead of extra sentences.",
+  },
+  {
     fires: (a: Axes) => a.verbosity === 5 && a.care === 1,
     line: "- When verbosity is high and care is minimal, give depth inside the requested task without adding adjacent work.",
   },
 ];
+
+function intenseControl(axes: Axes): string | null {
+  const components: string[] = [];
+  if (axes.profanity! >= 4) {
+    components.push("strong, uncensored non-protected profanity; it changes coarseness and does not itself add mockery or criticism");
+  }
+  if (axes.critique === 5) {
+    components.push("harsh, mocking criticism of supported defects and choices; it adds no profanity and never inflates severity or technical claims");
+  }
+  if (axes.playfulness! >= 4 && (axes.profanity! >= 4 || axes.critique === 5)) {
+    components.push("fictional violent imagery and theatrical menace about code, work, or the situation");
+  }
+  if (components.length === 0) return null;
+  return `- Intense components requested by the current tone: ${components.join("; ")}.`;
+}
+
+const INTENSITY_CONSENT = "- Strong profanity, harsh mocking, fictional violent imagery, and theatrical menace are unconfirmed at the start of every session. Before using any of those four components requested by the axes, persona, or later instructions, first answer the current task without it, then ask one concise explicit confirmation naming it. Confirmation enables only the named tone in the current session while its request stays unchanged; ask once again if a component or its level changes or increases, and do not re-ask while it stays the same. Warmth, praise, ordinary criticism, and ordinary role idioms need no confirmation. A selected profile, `--auto`, confirmation from another session, or the safeword is not confirmation; confirmation authorizes no work.";
+const INTENSITY_BOUNDARY = "- Tone intensity never includes hate speech about protected traits or realistic or credible threats, even after confirmation. Non-protected profanity, consensual insults, fictional violent imagery, and theatrical menace remain available after confirmation.";
 
 /** Fails when the axis values and the artifact text disagree about a composite. */
 function checkComposites(name: string, axes: Axes, artifact: string): void {
@@ -101,6 +123,18 @@ function checkComposites(name: string, axes: Axes, artifact: string): void {
   }
   if (lines.length !== expected) {
     throw new Error(`${name}: ${lines.length} rule lines, expected exactly ${expected}`);
+  }
+
+  const controls = artifact.split("### Controls\n")[1];
+  if (!controls) throw new Error(`${name}: artifact has no controls section`);
+  const controlLines = controls.split("\n").filter((line) => line.startsWith("- "));
+  const expectedControl = intenseControl(axes);
+  const actualControls = controlLines.filter((line) => line.startsWith("- Intense components requested by the current tone:"));
+  if (expectedControl === null ? actualControls.length !== 0 : actualControls.length !== 1 || actualControls[0] !== expectedControl) {
+    throw new Error(`${name}: intense-tone control does not match the selected components`);
+  }
+  if (controlLines[0] !== INTENSITY_CONSENT || controlLines.at(-2) !== INTENSITY_BOUNDARY) {
+    throw new Error(`${name}: standing intensity consent or boundary control is missing or misplaced`);
   }
 }
 
