@@ -8,6 +8,9 @@ Elige un personaje, ajusta doce diales y guarda una voz para usarla en distintos
 
 [English](https://github.com/awesometic/tonedial/blob/main/README.md) | [한국어](https://github.com/awesometic/tonedial/blob/main/README.ko.md) | [日本語](https://github.com/awesometic/tonedial/blob/main/README.ja.md) | [简体中文](https://github.com/awesometic/tonedial/blob/main/README.zh.md) | **Español**
 
+> **En desarrollo:** El efecto de cada eje de tono puede ser menor de lo esperado, y los niveles contiguos pueden sonar parecidos.
+> Incluso con la misma configuración, los resultados varían según el modelo, el idioma y el contexto de la conversación.
+
 ## Mira cómo responde
 
 <img src="https://raw.githubusercontent.com/awesometic/tonedial/main/docs/media/readme/es/voice-examples.svg" alt="Royal Advisor y Ego Sword responden a la misma pregunta sobre renombrar una función en conversaciones reales de Codex" width="760">

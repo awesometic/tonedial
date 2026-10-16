@@ -2,7 +2,7 @@ status: 1
 --- stdout --- [bytes=112; endsWithNewline=true]
 ToneDial · update
 
-  tonedial 0.1.4
+  tonedial 0.1.5
 
   Package update:
     npm update -g tonedial --prefix "<ROOT>/npm prefix"

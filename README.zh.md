@@ -8,6 +8,9 @@
 
 [English](https://github.com/awesometic/tonedial/blob/main/README.md) | [한국어](https://github.com/awesometic/tonedial/blob/main/README.ko.md) | [日本語](https://github.com/awesometic/tonedial/blob/main/README.ja.md) | **简体中文** | [Español](https://github.com/awesometic/tonedial/blob/main/README.es.md)
 
+> **开发中：** 各语气轴的效果可能不如预期明显，相邻档位的表现也可能相近。
+> 即使设置相同，结果也会因模型、语言和对话上下文而有所不同。
+
 ## 先看实际回复
 
 <img src="https://raw.githubusercontent.com/awesometic/tonedial/main/docs/media/readme/zh/voice-examples.svg" alt="Royal Advisor 和 Ego Sword 回答同一函数改名问题的实际 Codex 对话记录" width="760">

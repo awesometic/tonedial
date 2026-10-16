@@ -42,7 +42,7 @@ export const JSON_SCHEMA = 3;
  * run time is the one thing that breaks all three binary packagers at once. A test asserts this
  * equals the manifest, which is the cheap half of the trade.
  */
-export const VERSION = "0.1.4";
+export const VERSION = "0.1.5";
 
 /** Command flags are declared centrally and parsed strictly, so a typo fails rather than
  *  being silently dropped — which is what a permissive parse did to `--project`. */

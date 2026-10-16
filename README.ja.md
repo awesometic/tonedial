@@ -8,6 +8,9 @@
 
 [English](https://github.com/awesometic/tonedial/blob/main/README.md) | [한국어](https://github.com/awesometic/tonedial/blob/main/README.ko.md) | **日本語** | [简体中文](https://github.com/awesometic/tonedial/blob/main/README.zh.md) | [Español](https://github.com/awesometic/tonedial/blob/main/README.es.md)
 
+> **開発中:** 各口調軸の効果が期待より弱かったり、隣り合う段階の違いが感じられなかったりする場合があります。
+> 同じ設定でも、モデル、言語、会話の文脈によって結果は変わります。
+
 ## まずは応答から
 
 <img src="https://raw.githubusercontent.com/awesometic/tonedial/main/docs/media/readme/ja/voice-examples.svg" alt="同じ関数名変更の質問に答えるRoyal AdvisorとEgo Swordの実際のCodex対話記録" width="760">

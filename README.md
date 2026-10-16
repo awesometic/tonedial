@@ -8,6 +8,9 @@ Pick a character, tune twelve dials, and save a voice to use across projects.
 
 **English** | [한국어](https://github.com/awesometic/tonedial/blob/main/README.ko.md) | [日本語](https://github.com/awesometic/tonedial/blob/main/README.ja.md) | [简体中文](https://github.com/awesometic/tonedial/blob/main/README.zh.md) | [Español](https://github.com/awesometic/tonedial/blob/main/README.es.md)
 
+> **In development:** The effect of each tone axis may be weaker than expected, and adjacent levels may sound similar.
+> Results vary by model, language, and conversation context, even with the same settings.
+
 ## Hear it first
 
 <img src="https://raw.githubusercontent.com/awesometic/tonedial/main/docs/media/readme/en/voice-examples.svg" alt="Royal Advisor and Ego Sword answer the same function-renaming question in recorded Codex conversations" width="760">

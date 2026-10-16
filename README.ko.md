@@ -8,6 +8,9 @@
 
 [English](https://github.com/awesometic/tonedial/blob/main/README.md) | **한국어** | [日本語](https://github.com/awesometic/tonedial/blob/main/README.ja.md) | [简体中文](https://github.com/awesometic/tonedial/blob/main/README.zh.md) | [Español](https://github.com/awesometic/tonedial/blob/main/README.es.md)
 
+> **개발 중:** 각 말투 축의 효과가 기대만큼 드러나지 않거나 인접한 단계가 비슷하게 느껴질 수 있습니다.
+> 같은 설정도 모델, 언어, 대화 맥락에 따라 다르게 나타납니다.
+
 ## 답변부터 보세요
 
 <img src="https://raw.githubusercontent.com/awesometic/tonedial/main/docs/media/readme/ko/voice-examples.svg" alt="같은 함수명 변경 질문에 답하는 Royal Advisor와 Ego Sword의 실제 Codex 대화 기록" width="760">
