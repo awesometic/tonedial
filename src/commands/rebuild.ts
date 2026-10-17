@@ -22,7 +22,7 @@ import {
   contextArtifactTargets, generatedSeedSelection, planGeneratedSeedRebuild, seedFiles, SEED_VERSION,
 } from "../core/seeds.ts";
 import {
-  inspectOperations, readJournal, retireOperationForAppRebuild, type JsonValue,
+  inspectOperations, readJournal, retireOperationForAppRebuild, serializeOperationQuarantine, type JsonValue,
   type OperationAction, type OperationJournal, type RecoveryPhase,
 } from "../core/operations.ts";
 import {
@@ -212,7 +212,33 @@ function privateCapture(capture: RawEntryCapture): JsonValue {
 export async function runAppRebuild(ctx: Ctx): Promise<AppRebuildResult> {
   const t: Messages = ctx.t;
   const operations = inspectOperations(ctx.paths);
-  const pending = operations.journals.filter(entry => entry.state === "pending" || entry.state === "invalid");
+  const pending = operations.journals.filter(entry => entry.state === "pending");
+  const invalid = operations.journals.filter(entry => entry.state === "invalid");
+  let quarantined = invalid.find(entry => entry.operationId === ctx.flags.quarantineOperation) ?? null;
+  if (ctx.flags.quarantineOperation && quarantined === null) throw new ConfigError(t.recovery.quarantineUnavailable(ctx.flags.quarantineOperation));
+  if (invalid.length > 0 && quarantined === null && operations.lock.state === "none" && pending.length === 0 && invalid.length === 1 &&
+      !ctx.flags.auto && ctx.canPrompt) {
+    const candidate = invalid[0]!;
+    const input = createInterface({ input: process.stdin, output: process.stdout });
+    try {
+      const notice = t.recovery.quarantineCandidate(candidate.operationId).split("\n").flatMap(line =>
+        line === candidate.operationId ? [line] : wrap(line, ctx.ui.width - 2));
+      process.stdout.write(`${notice.map(line => `  ${line}`).join("\n")}\n`);
+      const question = wrap(t.recovery.quarantineQuestion, ctx.ui.width - 3).map(line => `  ${line}`).join("\n");
+      const answer = (await input.question(`${question} `)).trim();
+      if (answer === "") throw new ConfigError(t.recovery.cancelled);
+      if (answer !== candidate.operationId) throw new ConfigError(t.recovery.operationMismatch);
+      quarantined = candidate;
+    } finally { input.close(); }
+  }
+  if (invalid.length > 0 && quarantined === null) {
+    const candidate = invalid[0]!;
+    const command = `tonedial doctor --fix --quarantine-operation ${candidate.operationId} ${connectionScopeFlag(ctx.agent)}`;
+    throw new ConfigError(t.recovery.quarantineRequired(candidate.operationId, command));
+  }
+  if (quarantined !== null && (invalid.length !== 1 || operations.lock.state !== "none" || pending.length > 0)) {
+    throw new ConfigError(t.doctor.recoveryPending);
+  }
   const blocked = operations.lock.state !== "none" || pending.length > 0;
   if (blocked && (operations.lock.state === "live" || operations.lock.state === "unknown" ||
     pending.some(entry => entry.journal === null) || (!ctx.flags.fromOperation && (ctx.flags.auto || !ctx.canPrompt)))) {
@@ -352,7 +378,15 @@ export async function runAppRebuild(ctx: Ctx): Promise<AppRebuildResult> {
   config.managedSeeds = seeds.records;
   config.seedVersion = SEED_VERSION;
   const artifact = compile(toCompileInput(config));
-  const operationActions: PlannedOperationAction[] = [...seeds.operationActions];
+  let quarantinePlan: PlannedOperationAction | null = null;
+  if (quarantined !== null) {
+    const capture = captureRawEntry(quarantined.path, t, { within: ctx.paths.root });
+    if (capture.type !== "regular" || capture.bytes === null) throw new ConfigError(t.recovery.quarantineUnavailable(quarantined.operationId));
+    quarantinePlan = planEntryRebuild(capture,
+      serializeOperationQuarantine(ctx.paths, quarantined.operationId, capture.bytes), t,
+      { reason: "quarantine-operation", mode: capture.mode ?? 0o600 }).action;
+  }
+  const operationActions: PlannedOperationAction[] = [...(quarantinePlan ? [quarantinePlan] : []), ...seeds.operationActions];
   for (const target of artifacts) {
     const capture = target.capture ?? captureRawEntry(target.path, t, { within: ctx.paths.root, allowLink: true });
     const plan = planEntryRebuild(capture, artifact, t, { reason: "generated" });
@@ -398,6 +432,7 @@ export async function runAppRebuild(ctx: Ctx): Promise<AppRebuildResult> {
     ...(missingFields.length ? [`  ${t.recovery.missing(missingFields)}`] : []),
     ...(copies.length ? [`  ${t.recovery.copies(copies)}`] : []),
     ...(nativeAttention ? [`  ${t.recovery.nativePending}`] : []),
+    ...(quarantined ? [`  ${t.recovery.quarantine(quarantined.operationId)}`] : []),
     ...(retirementId ? [`  ${t.recovery.retire(retirementId)}`] : []),
   ].flatMap(line => wrap(line.trimStart(), ctx.ui.width - 2).map(part => `  ${part}`));
   const options = {
@@ -422,6 +457,11 @@ export async function runAppRebuild(ctx: Ctx): Promise<AppRebuildResult> {
         for (const target of artifacts) {
           verificationPath = target.path;
           if (capturedText(captureRawEntry(target.path, t, { within: ctx.paths.root })) !== artifact) throw mismatch();
+        }
+        if (quarantined !== null) {
+          verificationPath = quarantined.path;
+          const entry = inspectOperations(ctx.paths).journals.find(({ operationId }) => operationId === quarantined.operationId);
+          if (entry?.state !== "quarantined") throw mismatch();
         }
         verificationPath = ctx.paths.tone;
         if (capturedText(captureRawEntry(ctx.paths.tone, t, { within: ctx.paths.root })) !== artifact) throw mismatch();
@@ -483,6 +523,7 @@ export async function runAppRebuild(ctx: Ctx): Promise<AppRebuildResult> {
       root: ctx.paths.root, source, recovered: [...kept], defaulted: [...defaulted], invalid: damagedFields,
       seeded: seeds.labels, chars: [...artifact].length, riskAxes: riskyAxes(config.axes),
       recoveredPresets: copies, restoredPreset: restoredPreset?.slug ?? null, retiredOperation: retirementId,
+      quarantinedOperation: quarantined?.operationId ?? null,
       retiredExternalActions,
       nativeAttention, activationVerified: false, diff: result.diff,
     },

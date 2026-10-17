@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { afterEach, beforeEach, test } from "node:test";
 import childProcess from "node:child_process";
 import fs from "node:fs";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { syncBuiltinESMExports } from "node:module";
 import { PassThrough } from "node:stream";
 import { join } from "node:path";
@@ -252,6 +252,36 @@ test("an orphan pending journal offers diagnosis without recovery authority the 
   assert.match(rollback.value.error as string, /does not contain a recoverable owner/);
   assert.deepEqual(readFileSync(journalPath), before);
   assert.equal(existsSync(paths.operationsLock), false);
+});
+
+test("an unreadable operation record is quarantined through the repair gate and remains rollbackable", async () => {
+  assert.equal((await invoke(["init", "--global", "--tools", "none", "--auto"])).code, 0);
+  const paths = resolvePaths(env);
+  const operationId = "8".repeat(32);
+  const path = join(paths.operations, `${operationId}.json`);
+  const original = Buffer.from([0xff, 0x00, 0x7b, 0x0a]);
+  writeFileSync(path, original, { mode: 0o640 });
+
+  const diagnosis = await invokeHuman(["doctor", "--global"]);
+  assert.equal(diagnosis.code, 0, diagnosis.error);
+  assert.ok(diagnosis.output.includes(`tonedial doctor --fix --quarantine-operation ${operationId} --global`));
+
+  const preview = await invoke(["doctor", "--fix", "--quarantine-operation", operationId, "--global", "--tools", "none", "--dry-run"]);
+  assert.equal(preview.code, 0, preview.output);
+  assert.equal(preview.value.quarantinedOperation, operationId);
+  assert.deepEqual(readFileSync(path), original, "dry-run changed the unreadable record");
+
+  const repaired = await invoke(["doctor", "--fix", "--quarantine-operation", operationId, "--global", "--tools", "none", "--auto"]);
+  assert.equal(repaired.code, 0, repaired.output);
+  assert.equal(repaired.value.quarantinedOperation, operationId);
+  assert.equal(inspectOperations(paths).journals.find(entry => entry.operationId === operationId)?.state, "quarantined");
+  assert.notDeepEqual(readFileSync(path), original);
+
+  const rollback = await invoke(["doctor", "--fix", "--rollback", String(repaired.value.operationId), "--auto"]);
+  assert.equal(rollback.code, 0, rollback.output);
+  assert.deepEqual(readFileSync(path), original, "rollback did not restore the unreadable record bytes");
+  assert.equal(lstatSync(path).mode & 0o777, 0o640);
+  assert.equal(inspectOperations(paths).journals.find(entry => entry.operationId === operationId)?.state, "invalid");
 });
 
 function containsWrapped(text: string, expected: string): boolean {

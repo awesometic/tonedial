@@ -716,6 +716,34 @@ def recovery_case(root: Path, language: str, node: str, binary: Path) -> dict[st
         shutil.rmtree(scratch, ignore_errors=True)
 
 
+def invalid_recovery_case(root: Path, language: str, node: str, binary: Path) -> dict[str, Any]:
+    scratch = Path(tempfile.mkdtemp(prefix="tonedial-pty-invalid-recovery-")).resolve()
+    try:
+        initialize(root, scratch, language, node, binary)
+        operation_id = "e" * 32
+        state = scratch / "state"
+        (state / "operations" / f"{operation_id}.json").write_bytes(b"invalid journal\n")
+        before = snapshot(state)
+        with run_session(scratch, language, node, binary, ["doctor", "--fix", "--here"]) as session:
+            session.wait_for([operation_id.encode()])
+            if snapshot(state) != before:
+                raise ScenarioError("invalid recovery wrote before operation selection")
+            start = session.mark()
+            session.send(operation_id.encode() + b"\n")
+            session.wait_for([b"[y/N]"], since=start)
+            if snapshot(state) != before:
+                raise ScenarioError("invalid recovery selection wrote before plan approval")
+            session.send(b"n\n")
+            if session.wait(8) != 0:
+                raise ScenarioError("declined invalid recovery did not exit cleanly")
+            require_termios(session, "invalid recovery")
+        if snapshot(state) != before:
+            raise ScenarioError("declined invalid recovery changed state")
+        return {"unchanged": True, "termiosRestored": True}
+    finally:
+        shutil.rmtree(scratch, ignore_errors=True)
+
+
 def run_all(root: Path, language: str, node: str, binary: Path) -> dict[str, Any]:
     global last_transcript
     cases = {
@@ -735,6 +763,7 @@ def run_all(root: Path, language: str, node: str, binary: Path) -> dict[str, Any
         "create-interrupt": lambda: create_case(root, language, node, binary, "interrupt"),
         "create-approval-interrupt": lambda: create_case(root, language, node, binary, "approval-interrupt"),
         "recovery-selection": lambda: recovery_case(root, language, node, binary),
+        "invalid-recovery-selection": lambda: invalid_recovery_case(root, language, node, binary),
     }
     results: dict[str, Any] = {}
     for name, run_case in cases.items():

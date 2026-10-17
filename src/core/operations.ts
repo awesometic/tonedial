@@ -158,7 +158,7 @@ export type OperationLockInspection = {
 export type OperationJournalInspection = {
   path: string;
   operationId: string;
-  state: OperationState | "invalid";
+  state: OperationState | "quarantined" | "invalid";
   journal: OperationJournal | null;
   message?: string;
 };
@@ -533,6 +533,35 @@ export function readJournal(paths: OperationPaths, operationIdValue: string): Op
   const path = operationJournalPath(paths, operationIdValue);
   const journal = readJson<OperationJournal>(path);
   return validJournal(journal, paths, operationIdValue) ? journal : null;
+}
+
+type OperationQuarantine = {
+  schema: 1;
+  kind: "quarantined-operation";
+  operationId: string;
+  root: string;
+  originalSha256: string;
+};
+
+function readOperationQuarantine(paths: OperationPaths, operationIdValue: string): OperationQuarantine | null {
+  if (!existingOperationsDirectory(paths)) return null;
+  const value = readJson<OperationQuarantine>(operationJournalPath(paths, operationIdValue));
+  return isPlainObject(value) && hasExactKeys(value, ["kind", "operationId", "originalSha256", "root", "schema"]) &&
+    value.schema === 1 && value.kind === "quarantined-operation" && value.operationId === operationIdValue &&
+    value.root === paths.root && /^[0-9a-f]{64}$/.test(value.originalSha256)
+    ? value : null;
+}
+
+/** Replace an unreadable journal with a nonblocking marker; the enclosing repair journal keeps its original bytes. */
+export function serializeOperationQuarantine(paths: OperationPaths, operationIdValue: string, original: Buffer): string {
+  if (!validOperationId(operationIdValue)) throw new OperationError("invalid", "operation id is not valid");
+  return `${JSON.stringify({
+    schema: 1,
+    kind: "quarantined-operation",
+    operationId: operationIdValue,
+    root: paths.root,
+    originalSha256: createHash("sha256").update(original).digest("hex"),
+  }, null, 2)}\n`;
 }
 
 export type RollbackSelectionStatus = "pending" | "retained" | "superseded" | "unretained" | "rolled-back" | "retired-for-app-rebuild";
@@ -1035,12 +1064,13 @@ export function inspectOperations(paths: OperationPaths): OperationsInspection {
     if (!match?.groups?.id || !entry.isFile() || entry.isSymbolicLink()) continue;
     const id = match.groups.id;
     const journal = readJournal(paths, id);
+    const quarantine = journal === null ? readOperationQuarantine(paths, id) : null;
     journals.push({
       path: join(paths.operations, entry.name),
       operationId: id,
-      state: journal?.state ?? "invalid",
+      state: journal?.state ?? (quarantine === null ? "invalid" : "quarantined"),
       journal,
-      ...(journal === null ? { message: "mutation journal is invalid" } : {}),
+      ...(journal === null ? { message: quarantine === null ? "mutation journal is invalid" : "invalid journal is quarantined in rollback history" } : {}),
     });
   }
   const ownerOnly = ownerOnlyInspection(paths, lock);

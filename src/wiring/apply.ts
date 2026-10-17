@@ -740,7 +740,7 @@ function rawCapturedAt(path: string, capture: Pick<RawEntryCapture, "boundary">,
 type EntryRecipe = { relativePath: string; contents: string; mode?: number };
 type EntryRebuildMetadata = {
   schema: 1;
-  reason: "generated" | "restore-config" | "restore-preset";
+  reason: "generated" | "restore-config" | "restore-preset" | "quarantine-operation";
   boundary: string;
   boundaryIdentity: string;
   parents: RawEntryCapture["parents"];
@@ -978,7 +978,7 @@ function validateEntryRebuildAction(action: OperationAction, prepared = false): 
   const value = snapshotRecord(action.metadata ?? null);
   if (action.kind !== "entry-rebuild" || !normalizedPath(action.path) || action.realPath !== action.path || value === null ||
       Object.keys(value).sort().join(",") !== ["schema", "reason", "boundary", "boundaryIdentity", "parents", "stash", "stashIdentity", "archive", "prepared", "preparedIdentity", "createdParents", ...(Object.hasOwn(value, "recipes") ? ["recipes"] : [])].sort().join(",") ||
-      value.schema !== 1 || !["generated", "restore-config", "restore-preset"].includes(value.reason as string) ||
+      value.schema !== 1 || !["generated", "restore-config", "restore-preset", "quarantine-operation"].includes(value.reason as string) ||
       !normalizedPath(value.boundary) || !lexicallyInside(action.path, value.boundary) || !identityTextValue(value.boundaryIdentity) ||
       !Array.isArray(value.parents) || value.parents.length === 0 || !normalizedPath(value.stash) ||
       dirname(value.stash) !== dirname(action.path) || !new RegExp(`^\\.${basename(action.path).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\.tonedial-rebuild-[0-9a-f]{32}$`).test(basename(value.stash)) ||

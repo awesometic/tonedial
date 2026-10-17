@@ -69,6 +69,8 @@ export type Flags = {
   fix: boolean;
   /** On doctor --fix: explicitly select one recorded operation to restore. */
   rollback: string | null;
+  /** On doctor --fix: preserve one unreadable operation record and unblock recovery. */
+  quarantineOperation?: string | null;
   fromOperation?: string | null;
   fromPreset?: string | null;
   restorePreset?: string | null;
@@ -86,13 +88,14 @@ export type Flags = {
   tools: string | null;
 };
 
-const FLAG_NAMES = ["project", "check", "explain", "global", "here", "migrateLegacy", "auto", "dryRun", "fix", "rollback", "fromOperation", "fromPreset", "restorePreset", "preset", "slug", "acceptUsage", "lang", "commands", "tools"] as const;
+const FLAG_NAMES = ["project", "check", "explain", "global", "here", "migrateLegacy", "auto", "dryRun", "fix", "rollback", "quarantineOperation", "fromOperation", "fromPreset", "restorePreset", "preset", "slug", "acceptUsage", "lang", "commands", "tools"] as const;
 
 /** Command-line spelling for each flag, where it differs from the field name. */
 const FLAG_SPELLING: Record<(typeof FLAG_NAMES)[number], string> = {
   project: "project", check: "check", explain: "explain",
   global: "global", auto: "auto", dryRun: "dry-run", fix: "fix", lang: "lang", commands: "commands",
   tools: "tools", rollback: "rollback", here: "here", migrateLegacy: "migrate-legacy",
+  quarantineOperation: "quarantine-operation",
   fromOperation: "from-operation", fromPreset: "from-preset", restorePreset: "restore-preset",
   preset: "preset", slug: "slug", acceptUsage: "accept-usage",
 };
@@ -164,7 +167,7 @@ const COMMANDS: Record<
   unwire: { run: runUnwire, flags: ["global", "here", "project", "auto", "dryRun"], max: 1 },
   init: { run: runInit, flags: ["global", "here", "project", "migrateLegacy", "auto", "dryRun", "lang", "commands", "tools"], max: 0, context: "setup" },
   // Doctor checks mutation permission after its recovery-first diagnosis, even with bad config.
-  doctor: { run: runDoctor, flags: ["global", "here", "project", "auto", "dryRun", "fix", "rollback", "fromOperation", "fromPreset", "restorePreset", "tools"], max: 0 },
+  doctor: { run: runDoctor, flags: ["global", "here", "project", "auto", "dryRun", "fix", "rollback", "quarantineOperation", "fromOperation", "fromPreset", "restorePreset", "tools"], max: 0 },
   eject: { run: runEject, flags: ["global", "here", "project", "auto", "dryRun"], max: 0 },
 };
 
@@ -237,7 +240,8 @@ const COMMAND_EXAMPLES: Record<keyof Messages["help"]["commands"], readonly stri
   wire: ["tonedial wire codex --here --dry-run"],
   unwire: ["tonedial unwire codex --here --dry-run"],
   init: ["tonedial init --tools none --global --auto", "tonedial init --tools codex --here"],
-  doctor: ["tonedial doctor", "tonedial doctor --fix --global --tools none --dry-run"],
+  doctor: ["tonedial doctor", "tonedial doctor --fix --global --tools none --dry-run",
+    "tonedial doctor --fix --quarantine-operation ID --global"],
   eject: ["tonedial eject --here --dry-run"],
 };
 
@@ -253,6 +257,7 @@ const FLAG_SYNTAX: [keyof Messages["help"]["flags"], string][] = [
   ["tools", "--tools=LIST"],
   ["fix", "--fix"],
   ["rollback", "--rollback=ID"],
+  ["quarantineOperation", "--quarantine-operation=ID"],
   ["fromOperation", "--from-operation=ID"],
   ["fromPreset", "--from-preset=SLUG"],
   ["restorePreset", "--restore-preset=SLUG"],
@@ -420,6 +425,7 @@ export async function run(
     "dry-run": { type: "boolean", default: false },
     fix: { type: "boolean", default: false },
     rollback: { type: "string" },
+    "quarantine-operation": { type: "string" },
     "from-operation": { type: "string" },
     "from-preset": { type: "string" },
     "restore-preset": { type: "string" },
@@ -532,6 +538,7 @@ export async function run(
     dryRun: parsed.values["dry-run"] === true,
     fix: parsed.values.fix === true,
     rollback: typeof parsed.values.rollback === "string" ? parsed.values.rollback : null,
+    quarantineOperation: typeof parsed.values["quarantine-operation"] === "string" ? parsed.values["quarantine-operation"] : null,
     fromOperation: typeof parsed.values["from-operation"] === "string" ? parsed.values["from-operation"] : null,
     fromPreset: typeof parsed.values["from-preset"] === "string" ? parsed.values["from-preset"] : null,
     restorePreset: typeof parsed.values["restore-preset"] === "string" ? parsed.values["restore-preset"] : null,
@@ -559,9 +566,9 @@ export async function run(
     return fail(asJson, say.errors.tooManyArguments(name, command.max, rest.length), 2, uiErr);
   }
   if (name === "doctor" && (
-    (!flags.fix && (flags.fromOperation !== null || flags.fromPreset !== null || flags.restorePreset !== null || flags.tools !== null)) ||
+    (!flags.fix && (flags.quarantineOperation !== null || flags.fromOperation !== null || flags.fromPreset !== null || flags.restorePreset !== null || flags.tools !== null)) ||
     (flags.restorePreset !== null && flags.fromOperation === null) ||
-    (flags.rollback !== null && (flags.fromOperation !== null || flags.fromPreset !== null || flags.restorePreset !== null || flags.tools !== null))
+    (flags.rollback !== null && (flags.quarantineOperation !== null || flags.fromOperation !== null || flags.fromPreset !== null || flags.restorePreset !== null || flags.tools !== null))
   )) {
     return fail(asJson, say.recovery.invalidOptions, 2, uiErr);
   }

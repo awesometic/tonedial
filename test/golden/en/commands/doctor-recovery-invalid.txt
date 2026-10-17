@@ -1,0 +1,17 @@
+status: 0
+--- stdout --- [bytes=385; endsWithNewline=true]
+ToneDial · doctor
+
+  Inspection scope: global
+  <ROOT>
+
+  An unreadable operation record is blocking recovery. No files were changed by
+  this command.
+
+  Operation ID:
+  ffffffffffffffffffffffffffffffff
+  Quarantine it before rebuilding; the original bytes remain available through
+  rollback.
+  tonedial doctor --fix --quarantine-operation ffffffffffffffffffffffffffffffff --global
+--- stderr --- [bytes=0; endsWithNewline=false]
+

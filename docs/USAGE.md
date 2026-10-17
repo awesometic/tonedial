@@ -540,6 +540,18 @@ Some file changes may already be applied; keep the operation record and run the 
 Doctor shows current blockers by default; `--verbose` and `--json` retain the full operation history.
 Running and uncertain owners remain protected and receive no automatic mutation recommendation.
 
+An unreadable operation record has no trusted actions to resume or restore.
+Doctor reports its exact ID and a scoped `--quarantine-operation` command.
+Preview or approve that command through the normal repair gate:
+
+```bash
+tonedial doctor --fix --quarantine-operation <id> --global --dry-run
+tonedial doctor --fix --quarantine-operation <id> --global
+```
+
+Quarantine replaces only the unreadable record with a nonblocking marker.
+The repair journal retains the original bytes and mode for explicit rollback; never delete the record by hand.
+
 For a stopped valid operation, use the exact `--from-operation` command shown by doctor.
 Preview it with `--dry-run`, then review and approve the proposed repair.
 This continues application repair with valid current settings first; it does not undo the previous changes.
@@ -604,7 +616,7 @@ Successful tone mutations recompile in the same action.
 | `edit [preset <slug>]` | Open config/profile in the editor; `--dry-run` previews |
 | `init` | Initialize/rebuild app files; optionally connect tools |
 | `wire [tool]` / `unwire [tool]` | Connect/disconnect in the selected scope |
-| `doctor` | Diagnose; `--fix` rebuilds; `--fix --rollback <id>` restores an operation |
+| `doctor` | Diagnose; `--fix` rebuilds; `--quarantine-operation <id>` preserves an unreadable record; `--rollback <id>` restores an operation |
 | `eject` | Disconnect a scope; retain shared state |
 | `compile` | Repair missing/stale `TONE.md`; `--check` inspects without writes |
 | `test [claude\|codex]` | Fresh preview; `--preset` selects a profile; JSON/dry-run launch nothing |

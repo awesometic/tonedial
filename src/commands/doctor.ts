@@ -644,11 +644,14 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true, showCodexActi
   if (inspected.lock.state !== "none" || inspected.journals.some(({ state }) => state === "pending" || state === "invalid")) {
     const owner = inspected.lock.owner;
     const blocking = inspected.journals.filter(({ state }) => state === "pending" || state === "invalid");
+    const invalid = blocking.filter(({ state }) => state === "invalid");
+    const quarantineable = inspected.lock.state === "none" && blocking.length === 1 && invalid.length === 1;
     const shown = ctx.flags.verbose ? inspected.journals : inspected.journals.filter(({ operationId, state }) =>
       state === "pending" || state === "invalid" || operationId === owner?.operationId);
     const lines = [
-      ...wrap(ctx.t.doctor.recoveryPending, ctx.ui.width - 2).map(line => `  ${ctx.ui.warn(line)}`),
-      ...shown.map(({ operationId, state }) => `  ${operationId}  ${ctx.t.doctor.operationState[state]}`),
+      ...wrap(quarantineable ? ctx.t.doctor.invalidRecoveryPending : ctx.t.doctor.recoveryPending, ctx.ui.width - 2).map(line => `  ${ctx.ui.warn(line)}`),
+      ...shown.filter(({ operationId }) => !quarantineable || operationId !== invalid[0]!.operationId)
+        .map(({ operationId, state }) => `  ${operationId}  ${ctx.t.doctor.operationState[state]}`),
     ];
     if (owner !== null && !shown.some(({ operationId }) => operationId === owner.operationId)) lines.push(`  ${owner.operationId}`);
     if (inspected.lock.state === "live" || inspected.lock.state === "unknown" || inspected.lock.state === "invalid") {
@@ -667,7 +670,12 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true, showCodexActi
         }
       }
     }
-    lines.push(...nextStep(`${repairCommand(ctx, "doctor")} --json`, ctx.ui));
+    if (quarantineable) {
+      lines.push("", ...wrap(ctx.t.recovery.quarantineCandidate(invalid[0]!.operationId), ctx.ui.width - 2).map(line => `  ${line}`),
+        ...nextStep(repairCommand(ctx, `doctor --fix --quarantine-operation ${invalid[0]!.operationId}`), ctx.ui).slice(1));
+    } else {
+      lines.push(...nextStep(`${repairCommand(ctx, "doctor")} --json`, ctx.ui));
+    }
     return {
       lines,
       // The damaged config is deliberately not parsed here. `operation` is the only safe context

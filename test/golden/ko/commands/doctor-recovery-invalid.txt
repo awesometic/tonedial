@@ -1,0 +1,17 @@
+status: 0
+--- stdout --- [bytes=462; endsWithNewline=true]
+ToneDial · doctor
+
+  검사 범위: 전역
+  <ROOT>
+
+  읽을 수 없는 작업 기록 때문에 복구를 진행할 수 없습니다. 이번 실행에서는
+  파일을 바꾸지 않았습니다.
+
+  작업 ID:
+  ffffffffffffffffffffffffffffffff
+  앱을 복구하려면 이 기록을 먼저 격리해야 합니다. 원본 바이트는 롤백 기록에
+  보존됩니다.
+  tonedial doctor --fix --quarantine-operation ffffffffffffffffffffffffffffffff --global
+--- stderr --- [bytes=0; endsWithNewline=false]
+

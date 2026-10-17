@@ -203,6 +203,11 @@ If repair fails, report its phase, affected path, safe error code and operation 
 Some file changes may already be applied; a failure is not evidence that all files stayed unchanged.
 Preserve the operation record and follow the reported scoped read-only diagnosis.
 Default doctor output focuses on blockers; \`--verbose\` and JSON retain the operation history.
+If doctor reports an unreadable operation record, use its exact scoped
+\`doctor --fix --quarantine-operation <id>\` command. Preview or approve that replacement through
+the normal repair gate; never delete the record directly. The replacement stops the damaged
+record from blocking recovery, while the repair journal keeps its original bytes and mode for
+explicit rollback.
 For an explicitly selected stopped operation, \`doctor --fix --from-operation <id>\` continues
 application repair using valid current settings first; it does not undo the earlier changes.
 Preview that exact ID and scope with \`--dry-run\` before applying the approved repair.
@@ -463,7 +468,7 @@ selected by critique or persona. Bravado grades effort claims without replacing 
  * command name stays `/tone` even though the tool is `tonedial`: it is what a person types
  * mid-sentence, and the two extra characters are paid every time.
  */
-export const TONE_COMMAND_VERSION = 13;
+export const TONE_COMMAND_VERSION = 14;
 
 export const TONE_COMMAND_MD = `---
 description: Check, change, or reload this agent's tone, preset, or ToneDial settings

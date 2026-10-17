@@ -193,6 +193,11 @@ export type Messages = {
     rollback: (id: string) => string;
     rollbackOrder: string;
     noSnapshot: (id: string) => string;
+    quarantineCandidate: (id: string) => string;
+    quarantineQuestion: string;
+    quarantineRequired: (id: string, command: string) => string;
+    quarantineUnavailable: (id: string) => string;
+    quarantine: (id: string) => string;
     retire: (id: string) => string;
     resumeOperation: (id: string) => string;
     resumeQuestion: string;
@@ -352,6 +357,7 @@ export type Messages = {
     seedsNotRun: string;
     seedsAttention: string;
     recoveryPending: string;
+    invalidRecoveryPending: string;
     resumeOperation: string;
     contextCurrent: string;
     contextRepair: string;
@@ -359,7 +365,7 @@ export type Messages = {
     guideFormat: Record<"missing" | "unsupported" | "not-inspected", string>;
     readerState: Record<"not-required" | "not-inspected" | "missing" | "unrunnable" | "runnable", string>;
     readerFailure: Record<"changed" | "probe", string>;
-    operationState: Record<"pending" | "complete" | "rolled-back" | "retired-for-app-rebuild" | "invalid", string>;
+    operationState: Record<"pending" | "complete" | "rolled-back" | "retired-for-app-rebuild" | "quarantined" | "invalid", string>;
     rollbackStatus: Record<"ready" | "busy" | "unresolved" | "superseded" | "not-found" | "rolled-back", string>;
     rollbackAction: Record<"applied" | "already-reverted" | "changed" | "unsupported", string>;
     rollbackQuestion: string;
@@ -483,7 +489,7 @@ export type Messages = {
     firstSteps: string;
     examples: string;
     commands: { init: string; set: string; get: string; address: string; persona: string; reset: string; show: string; create: string; save: string; list: string; edit: string; use: string; compile: string; export: string; import: string; wire: string; unwire: string; doctor: string; update: string; eject: string; test: string };
-    flags: { global: string; here: string; project: string; migrateLegacy: string; auto: string; dryRun: string; lang: string; commands: string; tools: string; fix: string; rollback: string; fromOperation: string; fromPreset: string; restorePreset: string; preset: string; slug: string; acceptUsage: string; explain: string; check: string; json: string; verbose: string; color: string; version: string; help: string };
+    flags: { global: string; here: string; project: string; migrateLegacy: string; auto: string; dryRun: string; lang: string; commands: string; tools: string; fix: string; rollback: string; quarantineOperation: string; fromOperation: string; fromPreset: string; restorePreset: string; preset: string; slug: string; acceptUsage: string; explain: string; check: string; json: string; verbose: string; color: string; version: string; help: string };
   };
   combos: {
     /** Advisory framing for a contradiction. */
@@ -679,7 +685,7 @@ const enMessages: Messages = {
     choosePreset: "Choose a preset for values with no valid saved source:",
     sourceRequired: "Saved values are incomplete. Run tonedial doctor --fix interactively, or select --from-preset SLUG or --from-operation ID before unattended recovery.",
     sourceInvalid: "The selected source cannot supply valid settings. The original was kept.",
-    invalidOptions: "Recovery source and tool options require doctor --fix. --restore-preset requires --from-operation; --rollback cannot be combined with source, preset, or tool choices.",
+    invalidOptions: "Recovery source, quarantine and tool options require doctor --fix. --restore-preset requires --from-operation; --rollback cannot be combined with quarantine, source, preset, or tool choices.",
     keptSettings: "Saved settings and custom presets kept.",
     obsoleteWidthDiscarded: "Discard invalid retired fixed_width input. Output follows terminal width.",
     obsoleteGuardsDiscarded: "Discard invalid retired guards input. ToneDial no longer adds guard requests.",
@@ -692,6 +698,11 @@ const enMessages: Messages = {
     rollback: (id) => `Restore the previous files:\ntonedial doctor --fix --rollback ${id}`,
     rollbackOrder: "Restore connections first, then application files:",
     noSnapshot: (id) => `${id}: no valid settings snapshot for this state root`,
+    quarantineCandidate: (id) => `Operation ID:\n${id}\nQuarantine it before rebuilding; the original bytes remain available through rollback.`,
+    quarantineQuestion: "Type the full operation ID above to quarantine it; Enter cancels:",
+    quarantineRequired: (id, command) => `${id}: this unreadable operation record needs explicit quarantine before recovery. No files were changed.\n${command}`,
+    quarantineUnavailable: (id) => `${id}: no matching unreadable operation record can be quarantined. No files were changed.`,
+    quarantine: (id) => `Quarantine unreadable operation ${id}; keep its original bytes in rollback history.`,
     retire: (id) => `Retire stopped operation ${id} as history before a new application rebuild. Its external changes are not certified or undone.`,
     resumeOperation: (id) => `Stopped operation:\n${id}`,
     resumeQuestion: "Type the full operation ID above to continue; Enter cancels:",
@@ -854,6 +865,7 @@ const enMessages: Messages = {
     seedsNotRun: "no bundled files · init has not run here",
     seedsAttention: "bundled files need attention",
     recoveryPending: "An operation is active or needs recovery. No files were changed by this command.",
+    invalidRecoveryPending: "An unreadable operation record is blocking recovery. No files were changed by this command.",
     resumeOperation: "Continue application repair:",
     contextCurrent: "AGENTS.md and TONE.md layout is current.",
     contextRepair: "Managed context files need repair. Check the guide and tone-file diagnostics.",
@@ -876,7 +888,7 @@ const enMessages: Messages = {
       changed: "Reader or config changed during inspection. Retry after changes stop.",
       probe: "The controlled probe failed. Check Node and temporary-directory access, then rerun doctor.",
     },
-    operationState: { pending: "pending", complete: "complete", "rolled-back": "restored", "retired-for-app-rebuild": "retired for rebuild", invalid: "invalid record" },
+    operationState: { pending: "pending", complete: "complete", "rolled-back": "restored", "retired-for-app-rebuild": "retired for rebuild", quarantined: "quarantined", invalid: "invalid record" },
     rollbackStatus: {
       ready: "Approval will restore the selected operation.",
       busy: "Operation still active. Wait for its owner to finish.",
@@ -1048,6 +1060,7 @@ const enMessages: Messages = {
       tools: "agents to connect · init: none = state only",
       fix: "doctor: repair fixable findings",
       rollback: "doctor --fix: restore one operation",
+      quarantineOperation: "doctor --fix: quarantine one unreadable operation record",
       fromOperation: "doctor --fix: select saved settings from an operation",
       fromPreset: "doctor --fix: preset for unavailable settings",
       restorePreset: "doctor --fix: restore one missing or damaged user preset",
@@ -1368,7 +1381,7 @@ const koMessages: Messages = {
     choosePreset: "저장된 값이 없는 항목에 사용할 프리셋을 선택하세요:",
     sourceRequired: "저장된 값이 부족합니다. 터미널에서 tonedial doctor --fix를 실행하거나 자동 복구 전에 --from-preset SLUG 또는 --from-operation ID를 선택하세요.",
     sourceInvalid: "선택한 원본에서 올바른 설정을 읽지 못했습니다. 기존 파일은 유지했습니다.",
-    invalidOptions: "복구 원본과 도구 옵션은 doctor --fix에서 쓰세요. --restore-preset에는 --from-operation이 필요하며, --rollback은 원본·프리셋·도구 선택과 함께 쓸 수 없습니다.",
+    invalidOptions: "복구 원본·격리·도구 옵션은 doctor --fix에서 쓰세요. --restore-preset에는 --from-operation이 필요하며, --rollback은 격리·원본·프리셋·도구 선택과 함께 쓸 수 없습니다.",
     keptSettings: "저장된 설정·사용자 프리셋 유지",
     obsoleteWidthDiscarded: "더 이상 쓰지 않는 fixed_width의 잘못된 값을 버립니다. 출력은 터미널 폭에 맞춥니다.",
     obsoleteGuardsDiscarded: "더 이상 쓰지 않는 guards의 잘못된 값을 버립니다. ToneDial은 가드 요청을 넣지 않습니다.",
@@ -1381,6 +1394,11 @@ const koMessages: Messages = {
     rollback: (id) => `이전 파일로 돌아가기:\ntonedial doctor --fix --rollback ${id}`,
     rollbackOrder: "연결 파일을 먼저 되돌린 뒤 앱 파일을 되돌리세요:",
     noSnapshot: (id) => `${id}: 이 상태 경로에서 쓸 수 있는 설정 기록이 없습니다`,
+    quarantineCandidate: (id) => `작업 ID:\n${id}\n앱을 복구하려면 이 기록을 먼저 격리해야 합니다. 원본 바이트는 롤백 기록에 보존됩니다.`,
+    quarantineQuestion: "격리하려면 위 작업 ID 전체를 입력하세요. Enter를 누르면 취소합니다:",
+    quarantineRequired: (id, command) => `${id}: 복구 전에 읽을 수 없는 작업 기록을 명시적으로 격리해야 합니다. 파일은 바꾸지 않았습니다.\n${command}`,
+    quarantineUnavailable: (id) => `${id}: 격리할 수 있는 읽기 불가 작업 기록을 찾지 못했습니다. 파일은 바꾸지 않았습니다.`,
+    quarantine: (id) => `읽을 수 없는 작업 ${id}를 격리합니다. 원본 바이트는 롤백 기록에 보존합니다.`,
     retire: (id) => `중단된 작업 ${id}를 기록으로 보관한 뒤 새 앱 복구를 시작합니다. 그 작업의 외부 파일 변경은 확인하거나 되돌리지 않습니다.`,
     resumeOperation: (id) => `중단된 작업:\n${id}`,
     resumeQuestion: "계속하려면 위 작업 ID 전체를 입력하세요. Enter를 누르면 취소합니다:",
@@ -1545,6 +1563,7 @@ const koMessages: Messages = {
     seedsNotRun: "기본 파일 없음 · init으로 준비하세요",
     seedsAttention: "기본 파일 확인 필요",
     recoveryPending: "진행 중이거나 복구가 필요한 작업이 있습니다. 이번 실행에서는 파일을 바꾸지 않았습니다.",
+    invalidRecoveryPending: "읽을 수 없는 작업 기록 때문에 복구를 진행할 수 없습니다. 이번 실행에서는 파일을 바꾸지 않았습니다.",
     resumeOperation: "앱 복구를 이어가려면:",
     contextCurrent: "AGENTS.md와 TONE.md 구성이 최신입니다.",
     contextRepair: "관리 중인 컨텍스트 파일을 복구해야 합니다. 안내 파일과 톤 파일의 진단을 확인해 주세요.",
@@ -1567,7 +1586,7 @@ const koMessages: Messages = {
       changed: "검사 중 전달 스크립트나 설정이 바뀌었습니다. 변경이 끝난 뒤 다시 시도해 주세요.",
       probe: "제어된 검사에 실패했습니다. Node와 임시 디렉터리 접근 권한을 확인한 뒤 doctor를 다시 실행해 주세요.",
     },
-    operationState: { pending: "미완료", complete: "완료", "rolled-back": "복구됨", "retired-for-app-rebuild": "앱 복구를 위해 보관됨", invalid: "잘못된 기록" },
+    operationState: { pending: "미완료", complete: "완료", "rolled-back": "복구됨", "retired-for-app-rebuild": "앱 복구를 위해 보관됨", quarantined: "격리됨", invalid: "잘못된 기록" },
     rollbackStatus: {
       ready: "승인하면 선택한 작업을 복구합니다.",
       busy: "아직 진행 중인 작업입니다. 작업이 끝날 때까지 기다려 주세요.",
@@ -1739,6 +1758,7 @@ const koMessages: Messages = {
       tools: "연결할 에이전트 · init에서 none은 상태만 준비",
       fix: "doctor: 고칠 수 있는 문제 복구",
       rollback: "doctor --fix: 작업 하나 복구",
+      quarantineOperation: "doctor --fix: 읽을 수 없는 작업 기록 하나 격리",
       fromOperation: "doctor --fix: 작업 기록에서 설정 선택",
       fromPreset: "doctor --fix: 없는 설정에 사용할 프리셋",
       restorePreset: "doctor --fix: 없거나 손상된 사용자 프리셋 하나 복원",

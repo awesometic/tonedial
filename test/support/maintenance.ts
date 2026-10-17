@@ -19,7 +19,7 @@ import {
 
 export const UPDATE_SCENARIOS = ["update-current", "update-refresh", "update-modified", "update-blocked", "update-invalid"] as const;
 export type MaintenanceScenario = typeof UPDATE_SCENARIOS[number] | "doctor-seeds";
-export const RECOVERY_SCENARIOS = ["doctor-recovery-stopped", "doctor-rebuild-failed"] as const;
+export const RECOVERY_SCENARIOS = ["doctor-recovery-stopped", "doctor-recovery-invalid", "doctor-rebuild-failed"] as const;
 export type RecoveryScenario = typeof RECOVERY_SCENARIOS[number];
 export const RECOVERY_OPERATION_ID = "f".repeat(32);
 
@@ -48,6 +48,8 @@ export async function captureRecovery(language: GoldenLanguage, scenario: Recove
         `import { seedRecoveryHistory } from ${JSON.stringify(import.meta.url)}; seedRecoveryHistory(process.env);`],
       { env: workspace.env, encoding: "utf8", timeout: 10_000 });
       assert.equal(child.status, 0, child.stderr);
+    } else if (scenario === "doctor-recovery-invalid") {
+      writeFileSync(join(paths.operations, `${RECOVERY_OPERATION_ID}.json`), "invalid journal\n", { mode: 0o640 });
     } else {
       const config = parseConfig(readFileSync(paths.config, "utf8"));
       const seeds = seedFiles(paths, { native: true }).filter(seed => seed.id.startsWith("skill/"));
@@ -67,13 +69,17 @@ export async function captureRecovery(language: GoldenLanguage, scenario: Recove
       syncBuiltinESMExports();
       restoreFault = () => { fault.mock.restore(); syncBuiltinESMExports(); };
     }
-    let capture = normalizeCapture(await captureCli(workspace, scenario === "doctor-recovery-stopped"
+    let capture = normalizeCapture(await captureCli(workspace, scenario !== "doctor-rebuild-failed"
       ? ["doctor", "--global"] : ["doctor", "--fix", "--global", "--auto"]), workspace);
     if (scenario === "doctor-recovery-stopped") {
       assert.equal(capture.status, 0, capture.stderr);
       assert.equal(capture.stderr, "");
       assert.ok(capture.stdout.includes(RECOVERY_OPERATION_ID));
       for (let index = 1; index <= 8; index++) assert.ok(!capture.stdout.includes(index.toString(16).padStart(32, "0")), "completed history leaked into the default recovery report");
+    } else if (scenario === "doctor-recovery-invalid") {
+      assert.equal(capture.status, 0, capture.stderr);
+      assert.equal(capture.stderr, "");
+      assert.ok(capture.stdout.includes(`tonedial doctor --fix --quarantine-operation ${RECOVERY_OPERATION_ID} --global`));
     } else {
       assert.equal(capture.status, 1, capture.stdout + capture.stderr);
       assert.match(capture.stderr, /EACCES/);
