@@ -23,7 +23,7 @@ const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const artifactRoot = resolve(process.env.TONEDIAL_GOLDEN_ARTIFACT_DIR ?? join(root, "artifacts/golden"));
 const SETTINGS_SCENARIOS = ["get", "get-speech-narrow", "show-note-narrow"] as const;
 type SettingsScenario = typeof SETTINGS_SCENARIOS[number];
-type RecoveryImageScenario = RecoveryScenario | "doctor-recovery-stopped-narrow" | "doctor-recovery-invalid-narrow" | "doctor-rebuild-failed-narrow";
+type RecoveryImageScenario = RecoveryScenario | "doctor-recovery-stopped-narrow" | "doctor-recovery-invalid-narrow" | "doctor-recovery-multiple-narrow" | "doctor-rebuild-failed-narrow";
 type ImageScenario = "pending" | "help" | "doctor-global" | MaintenanceScenario | "doctor-seeds-narrow" | SettingsScenario | RecoveryImageScenario;
 
 function imageGoldenPath(language: GoldenLanguage, scenario: ImageScenario): string {
@@ -128,9 +128,11 @@ async function captureImage(language: GoldenLanguage, scenario: ImageScenario): 
   }
   if (scenario === "doctor-recovery-stopped" || scenario === "doctor-recovery-stopped-narrow" ||
       scenario === "doctor-recovery-invalid" || scenario === "doctor-recovery-invalid-narrow" ||
+      scenario === "doctor-recovery-multiple" || scenario === "doctor-recovery-multiple-narrow" ||
       scenario === "doctor-rebuild-failed" || scenario === "doctor-rebuild-failed-narrow") {
     const narrow = scenario.endsWith("-narrow");
     const name = scenario.startsWith("doctor-recovery-invalid") ? "doctor-recovery-invalid"
+      : scenario.startsWith("doctor-recovery-multiple") ? "doctor-recovery-multiple"
       : scenario.startsWith("doctor-recovery") ? "doctor-recovery-stopped" : "doctor-rebuild-failed";
     const capture = await captureRecovery(language, name, narrow ? 60 : 80);
     return renderDialSvg(capture.stdout + capture.stderr, language, `${language} · ${scenario}`);
@@ -161,7 +163,7 @@ function assertImageGolden(language: GoldenLanguage, scenario: ImageScenario, ac
 for (const language of selectedGoldenLanguages()) {
   test(`representative ${language} screen images match their SVG goldens`, async (t) => {
     for (const scenario of ["pending", "help", "doctor-global", ...UPDATE_SCENARIOS, "doctor-seeds", "doctor-seeds-narrow", ...SETTINGS_SCENARIOS,
-      ...RECOVERY_SCENARIOS, "doctor-recovery-stopped-narrow", "doctor-recovery-invalid-narrow", "doctor-rebuild-failed-narrow"] as const) {
+      ...RECOVERY_SCENARIOS, "doctor-recovery-stopped-narrow", "doctor-recovery-invalid-narrow", "doctor-recovery-multiple-narrow", "doctor-rebuild-failed-narrow"] as const) {
       await t.test(scenario, async () => {
         assertImageGolden(language, scenario, await captureImage(language, scenario));
       });

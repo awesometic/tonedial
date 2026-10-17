@@ -198,6 +198,8 @@ export type Messages = {
     quarantineRequired: (id: string, command: string) => string;
     quarantineUnavailable: (id: string) => string;
     quarantine: (id: string) => string;
+    quarantineComplete: (id: string) => string;
+    quarantineRemaining: (count: number) => string;
     retire: (id: string) => string;
     resumeOperation: (id: string) => string;
     resumeQuestion: string;
@@ -703,6 +705,8 @@ const enMessages: Messages = {
     quarantineRequired: (id, command) => `${id}: this unreadable operation record needs explicit quarantine before recovery. No files were changed.\n${command}`,
     quarantineUnavailable: (id) => `${id}: no matching unreadable operation record can be quarantined. No files were changed.`,
     quarantine: (id) => `Quarantine unreadable operation ${id}; keep its original bytes in rollback history.`,
+    quarantineComplete: (id) => `Unreadable operation ${id} quarantined.`,
+    quarantineRemaining: (count) => `${count} unreadable operation ${count === 1 ? "record remains" : "records remain"}. Quarantine the next record before rebuilding.`,
     retire: (id) => `Retire stopped operation ${id} as history before a new application rebuild. Its external changes are not certified or undone.`,
     resumeOperation: (id) => `Stopped operation:\n${id}`,
     resumeQuestion: "Type the full operation ID above to continue; Enter cancels:",
@@ -865,7 +869,7 @@ const enMessages: Messages = {
     seedsNotRun: "no bundled files · init has not run here",
     seedsAttention: "bundled files need attention",
     recoveryPending: "An operation is active or needs recovery. No files were changed by this command.",
-    invalidRecoveryPending: "An unreadable operation record is blocking recovery. No files were changed by this command.",
+    invalidRecoveryPending: "Unreadable operation history is blocking recovery. No files were changed by this command.",
     resumeOperation: "Continue application repair:",
     contextCurrent: "AGENTS.md and TONE.md layout is current.",
     contextRepair: "Managed context files need repair. Check the guide and tone-file diagnostics.",
@@ -1399,6 +1403,8 @@ const koMessages: Messages = {
     quarantineRequired: (id, command) => `${id}: 복구 전에 읽을 수 없는 작업 기록을 명시적으로 격리해야 합니다. 파일은 바꾸지 않았습니다.\n${command}`,
     quarantineUnavailable: (id) => `${id}: 격리할 수 있는 읽기 불가 작업 기록을 찾지 못했습니다. 파일은 바꾸지 않았습니다.`,
     quarantine: (id) => `읽을 수 없는 작업 ${id}를 격리합니다. 원본 바이트는 롤백 기록에 보존합니다.`,
+    quarantineComplete: (id) => `읽을 수 없는 작업 ${id}를 격리했습니다.`,
+    quarantineRemaining: (count) => `읽을 수 없는 작업 기록 ${count}개가 남았습니다. 다음 기록을 격리한 뒤 복구를 계속하세요.`,
     retire: (id) => `중단된 작업 ${id}를 기록으로 보관한 뒤 새 앱 복구를 시작합니다. 그 작업의 외부 파일 변경은 확인하거나 되돌리지 않습니다.`,
     resumeOperation: (id) => `중단된 작업:\n${id}`,
     resumeQuestion: "계속하려면 위 작업 ID 전체를 입력하세요. Enter를 누르면 취소합니다:",

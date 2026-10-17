@@ -549,8 +549,9 @@ tonedial doctor --fix --quarantine-operation <id> --global --dry-run
 tonedial doctor --fix --quarantine-operation <id> --global
 ```
 
-Quarantine replaces only the unreadable record with a nonblocking marker.
-The repair journal retains the original bytes and mode for explicit rollback; never delete the record by hand.
+Quarantine replaces only the selected unreadable record with a nonblocking marker.
+When several records are unreadable, doctor reports the next ID and command; repeat until the last command continues the application rebuild.
+Each repair journal retains that record's original bytes and mode for explicit rollback; never delete records by hand.
 
 For a stopped valid operation, use the exact `--from-operation` command shown by doctor.
 Preview it with `--dry-run`, then review and approve the proposed repair.

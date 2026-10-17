@@ -34,12 +34,18 @@ import { wrap } from "../ui/width.ts";
 import { parseToolSelection } from "../wiring/targets.ts";
 import { riskWarnings } from "../ui/format.ts";
 
-export type AppRebuildResult = CommandResult & {
+export type AppRebuildResult = CommandResult & ({
+  quarantineOnly: true;
+  rebuiltConfig: null;
+  proposedConfig: null;
+  legacy: null;
+} | {
+  quarantineOnly: false;
   rebuiltConfig: ConfigV2 | null;
   /** Validated proposal for strictly read-only planning of the next phase. Never serialized. */
   proposedConfig: ConfigV2;
   legacy: LegacyOwnershipEvidence | null;
-};
+});
 
 const CONFIG_MAX_BYTES = 1024 * 1024;
 const scalarFields = ["preset", "unsaved", "safeword", "speech_level", "language"] as const;
@@ -209,6 +215,55 @@ function privateCapture(capture: RawEntryCapture): JsonValue {
     parents: capture.parents.map(parent => ({ ...parent })) };
 }
 
+function planOperationQuarantine(ctx: Ctx, entry: ReturnType<typeof inspectOperations>["journals"][number]): PlannedOperationAction {
+  const capture = captureRawEntry(entry.path, ctx.t, { within: ctx.paths.root });
+  if (capture.type !== "regular" || capture.bytes === null) throw new ConfigError(ctx.t.recovery.quarantineUnavailable(entry.operationId));
+  return planEntryRebuild(capture, serializeOperationQuarantine(ctx.paths, entry.operationId, capture.bytes), ctx.t,
+    { reason: "quarantine-operation", mode: capture.mode ?? 0o600 }).action;
+}
+
+async function quarantineOneOperation(
+  ctx: Ctx,
+  entry: ReturnType<typeof inspectOperations>["journals"][number],
+  remaining: readonly string[],
+): Promise<AppRebuildResult> {
+  const action = planOperationQuarantine(ctx, entry);
+  const presentation = [ctx.t.recovery.quarantine(entry.operationId)]
+    .flatMap(line => wrap(line, ctx.ui.width - 2).map(part => `  ${part}`));
+  const result = await gate([], {
+    paths: ctx.paths, operationActions: [action], retention: { kind: "migration", reason: "app-rebuild" },
+    auto: ctx.flags.auto, dryRun: ctx.flags.dryRun, verbose: ctx.flags.verbose, ui: ctx.ui, t: ctx.t,
+    heading: ctx.t.recovery.heading, interactive: () => ctx.canPrompt, ...(ctx.canPrompt ? {} : { out: () => {} }),
+    recoveryPresentation: { lines: presentation,
+      failureMessage: (id: string, phase: RecoveryPhase, path: string | null, code: string) =>
+        `${ctx.t.recovery.failure(id, phase, path, code)}\ntonedial doctor ${connectionScopeFlag(ctx.agent)} --json` },
+    verify: () => {
+      const state = inspectOperations(ctx.paths).journals.find(({ operationId }) => operationId === entry.operationId)?.state;
+      if (state !== "quarantined") throw new ConfigError(ctx.t.recovery.sourceInvalid);
+    },
+  });
+  const lines = [...result.lines];
+  if (result.reason === "written") {
+    lines.push(`  ${ctx.t.recovery.quarantineComplete(entry.operationId)}`);
+  } else {
+    lines.push(`  ${result.reason === "dry-run" ? ctx.t.wiring.dryRun : ctx.t.wiring.declined}`);
+  }
+  return {
+    lines,
+    json: {
+      appRebuilt: false, applied: result.applied, reason: result.reason, operationId: result.operationId ?? null,
+      root: ctx.paths.root, quarantinedOperation: entry.operationId, remainingInvalidOperations: [...remaining],
+      next: result.applied && remaining.length > 0
+        ? `tonedial doctor --fix --quarantine-operation ${remaining[0]} ${connectionScopeFlag(ctx.agent)}` : null,
+      nativeAttention: false, activationVerified: false, diff: result.diff,
+    },
+    rebuiltConfig: null,
+    proposedConfig: null,
+    legacy: null,
+    quarantineOnly: true,
+  };
+}
+
 export async function runAppRebuild(ctx: Ctx): Promise<AppRebuildResult> {
   const t: Messages = ctx.t;
   const operations = inspectOperations(ctx.paths);
@@ -236,17 +291,20 @@ export async function runAppRebuild(ctx: Ctx): Promise<AppRebuildResult> {
     const command = `tonedial doctor --fix --quarantine-operation ${candidate.operationId} ${connectionScopeFlag(ctx.agent)}`;
     throw new ConfigError(t.recovery.quarantineRequired(candidate.operationId, command));
   }
-  if (quarantined !== null && (invalid.length !== 1 || operations.lock.state !== "none" || pending.length > 0)) {
+  if (quarantined !== null && (operations.lock.state !== "none" || pending.length > 0)) {
     throw new ConfigError(t.doctor.recoveryPending);
+  }
+  const scopeExplicit = ctx.scopeExplicit ?? (ctx.flags.global || ctx.flags.here === true || ctx.flags.project !== null);
+  if (ctx.flags.auto && !ctx.flags.dryRun && !scopeExplicit) throw new ConfigError(t.errors.scopeRequired);
+  if (ctx.flags.tools !== null) parseToolSelection(ctx.flags.tools, true, t);
+  if (quarantined !== null && invalid.length > 1) {
+    return quarantineOneOperation(ctx, quarantined, invalid.filter(entry => entry !== quarantined).map(entry => entry.operationId));
   }
   const blocked = operations.lock.state !== "none" || pending.length > 0;
   if (blocked && (operations.lock.state === "live" || operations.lock.state === "unknown" ||
     pending.some(entry => entry.journal === null) || (!ctx.flags.fromOperation && (ctx.flags.auto || !ctx.canPrompt)))) {
     throw new ConfigError(t.doctor.recoveryPending);
   }
-  const scopeExplicit = ctx.scopeExplicit ?? (ctx.flags.global || ctx.flags.here === true || ctx.flags.project !== null);
-  if (ctx.flags.auto && !ctx.flags.dryRun && !scopeExplicit) throw new ConfigError(t.errors.scopeRequired);
-  if (ctx.flags.tools !== null) parseToolSelection(ctx.flags.tools, true, t);
   const configCapture = captureRawEntry(ctx.paths.config, t, { within: ctx.paths.root, maxBytes: CONFIG_MAX_BYTES });
   const selected = ctx.flags.fromOperation ? selectedJournal(ctx, ctx.flags.fromOperation) : null;
   let retirementId: string | null = null;
@@ -380,11 +438,7 @@ export async function runAppRebuild(ctx: Ctx): Promise<AppRebuildResult> {
   const artifact = compile(toCompileInput(config));
   let quarantinePlan: PlannedOperationAction | null = null;
   if (quarantined !== null) {
-    const capture = captureRawEntry(quarantined.path, t, { within: ctx.paths.root });
-    if (capture.type !== "regular" || capture.bytes === null) throw new ConfigError(t.recovery.quarantineUnavailable(quarantined.operationId));
-    quarantinePlan = planEntryRebuild(capture,
-      serializeOperationQuarantine(ctx.paths, quarantined.operationId, capture.bytes), t,
-      { reason: "quarantine-operation", mode: capture.mode ?? 0o600 }).action;
+    quarantinePlan = planOperationQuarantine(ctx, quarantined);
   }
   const operationActions: PlannedOperationAction[] = [...(quarantinePlan ? [quarantinePlan] : []), ...seeds.operationActions];
   for (const target of artifacts) {
@@ -495,7 +549,7 @@ export async function runAppRebuild(ctx: Ctx): Promise<AppRebuildResult> {
     if (!ctx.flags.auto) {
       process.stdout.write(`${(preview.reason === "nothing" ? [...preview.lines, ...presentation] : preview.lines).join("\n")}\n`);
       if (await confirm(`  ${t.wiring.applyQuestion(preview.diff.length)}`) === "no") {
-        return { lines: [`  ${t.wiring.declined}`], json: { appRebuilt: false, applied: false, reason: "declined", diff: preview.diff }, rebuiltConfig: null, proposedConfig: config, legacy };
+        return { lines: [`  ${t.wiring.declined}`], json: { appRebuilt: false, applied: false, reason: "declined", diff: preview.diff }, rebuiltConfig: null, proposedConfig: config, legacy, quarantineOnly: false };
       }
     }
     const snapshots = [configCapture, ...seeds.reads, ...artifacts.flatMap(target => target.capture === null ? [] : [target.capture]),
@@ -517,7 +571,7 @@ export async function runAppRebuild(ctx: Ctx): Promise<AppRebuildResult> {
   if (retirementId !== null && result.reason === "nothing" && ctx.flags.auto) lines.push(...presentation);
   lines.push(`  ${applied ? result.reason === "nothing" ? t.recovery.unchanged : t.recovery.rebuilt : result.reason === "dry-run" ? t.wiring.dryRun : t.wiring.declined}`);
   return {
-    lines, rebuiltConfig: applied ? config : null, proposedConfig: config, legacy,
+    lines, rebuiltConfig: applied ? config : null, proposedConfig: config, legacy, quarantineOnly: false,
     json: {
       appRebuilt: applied, applied: result.applied, reason: result.reason, operationId: result.operationId ?? null,
       root: ctx.paths.root, source, recovered: [...kept], defaulted: [...defaulted], invalid: damagedFields,

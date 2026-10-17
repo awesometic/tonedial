@@ -1,0 +1,17 @@
+status: 0
+--- stdout --- [bytes=513; endsWithNewline=true]
+ToneDial · doctor
+
+  검사 범위: 전역
+  <ROOT>
+
+  읽을 수 없는 작업 기록 때문에 복구를 진행할 수 없습니다. 이번 실행에서는
+  파일을 바꾸지 않았습니다.
+  eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee  잘못된 기록
+  ffffffffffffffffffffffffffffffff  잘못된 기록
+
+  읽을 수 없는 작업 기록 2개가 남았습니다. 다음 기록을 격리한 뒤 복구를
+  계속하세요.
+  tonedial doctor --fix --quarantine-operation eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee --global
+--- stderr --- [bytes=0; endsWithNewline=false]
+

@@ -284,6 +284,55 @@ test("an unreadable operation record is quarantined through the repair gate and 
   assert.equal(inspectOperations(paths).journals.find(entry => entry.operationId === operationId)?.state, "invalid");
 });
 
+test("multiple unreadable operation records can be quarantined one at a time and rolled back independently", async () => {
+  assert.equal((await invoke(["init", "--global", "--tools", "none", "--auto"])).code, 0);
+  const paths = resolvePaths(env);
+  const ids = ["6".repeat(32), "7".repeat(32)];
+  const originals = ids.map((id, index) => {
+    const path = join(paths.operations, `${id}.json`);
+    const bytes = Buffer.from([0xff, index, 0x7b, 0x0a]);
+    writeFileSync(path, bytes, { mode: 0o640 + index });
+    return { id, path, bytes, mode: 0o640 + index };
+  });
+
+  const diagnosis = await invokeHuman(["doctor", "--global"]);
+  assert.equal(diagnosis.code, 0, diagnosis.error);
+  for (const { id } of originals) assert.ok(diagnosis.output.includes(id));
+  assert.ok(diagnosis.output.includes(`tonedial doctor --fix --quarantine-operation ${ids[0]} --global`));
+
+  const preview = await invoke(["doctor", "--fix", "--quarantine-operation", ids[0]!, "--global", "--tools", "none", "--dry-run"]);
+  assert.equal(preview.code, 0, preview.output);
+  assert.equal(preview.value.appRebuilt, false);
+  assert.deepEqual(preview.value.remainingInvalidOperations, [ids[1]]);
+  assert.equal(preview.value.next, null);
+  for (const original of originals) assert.deepEqual(readFileSync(original.path), original.bytes);
+
+  const first = await invokeHuman(["doctor", "--fix", "--quarantine-operation", ids[0]!, "--global", "--tools", "none", "--auto"]);
+  assert.equal(first.code, 0, first.error);
+  const firstRollback = /tonedial doctor --fix --rollback ([0-9a-f]{32})/.exec(first.output)?.[1];
+  const nextCommand = `tonedial doctor --fix --quarantine-operation ${ids[1]} --global`;
+  assert.ok(firstRollback, first.output);
+  assert.ok(first.output.indexOf(`tonedial doctor --fix --rollback ${firstRollback}`) < first.output.indexOf(nextCommand),
+    "the next repair command must remain the final action after the optional rollback");
+  assert.equal(inspectOperations(paths).journals.find(entry => entry.operationId === ids[0])?.state, "quarantined");
+  assert.equal(inspectOperations(paths).journals.find(entry => entry.operationId === ids[1])?.state, "invalid");
+
+  const second = await invoke(["doctor", "--fix", "--quarantine-operation", ids[1]!, "--global", "--tools", "none", "--auto"]);
+  assert.equal(second.code, 0, second.output);
+  assert.equal(second.value.appRebuilt, true);
+  assert.equal(second.value.quarantinedOperation, ids[1]);
+  for (const id of ids) assert.equal(inspectOperations(paths).journals.find(entry => entry.operationId === id)?.state, "quarantined");
+
+  for (const operationId of [String(second.value.operationId), firstRollback]) {
+    const rollback = await invoke(["doctor", "--fix", "--rollback", operationId, "--auto"]);
+    assert.equal(rollback.code, 0, rollback.output);
+  }
+  for (const original of originals) {
+    assert.deepEqual(readFileSync(original.path), original.bytes);
+    assert.equal(lstatSync(original.path).mode & 0o777, original.mode);
+  }
+});
+
 function containsWrapped(text: string, expected: string): boolean {
   return text.replace(/\s+/g, " ").includes(expected.replace(/\s+/g, " "));
 }

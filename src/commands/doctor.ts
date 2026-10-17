@@ -598,6 +598,20 @@ export async function runDoctor(ctx: Ctx, _args: string[]): Promise<CommandResul
   }
   if (!ctx.flags.fix) return doctorReport(ctx);
   const app = await runAppRebuild(ctx);
+  if (app.quarantineOnly) {
+    const rollbackLines = app.json.applied === true ? recoveryRollbackLines(ctx.t, app.json.operationId, null) : [];
+    const remaining = Array.isArray(app.json.remainingInvalidOperations)
+      ? app.json.remainingInvalidOperations.filter((id): id is string => typeof id === "string") : [];
+    const next = typeof app.json.next === "string" ? app.json.next : null;
+    return {
+      ...app,
+      lines: [...app.lines, ...rollbackLines, ...(next === null ? [] : [
+        `  ${ctx.t.recovery.quarantineRemaining(remaining.length)}`, "", `  ${next}`,
+      ])],
+      json: { ...app.json, root: ctx.agent.root, stateRoot: ctx.paths.root, agentRoot: ctx.agent.root,
+        live: ctx.agent.live, fixed: app.json.applied === true, appHealthy: false },
+    };
+  }
   if (ctx.flags.dryRun) {
     const native = await runRebuildNative(ctx, app.legacy, app.proposedConfig);
     return {
@@ -645,12 +659,13 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true, showCodexActi
     const owner = inspected.lock.owner;
     const blocking = inspected.journals.filter(({ state }) => state === "pending" || state === "invalid");
     const invalid = blocking.filter(({ state }) => state === "invalid");
-    const quarantineable = inspected.lock.state === "none" && blocking.length === 1 && invalid.length === 1;
+    const quarantineable = inspected.lock.state === "none" && blocking.length === invalid.length && invalid.length > 0;
+    const singleQuarantine = quarantineable && invalid.length === 1;
     const shown = ctx.flags.verbose ? inspected.journals : inspected.journals.filter(({ operationId, state }) =>
       state === "pending" || state === "invalid" || operationId === owner?.operationId);
     const lines = [
       ...wrap(quarantineable ? ctx.t.doctor.invalidRecoveryPending : ctx.t.doctor.recoveryPending, ctx.ui.width - 2).map(line => `  ${ctx.ui.warn(line)}`),
-      ...shown.filter(({ operationId }) => !quarantineable || operationId !== invalid[0]!.operationId)
+      ...shown.filter(({ operationId }) => !singleQuarantine || operationId !== invalid[0]!.operationId)
         .map(({ operationId, state }) => `  ${operationId}  ${ctx.t.doctor.operationState[state]}`),
     ];
     if (owner !== null && !shown.some(({ operationId }) => operationId === owner.operationId)) lines.push(`  ${owner.operationId}`);
@@ -671,7 +686,9 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true, showCodexActi
       }
     }
     if (quarantineable) {
-      lines.push("", ...wrap(ctx.t.recovery.quarantineCandidate(invalid[0]!.operationId), ctx.ui.width - 2).map(line => `  ${line}`),
+      lines.push("", ...(singleQuarantine
+        ? wrap(ctx.t.recovery.quarantineCandidate(invalid[0]!.operationId), ctx.ui.width - 2)
+        : wrap(ctx.t.recovery.quarantineRemaining(invalid.length), ctx.ui.width - 2)).map(line => `  ${line}`),
         ...nextStep(repairCommand(ctx, `doctor --fix --quarantine-operation ${invalid[0]!.operationId}`), ctx.ui).slice(1));
     } else {
       lines.push(...nextStep(`${repairCommand(ctx, "doctor")} --json`, ctx.ui));

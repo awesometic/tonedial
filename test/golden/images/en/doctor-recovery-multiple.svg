@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1296" height="428" viewBox="0 0 1296 428" role="img" aria-labelledby="title description">
+<title id="title">ToneDial screen (en · doctor-recovery-multiple)</title>
+<desc id="description">ToneDial · doctor
+
+  Inspection scope: global
+  &lt;ROOT&gt;
+
+  Unreadable operation history is blocking recovery. No files were changed by
+  this command.
+  eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee  invalid record
+  ffffffffffffffffffffffffffffffff  invalid record
+
+  2 unreadable operation records remain. Quarantine the next record before
+  rebuilding.
+  tonedial doctor --fix --quarantine-operation eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee --global
+</desc>
+<rect width="100%" height="100%" rx="16" fill="#171b20"/>
+<g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, system-ui" font-size="22"><text x="32" y="48" fill="#edf3f6" font-weight="400" opacity="1">ToneDial · doctor</text>
+<text x="60" y="104" fill="#edf3f6" font-weight="400" opacity="1">Inspection scope: global</text>
+<text x="60" y="132" fill="#edf3f6" font-weight="400" opacity="1">&lt;ROOT&gt;</text>
+<text x="60" y="188" fill="#edf3f6" font-weight="400" opacity="1">Unreadable operation history is blocking recovery. No files were changed by</text>
+<text x="60" y="216" fill="#edf3f6" font-weight="400" opacity="1">this command.</text>
+<text x="60" y="244" fill="#edf3f6" font-weight="400" opacity="1">eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee</text>
+<text x="536" y="244" fill="#edf3f6" font-weight="400" opacity="1">invalid record</text>
+<text x="60" y="272" fill="#edf3f6" font-weight="400" opacity="1">ffffffffffffffffffffffffffffffff</text>
+<text x="536" y="272" fill="#edf3f6" font-weight="400" opacity="1">invalid record</text>
+<text x="60" y="328" fill="#edf3f6" font-weight="400" opacity="1">2 unreadable operation records remain. Quarantine the next record before</text>
+<text x="60" y="356" fill="#edf3f6" font-weight="400" opacity="1">rebuilding.</text>
+<text x="60" y="384" fill="#edf3f6" font-weight="400" opacity="1">tonedial doctor --fix --quarantine-operation eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee --global</text></g>
+</svg>

@@ -1,0 +1,17 @@
+status: 0
+--- stdout --- [bytes=432; endsWithNewline=true]
+ToneDial · doctor
+
+  Inspection scope: global
+  <ROOT>
+
+  Unreadable operation history is blocking recovery. No files were changed by
+  this command.
+  eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee  invalid record
+  ffffffffffffffffffffffffffffffff  invalid record
+
+  2 unreadable operation records remain. Quarantine the next record before
+  rebuilding.
+  tonedial doctor --fix --quarantine-operation eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee --global
+--- stderr --- [bytes=0; endsWithNewline=false]
+

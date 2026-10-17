@@ -295,6 +295,9 @@ async function rebuildExisting(entry: Ctx): Promise<CommandResult> {
   const resultHeading = ctx.canPrompt && !ctx.flags.auto && !ctx.flags.dryRun
     ? section(copy.init.resultHeading, ctx.ui) : [];
   const app = await runAppRebuild(ctx);
+  if (app.quarantineOnly) {
+    return { ...app, lines: [...(ctx.canPrompt ? [] : introduction), ...resultHeading, ...app.lines] };
+  }
   if (ctx.flags.dryRun) {
     const answers = await ask(ctx, copy, false, selection);
     const tools = selection ?? answers.tools!;

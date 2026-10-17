@@ -20,7 +20,7 @@ import { BUNDLED, builtinPresetDir, LEGACY_BUILTIN_SLUGS, RETIRED_PRESETS } from
 import { SKILL_MD, SKILL_NAME, SKILL_TRAITS_MD } from "./skill.ts";
 
 // Bump for changed generated content; freshness also checks each managed seed's bytes/provenance.
-export const SEED_VERSION = 22;
+export const SEED_VERSION = 23;
 
 /** The state-root operating boundaries. The compiler owns the current tone separately. */
 export const GUIDE_MD = `${GUIDE_FORMAT_MARKER}
