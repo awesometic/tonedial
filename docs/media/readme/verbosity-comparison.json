@@ -1,0 +1,62 @@
+{
+  "kind": "recorded-native-default-vs-profile",
+  "recordedOn": "2026-10-18",
+  "samplesPerCondition": 1,
+  "question": "This crashes when `name` is null. Should I use optional chaining, a default parameter, or an explicit guard? Choose one and give me the replacement function.\n\n```js\nfunction label(name) {\n  return name.trim();\n}\n```",
+  "questionSha256": "81804ff657cf645fffc431751aac56bf36182400609fb8779b30a9e9930045a4",
+  "client": "Codex CLI",
+  "clientVersion": "0.160.0",
+  "model": "gpt-5.6-sol",
+  "reasoningEffort": "high",
+  "productRevision": "a82996903ff6f8df022363e4413362245eb09669",
+  "tonedialVersion": "0.1.6",
+  "profileSource": "docs/media/readme/en/use-cases.json",
+  "profile": {
+    "slug": "vibe-coder",
+    "displayName": "Full-on vibe coder",
+    "verbosity": 1,
+    "toneChars": 3369,
+    "toneSha256": "ac2d6be51d5aca14d5fc68b272d21cde295a6c1c5a964081b40cbd1f0ba3d348",
+    "testCommand": "tonedial test codex --preset vibe-coder"
+  },
+  "comparisonScope": "complete-profile-not-isolated-verbosity-axis",
+  "preRegisteredPrediction": "The complete vibe-coder profile will use fewer prose words than the no-ToneDial control while preserving one recommendation and a paste-ready replacement.",
+  "capturePlanSha256": "99f0aeb6776573e821f3d92b93c21bf2513a2cec0b5c97a0c98de04c8abff8ec",
+  "customizationIsolation": "requested",
+  "nativeSandbox": "read-only",
+  "osFilesystemIsolationProven": false,
+  "hookActivationVerified": false,
+  "adherenceScored": false,
+  "conditions": [
+    {
+      "id": "codex-default",
+      "label": "Codex default",
+      "delivery": "native-interactive-no-tonedial-control",
+      "tone": "none-supplied",
+      "openingResponseText": "Understood. Dialogue only, no tools or filesystem changes. I’ll wait for your next message.",
+      "openingResponseSha256": "48a95f0b08134e721431299f3cc10339987169f0e64b32221e22ac9dd6e85ce3",
+      "responseText": "Use an explicit guard. Default parameters don’t handle `null`, and optional chaining would return `undefined`.\n\n```js\nfunction label(name) {\n  if (name == null) return '';\n  return name.trim();\n}\n```",
+      "responseSha256": "0daa983c8303ca2313fbad5157d2b4a0417c52b38de1130d27876c1694f8d0c7",
+      "proseWords": 15,
+      "nativeTurnCount": 2,
+      "nativeExit": 0,
+      "toolCallsObserved": 0,
+      "targetUnchanged": true
+    },
+    {
+      "id": "vibe-coder",
+      "label": "Complete vibe-coder profile",
+      "delivery": "tonedial-test-native-interactive",
+      "tone": "vibe-coder",
+      "openingResponseText": "준비됐습니다, boss. 다음 요청을 주세요.",
+      "openingResponseSha256": "9eae51fa4c5a3d67ce5e2be8947b9135e0cdc25ff6521d8b27a194889770b61b",
+      "responseText": "Use an explicit guard, boss.\n\n```js\nfunction label(name) {\n  if (name == null) return '';\n  return name.trim();\n}\n```",
+      "responseSha256": "f030ff823328b55898601f1da7251e66b7ab9e89df559bc6751705d3ad20682c",
+      "proseWords": 5,
+      "nativeTurnCount": 2,
+      "nativeExit": 0,
+      "toolCallsObserved": 0,
+      "targetUnchanged": true
+    }
+  ]
+}

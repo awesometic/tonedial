@@ -6,7 +6,7 @@ Use Node 24+, npm and a POSIX shell from the repository root.
 | Change / claim | Verification |
 |---|---|
 | Documentation / examples | Resolve links, exercise changed commands and run relevant document consumers |
-| README / media | `node --test test/dial-example.test.ts test/voice-examples.test.ts` |
+| README / media | `node --test test/dial-example.test.ts test/voice-examples.test.ts test/verbosity-comparison.test.ts` |
 | Runtime / build | [Automated checks](#automated-checks) |
 | CLI text / dial | [Golden and PTY tests](#output-and-terminal-regression-tests) |
 | Installed package | [Isolated candidate](#isolated-candidate) |
@@ -244,6 +244,10 @@ Use [packs](./test/packs/), [scenarios](./test/scenarios.md) and the [rubric](./
 One configuration/model is useful; the matrix below defines full coverage, not a minimum PR.
 Anchor changes require Route D in Codex and Claude with matched clean `X-none` controls; keep Antigravity IDE/Desktop evidence separate.
 The producer sees no predictions, repository design or judging instructions; the judge is a separate context.
+
+The README's [default-vs-`vibe-coder` record](./media/readme/verbosity-comparison.json) is an `n=1`
+illustration of a complete profile, not a scored measurement or a single-axis claim.
+Its consumer test protects the fixed question, raw replies, hashes, profile bytes and evidence limits.
 
 | Case | Packs | Scenarios | Tiers | Repetitions |
 | --- | --- | --- | --- | --- |

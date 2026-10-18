@@ -19,6 +19,15 @@
 
 **[캐릭터 7개 모두 보기 →](https://github.com/awesometic/tonedial/blob/main/docs/EXAMPLES.ko.md)**
 
+## 같은 모델, 더 짧은 답
+
+`gpt-5.6-sol` / `high`에서 새 Codex 기본값 세션 한 번과 아래 `vibe-coder` 전체 프로필 세션 한 번을 비교했습니다.
+`verbosity=1`은 이 프로필의 한 요소이며 유일한 차이는 아닙니다.
+
+<img src="https://raw.githubusercontent.com/awesometic/tonedial/main/docs/media/readme/ko/verbosity-comparison.svg" alt="GPT-5.6 Sol high가 Codex 기본값과 vibe-coder 전체 프로필에서 같은 명시적 가드 수정안을 답한 비교. 프로필 응답의 영문 설명이 15단어에서 5단어로 줄었습니다" width="760">
+
+<sub>같은 질문 · 새 세션마다 첫 완료 응답 · 영문 설명 15단어 → 5단어. 단일 비교 예시이며, 축 하나만 분리한 벤치마크는 아닙니다. <a href="https://github.com/awesometic/tonedial/blob/main/docs/media/readme/verbosity-comparison.json">입력과 생성 기록</a>.</sub>
+
 ## 이렇게 활용해 보세요
 
 [설치](#바로-시작하기)를 마쳤다면 원하는 설정을 골라 보세요.

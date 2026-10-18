@@ -2,7 +2,7 @@
 
 **English first. Same facts in every locale. Real replies stay verbatim.**
 
-[README copy](#readme-copy) · [Paths & links](#paths-and-links) · [Dial images](#dial-images) · [Recorded conversations](#recorded-conversations)
+[README copy](#readme-copy) · [Paths & links](#paths-and-links) · [Dial images](#dial-images) · [Recorded conversations](#recorded-conversations) · [Default vs profile](#default-vs-profile)
 
 ## README copy
 
@@ -25,7 +25,7 @@ The CLI language and single English anchor set are independent of README languag
 4. Run the consumer checks and inspect images:
 
 ```bash
-node --test test/dial-example.test.ts test/voice-examples.test.ts
+node --test test/dial-example.test.ts test/voice-examples.test.ts test/verbosity-comparison.test.ts
 ```
 
 ## Paths and links
@@ -40,6 +40,7 @@ All locale assets live in `docs/media/readme/<language>/`:
 | `voice-examples.svg` | README: Royal Advisor + Ego Sword |
 | `voice-<preset>.svg` | Gallery: one conversation |
 | `use-cases.json` | Three README recipes, complete commands and recorded Codex replies |
+| `verbosity-comparison.svg` | README: Codex default vs complete `vibe-coder` profile |
 
 Use lowercase locale tags and kebab-case semantic stems: `ko/dial.svg`, not `dial-ko.svg`.
 Locales share stems, not necessarily extensions; preserve the appropriate PNG/JPG/SVG/JSON format.
@@ -47,6 +48,8 @@ Add `shared/` only for an actual language-neutral asset.
 Locale-specific images stay inside their locale directory; link provenance instead of repeating it in captions.
 The shared public-v7 batch manifest is `docs/media/readme/capture-v7-manifest.json`;
 it records candidate file hashes and path-redacted before/after capture manifests.
+The language-neutral comparison record is `docs/media/readme/verbosity-comparison.json`;
+each locale renders its labels around the same verbatim English replies.
 
 Npm omits `docs/`, so links visible there must use canonical repository URLs:
 
@@ -113,3 +116,22 @@ Keep the commands and verbatim Markdown replies aligned with that locale's READM
 The consumer test exercises every command with disposable state and checks the resulting compiler input and transcript hashes.
 These dialogue-only examples neither edit a project nor establish hook activation or scored adherence;
 preserve their recorded deviations as well as their replies.
+
+## Default vs profile
+
+The README comparison uses two fresh native Codex CLI sessions with the same fixed question,
+`gpt-5.6-sol` and `high`: one control with no ToneDial manner supplied, and one launched through
+`tonedial test codex --preset vibe-coder`.
+It preserves the first completed reply from each condition and counts English prose words before the shared code block.
+
+```bash
+node scripts/verbosity-svg.ts en > verbosity-comparison.svg
+node scripts/verbosity-svg.ts ko > verbosity-comparison-ko.svg
+```
+
+The public JSON owns the prompt, raw opening and question replies, hashes, model/client metadata,
+profile source and the pre-registered direction of the comparison.
+The complete profile changes more than verbosity, so describe the result as a default-vs-profile illustration,
+not proof of an isolated `verbosity=1` effect.
+One reply per condition does not establish repeatability, scored adherence or hook activation.
+The native read-only request and unchanged disposable target do not prove OS-level filesystem isolation.

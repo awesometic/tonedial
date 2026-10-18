@@ -19,6 +19,15 @@ Pick a character, tune twelve dials, and save a voice to use across projects.
 
 **[See all 7 characters →](https://github.com/awesometic/tonedial/blob/main/docs/EXAMPLES.md)**
 
+## Same model. Less preamble.
+
+With `gpt-5.6-sol` / `high`, we ran one fresh session with Codex defaults and one with the complete `vibe-coder` profile below.
+`verbosity=1` is one part of that profile, not the only difference.
+
+<img src="https://raw.githubusercontent.com/awesometic/tonedial/main/docs/media/readme/en/verbosity-comparison.svg" alt="GPT-5.6 Sol high gives the same explicit-guard fix with Codex defaults and the complete vibe-coder profile; the profile response uses five prose words instead of fifteen" width="760">
+
+<sub>Same prompt · first completed reply in each fresh session · 15 → 5 prose words. One illustrative pair, not an isolated-axis benchmark. <a href="https://github.com/awesometic/tonedial/blob/main/docs/media/readme/verbosity-comparison.json">Inputs & provenance</a>.</sub>
+
 ## How would you use it?
 
 After [setup](#try-it), choose a recipe.

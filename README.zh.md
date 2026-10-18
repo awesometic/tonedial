@@ -19,6 +19,15 @@
 
 **[查看全部 7 个角色 →](https://github.com/awesometic/tonedial/blob/main/docs/EXAMPLES.zh.md)**
 
+## 同一模型，更少铺垫
+
+在 `gpt-5.6-sol` / `high` 下，我们各运行了一次全新的 Codex 默认会话和使用下方完整 `vibe-coder` 配置的会话。
+`verbosity=1` 只是该配置的一部分，并非唯一差异。
+
+<img src="https://raw.githubusercontent.com/awesometic/tonedial/main/docs/media/readme/zh/verbosity-comparison.svg" alt="GPT-5.6 Sol high 在 Codex 默认设置和完整 vibe-coder 配置下给出了相同的显式空值检查修复；配置后的英文说明从 15 个词缩短到 5 个词" width="760">
+
+<sub>同一问题 · 每个新会话的首次完整回复 · 英文说明 15 个词 → 5 个词。这是一次示例性对比，并非只隔离单个轴的基准测试。 <a href="https://github.com/awesometic/tonedial/blob/main/docs/media/readme/verbosity-comparison.json">输入与生成记录</a>.</sub>
+
 ## 试试这样用？
 
 完成[设置](#开始试用)后，选择一组配置。

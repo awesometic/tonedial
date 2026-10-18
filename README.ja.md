@@ -19,6 +19,15 @@
 
 **[7キャラクターすべてを見る →](https://github.com/awesometic/tonedial/blob/main/docs/EXAMPLES.ja.md)**
 
+## 同じモデル、前置きは短く
+
+`gpt-5.6-sol` / `high` で、Codexデフォルトの新規セッション1回と、下記の `vibe-coder` プロファイル全体を適用した新規セッション1回を比較しました。
+`verbosity=1` はこのプロファイルの一要素であり、唯一の違いではありません。
+
+<img src="https://raw.githubusercontent.com/awesometic/tonedial/main/docs/media/readme/ja/verbosity-comparison.svg" alt="GPT-5.6 Sol highがCodexデフォルトとvibe-coderプロファイル全体で同じ明示的ガードの修正を返した比較。プロファイル側の英文説明は15語から5語になっています" width="760">
+
+<sub>同じ質問 · 各新規セッションの最初の完了応答 · 英文の説明 15語 → 5語。単一の比較例であり、1軸だけを分離したベンチマークではありません。 <a href="https://github.com/awesometic/tonedial/blob/main/docs/media/readme/verbosity-comparison.json">入力と生成記録</a>.</sub>
+
 ## こんな使い方はいかがですか？
 
 [セットアップ](#試してみる)後に、使いたい設定を選んでください。

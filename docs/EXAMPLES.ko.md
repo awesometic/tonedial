@@ -5,6 +5,8 @@
 같은 질문에 일곱 캐릭터가 답합니다.
 실제 Codex 응답을 터미널 대화 형식으로 옮겼습니다.
 
+[Codex 기본값과 `vibe-coder` 전체 프로필 비교는 README에서 볼 수 있습니다.](../README.ko.md)
+
 ## 같은 질문
 
 > `getActiveUsers(orgId)`를 `fetchData`로 바꿔도 될까?

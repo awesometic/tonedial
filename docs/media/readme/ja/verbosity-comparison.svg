@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="536" viewBox="0 0 1120 536" role="img" aria-labelledby="title description">
+<title id="title">同じモデル、前置きは短く</title>
+<desc id="description">This crashes when `name` is null. Should I use optional chaining, a default parameter, or an explicit guard? Choose one and give me the replacement function.
+
+```js
+function label(name) {
+  return name.trim();
+}
+```
+
+Codex デフォルト
+Use an explicit guard. Default parameters don’t handle `null`, and optional chaining would return `undefined`.
+
+```js
+function label(name) {
+  if (name == null) return '';
+  return name.trim();
+}
+```
+
+vibe-coder
+Use an explicit guard, boss.
+
+```js
+function label(name) {
+  if (name == null) return '';
+  return name.trim();
+}
+```</desc>
+<rect width="1120" height="536" rx="16" fill="#171b20"/>
+<g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, system-ui"><text x="36" y="52" fill="#edf3f6" font-size="30" font-weight="700" xml:space="preserve">同じモデル、前置きは短く</text>
+<text x="36" y="84" fill="#66d9dc" font-size="19" font-weight="700" xml:space="preserve">Codex CLI · gpt-5.6-sol · high</text>
+<rect x="36" y="116" width="514" height="358" rx="14" fill="#1d232a" stroke="#34424d"/>
+<text x="60" y="158" fill="#66d9dc" font-size="23" font-weight="700" xml:space="preserve">Codex デフォルト</text>
+<text x="400" y="158" fill="#b8cbd4" font-size="16" font-weight="700" xml:space="preserve">説明 15語</text>
+<text x="60" y="188" fill="#b8cbd4" font-size="15" font-weight="400" xml:space="preserve">ToneDial の口調指定なし</text>
+<path d="M60 208H526" stroke="#34424d"/>
+<text x="60" y="244" fill="#edf3f6" font-size="19" font-weight="400" xml:space="preserve">Use an explicit guard. Default</text>
+<text x="60" y="272" fill="#edf3f6" font-size="19" font-weight="400" xml:space="preserve">parameters don’t handle null, and</text>
+<text x="60" y="300" fill="#edf3f6" font-size="19" font-weight="400" xml:space="preserve">optional chaining would return</text>
+<text x="60" y="328" fill="#edf3f6" font-size="19" font-weight="400" xml:space="preserve">undefined.</text>
+<text x="60" y="370" fill="#b8e5df" font-size="18" font-weight="400" xml:space="preserve">function label(name) {</text>
+<text x="60" y="397" fill="#b8e5df" font-size="18" font-weight="400" xml:space="preserve">  if (name == null) return '';</text>
+<text x="60" y="424" fill="#b8e5df" font-size="18" font-weight="400" xml:space="preserve">  return name.trim();</text>
+<text x="60" y="451" fill="#b8e5df" font-size="18" font-weight="400" xml:space="preserve">}</text>
+<rect x="570" y="116" width="514" height="358" rx="14" fill="#1d232a" stroke="#34424d"/>
+<text x="594" y="158" fill="#66d9dc" font-size="23" font-weight="700" xml:space="preserve">vibe-coder</text>
+<text x="934" y="158" fill="#b8cbd4" font-size="16" font-weight="700" xml:space="preserve">説明 5語</text>
+<text x="594" y="188" fill="#b8cbd4" font-size="15" font-weight="400" xml:space="preserve">$ tonedial test codex --preset vibe-coder</text>
+<path d="M594 208H1060" stroke="#34424d"/>
+<text x="594" y="244" fill="#edf3f6" font-size="19" font-weight="400" xml:space="preserve">Use an explicit guard, boss.</text>
+<text x="594" y="286" fill="#b8e5df" font-size="18" font-weight="400" xml:space="preserve">function label(name) {</text>
+<text x="594" y="313" fill="#b8e5df" font-size="18" font-weight="400" xml:space="preserve">  if (name == null) return '';</text>
+<text x="594" y="340" fill="#b8e5df" font-size="18" font-weight="400" xml:space="preserve">  return name.trim();</text>
+<text x="594" y="367" fill="#b8e5df" font-size="18" font-weight="400" xml:space="preserve">}</text>
+<text x="36" y="506" fill="#b8cbd4" font-size="17" font-weight="400" xml:space="preserve">同じ質問 · 最初の完了応答 · 条件ごとに1回 · 2026-10-18</text></g>
+</svg>

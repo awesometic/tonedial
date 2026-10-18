@@ -5,6 +5,8 @@
 同じ質問に、7つのキャラクターが答えます。
 実際のCodex応答を、ターミナル風の対話として表示しています。
 
+[Codexデフォルトと `vibe-coder` プロファイル全体の比較はREADMEで確認できます。](../README.ja.md)
+
 ## 共通の質問
 
 > `getActiveUsers(orgId)` を `fetchData` に改名してもいい？

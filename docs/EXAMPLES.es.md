@@ -5,6 +5,8 @@
 Una pregunta, siete personajes.
 Respuestas reales de Codex presentadas como diálogo de terminal.
 
+[Compara los valores predeterminados de Codex con el perfil `vibe-coder` completo en el README.](../README.es.md)
+
 ## La misma pregunta
 
 > ¿Debería cambiar el nombre de `getActiveUsers(orgId)` a `fetchData`?

@@ -5,6 +5,8 @@
 同一个问题，七种角色回答。
 将实际 Codex 回复排成终端对话形式。
 
+[在 README 中比较 Codex 默认设置和完整的 `vibe-coder` 配置。](../README.zh.md)
+
 ## 相同的问题
 
 > `getActiveUsers(orgId)` 可以改名为 `fetchData` 吗？

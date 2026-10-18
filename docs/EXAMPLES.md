@@ -5,6 +5,8 @@
 Seven characters answer the same question.
 Recorded Codex replies, rendered as terminal dialogue.
 
+[Compare Codex defaults with the complete `vibe-coder` profile in the README.](../README.md#same-model-less-preamble)
+
 ## Shared question
 
 > Should I rename `getActiveUsers(orgId)` to `fetchData`?

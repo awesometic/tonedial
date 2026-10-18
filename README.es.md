@@ -19,6 +19,15 @@ Elige un personaje, ajusta doce diales y guarda una voz para usarla en distintos
 
 **[Ver los 7 personajes →](https://github.com/awesometic/tonedial/blob/main/docs/EXAMPLES.es.md)**
 
+## El mismo modelo. Menos rodeos.
+
+Con `gpt-5.6-sol` / `high`, ejecutamos una sesión nueva con los valores predeterminados de Codex y otra con el perfil `vibe-coder` completo que aparece más abajo.
+`verbosity=1` forma parte del perfil, pero no es la única diferencia.
+
+<img src="https://raw.githubusercontent.com/awesometic/tonedial/main/docs/media/readme/es/verbosity-comparison.svg" alt="GPT-5.6 Sol high propone la misma corrección con una guarda explícita usando los valores predeterminados de Codex y el perfil vibe-coder completo; la explicación en inglés baja de quince palabras a cinco" width="760">
+
+<sub>Misma pregunta · primera respuesta completa de cada sesión nueva · 15 → 5 palabras de explicación en inglés. Es una comparación ilustrativa, no una prueba que aísle un solo eje. <a href="https://github.com/awesometic/tonedial/blob/main/docs/media/readme/verbosity-comparison.json">Entradas y procedencia</a>.</sub>
+
 ## ¿Y si lo usas así?
 
 Tras la [configuración](#pruébalo), elige una receta.
