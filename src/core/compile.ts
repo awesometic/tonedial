@@ -1,5 +1,5 @@
 import {
-  ANCHORS, AXIS_ORDER, CONTROLS, FORMAT_COMPOSITION, GENERATION_COMMENT, PERSONA,
+  ANCHORS, AXIS_ORDER, CONTROLS, DELIVERY_OFF_MARKER, FORMAT_COMPOSITION, GENERATION_COMMENT, PERSONA,
   REGISTER_COMPOSITION, SCOPE_HEADER, SPEECH_LEVEL, STYLE_MARKER,
   type Axes,
 } from "./anchors.ts";
@@ -9,6 +9,8 @@ export type SpeechLevel = keyof typeof SPEECH_LEVEL;
 
 export type Config = {
   preset: string | null;
+  /** Missing means on for direct callers and artifacts produced before the switch existed. */
+  enabled?: boolean;
   axes: Axes;
   speech_level: SpeechLevel;
   persona: Persona | null;
@@ -51,6 +53,9 @@ function personaLines(p: Persona): string[] {
 }
 
 function validate(config: Config): void {
+  if (config.enabled !== undefined && typeof config.enabled !== "boolean") {
+    throw new RangeError("enabled must be true or false");
+  }
   for (const axis of AXIS_ORDER) {
     const level = config.axes[axis];
     if (!Number.isInteger(level) || level < 1 || level > 5) {
@@ -82,8 +87,9 @@ export function compile(config: Config): string {
   const out: string[] = [
     GENERATION_COMMENT(config.preset),
     STYLE_MARKER(config.axes.verbosity, config.axes.care),
-    SCOPE_HEADER,
   ];
+  if (config.enabled === false) out.push(DELIVERY_OFF_MARKER);
+  out.push(SCOPE_HEADER);
 
   if (config.persona) {
     const lines = personaLines(config.persona);

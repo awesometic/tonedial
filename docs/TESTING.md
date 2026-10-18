@@ -142,6 +142,8 @@ check_state() {
   td_trial "$channel" "$cli" init --lang en --tools none --global --auto --json || return
   td_trial "$channel" "$cli" compile --check --json || return
   td_trial "$channel" "$cli" set warmth=4 --json || return
+  td_trial "$channel" "$cli" off --json || return
+  td_trial "$channel" "$cli" on --json || return
   td_trial "$channel" "$cli" save "Trial Preset" --json || return
   td_trial "$channel" "$cli" export trial-preset --json || return
   td_trial "$channel" "$cli" list --json || return
@@ -153,6 +155,8 @@ check_state npm "$npm_cli" && check_state curl "$curl_cli"
 Stop on any failure. Inspect files/modes as well as receipts:
 
 - Exported `warmth=4`, listed custom `trial-preset`, fresh tone, no native connection.
+- `off` retains the full artifact and settings while the reader emits no context; `on` restores
+  the exact prior artifact body and reader delivery.
 - Dry-run leaves every byte unchanged; state-only init writes guide/tone, config and caches, no hooks/skills.
 - Save a custom profile, alter generated guide/tone, preview/approve `doctor --fix --global --auto`, then verify original custom bytes/mode, export and reload.
 - Missing values use explicit sources/defaults from [recovery](./USAGE.md#recovery), never root/lock deletion.
@@ -201,6 +205,9 @@ Before launching:
    Test resume, clear, compaction and fork only where that surface has those events. Shared global/project layers must not duplicate context.
 4. Ask the discovered skill to change one setting and separately to reload unchanged settings.
    Require CLI success, `compile --check --json`, then complete `agentsPath` and `path` reads. A settings query alone is not reload evidence.
+   Turn delivery off and verify every connected lifecycle route emits an empty provider-valid response,
+   then turn it on and verify the same saved pair returns. Use a fresh session to check the no-tone control;
+   an open session may retain context delivered before `off`.
 5. Exercise failed changed-setting and unchanged-setting reloads in the disposable environment.
    For the changed case, first confirm save success, then interrupt before reading and move a context file aside; otherwise a mutation may recreate/refuse it and test the wrong path.
    Require separate save/no-change and failed-read reports, never a claim that guidance became active. Restore the original file before continuing.

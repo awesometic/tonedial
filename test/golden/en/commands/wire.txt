@@ -9,12 +9,12 @@ ToneDial · wire
   Changes: 6
 
   <ROOT>/state/reader.mjs
-  (new file)  395 lines
+  (new file)  407 lines
   + #!/usr/bin/env node
   + import {
 
   <ROOT>/state/skill/tonedial/SKILL.md
-  (new file)  320 lines
+  (new file)  343 lines
   + ---
   + name: tonedial
 

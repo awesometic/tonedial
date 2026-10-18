@@ -15,7 +15,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { run } from "../src/cli.ts";
 import { compile } from "../src/core/compile.ts";
 import { toCompileInput } from "../src/core/resolve.ts";
-import { AXIS_DEFAULT, AXIS_ORDER } from "../src/core/anchors.ts";
+import { AXIS_DEFAULT, AXIS_ORDER, DELIVERY_OFF_MARKER } from "../src/core/anchors.ts";
 import { parseConfig, serializeConfig, defaultConfig, nearestAxis } from "../src/core/config.ts";
 import { resolvePaths } from "../src/core/paths.ts";
 import { editorCommand } from "../src/commands/edit.ts";
@@ -203,6 +203,54 @@ test("running a state-changing command twice changes nothing the second time", a
     assert.equal(readFileSync(paths().config, "utf8"), c1, `${args.join(" ")} config`);
     assert.equal(tone(), t1, `${args.join(" ")} artifact`);
   }
+});
+
+test("off and on pause delivery without losing the saved tone", async () => {
+  await initializeState();
+  assert.equal(await cli("set", "warmth=4", "persona.user=Dummy saved context"), 0);
+  const beforeConfig = config();
+  const beforeTone = tone();
+
+  out = [];
+  assert.equal(await cli("off", "--json"), 0, stderr());
+  const stopped = JSON.parse(stdout()) as { enabled: boolean; changed: boolean };
+  assert.equal(stopped.enabled, false);
+  assert.equal(stopped.changed, true);
+  const stoppedConfig = config();
+  assert.equal(stoppedConfig.enabled, false);
+  assert.deepEqual({ ...stoppedConfig, enabled: true }, beforeConfig);
+  assert.equal(tone().replace(`${DELIVERY_OFF_MARKER}\n`, ""), beforeTone);
+  assert.ok(tone().length > DELIVERY_OFF_MARKER.length, "off emptied TONE.md");
+
+  const stoppedBytes = [readFileSync(paths().config), readFileSync(paths().tone)];
+  out = [];
+  assert.equal(await cli("off", "--json"), 0, stderr());
+  assert.equal(JSON.parse(stdout()).changed, false);
+  assert.deepEqual([readFileSync(paths().config), readFileSync(paths().tone)], stoppedBytes);
+
+  out = [];
+  assert.equal(await cli("show", "--json"), 0, stderr());
+  assert.equal(JSON.parse(stdout()).enabled, false);
+  out = [];
+  assert.equal(await cli("get", "--json"), 0, stderr());
+  assert.equal(JSON.parse(stdout()).enabled, false);
+  out = [];
+  assert.equal(await cli("compile", "--check", "--json"), 0, stderr());
+  assert.equal(JSON.parse(stdout()).enabled, false);
+
+  out = [];
+  assert.equal(await cli("on", "--json"), 0, stderr());
+  const resumed = JSON.parse(stdout()) as { enabled: boolean; changed: boolean };
+  assert.equal(resumed.enabled, true);
+  assert.equal(resumed.changed, true);
+  assert.deepEqual(config(), beforeConfig);
+  assert.equal(tone(), beforeTone);
+
+  const resumedBytes = [readFileSync(paths().config), readFileSync(paths().tone)];
+  out = [];
+  assert.equal(await cli("on", "--json"), 0, stderr());
+  assert.equal(JSON.parse(stdout()).changed, false);
+  assert.deepEqual([readFileSync(paths().config), readFileSync(paths().tone)], resumedBytes);
 });
 
 test("nothing is written outside the resolved root", async () => {
@@ -1111,6 +1159,7 @@ test("a malformed config is refused by field rather than silently defaulted", as
     [{ schema: 1, persona: "senior dev" }, EN.config.notAnObject("persona")],
     [{ schema: 1, persona: { address: "boss" } }, EN.config.notAnObject("persona.address")],
     [{ schema: 1, guards: "false" }, EN.config.notABoolean("guards")],
+    [{ schema: 1, enabled: "false" }, EN.config.notABoolean("enabled")],
     [{ schema: 1, emoji: 3 }, /unknown key emoji/],
     [{ schema: 1, safeword: 'a" b' }, EN.config.safewordQuote],
   ];
@@ -1148,18 +1197,19 @@ test("a name that is not a command is refused, including one the prototype answe
     "a near miss is answered differently from a name nothing resembles");
 });
 
-test("a word for stopping is answered with what exists, not with the nearest command", async () => {
+test("a stopping synonym points to off instead of the nearest command", async () => {
   // None of these is a command, and three are inside the spelling match's reach — `stop` is two
   // edits from `show`, `delete` three from `reset`, `quit` two from `edit`. So the table has to
   // be consulted first, or the answer sends someone trying to leave back to what they are
-  // leaving. There is no off switch to give them; the answer names the three things there are.
-  for (const word of ["off", "disable", "stop", "quit", "uninstall", "remove", "delete"]) {
+  // leaving. The answer names the pause, reset, disconnect, and uninstall boundaries.
+  for (const word of ["disable", "stop", "quit", "uninstall", "remove", "delete"]) {
     err = [];
     assert.equal(await cli(word), 2, word);
     const said = stderr();
-    assert.match(said, /safeword/i, `${word}: the safeword is one of the three real acts`);
-    assert.match(said, /reset/, `${word}: and so is the dial reset`);
-    assert.match(said, /eject/, `${word}: and so is removing the wiring`);
+    assert.match(said, /tonedial off/, `${word}: the delivery switch is named`);
+    assert.match(said, /tonedial on/, `${word}: the reversible path is named`);
+    assert.match(said, /reset/, `${word}: the dial reset remains distinct`);
+    assert.match(said, /eject/, `${word}: disconnect remains distinct`);
     assert.doesNotMatch(said, /Did you mean/, `${word}: and the spelling match never ran`);
   }
 });

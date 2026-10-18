@@ -29,6 +29,14 @@ const messages: Messages = {
     launchFailed: (provider) => `${provider} を起動できません。インストール状況を確認して再試行してください。`,
     selectionCancelled: "プロバイダーが選択されていません。",
   },
+  delivery: {
+    on: "ToneDialをオンにしました · 配信停止マーカーを削除",
+    off: "ToneDialをオフにしました · 配信停止マーカーを保存 · 設定とTONE.mdは保持",
+    alreadyOn: "口調の配信はすでにオンです · 変更なし",
+    alreadyOff: "口調の配信はすでにオフです · 変更なし",
+    openConversation: "開いている会話には以前の口調が残る場合があります。ToneDialなしの状態と正確に比較するには新しい会話を使ってください。",
+    status: (enabled) => `口調の配信：${enabled ? "オン" : "オフ"}`,
+  },
   axis: {
     range: (axis, given) => `${axis}: 1–5を指定してください（入力：${given}）`,
     unknown: (name, nearest) => `${name}: 軸ではありません${nearest ? `。${nearest} のことですか？` : ""}`,
@@ -445,6 +453,8 @@ const messages: Messages = {
     firstSteps: "口調を設定し、確認します：",
     examples: "使用例",
     commands: {
+      on: "保存した口調の配信を再開",
+      off: "口調の配信を一時停止 · 設定とTONE.mdは保持",
       init: "初期設定と同梱ファイルの更新",
       set: "軸・役割・設定を変更 · 引数なしでダイヤル",
       get: "現在の設定値を確認 · キー指定で意味と選択肢も表示",
@@ -504,11 +514,10 @@ const messages: Messages = {
     notACommand: (name, known, nearest) =>
       `${name} はコマンドではありません。${nearest ? `${nearest} のことですか？` : ""} ` +
       `選択肢：${known.join(", ")}`,
-    noOffSwitch:
-      "オフスイッチはありません。合言葉は一度だけ平易な回答を求めます。設定の有無は tonedial show で確認できます。" +
-      "tonedial reset は軸の既定値を復元します。tonedial eject --global または " +
-      "--project <path> でその範囲を解除します。全接続を解除した後、" +
-      "npm uninstall -g tonedial でコマンドを削除できます。",
+    stoppingHelp:
+      "設定を削除せずに口調の配信を止めるには tonedial off を実行し、再開するには tonedial on を実行してください。" +
+      "tonedial reset は軸の既定値を復元します。tonedial eject --global または --project <path> でその範囲を解除します。" +
+      "全接続を解除した後、npm uninstall -g tonedial でコマンドを削除できます。",
     notAnOption: (flag) => `${flag}: オプションではありません。一覧：tonedial --help`,
     flagNotAccepted: (command, flag) => `${command}: --${flag} は使えません`,
     tooManyArguments: (command, max, got) =>

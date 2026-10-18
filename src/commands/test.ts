@@ -57,7 +57,8 @@ export async function runTest(ctx: Ctx, args: string[]): Promise<CommandResult> 
     }
     input = toCompileInput(withPreset(config, preview));
   }
-  const tone = compile(input);
+  // A test is an explicit one-shot preview, independent of the persistent native delivery switch.
+  const tone = compile({ ...input, enabled: true });
 
   const installed = PROVIDERS.map((provider) => ({ provider, program: onPath(provider, ctx.env) }))
     .filter((entry): entry is { provider: Provider; program: string } => entry.program !== null);

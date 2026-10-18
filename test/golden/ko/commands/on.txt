@@ -1,0 +1,7 @@
+status: 0
+--- stdout --- [bytes=65; endsWithNewline=true]
+ToneDial · on
+
+  ToneDial 켜짐 · 전달 중지 마커 제거
+--- stderr --- [bytes=0; endsWithNewline=false]
+

@@ -48,7 +48,7 @@ export type AppRebuildResult = CommandResult & ({
 });
 
 const CONFIG_MAX_BYTES = 1024 * 1024;
-const scalarFields = ["preset", "unsaved", "safeword", "speech_level", "language"] as const;
+const scalarFields = ["enabled", "preset", "unsaved", "safeword", "speech_level", "language"] as const;
 const personaFields = ["age", "gender", "note", "user", "agent"] as const;
 
 function capturedText(capture: RawEntryCapture): string | null {

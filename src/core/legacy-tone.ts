@@ -1,6 +1,6 @@
 // Decode known current and historical English artifact bodies. Unknown prose is never a data source.
 import {
-  ANCHORS, AXIS_DEFAULT, AXIS_ORDER, CONTROLS, FORMAT_COMPOSITION, PERSONA, REGISTER_COMPOSITION, SCOPE_HEADER,
+  ANCHORS, AXIS_DEFAULT, AXIS_ORDER, CONTROLS, DELIVERY_OFF_MARKER, FORMAT_COMPOSITION, PERSONA, REGISTER_COMPOSITION, SCOPE_HEADER,
   SPEECH_LEVEL, type Axis, type Level,
 } from "./anchors.ts";
 import {
@@ -356,10 +356,14 @@ export function recoverLegacyTone(text: string, t: Messages): SettingsRecovery |
   const afterGeneration = source.slice(marker[0].length);
   const styleMarker = /^<!-- tonedial-style:1 verbosity=([1-5]) care=([1-5]) -->\n/.exec(afterGeneration);
   if (afterGeneration.startsWith("<!-- tonedial-style:") && styleMarker === null) return null;
-  const prefix = `${marker[0]}${styleMarker?.[0] ?? ""}${SCOPE_HEADER}\n`;
+  const afterStyle = afterGeneration.slice(styleMarker?.[0].length ?? 0);
+  const deliveryMarker = afterStyle.startsWith(`${DELIVERY_OFF_MARKER}\n`) ? `${DELIVERY_OFF_MARKER}\n` : "";
+  if (afterStyle.startsWith("<!-- tonedial-delivery:") && deliveryMarker === "") return null;
+  const prefix = `${marker[0]}${styleMarker?.[0] ?? ""}${deliveryMarker}${SCOPE_HEADER}\n`;
   if (!source.startsWith(prefix)) return null;
   let body = source.slice(prefix.length);
   const config = defaultConfig();
+  config.enabled = deliveryMarker !== "" ? false : true;
   const unknown: string[] = [];
   if (body.startsWith("### Persona\n")) {
     const end = body.indexOf("\n### Rules\n");

@@ -495,7 +495,7 @@ test("every command's --json envelope keeps the keys a consumer reads", async ()
     v === null ? "null" : Array.isArray(v) ? "array" : typeof v;
   const expected: Record<string, Record<string, string>> = {
     show: {
-      preset: "string", preview: "boolean", combinations: "array", unsaved: "boolean",
+      preset: "string", preview: "boolean", combinations: "array", unsaved: "boolean", enabled: "boolean",
       axes: "object", defaults: "object", kinds: "object", groups: "object",
       riskAxes: "array", riskThresholds: "object", persona: "object", safeword: "null",
       speech_level: "string", language: "string",
@@ -948,7 +948,7 @@ test("a Korean install speaks Korean where a command does not exist", async () =
   // The scan above ends on an error loop that asserts exit 1. A name that is not a command
   // exits 2, so neither the stopping answer nor the refusal around it is reachable from there.
   assert.equal(await cli("init", "--here", "--tools", "none", "--lang", "ko", "--auto"), 0);
-  for (const argv of [["off"], ["ejct"], ["toString"]]) {
+  for (const argv of [["disable"], ["ejct"], ["toString"]]) {
     err = [];
     assert.equal(await cli(...argv), 2, argv.join(" "));
     const prose = stripStable(err.join(""));

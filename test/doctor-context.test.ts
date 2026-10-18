@@ -843,6 +843,22 @@ test("doctor reports a retained reader as runnable under the CLI runtime without
   assert.equal(readFileSync(retainedPath, "utf8").startsWith("#!"), true);
 });
 
+test("doctor keeps the reader healthy while delivery is off", async () => {
+  await retainReaderSeed();
+  const stopped = await invoke(["off"]);
+  assert.equal(stopped.code, 0, stopped.output);
+  assert.equal(stopped.value.enabled, false);
+
+  const report = await invoke(["doctor", "--here"]);
+  assert.deepEqual(report.value.reader, {
+    state: "runnable",
+    reason: null,
+    runtime: process.execPath,
+    scope: "cli-runtime",
+  });
+  assert.equal(check(report, "reader").state, "note");
+});
+
 test("doctor does not probe a missing retained reader", async () => {
   const retainedPath = await retainReaderSeed();
   rmSync(retainedPath);

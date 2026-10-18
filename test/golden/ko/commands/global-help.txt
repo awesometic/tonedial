@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=4086; endsWithNewline=true]
+--- stdout --- [bytes=4228; endsWithNewline=true]
 tonedial — 코딩 에이전트의 말투를 한 번 정하고 계속 씁니다
 
 tonedial <command> [options]
@@ -9,6 +9,8 @@ tonedial <command> [options]
   tonedial show
 
 말투
+  on                         저장한 말투 전달 재개
+  off                        말투 전달 일시정지 · 설정·TONE.md 유지
   set <key>=<value> …       축·역할·설정 변경 · 인자 없으면 다이얼
   get [key]                  현재 설정값 조회 · 키를 지정하면 의미와 선택지도
                              표시

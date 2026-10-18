@@ -76,7 +76,8 @@ export function runShow(ctx: Ctx, args: string[]): CommandResult {
   const gauges = [gaugeHeader(ui, ctx.t), ...gaugeBlock(axes, ui)];
   const gaugeWidth = Math.max(...gauges.map((line) => maxCells(stripVTControlCharacters(line))));
   const detailWidth = ui.terminal && ui.width >= 119 ? ui.width - gaugeWidth - 4 : ui.width - 2;
-  const details: string[] = [ui.bold(ctx.t.artifact.settingsHeading)];
+  const details: string[] = [ui.bold(ctx.t.artifact.settingsHeading),
+    ...(config.enabled ? [] : [ctx.t.delivery.status(false)])];
   if (personaSet) {
     const bits = [
       age ? humanText(age) : null,
@@ -169,6 +170,7 @@ export function runShow(ctx: Ctx, args: string[]): CommandResult {
     json: {
       preset: preview ? preview.slug : config.preset,
       preview: preview !== null,
+      enabled: config.enabled,
       activeKnown: preview !== null || !activeConflict,
       // Layered rather than flattened: the skill has to tell a forbidden contradiction from a
       // cosmetic one, and a joined string cannot carry that.

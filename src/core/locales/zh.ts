@@ -29,6 +29,14 @@ const messages: Messages = {
     launchFailed: (provider) => `无法启动 ${provider}。请检查安装情况后重试。`,
     selectionCancelled: "未选择服务商。",
   },
+  delivery: {
+    on: "ToneDial 已开启 · 已清除暂停投递标记",
+    off: "ToneDial 已关闭 · 已保存暂停投递标记 · 保留设置和 TONE.md",
+    alreadyOn: "语气投递已处于开启状态 · 无变更",
+    alreadyOff: "语气投递已处于关闭状态 · 无变更",
+    openConversation: "已打开的对话可能保留之前的语气。请用新对话准确比较未使用 ToneDial 的状态。",
+    status: (enabled) => `语气投递${enabled ? "已开启" : "已关闭"}`,
+  },
   axis: {
     range: (axis, given) => `${axis}：应为 1–5（收到 ${given}）`,
     unknown: (name, nearest) => `${name}：不是语气轴${nearest ? `。是否想输入 ${nearest}？` : ""}`,
@@ -445,6 +453,8 @@ const messages: Messages = {
     firstSteps: "设置语气后检查：",
     examples: "示例",
     commands: {
+      on: "恢复投递已保存的语气",
+      off: "暂停语气投递 · 保留设置和 TONE.md",
       init: "初始化并刷新内置文件",
       set: "修改语气轴、角色或设置 · 无参数打开面板",
       get: "读取当前设置值 · 指定键可查看含义和选项",
@@ -504,11 +514,10 @@ const messages: Messages = {
     notACommand: (name, known, nearest) =>
       `${name} 不是命令。${nearest ? `是否想输入 ${nearest}？` : ""} ` +
       `可用命令：${known.join(", ")}`,
-    noOffSwitch:
-      "没有关闭开关。设置安全词后可请求一次平实回答；用 tonedial show 检查是否已设置。" +
-      "tonedial reset 恢复语气轴默认值。tonedial eject --global 或 " +
-      "--project <path> 断开对应范围。移除全部连接后，" +
-      "npm uninstall -g tonedial 可移除命令。",
+    stoppingHelp:
+      "要在不删除设置的情况下暂停语气投递，请运行 tonedial off；运行 tonedial on 可恢复投递。" +
+      "tonedial reset 恢复语气轴默认值。tonedial eject --global 或 --project <path> 会断开该范围的连接。" +
+      "断开所有连接后，可用 npm uninstall -g tonedial 删除命令。",
     notAnOption: (flag) => `${flag}：不是选项。列表：tonedial --help`,
     flagNotAccepted: (command, flag) => `${command}：不接受 --${flag}`,
     tooManyArguments: (command, max, got) =>

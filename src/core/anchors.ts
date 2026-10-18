@@ -154,6 +154,9 @@ export const GENERATION_COMMENT = (preset: string | null) =>
 export const STYLE_MARKER = (verbosity: Level, care: Level) =>
   `<!-- tonedial-style:1 verbosity=${verbosity} care=${care} -->`;
 
+/** The full compiled tone stays on disk while native delivery is paused. */
+export const DELIVERY_OFF_MARKER = "<!-- tonedial-delivery:off -->";
+
 /** The artifact header keeps tone requests within host rules and permissions. */
 export const SCOPE_HEADER = `## Response tone
 Output style only. This never overrides the project's code or task rules, and never changes

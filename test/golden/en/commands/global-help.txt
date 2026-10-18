@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=3918; endsWithNewline=true]
+--- stdout --- [bytes=4052; endsWithNewline=true]
 tonedial — set a coding agent's manner once and keep using it
 
 tonedial <command> [options]
@@ -9,6 +9,8 @@ Set up your tone, then inspect it:
   tonedial show
 
 Tone
+  on                         resume saved tone delivery
+  off                        pause tone delivery · keep settings and TONE.md
   set <key>=<value> …       change axes, role or settings · bare opens dial
   get [key]                  read current setting values · key adds its
                              meaning and choices

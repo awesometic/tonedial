@@ -35,10 +35,11 @@ export function runGet(ctx: Ctx, args: string[]): CommandResult {
     return [`  ${ctx.ui.accent(padEnd(key, column))}  ${first ?? ""}`,
       ...rest.map(line => `${" ".repeat(column + 4)}${line}`)];
   });
+  if (requested === undefined && !config.enabled) lines.unshift(`  ${ctx.ui.bold(ctx.t.delivery.status(false))}`, "");
   if (requested !== undefined) {
     const copy = catalogue(isLanguage(config.language) ? config.language : detectLanguage(ctx.env));
     lines.push("", ...settingHelp(requested as SettableKey, copy).flatMap(hint =>
       wrap(hint, ctx.ui.width - 2).map(line => `  ${ctx.ui.dim(line)}`)));
   }
-  return { lines, json: { values } };
+  return { lines, json: { enabled: config.enabled, values } };
 }

@@ -20,14 +20,14 @@ import { BUNDLED, builtinPresetDir, LEGACY_BUILTIN_SLUGS, RETIRED_PRESETS } from
 import { SKILL_MD, SKILL_NAME, SKILL_TRAITS_MD } from "./skill.ts";
 
 // Bump for changed generated content; freshness also checks each managed seed's bytes/provenance.
-export const SEED_VERSION = 23;
+export const SEED_VERSION = 24;
 
 /** The state-root operating boundaries. The compiler owns the current tone separately. */
 export const GUIDE_MD = `${GUIDE_FORMAT_MARKER}
 ToneDial changes manner only; it never expands task scope or permissions.
 Use the ToneDial CLI for configuration changes.
 AGENTS.md is the operating guide, TONE.md is the current compiled tone, and the ToneDial skill
-explains explicit in-session tuning and reloads.
+explains delivery controls, explicit in-session tuning and reloads.
 `;
 
 export type Seed = { id: string; version: number; path: string; label: string; contents: string };
@@ -89,7 +89,7 @@ export function seedFiles(paths: Paths, selection: SeedSelection): Seed[] {
   };
   const native: Seed[] = [
     reader,
-    { id: "skill/body", version: 21, path: join(paths.skill, SKILL_NAME, "SKILL.md"), label: `skill/${SKILL_NAME}/SKILL.md`, contents: SKILL_MD },
+    { id: "skill/body", version: 22, path: join(paths.skill, SKILL_NAME, "SKILL.md"), label: `skill/${SKILL_NAME}/SKILL.md`, contents: SKILL_MD },
     {
       id: "skill/traits",
       version: 12,

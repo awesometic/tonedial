@@ -1,0 +1,7 @@
+status: 0
+--- stdout --- [bytes=57; endsWithNewline=true]
+ToneDial · on
+
+  ToneDial on · delivery marker cleared
+--- stderr --- [bytes=0; endsWithNewline=false]
+

@@ -9,12 +9,12 @@ ToneDial · wire
   변경 항목 6개
 
   <ROOT>/state/reader.mjs
-  (새 파일)  395줄
+  (새 파일)  407줄
   + #!/usr/bin/env node
   + import {
 
   <ROOT>/state/skill/tonedial/SKILL.md
-  (새 파일)  320줄
+  (새 파일)  343줄
   + ---
   + name: tonedial
 

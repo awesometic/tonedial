@@ -34,6 +34,7 @@ import { runEject } from "./commands/eject.ts";
 import { runInit } from "./commands/init.ts";
 import { runUnwire, runWire } from "./commands/wire.ts";
 import { runTest } from "./commands/test.ts";
+import { runOff, runOn } from "./commands/toggle.ts";
 
 export const JSON_SCHEMA = 3;
 
@@ -147,6 +148,8 @@ const COMMANDS: Record<
   string,
   { run: (ctx: Ctx, args: string[]) => CommandResult | Promise<CommandResult>; flags: (keyof Flags)[]; max: number | null; context?: "state" | "setup" }
 > = {
+  on: { run: runOn, flags: [], max: 0, context: "state" },
+  off: { run: runOff, flags: [], max: 0, context: "state" },
   set: { run: runSet, flags: [], max: null, context: "state" },
   get: { run: runGet, flags: [], max: 1 },
   test: { run: runTest, flags: ["project", "dryRun", "preset", "acceptUsage"], max: 1 },
@@ -188,6 +191,8 @@ type CommandRow = [keyof Messages["help"]["commands"], string];
 /** Intent groups share one command inventory between compact and full help. */
 const COMMAND_GROUPS: [keyof Messages["help"]["groups"], CommandRow[]][] = [
   ["tone", [
+    ["on", "on"],
+    ["off", "off"],
     ["set", "set <key>=<value> …"],
     ["get", "get [key]"],
     ["address", "address [self user]"],
@@ -221,6 +226,8 @@ const COMMAND_GROUPS: [keyof Messages["help"]["groups"], CommandRow[]][] = [
 const COMMAND_SYNTAX: CommandRow[] = COMMAND_GROUPS.flatMap(([, rows]) => rows);
 
 const COMMAND_EXAMPLES: Record<keyof Messages["help"]["commands"], readonly string[]> = {
+  on: ["tonedial on"],
+  off: ["tonedial off"],
   set: ["tonedial set", "tonedial set warmth=5 critique=4", "tonedial set persona.agent=reviewer"],
   get: ["tonedial get", "tonedial get language", "tonedial get speech_level --json"],
   test: ["tonedial test codex --dry-run", "tonedial test claude --project .", "tonedial test codex --preset my-tone --accept-usage"],
@@ -391,16 +398,12 @@ function columns(env: NodeJS.ProcessEnv, stream: NodeJS.WriteStream, isTTY: bool
 }
 
 /**
- * Words a person reaches for when they want to stop, none of which is a command.
- *
- * There is no off switch to give them, so the answer names the acts that do exist and says so.
+ * Words a person reaches for when they want to stop, but which are not command spellings.
  *
  * A deliberate ceiling: the list is guessed, not measured — nobody has reported typing any of
- * them. Replace it with a measured one when a user reports a word that is not here, or drop it
- * if the answer turns out to be the list of seventeen after all. The cost of being wrong is one
- * string; the cost of being right is that `tonedial off` stops dead-ending in that list.
+ * them. Replace it with a measured one when a user reports a word that is not here.
  */
-const STOPPING = ["off", "disable", "stop", "quit", "uninstall", "remove", "delete"];
+const STOPPING = ["disable", "stop", "quit", "uninstall", "remove", "delete"];
 
 export async function run(
   argv: string[],
@@ -522,7 +525,7 @@ export async function run(
     // The intent table is consulted before the spelling match, and a word in it never reaches
     // one: `stop` is two edits from `show` and `delete` three from `reset`, so the match would
     // answer a person trying to leave with the command they were leaving.
-    if (STOPPING.includes(name)) return fail(asJson, say.errors.noOffSwitch, 2, uiErr);
+    if (STOPPING.includes(name)) return fail(asJson, say.errors.stoppingHelp, 2, uiErr);
     return fail(asJson, say.errors.notACommand(asJson ? name : humanText(name), COMMAND_NAMES, nearest(name, COMMAND_NAMES)), 2, uiErr);
   }
 

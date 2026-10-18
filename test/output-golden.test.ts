@@ -39,6 +39,15 @@ const initialized = (args: (workspace: GoldenWorkspace, language: GoldenLanguage
 });
 
 const scenarios: Record<string, Scenario> = {
+  on: {
+    ...initialized(() => ["on"]),
+    setup: async (workspace, language) => {
+      await init(workspace, language);
+      const result = await captureCli(workspace, ["off"]);
+      assert.equal(result.status, 0, `setup off failed: ${result.stderr}`);
+    },
+  },
+  off: initialized(() => ["off"]),
   set: initialized(() => ["set", "warmth=5"]),
   get: initialized(() => ["get"]),
   test: initialized(() => ["test", "codex", "--dry-run"]),

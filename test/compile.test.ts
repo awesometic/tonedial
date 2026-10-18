@@ -374,6 +374,7 @@ test("an input the compiler cannot honour throws rather than emitting nonsense",
   assert.throws(bad({ axes: missing as Axes }), RangeError, "a missing axis");
   assert.throws(bad({ speech_level: "casual" as never }), RangeError, "an unknown speech_level");
   assert.throws(bad({ speech_level: "toString" as never }), RangeError, "an inherited name is not a speech level");
+  assert.throws(bad({ enabled: "false" as never }), RangeError, "delivery state is boolean");
   assert.throws(bad({ safeword: "   " }), RangeError, "a blank safeword would match everything");
 });
 

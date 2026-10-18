@@ -29,6 +29,14 @@ const messages: Messages = {
     launchFailed: (provider) => `No se pudo iniciar ${provider}. Comprueba su instalación y vuelve a intentarlo.`,
     selectionCancelled: "No se eligió ningún proveedor.",
   },
+  delivery: {
+    on: "ToneDial activado · marcador de pausa eliminado",
+    off: "ToneDial desactivado · marcador de pausa guardado · se conservan los ajustes y TONE.md",
+    alreadyOn: "La entrega del tono ya está activada · sin cambios",
+    alreadyOff: "La entrega del tono ya está desactivada · sin cambios",
+    openConversation: "Las conversaciones abiertas pueden conservar el tono anterior. Usa una conversación nueva para comparar el estado sin ToneDial.",
+    status: (enabled) => `Entrega del tono ${enabled ? "activada" : "desactivada"}`,
+  },
   axis: {
     range: (axis, given) => `${axis}: se esperaba 1–5 (se recibió ${given})`,
     unknown: (name, nearest) => `${name}: no es un eje${nearest ? `. ¿Querías decir ${nearest}?` : ""}`,
@@ -445,6 +453,8 @@ const messages: Messages = {
     firstSteps: "Configura el tono y revísalo:",
     examples: "Ejemplos",
     commands: {
+      on: "reanudar la entrega del tono guardado",
+      off: "pausar la entrega · conservar ajustes y TONE.md",
       init: "configurar y actualizar archivos incluidos",
       set: "cambiar ejes, rol o ajustes · sin argumentos abre el dial",
       get: "consultar valores actuales · una clave muestra su significado y opciones",
@@ -504,11 +514,10 @@ const messages: Messages = {
     notACommand: (name, known, nearest) =>
       `${name} no es un comando.${nearest ? ` ¿Querías decir ${nearest}?` : ""} ` +
       `Disponibles: ${known.join(", ")}`,
-    noOffSwitch:
-      "No hay interruptor de apagado. Si está definida, la palabra clave pide una respuesta sencilla; tonedial show indica " +
-      "si existe. tonedial reset restablece los ejes. tonedial eject --global o " +
-      "--project <path> desconecta ese ámbito. Tras quitar todas las conexiones, " +
-      "npm uninstall -g tonedial elimina el comando.",
+    stoppingHelp:
+      "Usa tonedial off para pausar la entrega sin borrar los ajustes y tonedial on para reanudarla. " +
+      "tonedial reset restablece los ejes. tonedial eject --global o --project <path> desconecta ese ámbito. " +
+      "Tras quitar todas las conexiones, npm uninstall -g tonedial elimina el comando.",
     notAnOption: (flag) => `${flag}: no es una opción. Lista: tonedial --help`,
     flagNotAccepted: (command, flag) => `${command}: no admite --${flag}`,
     tooManyArguments: (command, max, got) =>

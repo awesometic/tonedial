@@ -4,8 +4,9 @@ import {
   CONTEXT_ARTIFACT_FILENAME,
   CONTEXT_GUIDE_FILENAME,
 } from "./paths.ts";
+import { DELIVERY_OFF_MARKER } from "./anchors.ts";
 
-export const READER_PROTOCOL_VERSION = 2 as const;
+export const READER_PROTOCOL_VERSION = 3 as const;
 export const GUIDE_FORMAT_VERSION = 1 as const;
 export const GUIDE_FORMAT_MARKER = `<!-- tonedial-guide:${GUIDE_FORMAT_VERSION} -->`;
 
@@ -31,6 +32,7 @@ export const READER_REPAIR_HINTS = {
   event: "use a supported hook event",
   input: "retry the hook with a valid event payload",
   response: "retry the hook when the response is available",
+  "delivery-marker": "regenerate the tone artifact",
   "style-marker": "regenerate the tone artifact",
   unreadable: "run tonedial doctor and resolve the reported path",
 } as const;
@@ -57,6 +59,7 @@ const GUIDE_FILENAME = ${JSON.stringify(CONTEXT_GUIDE_FILENAME)};
 const ARTIFACT_FILENAME = ${JSON.stringify(CONTEXT_ARTIFACT_FILENAME)};
 const LOCK_FILENAME = "operations.lock";
 const GUIDE_MARKER = ${JSON.stringify(GUIDE_FORMAT_MARKER)};
+const DELIVERY_OFF_MARKER = ${JSON.stringify(DELIVERY_OFF_MARKER)};
 const REPAIR_HINTS = ${JSON.stringify(READER_REPAIR_HINTS)};
 const PROVIDERS = new Set(["codex", "claude", "antigravity"]);
 const EVENTS = new Set(["SessionStart", "UserPromptSubmit", "Stop", "PreInvocation"]);
@@ -345,6 +348,13 @@ function styleMarker(artifact) {
   return match === null ? null : { verbosity: Number(match[1]), care: Number(match[2]) };
 }
 
+function deliveryEnabled(artifact) {
+  const line = artifact.split(/\r?\n/, 3)[2] ?? "";
+  if (line === DELIVERY_OFF_MARKER) return false;
+  if (line.startsWith("<!-- tonedial-delivery:")) throw new ReaderFailure("delivery-marker");
+  return true;
+}
+
 // shortcut: ambiguous data-like prose skips feedback; refine only with verified host format metadata.
 function literalPayload(text) {
   const value = text.trim();
@@ -407,8 +417,12 @@ async function main() {
   const hint = providerHint(args);
   try {
     const { provider, state, event } = parseArgs(args);
-    const input = event === "Stop" ? await hookInput() : null;
     const pair = readPair(state);
+    if (!deliveryEnabled(pair.artifact)) {
+      empty(provider, event);
+      return;
+    }
+    const input = event === "Stop" ? await hookInput() : null;
     if (event === "Stop") {
       const result = styleFeedback(pair, input);
       if (result.diagnostic !== null) {

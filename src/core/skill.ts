@@ -8,6 +8,7 @@ export const SKILL_NAME = "tonedial";
 /** The current command envelope, shared by both installed control entry points. */
 const JSON_MD = `Require zero exit status and a JSON result with \`ok: true\` and \`schema: 3\`
 for every successful CLI step before continuing. Parse JSON rather than scraping human output.
+\`get --json\`, \`show --json\`, and \`compile --check --json\` report the shared \`enabled\` delivery state.
 \`chars\` reports the current TONE.md Unicode character count; no size target or maximum applies.
 Schema 3 removes guard and ceiling fields and reports advisory \`riskAxes\`; persisted config
 remains schema 2. Custom profiles use preset schema 2; legacy schema 1 and journal formats
@@ -71,6 +72,10 @@ Require zero exit status, \`ok: true\`, and \`schema: 3\` before continuing.
 This read-only command reports destinations; it does not prove that either file exists,
 matches the saved settings, or has been loaded.
 
+If it reports \`enabled: false\`, do not read or apply the context pair. Report that the settings
+are saved but delivery remains off. This also applies to tone changes made while delivery is off.
+Continue below only when it reports \`enabled: true\`.
+
 Read the complete UTF-8 file at the returned absolute \`agentsPath\` first (\`AGENTS.md\`).
 Its first line must be \`${GUIDE_FORMAT_MARKER}\`; otherwise stop the reload.
 Then read the complete UTF-8 file at the returned absolute \`path\` (\`TONE.md\`).
@@ -91,6 +96,23 @@ For diagnosis, follow the shared Connection scope and legacy state procedure.
 This reload affects only the current conversation. It does not fire a lifecycle hook, replace
 earlier context, or reload other open sessions. Future delivery still depends on an installed,
 enabled, and trusted native hook.
+`;
+
+const DELIVERY_MD = `## Pause and resume delivery
+
+For an explicit request to turn ToneDial off, run \`tonedial off --json\`, then run
+\`tonedial compile --check --json\`. Require both results to report \`enabled: false\`.
+Do not read the guide or artifact afterward. Report that saved settings, profiles and the full
+\`TONE.md\` remain. The current ToneDial reader emits no ToneDial context.
+Already delivered context cannot be removed from an open conversation; stop applying the saved
+manner where possible and name a fresh conversation as the clean check. Do not promise a perfect reset.
+The successful command proves the marker was saved, not that a native reader ran.
+A reader installed before this switch must be refreshed through the user's existing tools and scope
+before it can honor the marker.
+
+For an explicit request to turn ToneDial on, run \`tonedial on --json\`, then follow the reload
+procedure below. Turning delivery on does not prove that a native hook is installed, trusted,
+enabled or running. Neither command changes axes, persona, address, register, safeword or profiles.
 `;
 
 /** Explicit setting requests use the same CLI mapping through either installed entry point. */
@@ -229,7 +251,7 @@ Do not claim that setup, repair, or migration proves host activation or model ad
  */
 export const SKILL_MD = `---
 name: tonedial
-description: Use when the user wants to check, change, or reload ToneDial manner, tone, personality, register, preset, user description, agent role, address terms, or safeword — including requests like "be gentler", "act as a database specialist", "remember my background in ToneDial", "more formal", "call me friend", or asking what the current tone settings are.
+description: Use when the user wants to check, change, pause, resume, or reload ToneDial manner, tone, personality, register, preset, user description, agent role, address terms, or safeword — including requests like "turn ToneDial off", "be gentler", "act as a database specialist", "remember my background in ToneDial", "more formal", "call me friend", or asking what the current tone settings are.
 ---
 
 # tonedial
@@ -248,6 +270,7 @@ the user to complete CLI installation and explicit setup; do not install it or g
 tonedial get --json
 \`\`\`
 
+The top-level \`enabled\` field reports whether native delivery is on.
 The \`values\` object carries the twelve axis levels and the separate settings under their
 editable keys. An unset setting is \`null\`; description text is returned in full.
 For the formatted overview, preset state and advisory \`riskAxes\`, use \`tonedial show --json\`.
@@ -292,9 +315,11 @@ ${SETTINGS_MD}
 
 ${SETUP_MD}
 
+${DELIVERY_MD}
+
 ## Apply it in this session
 
-Successful \`set\`, \`address\`, \`persona\`, \`use\`, \`reset\`, \`save\`, and approved \`create\` commands recompile \`TONE.md\`; that is a saved state
+Successful \`on\`, \`off\`, \`set\`, \`address\`, \`persona\`, \`use\`, \`reset\`, \`save\`, and approved \`create\` commands recompile \`TONE.md\`; that is a saved state
 change, not evidence of a session reload.
 
 ${RELOAD_MD}
@@ -309,9 +334,9 @@ in the same message still faces every confirmation and permission check it other
 For an explicit request to restore the default axes, run \`tonedial reset --json\`, then follow
 the reload steps above. Saved presets remain available through \`tonedial use <slug> --json\`.
 Reset restores axes only; it does not disable hooks, unload instructions, or clear persona,
-safeword, or other settings. ToneDial has no persistent tone-off switch.
-For "turn tone off" or an ambiguous "go back to normal", explain that limit and ask whether
-the user wants an axis reset before changing state; do not silently equate off with reset.
+safeword, or other settings. Use \`tonedial off --json\` to pause delivery without changing them.
+For an ambiguous "go back to normal", ask whether the user means delivery off or an axis reset;
+do not silently equate them.
 
 ## A separate test conversation
 
@@ -469,13 +494,14 @@ selected by critique or persona. Bravado grades effort claims without replacing 
  * command name stays `/tone` even though the tool is `tonedial`: it is what a person types
  * mid-sentence, and the two extra characters are paid every time.
  */
-export const TONE_COMMAND_VERSION = 15;
+export const TONE_COMMAND_VERSION = 16;
 
 export const TONE_COMMAND_MD = `---
-description: Check, change, or reload this agent's tone, preset, or ToneDial settings
+description: Check, change, pause, resume, or reload this agent's tone, preset, or ToneDial settings
 ---
 
-Run \`tonedial get --json\` and report the requested current settings from \`values\` in plain language.
+Run \`tonedial get --json\` and report the requested current settings from \`values\` and the
+delivery state from \`enabled\` in plain language.
 Use the same installed CLI and environment throughout.
 ${JSON_MD}
 Otherwise report the failed step and stop that flow.
@@ -497,13 +523,15 @@ ${SETTINGS_MD}
 
 ${SETUP_MD}
 
+${DELIVERY_MD}
+
 ${RELOAD_MD}
 
 An explicit axis-reset request uses \`tonedial reset --json\` followed by the same reload steps.
 Reset restores axes only; it does not disable hooks, unload instructions, or clear persona,
 safeword, or other settings. Saved presets remain available.
-\`/tone off\` is not a persistent tone-off switch. Explain that limit and ask whether the user
-wants an axis reset before changing state; never silently equate off with reset.
+For an ambiguous \`/tone normal\`, ask whether the user means delivery off or an axis reset;
+never silently equate them.
 
 Never edit ToneDial's config, guide, or artifact directly; the CLI is the source of truth.
 `;

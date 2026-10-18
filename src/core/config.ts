@@ -120,6 +120,8 @@ export type ConfigWiring = {
 
 export type Config = {
   schema: number;
+  /** Shared delivery switch; profiles never replace it. */
+  enabled: boolean;
   /** Last applied or saved profile; retained when current tone settings diverge. */
   preset: string | null;
   /** True when tone settings have changed since the profile was applied or saved. */
@@ -158,6 +160,7 @@ export type ApprovedConfigMigration = {
 export function defaultConfig(): Config {
   return {
     schema: CONFIG_SCHEMA,
+    enabled: true,
     preset: null,
     unsaved: false,
     axes: { ...AXIS_DEFAULT },
@@ -630,7 +633,7 @@ export function parseConfig(text: string, t: Messages = catalogue("en").cli): Co
   // An unknown key is refused by name rather than silently dropped on the next write. This
   // file is user-editable, and a tool that eats what a person typed has no business asking
   // them to trust it with someone else's files later.
-  const KNOWN = ["schema", "preset", "unsaved", "axes", "persona", "safeword", "guards", "fixed_width",
+  const KNOWN = ["schema", "enabled", "preset", "unsaved", "axes", "persona", "safeword", "guards", "fixed_width",
     "speech_level", "language", "seedVersion", "managedSeeds", "wiring"];
   const unknown = Object.keys(raw).filter((k) => !KNOWN.includes(k));
   if (unknown.length) throw new ConfigError(t.config.unknownKey(unknown.join(", "), KNOWN));
@@ -660,6 +663,7 @@ export function parseConfig(text: string, t: Messages = catalogue("en").cli): Co
   }
 
   const common = {
+    enabled: raw.enabled === undefined ? true : requiredBoolean(raw.enabled, "enabled", t),
     preset: asString(raw.preset, "preset", t),
     unsaved: raw.unsaved === true,
     axes: readAxes(raw.axes, t),
@@ -690,6 +694,9 @@ export function serializeConfig(config: Config, t: Messages = catalogue("en").cl
     JSON.stringify(
       {
         schema: CONFIG_SCHEMA,
+        // On is the historical default. Omit it so ordinary writes retain the released shape;
+        // only the meaningful paused state needs a persisted byte.
+        ...(current.enabled ? {} : { enabled: false }),
         preset: current.preset,
         unsaved: current.unsaved,
         axes,
@@ -727,6 +734,7 @@ export function prepareApprovedMigration(
   return {
     config: {
       schema: CONFIG_SCHEMA,
+      enabled: legacy.enabled,
       preset: legacy.preset,
       unsaved: legacy.unsaved,
       axes: { ...legacy.axes },
@@ -746,7 +754,7 @@ export function prepareApprovedMigration(
   };
 }
 
-export const USER_SETTING_KEYS = ["preset", "unsaved", "axes", "persona", "safeword", "speech_level", "language"] as const;
+export const USER_SETTING_KEYS = ["enabled", "preset", "unsaved", "axes", "persona", "safeword", "speech_level", "language"] as const;
 
 export type SettingsRecovery = {
   config: ConfigV2;

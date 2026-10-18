@@ -274,6 +274,7 @@ test("literal original artifact text recovers its rendered data and exposes sett
 
 test("current controls and composites decode exactly, while altered or duplicate static instructions are refused", () => {
   const config = defaultConfig();
+  config.enabled = false;
   config.axes = { ...AXIS_DEFAULT, warmth: 5, profanity: 4, compliance: 1, conviction: 1 };
   config.safeword = null;
   config.speech_level = "plain";
@@ -288,6 +289,7 @@ test("current controls and composites decode exactly, while altered or duplicate
   assert.equal(Object.hasOwn(result.config, "guards"), false);
   assert.equal(result.config.safeword, null);
   assert.equal(result.config.speech_level, "plain");
+  assert.equal(result.config.enabled, false);
   assert.deepEqual(result.config.persona, config.persona);
   assert.ok(result.invalid.includes("preset"));
   assert.ok(result.invalid.includes("unsaved"));
@@ -313,6 +315,7 @@ test("current controls and composites decode exactly, while altered or duplicate
     artifact.replace(boundary, ""),
     artifact.replace(boundary, `${boundary}${boundary}`),
     artifact.replace(marker, "<!-- tonedial-style:1 verbosity=1 care=1 -->"),
+    artifact.replace("<!-- tonedial-delivery:off -->", "<!-- tonedial-delivery:paused -->"),
     `${OLD_TONE}DO_NOT_ECHO_EXTRA_TRAILER\n`,
   ];
   for (const variant of variants) assert.equal(recoverLegacyTone(variant, EN), null);

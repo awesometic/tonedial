@@ -789,8 +789,8 @@ test("both windows onto the CLI carry one reload procedure, and it reads the gui
 
   // The skill and the slash command are two windows onto one CLI, so the procedure they hand the
   // model has to be one text. Forking it is the failure this looks for: the shared run collapses.
-  const anchor = skill.findIndex((line) => line.includes("compile --check --json"));
-  assert.ok(anchor >= 0, "the skill no longer names the command that returns the paths");
+  const anchor = skill.findIndex((line) => line.startsWith("First distinguish a successful settings change"));
+  assert.ok(anchor >= 0, "the skill no longer carries the shared reload procedure");
   const start = command.findIndex((line) => line === skill[anchor]);
   assert.ok(start >= 0, "the command no longer shares the skill's reload procedure");
   const shared: string[] = [];
@@ -813,6 +813,7 @@ test("both windows onto the CLI carry one reload procedure, and it reads the gui
   const current = await invoke(["get"]);
   assert.equal(current.code, 0, JSON.stringify(current.value));
   assert.equal(current.value.schema, 3);
+  assert.equal(current.value.enabled, true);
   assert.equal(typeof current.value.values.warmth, "number");
   assert.equal(current.value.values["persona.agent"], parseConfig(readFileSync(resolvePaths(env).config, "utf8")).persona.agent);
   const recoverySection = (lines: string[]) => /^## Connection scope and application recovery\n([\s\S]*?)(?=\n## |\nFirst distinguish)/m.exec(lines.join("\n"))?.[1];

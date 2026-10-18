@@ -108,6 +108,14 @@ export type Messages = {
     launchFailed: (provider: string) => string;
     selectionCancelled: string;
   };
+  delivery: {
+    on: string;
+    off: string;
+    alreadyOn: string;
+    alreadyOff: string;
+    openConversation: string;
+    status: (enabled: boolean) => string;
+  };
   axis: {
     range: (axis: string, given: string) => string;
     unknown: (name: string, nearest: string | null) => string;
@@ -490,7 +498,7 @@ export type Messages = {
     /** The two commands someone who has just installed this should run. */
     firstSteps: string;
     examples: string;
-    commands: { init: string; set: string; get: string; address: string; persona: string; reset: string; show: string; create: string; save: string; list: string; edit: string; use: string; compile: string; export: string; import: string; wire: string; unwire: string; doctor: string; update: string; eject: string; test: string };
+    commands: { on: string; off: string; init: string; set: string; get: string; address: string; persona: string; reset: string; show: string; create: string; save: string; list: string; edit: string; use: string; compile: string; export: string; import: string; wire: string; unwire: string; doctor: string; update: string; eject: string; test: string };
     flags: { global: string; here: string; project: string; migrateLegacy: string; auto: string; dryRun: string; lang: string; commands: string; tools: string; fix: string; rollback: string; quarantineOperation: string; fromOperation: string; fromPreset: string; restorePreset: string; preset: string; slug: string; acceptUsage: string; explain: string; check: string; json: string; verbose: string; color: string; version: string; help: string };
   };
   combos: {
@@ -502,8 +510,8 @@ export type Messages = {
   };
   errors: {
     notACommand: (name: string, known: readonly string[], nearest: string | null) => string;
-    /** The words a person reaches for to stop using this, none of which is a command. */
-    noOffSwitch: string;
+    /** Guidance for stopping words that are not exact command spellings. */
+    stoppingHelp: string;
     notAnOption: (flag: string) => string;
     flagNotAccepted: (command: string, flag: string) => string;
     tooManyArguments: (command: string, max: number, got: number) => string;
@@ -608,6 +616,14 @@ const enMessages: Messages = {
     history: "The provider may retain this conversation in its own history.",
     launchFailed: (provider) => `Could not start ${provider}. Check its installation and try again.`,
     selectionCancelled: "No provider selected.",
+  },
+  delivery: {
+    on: "ToneDial on · delivery marker cleared",
+    off: "ToneDial off · delivery marker saved · settings and TONE.md kept",
+    alreadyOn: "ToneDial already on · no changes",
+    alreadyOff: "ToneDial already off · no changes",
+    openConversation: "Open conversations may retain an earlier tone. Use a new conversation for a clean no-ToneDial comparison.",
+    status: (enabled) => `ToneDial ${enabled ? "on" : "off"}`,
   },
   axis: {
     range: (axis, given) => `${axis}: expected 1–5 (got ${given})`,
@@ -1029,6 +1045,8 @@ const enMessages: Messages = {
     firstSteps: "Set up your tone, then inspect it:",
     examples: "Examples",
     commands: {
+      on: "resume saved tone delivery",
+      off: "pause tone delivery · keep settings and TONE.md",
       init: "set up and refresh bundled files",
       set: "change axes, role or settings · bare opens dial",
       get: "read current setting values · key adds its meaning and choices",
@@ -1088,11 +1106,10 @@ const enMessages: Messages = {
     notACommand: (name, known, nearest) =>
       `${name} is not a command.${nearest ? ` Did you mean ${nearest}?` : ""} ` +
       `Available: ${known.join(", ")}`,
-    noOffSwitch:
-      "There is no off switch. If set, a safeword requests one plain answer; tonedial show reports " +
-      "whether one exists. tonedial reset restores axis defaults. tonedial eject --global or " +
-      "--project <path> disconnects that scope. Once all connections are gone, " +
-      "npm uninstall -g tonedial removes the command.",
+    stoppingHelp:
+      "Use tonedial off to pause tone delivery without deleting settings; tonedial on resumes it. " +
+      "tonedial reset restores axis defaults. tonedial eject --global or --project <path> " +
+      "disconnects that scope. Once all connections are gone, npm uninstall -g tonedial removes the command.",
     notAnOption: (flag) => `${flag}: not an option. List: tonedial --help`,
     flagNotAccepted: (command, flag) => `${command}: does not accept --${flag}`,
     tooManyArguments: (command, max, got) =>
@@ -1306,6 +1323,14 @@ const koMessages: Messages = {
     history: "도구가 자체 대화 기록을 남길 수 있습니다.",
     launchFailed: (provider) => `${provider}를 시작하지 못했습니다. 설치 상태를 확인하고 다시 시도해 주세요.`,
     selectionCancelled: "도구를 선택하지 않았습니다.",
+  },
+  delivery: {
+    on: "ToneDial 켜짐 · 전달 중지 마커 제거",
+    off: "ToneDial 꺼짐 · 전달 중지 마커 저장 · 설정과 TONE.md 유지",
+    alreadyOn: "ToneDial이 이미 켜져 있음 · 변경 없음",
+    alreadyOff: "ToneDial이 이미 꺼져 있음 · 변경 없음",
+    openConversation: "열린 대화에는 이전 말투가 남을 수 있습니다. ToneDial이 없는 상태를 제대로 비교하려면 새 대화를 여세요.",
+    status: (enabled) => `ToneDial ${enabled ? "켜짐" : "꺼짐"}`,
   },
   axis: {
     range: (axis, given) => `${axis}: 1~5만 쓸 수 있습니다(입력: ${given})`,
@@ -1729,6 +1754,8 @@ const koMessages: Messages = {
     firstSteps: "말투를 설정한 뒤 확인하세요:",
     examples: "사용 예",
     commands: {
+      on: "저장한 말투 전달 재개",
+      off: "말투 전달 일시정지 · 설정·TONE.md 유지",
       init: "초기 설정과 기본 파일 갱신",
       set: "축·역할·설정 변경 · 인자 없으면 다이얼",
       get: "현재 설정값 조회 · 키를 지정하면 의미와 선택지도 표시",
@@ -1788,11 +1815,10 @@ const koMessages: Messages = {
     notACommand: (name, known, nearest) =>
       `${name}: 명령이 아닙니다.${nearest ? ` ${nearest} 말씀이신가요?` : ""} ` +
       `사용 가능: ${known.join(", ")}`,
-    noOffSwitch:
-      "끄는 스위치는 없습니다. 세이프워드를 정했다면 한 메시지만 담백하게 답해 달라고 요청할 수 " +
-      "있습니다. 설정 여부는 tonedial show에서 확인하세요. tonedial reset은 축을 기본값으로 " +
-      "돌립니다. tonedial eject --global이나 --project <path>는 그 범위의 연결을 해제합니다. " +
-      "연결을 모두 해제한 뒤 npm uninstall -g tonedial로 명령을 삭제할 수 있습니다.",
+    stoppingHelp:
+      "설정을 지우지 않고 말투 전달만 멈추려면 tonedial off를 실행하세요. tonedial on으로 다시 켤 수 있습니다. " +
+      "tonedial reset은 축을 기본값으로 돌립니다. tonedial eject --global이나 --project <path>는 " +
+      "해당 범위의 연결을 해제합니다. 연결을 모두 해제한 뒤 npm uninstall -g tonedial로 명령을 삭제할 수 있습니다.",
     notAnOption: (flag) => `${flag}: 옵션이 아닙니다. 목록: tonedial --help`,
     flagNotAccepted: (command, flag) => `${command}: --${flag} 옵션을 받지 않습니다`,
     tooManyArguments: (command, max, got) => `${command}: 인자는 최대 ${max}개지만 ${got}개를 받았습니다`,

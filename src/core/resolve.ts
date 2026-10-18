@@ -10,6 +10,7 @@ export function toCompileInput(stored: StoredConfig): CompileInput {
     // The slug rides in the generation comment, so the model reads it. `unsaved` is what the
     // artifact says once tone settings have moved away from the profile that named them.
     preset: stored.unsaved ? null : stored.preset,
+    ...(stored.enabled ? {} : { enabled: false }),
     axes: stored.axes,
     speech_level: stored.speech_level,
     persona: hasPersona ? p : null,

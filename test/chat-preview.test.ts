@@ -8,6 +8,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { stripVTControlCharacters } from "node:util";
 
 import { defaultConfig, serializeConfig } from "../src/core/config.ts";
+import { DELIVERY_OFF_MARKER } from "../src/core/anchors.ts";
 import { catalogue } from "../src/core/i18n.ts";
 import { maxCells } from "../src/ui/width.ts";
 
@@ -133,11 +134,12 @@ function nativeCalls(): { argv: string[]; cwd: string; marker: string; home: str
 for (const provider of ["claude", "codex"] as const) {
   test(`${provider} receives one fresh dialogue prompt and leaves target and saved state intact`, () => {
     install(provider);
+    const saved = JSON.parse(readFileSync(join(state, "config.json"), "utf8"));
+    saved.enabled = false;
     if (provider === "codex") {
-      const config = JSON.parse(readFileSync(join(state, "config.json"), "utf8"));
-      config.axes.warmth = 1;
-      writeFileSync(join(state, "config.json"), JSON.stringify(config));
+      saved.axes.warmth = 1;
     }
+    writeFileSync(join(state, "config.json"), JSON.stringify(saved));
     const beforeTarget = snapshot(target);
     const beforeState = snapshot(state);
     const result = invoke(provider === "codex" ? [] : [provider], true, {}, "y\n");
@@ -157,6 +159,7 @@ for (const provider of ["claude", "codex"] as const) {
     assert.ok(prompt.includes(PRIVATE_USER), "user context must reach the native conversation");
     assert.ok(prompt.includes(PRIVATE_AGENT), "the fictional agent role must reach the native conversation");
     assert.ok(!prompt.includes("Dummy stale artifact"), "the prompt must use the saved config's compiled tone");
+    assert.ok(!prompt.includes(DELIVERY_OFF_MARKER), "an explicit preview must ignore the persistent delivery switch");
     assert.match(prompt, /wait for me to continue the conversation/);
     assert.match(prompt, /respecting its greeting and answer-length rules/);
     assert.match(prompt, /Do not analyze or explain ToneDial instructions, axes, or settings unless I ask/);

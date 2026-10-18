@@ -118,7 +118,7 @@ export async function runCompile(ctx: Ctx): Promise<CommandResult> {
       `  ${ctx.ui.dim(artifactSize(size, ctx.t))}`,
       ...nextStep(check && !current ? "tonedial compile" : "tonedial show", ctx.ui),
     ],
-    json: { path: ctx.paths.tone, agentsPath: ctx.paths.agents, written: !check, ...size },
+    json: { path: ctx.paths.tone, agentsPath: ctx.paths.agents, enabled: config.enabled, written: !check, ...size },
     warnings: [],
   };
 }

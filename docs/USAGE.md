@@ -120,7 +120,8 @@ Use `show <slug>` to preview a saved profile without applying it.
 
 The readable keys are all [twelve axes](#tone-and-axes) and every setting in the table below.
 Single-key human output includes an explanation and available enum values;
-JSON always returns a flat `values` object, with one key or all keys.
+JSON always returns a flat `values` object, with one key or all keys, plus the shared boolean
+`enabled` delivery state at the top level.
 Numbers remain numbers, unset fields are `null`, and text is returned in full.
 Wiring, file paths and internal ownership records are diagnosed with `doctor`, outside `get`.
 
@@ -238,10 +239,19 @@ tonedial show --explain
 tonedial set warmth=5 critique=4
 tonedial reset warmth              # one axis to its default
 tonedial reset                     # all axes to their defaults
+tonedial off                       # pause delivery; keep the saved tone
+tonedial on                        # resume delivery
 ```
 
 `reset` preserves persona, safeword and other settings.
-It neither disables delivery nor unloads context; there is no persistent tone-off switch.
+It neither disables delivery nor unloads context.
+`off` adds a delivery marker while retaining the complete compiled tone;
+the current managed reader emits no ToneDial context until `on` removes it.
+The switch is shared by every connection using that state root and is not part of a profile.
+It cannot remove context already delivered to an open conversation, so use a fresh conversation
+for a clean comparison with the model's ordinary manner.
+After updating an older installation, refresh its existing tools and scope through the normal
+previewed `init` flow before using `off`; an older installed reader does not recognize the marker.
 The safeword requests one plain answer without persona, flattery or jokes, then the saved tone resumes.
 It authorizes no action or intense tone and may not be followed by the model.
 ToneDial adds no factuality, visible-refusal, flattery-honesty or emergency-register guard; host permissions and file-change consent still apply.
@@ -445,6 +455,7 @@ tonedial eject --here
 ```
 
 Removal preserves shared state, profiles, CLI, shell PATH, other scopes/consumers and changed or ambiguous foreign resources.
+Use `off` instead when the connections should remain installed and only delivery should pause.
 
 ## Hook refresh and bounded style feedback
 
@@ -465,10 +476,13 @@ Use the generated skill as `/tonedial` where the host exposes it as a command; o
 ```text
 /tonedial drop the flattery
 /tonedial be blunter about the code
+/tonedial turn ToneDial off
+/tonedial turn ToneDial on
 /tonedial reload the current settings
 ```
 
 The skill saves through the CLI, runs `compile --check --json`, then reads `AGENTS.md` followed by `TONE.md`.
+After `off`, it verifies the disabled state without reading the pair. `on` follows the normal reload path.
 Reload changes no setting, runs no lifecycle hook and reaches only this conversation.
 A settings question reports state without reading the pair.
 Open conversations retain existing context until reload; new ones depend on their delivery route.
@@ -603,6 +617,7 @@ Successful tone mutations recompile in the same action.
 
 | Command | Purpose |
 |---|---|
+| `on` / `off` | Resume/pause hook delivery; keep settings, profiles and full `TONE.md` |
 | `set <key>=<value> …` | Change axes/settings; bare opens the dial |
 | `get [key]` | Read one/all current editable values; key adds meaning and choices |
 | `address [self user]` | Set address; bare asks for both |
@@ -628,6 +643,7 @@ Ordinary changes compile automatically; `compile --check --json` also supplies r
 | Machine contract | Behavior |
 |---|---|
 | Envelope | Every command accepts `--json`; integer `schema: 3`, including version/errors |
+| Delivery state | `get`, `show`, `compile --check`, `on` and `off` report boolean `enabled` |
 | Stored schemas | Config 2; preset 2 with legacy 1 support; operation formats separate |
 | Streams | JSON stdout has no terminal escapes or ToneDial prompts/provider handoff |
 | Export | Plain is raw preset JSON; `--json` wraps it |
@@ -664,6 +680,7 @@ Enter `y` to accept; Enter or `n` cancels.
 | Folder | Current directory or existing `--project` directory |
 
 Compilation happens in memory and leaves ToneDial state unchanged.
+This explicit preview uses the chosen tone even while persistent hook delivery is off.
 The opening prompt requests dialogue only and no file changes throughout that folder.
 Claude disables built-in tools and denies MCP tools; Codex requests a read-only sandbox without approval escalation.
 Claude safe mode and Codex invocation-only hook/doc overrides request exclusion of previous connected ToneDial context.
