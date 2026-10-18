@@ -247,7 +247,8 @@ The producer sees no predictions, repository design or judging instructions; the
 
 The README's [default-vs-`vibe-coder` record](./media/readme/verbosity-comparison.json) is an `n=1`
 illustration of a complete profile, not a scored measurement or a single-axis claim.
-Its consumer test protects the fixed question, raw replies, hashes, profile bytes and evidence limits.
+Its consumer test protects the displayed instruction, raw replies, hashes, profile bytes,
+excluded preflight and evidence limits.
 
 | Case | Packs | Scenarios | Tiers | Repetitions |
 | --- | --- | --- | --- | --- |

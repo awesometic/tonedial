@@ -119,18 +119,22 @@ preserve their recorded deviations as well as their replies.
 
 ## Default vs profile
 
-The README comparison uses two fresh native Codex CLI sessions with the same fixed question,
+The README comparison uses two fresh native Codex CLI sessions with the same fixed instruction,
 `gpt-5.6-sol` and `high`: one control with no ToneDial manner supplied, and one launched through
 `tonedial test codex --preset vibe-coder`.
-It preserves the first completed reply from each condition and counts English prose words before the shared code block.
+It displays the instruction above the image, preserves the first completed reply from each condition
+and counts every English response word with the consumer test's documented tokenizer.
 
 ```bash
 node scripts/verbosity-svg.ts en > verbosity-comparison.svg
 node scripts/verbosity-svg.ts ko > verbosity-comparison-ko.svg
 ```
 
-The public JSON owns the prompt, raw opening and question replies, hashes, model/client metadata,
+The public JSON owns the instruction, raw opening and response text, hashes, model/client metadata,
 profile source and the pre-registered direction of the comparison.
+It also preserves the excluded control preflight whose underspecified instruction produced a nonexistent command;
+no profile arm was run for that input.
+Treat the recorded plans as style examples, not validated roadmap or command-reference guidance.
 The complete profile changes more than verbosity, so describe the result as a default-vs-profile illustration,
 not proof of an isolated `verbosity=1` effect.
 One reply per condition does not establish repeatability, scored adherence or hook activation.

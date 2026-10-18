@@ -19,14 +19,18 @@ Pick a character, tune twelve dials, and save a voice to use across projects.
 
 **[See all 7 characters →](https://github.com/awesometic/tonedial/blob/main/docs/EXAMPLES.md)**
 
-## Same model. Less preamble.
+## Same model. A tighter plan.
 
-With `gpt-5.6-sol` / `high`, we ran one fresh session with Codex defaults and one with the complete `vibe-coder` profile below.
+At `gpt-5.6-sol` / `high`, one fresh session used Codex defaults and one used the complete `vibe-coder` profile below.
 `verbosity=1` is one part of that profile, not the only difference.
 
-<img src="https://raw.githubusercontent.com/awesometic/tonedial/main/docs/media/readme/en/verbosity-comparison.svg" alt="GPT-5.6 Sol high gives the same explicit-guard fix with Codex defaults and the complete vibe-coder profile; the profile response uses five prose words instead of fifteen" width="760">
+**Instruction**
 
-<sub>Same prompt · first completed reply in each fresh session · 15 → 5 prose words. One illustrative pair, not an isolated-axis benchmark. <a href="https://github.com/awesometic/tonedial/blob/main/docs/media/readme/verbosity-comparison.json">Inputs & provenance</a>.</sub>
+> I want to make ToneDial easier for first-time users. The README should get them from installation through `tonedial init` to their first preview with `tonedial test codex --preset <slug>`, and the CLI should make that next step obvious after `init`. Give me a prioritized three-step improvement plan for the README and first-run CLI flow.
+
+<img src="https://raw.githubusercontent.com/awesometic/tonedial/main/docs/media/readme/en/verbosity-comparison.svg" alt="GPT-5.6 Sol high answers the same three-step ToneDial improvement-plan instruction with Codex defaults and the complete vibe-coder profile; the profile response uses 82 words instead of 148" width="760">
+
+<sub>Same instruction · first completed reply in each fresh session · 148 → 82 response words. One illustrative pair, not an isolated-axis benchmark. The replies demonstrate style; use the guides below for product behavior and commands. <a href="https://github.com/awesometic/tonedial/blob/main/docs/media/readme/verbosity-comparison.json">Inputs & provenance</a>.</sub>
 
 ## How would you use it?
 

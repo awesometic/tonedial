@@ -1,57 +1,112 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="536" viewBox="0 0 1120 536" role="img" aria-labelledby="title description">
-<title id="title">同一模型，更少铺垫</title>
-<desc id="description">This crashes when `name` is null. Should I use optional chaining, a default parameter, or an explicit guard? Choose one and give me the replacement function.
-
-```js
-function label(name) {
-  return name.trim();
-}
-```
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="1052" viewBox="0 0 1120 1052" role="img" aria-labelledby="title description">
+<title id="title">同一模型，更精简的计划</title>
+<desc id="description">I want to make ToneDial easier for first-time users. The README should get them from installation through `tonedial init` to their first preview with `tonedial test codex --preset &lt;slug&gt;`, and the CLI should make that next step obvious after `init`. Give me a prioritized three-step improvement plan for the README and first-run CLI flow.
 
 Codex 默认设置
-Use an explicit guard. Default parameters don’t handle `null`, and optional chaining would return `undefined`.
+1. Make the README’s quick start a complete first-success path
+   Show one copy-pasteable sequence near the top:
 
-```js
-function label(name) {
-  if (name == null) return '';
-  return name.trim();
-}
-```
+   ```sh
+   # install ToneDial
+   tonedial init
+   tonedial test codex --preset &lt;slug&gt;
+   ```
+
+   Explain where `&lt;slug&gt;` comes from during `init`, what `init` creates, and what a successful preview looks like. Keep optional configuration and advanced concepts after this path.
+
+2. End `tonedial init` with a personalized next command
+   After initialization, print the exact runnable command using the selected or created preset:
+
+   ```text
+   ToneDial is ready.
+
+   Preview your Codex tone:
+     tonedial test codex --preset friendly-expert
+   ```
+
+   Avoid requiring users to remember a slug or reconstruct the command from documentation.
+
+3. Harden and validate the handoff
+   Ensure the suggested preview works immediately after every successful `init` path. Add focused tests for the final CLI output and the generated preset, then manually follow the README from a clean environment to catch mismatched installation commands, preset names, or prerequisites.
 
 vibe-coder
-Use an explicit guard, boss.
+Boss, prioritize one copy-pasteable happy path:
 
-```js
-function label(name) {
-  if (name == null) return '';
-  return name.trim();
-}
-```</desc>
-<rect width="1120" height="536" rx="16" fill="#171b20"/>
-<g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, system-ui"><text x="36" y="52" fill="#edf3f6" font-size="30" font-weight="700" xml:space="preserve">同一模型，更少铺垫</text>
+1. **README Quickstart**
+   - Installation → `tonedial init` → `tonedial test codex --preset &lt;slug&gt;`.
+   - Show where `&lt;slug&gt;` comes from and one real example.
+
+2. **Actionable `init` completion**
+   - Print the exact next command using the initialized preset:
+   ```text
+   Next: tonedial test codex --preset vibe-coder
+   ```
+
+3. **First-run guardrails**
+   - Improve invalid/missing preset errors with available slugs and the correct command.
+   - Add automated checks for README commands and `init` output.
+
+Done: prioritized plan.
+Remaining: implementation and verification.</desc>
+<rect width="1120" height="1052" rx="16" fill="#171b20"/>
+<g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, system-ui"><text x="36" y="52" fill="#edf3f6" font-size="30" font-weight="700" xml:space="preserve">同一模型，更精简的计划</text>
 <text x="36" y="84" fill="#66d9dc" font-size="19" font-weight="700" xml:space="preserve">Codex CLI · gpt-5.6-sol · high</text>
-<rect x="36" y="116" width="514" height="358" rx="14" fill="#1d232a" stroke="#34424d"/>
+<rect x="36" y="116" width="514" height="872" rx="14" fill="#1d232a" stroke="#34424d"/>
 <text x="60" y="158" fill="#66d9dc" font-size="23" font-weight="700" xml:space="preserve">Codex 默认设置</text>
-<text x="400" y="158" fill="#b8cbd4" font-size="16" font-weight="700" xml:space="preserve">说明 15 个词</text>
+<text x="412" y="158" fill="#b8cbd4" font-size="16" font-weight="700" xml:space="preserve">148 个词</text>
 <text x="60" y="188" fill="#b8cbd4" font-size="15" font-weight="400" xml:space="preserve">未提供 ToneDial 语气</text>
 <path d="M60 208H526" stroke="#34424d"/>
-<text x="60" y="244" fill="#edf3f6" font-size="19" font-weight="400" xml:space="preserve">Use an explicit guard. Default</text>
-<text x="60" y="272" fill="#edf3f6" font-size="19" font-weight="400" xml:space="preserve">parameters don’t handle null, and</text>
-<text x="60" y="300" fill="#edf3f6" font-size="19" font-weight="400" xml:space="preserve">optional chaining would return</text>
-<text x="60" y="328" fill="#edf3f6" font-size="19" font-weight="400" xml:space="preserve">undefined.</text>
-<text x="60" y="370" fill="#b8e5df" font-size="18" font-weight="400" xml:space="preserve">function label(name) {</text>
-<text x="60" y="397" fill="#b8e5df" font-size="18" font-weight="400" xml:space="preserve">  if (name == null) return '';</text>
-<text x="60" y="424" fill="#b8e5df" font-size="18" font-weight="400" xml:space="preserve">  return name.trim();</text>
-<text x="60" y="451" fill="#b8e5df" font-size="18" font-weight="400" xml:space="preserve">}</text>
-<rect x="570" y="116" width="514" height="358" rx="14" fill="#1d232a" stroke="#34424d"/>
+<text x="60" y="240" fill="#edf3f6" font-size="16" font-weight="700" xml:space="preserve">1. Make the README’s quick start a complete</text>
+<text x="60" y="263" fill="#edf3f6" font-size="16" font-weight="700" xml:space="preserve">   first-success path</text>
+<text x="60" y="286" fill="#edf3f6" font-size="16" font-weight="400" xml:space="preserve">Show one copy-pasteable sequence near the top:</text>
+<text x="60" y="321" fill="#b8e5df" font-size="16" font-weight="400" xml:space="preserve"># install ToneDial</text>
+<text x="60" y="344" fill="#b8e5df" font-size="16" font-weight="400" xml:space="preserve">tonedial init</text>
+<text x="60" y="367" fill="#b8e5df" font-size="16" font-weight="400" xml:space="preserve">tonedial test codex --preset &lt;slug&gt;</text>
+<text x="60" y="402" fill="#edf3f6" font-size="16" font-weight="400" xml:space="preserve">Explain where &lt;slug&gt; comes from during init,</text>
+<text x="60" y="425" fill="#edf3f6" font-size="16" font-weight="400" xml:space="preserve">what init creates, and what a successful</text>
+<text x="60" y="448" fill="#edf3f6" font-size="16" font-weight="400" xml:space="preserve">preview looks like. Keep optional</text>
+<text x="60" y="471" fill="#edf3f6" font-size="16" font-weight="400" xml:space="preserve">configuration and advanced concepts after this</text>
+<text x="60" y="494" fill="#edf3f6" font-size="16" font-weight="400" xml:space="preserve">path.</text>
+<text x="60" y="529" fill="#edf3f6" font-size="16" font-weight="700" xml:space="preserve">2. End tonedial init with a personalized next</text>
+<text x="60" y="552" fill="#edf3f6" font-size="16" font-weight="700" xml:space="preserve">   command</text>
+<text x="60" y="575" fill="#edf3f6" font-size="16" font-weight="400" xml:space="preserve">After initialization, print the exact runnable</text>
+<text x="60" y="598" fill="#edf3f6" font-size="16" font-weight="400" xml:space="preserve">command using the selected or created preset:</text>
+<text x="60" y="633" fill="#b8e5df" font-size="16" font-weight="400" xml:space="preserve">ToneDial is ready.</text>
+<text x="60" y="668" fill="#b8e5df" font-size="16" font-weight="400" xml:space="preserve">Preview your Codex tone:</text>
+<text x="60" y="691" fill="#b8e5df" font-size="16" font-weight="400" xml:space="preserve">tonedial test codex --preset friendly-expert</text>
+<text x="60" y="726" fill="#edf3f6" font-size="16" font-weight="400" xml:space="preserve">Avoid requiring users to remember a slug or</text>
+<text x="60" y="749" fill="#edf3f6" font-size="16" font-weight="400" xml:space="preserve">reconstruct the command from documentation.</text>
+<text x="60" y="784" fill="#edf3f6" font-size="16" font-weight="700" xml:space="preserve">3. Harden and validate the handoff</text>
+<text x="60" y="807" fill="#edf3f6" font-size="16" font-weight="400" xml:space="preserve">Ensure the suggested preview works immediately</text>
+<text x="60" y="830" fill="#edf3f6" font-size="16" font-weight="400" xml:space="preserve">after every successful init path. Add focused</text>
+<text x="60" y="853" fill="#edf3f6" font-size="16" font-weight="400" xml:space="preserve">tests for the final CLI output and the</text>
+<text x="60" y="876" fill="#edf3f6" font-size="16" font-weight="400" xml:space="preserve">generated preset, then manually follow the</text>
+<text x="60" y="899" fill="#edf3f6" font-size="16" font-weight="400" xml:space="preserve">README from a clean environment to catch</text>
+<text x="60" y="922" fill="#edf3f6" font-size="16" font-weight="400" xml:space="preserve">mismatched installation commands, preset</text>
+<text x="60" y="945" fill="#edf3f6" font-size="16" font-weight="400" xml:space="preserve">names, or prerequisites.</text>
+<rect x="570" y="116" width="514" height="872" rx="14" fill="#1d232a" stroke="#34424d"/>
 <text x="594" y="158" fill="#66d9dc" font-size="23" font-weight="700" xml:space="preserve">vibe-coder</text>
-<text x="934" y="158" fill="#b8cbd4" font-size="16" font-weight="700" xml:space="preserve">说明 5 个词</text>
+<text x="946" y="158" fill="#b8cbd4" font-size="16" font-weight="700" xml:space="preserve">82 个词</text>
 <text x="594" y="188" fill="#b8cbd4" font-size="15" font-weight="400" xml:space="preserve">$ tonedial test codex --preset vibe-coder</text>
 <path d="M594 208H1060" stroke="#34424d"/>
-<text x="594" y="244" fill="#edf3f6" font-size="19" font-weight="400" xml:space="preserve">Use an explicit guard, boss.</text>
-<text x="594" y="286" fill="#b8e5df" font-size="18" font-weight="400" xml:space="preserve">function label(name) {</text>
-<text x="594" y="313" fill="#b8e5df" font-size="18" font-weight="400" xml:space="preserve">  if (name == null) return '';</text>
-<text x="594" y="340" fill="#b8e5df" font-size="18" font-weight="400" xml:space="preserve">  return name.trim();</text>
-<text x="594" y="367" fill="#b8e5df" font-size="18" font-weight="400" xml:space="preserve">}</text>
-<text x="36" y="506" fill="#b8cbd4" font-size="17" font-weight="400" xml:space="preserve">同一问题 · 首次完整回复 · 每种条件1次 · 2026-10-18</text></g>
+<text x="594" y="240" fill="#edf3f6" font-size="16" font-weight="400" xml:space="preserve">Boss, prioritize one copy-pasteable happy</text>
+<text x="594" y="263" fill="#edf3f6" font-size="16" font-weight="400" xml:space="preserve">path:</text>
+<text x="594" y="298" fill="#edf3f6" font-size="16" font-weight="700" xml:space="preserve">1. README Quickstart</text>
+<text x="594" y="321" fill="#edf3f6" font-size="16" font-weight="400" xml:space="preserve">   - Installation → tonedial init → tonedial</text>
+<text x="594" y="344" fill="#edf3f6" font-size="16" font-weight="400" xml:space="preserve">     test codex --preset &lt;slug&gt;.</text>
+<text x="594" y="367" fill="#edf3f6" font-size="16" font-weight="400" xml:space="preserve">   - Show where &lt;slug&gt; comes from and one real</text>
+<text x="594" y="390" fill="#edf3f6" font-size="16" font-weight="400" xml:space="preserve">     example.</text>
+<text x="594" y="425" fill="#edf3f6" font-size="16" font-weight="700" xml:space="preserve">2. Actionable init completion</text>
+<text x="594" y="448" fill="#edf3f6" font-size="16" font-weight="400" xml:space="preserve">   - Print the exact next command using the</text>
+<text x="594" y="471" fill="#edf3f6" font-size="16" font-weight="400" xml:space="preserve">     initialized preset:</text>
+<text x="594" y="494" fill="#b8e5df" font-size="16" font-weight="400" xml:space="preserve">Next: tonedial test codex --preset vibe-coder</text>
+<text x="594" y="529" fill="#edf3f6" font-size="16" font-weight="700" xml:space="preserve">3. First-run guardrails</text>
+<text x="594" y="552" fill="#edf3f6" font-size="16" font-weight="400" xml:space="preserve">   - Improve invalid/missing preset errors</text>
+<text x="594" y="575" fill="#edf3f6" font-size="16" font-weight="400" xml:space="preserve">     with available slugs and the correct</text>
+<text x="594" y="598" fill="#edf3f6" font-size="16" font-weight="400" xml:space="preserve">     command.</text>
+<text x="594" y="621" fill="#edf3f6" font-size="16" font-weight="400" xml:space="preserve">   - Add automated checks for README commands</text>
+<text x="594" y="644" fill="#edf3f6" font-size="16" font-weight="400" xml:space="preserve">     and init output.</text>
+<text x="594" y="679" fill="#edf3f6" font-size="16" font-weight="400" xml:space="preserve">Done: prioritized plan.</text>
+<text x="594" y="702" fill="#edf3f6" font-size="16" font-weight="400" xml:space="preserve">Remaining: implementation and verification.</text>
+<text x="36" y="1022" fill="#b8cbd4" font-size="17" font-weight="400" xml:space="preserve">同一指令 · 首次完整回复 · 每种条件1次 · 2026-10-18</text></g>
 </svg>

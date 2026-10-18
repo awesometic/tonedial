@@ -19,14 +19,18 @@
 
 **[查看全部 7 个角色 →](https://github.com/awesometic/tonedial/blob/main/docs/EXAMPLES.zh.md)**
 
-## 同一模型，更少铺垫
+## 同一模型，更精简的计划
 
-在 `gpt-5.6-sol` / `high` 下，我们各运行了一次全新的 Codex 默认会话和使用下方完整 `vibe-coder` 配置的会话。
+在 `gpt-5.6-sol` / `high` 下，一个全新会话使用 Codex 默认设置，另一个使用下方完整的 `vibe-coder` 配置。
 `verbosity=1` 只是该配置的一部分，并非唯一差异。
 
-<img src="https://raw.githubusercontent.com/awesometic/tonedial/main/docs/media/readme/zh/verbosity-comparison.svg" alt="GPT-5.6 Sol high 在 Codex 默认设置和完整 vibe-coder 配置下给出了相同的显式空值检查修复；配置后的英文说明从 15 个词缩短到 5 个词" width="760">
+**指令**
 
-<sub>同一问题 · 每个新会话的首次完整回复 · 英文说明 15 个词 → 5 个词。这是一次示例性对比，并非只隔离单个轴的基准测试。 <a href="https://github.com/awesometic/tonedial/blob/main/docs/media/readme/verbosity-comparison.json">输入与生成记录</a>.</sub>
+> I want to make ToneDial easier for first-time users. The README should get them from installation through `tonedial init` to their first preview with `tonedial test codex --preset <slug>`, and the CLI should make that next step obvious after `init`. Give me a prioritized three-step improvement plan for the README and first-run CLI flow.
+
+<img src="https://raw.githubusercontent.com/awesometic/tonedial/main/docs/media/readme/zh/verbosity-comparison.svg" alt="GPT-5.6 Sol high 使用 Codex 默认设置和完整 vibe-coder 配置回答同一条 ToneDial 改进计划指令；配置后的英文回复从 148 个词缩短到 82 个词" width="760">
+
+<sub>同一指令 · 每个新会话的首次完整回复 · 英文回复 148 个词 → 82 个词。这是一次示例性对比，并非只隔离单个轴的基准测试。回复用于展示语气差异；产品行为和命令请以下方指南为准。 <a href="https://github.com/awesometic/tonedial/blob/main/docs/media/readme/verbosity-comparison.json">输入与生成记录</a>.</sub>
 
 ## 试试这样用？
 

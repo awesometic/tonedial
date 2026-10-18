@@ -19,14 +19,18 @@ Elige un personaje, ajusta doce diales y guarda una voz para usarla en distintos
 
 **[Ver los 7 personajes →](https://github.com/awesometic/tonedial/blob/main/docs/EXAMPLES.es.md)**
 
-## El mismo modelo. Menos rodeos.
+## El mismo modelo. Un plan más directo.
 
-Con `gpt-5.6-sol` / `high`, ejecutamos una sesión nueva con los valores predeterminados de Codex y otra con el perfil `vibe-coder` completo que aparece más abajo.
+Con `gpt-5.6-sol` / `high`, una sesión nueva usó los valores predeterminados de Codex y otra usó el perfil `vibe-coder` completo que aparece más abajo.
 `verbosity=1` forma parte del perfil, pero no es la única diferencia.
 
-<img src="https://raw.githubusercontent.com/awesometic/tonedial/main/docs/media/readme/es/verbosity-comparison.svg" alt="GPT-5.6 Sol high propone la misma corrección con una guarda explícita usando los valores predeterminados de Codex y el perfil vibe-coder completo; la explicación en inglés baja de quince palabras a cinco" width="760">
+**Instrucción**
 
-<sub>Misma pregunta · primera respuesta completa de cada sesión nueva · 15 → 5 palabras de explicación en inglés. Es una comparación ilustrativa, no una prueba que aísle un solo eje. <a href="https://github.com/awesometic/tonedial/blob/main/docs/media/readme/verbosity-comparison.json">Entradas y procedencia</a>.</sub>
+> I want to make ToneDial easier for first-time users. The README should get them from installation through `tonedial init` to their first preview with `tonedial test codex --preset <slug>`, and the CLI should make that next step obvious after `init`. Give me a prioritized three-step improvement plan for the README and first-run CLI flow.
+
+<img src="https://raw.githubusercontent.com/awesometic/tonedial/main/docs/media/readme/es/verbosity-comparison.svg" alt="GPT-5.6 Sol high responde a la misma instrucción de mejora de ToneDial con los valores predeterminados de Codex y el perfil vibe-coder completo; la respuesta en inglés baja de 148 palabras a 82" width="760">
+
+<sub>Misma instrucción · primera respuesta completa de cada sesión nueva · 148 → 82 palabras de respuesta en inglés. Es una comparación ilustrativa, no una prueba que aísle un solo eje. Las respuestas muestran diferencias de tono; consulta las guías siguientes para el comportamiento del producto y los comandos. <a href="https://github.com/awesometic/tonedial/blob/main/docs/media/readme/verbosity-comparison.json">Entradas y procedencia</a>.</sub>
 
 ## ¿Y si lo usas así?
 

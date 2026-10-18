@@ -679,7 +679,7 @@ Enter `y` to accept; Enter or `n` cancels.
 | Provider | One installed client can be selected; two prompt interactively; ambiguous plans need an explicit name |
 | Folder | Current directory or existing `--project` directory |
 
-The README includes a [recorded Codex-default vs complete `vibe-coder` comparison](../README.md#same-model-less-preamble)
+The README includes a [recorded Codex-default vs complete `vibe-coder` comparison](../README.md#same-model-a-tighter-plan)
 with [verbatim replies and provenance](./media/readme/verbosity-comparison.json).
 It uses one fresh `gpt-5.6-sol` / `high` session per condition and illustrates the whole profile,
 not the isolated effect of `verbosity=1`.

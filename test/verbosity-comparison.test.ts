@@ -12,12 +12,6 @@ import { LANGUAGES } from "../src/core/i18n.ts";
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const hash = (text: string) => createHash("sha256").update(text).digest("hex");
 const wordCount = (text: string) => text.match(/[\p{L}\p{N}’'-]+/gu)?.length ?? 0;
-const prose = (text: string) => text.split("\n\n```")[0]!;
-const code = (text: string) => {
-  const match = /```js\n([\s\S]+)\n```$/u.exec(text);
-  assert.ok(match);
-  return match[1];
-};
 
 type Condition = {
   id: string;
@@ -27,7 +21,7 @@ type Condition = {
   openingResponseSha256: string;
   responseText: string;
   responseSha256: string;
-  proseWords: number;
+  responseWords: number;
   nativeTurnCount: number;
   nativeExit: number;
   toolCallsObserved: number;
@@ -41,8 +35,8 @@ test("the README default-vs-vibe-coder comparison preserves its recorded native 
     kind: string;
     recordedOn: string;
     samplesPerCondition: number;
-    question: string;
-    questionSha256: string;
+    instruction: string;
+    instructionSha256: string;
     client: string;
     clientVersion: string;
     model: string;
@@ -59,6 +53,15 @@ test("the README default-vs-vibe-coder comparison preserves its recorded native 
     osFilesystemIsolationProven: boolean;
     hookActivationVerified: boolean;
     adherenceScored: boolean;
+    excludedPreflight: {
+      condition: string;
+      profileArmRun: boolean;
+      instruction: string;
+      instructionSha256: string;
+      responseText: string;
+      responseSha256: string;
+      excludedReason: string;
+    };
     conditions: Condition[];
   };
 
@@ -66,7 +69,7 @@ test("the README default-vs-vibe-coder comparison preserves its recorded native 
   assert.equal(data.kind, "recorded-native-default-vs-profile");
   assert.equal(data.recordedOn, "2026-10-18");
   assert.equal(data.samplesPerCondition, 1);
-  assert.equal(hash(data.question), data.questionSha256);
+  assert.equal(hash(data.instruction), data.instructionSha256);
   assert.equal(data.client, "Codex CLI");
   assert.equal(data.clientVersion, "0.160.0");
   assert.equal(data.model, "gpt-5.6-sol");
@@ -81,6 +84,12 @@ test("the README default-vs-vibe-coder comparison preserves its recorded native 
   assert.equal(data.osFilesystemIsolationProven, false);
   assert.equal(data.hookActivationVerified, false);
   assert.equal(data.adherenceScored, false);
+  assert.equal(data.excludedPreflight.condition, "codex-default");
+  assert.equal(data.excludedPreflight.profileArmRun, false);
+  assert.equal(hash(data.excludedPreflight.instruction), data.excludedPreflight.instructionSha256);
+  assert.equal(hash(data.excludedPreflight.responseText), data.excludedPreflight.responseSha256);
+  assert.match(data.excludedPreflight.responseText, /`tonedial preview`/u);
+  assert.match(data.excludedPreflight.excludedReason, /nonexistent `tonedial preview`/u);
 
   const recipes = JSON.parse(readFileSync(join(root, data.profileSource), "utf8")) as {
     recipes: { slug: string; tone: string; toneSha256: string; input: Config }[];
@@ -99,7 +108,10 @@ test("the README default-vs-vibe-coder comparison preserves its recorded native 
   for (const item of data.conditions) {
     assert.equal(hash(item.openingResponseText), item.openingResponseSha256);
     assert.equal(hash(item.responseText), item.responseSha256);
-    assert.equal(wordCount(prose(item.responseText)), item.proseWords);
+    assert.equal(wordCount(item.responseText), item.responseWords);
+    assert.deepEqual([...item.responseText.matchAll(/^\d+\. /gmu)].map(match => match[0]), ["1. ", "2. ", "3. "]);
+    assert.match(item.responseText, /tonedial test codex --preset/u);
+    assert.doesNotMatch(item.responseText, /`tonedial preview`/u);
     assert.equal(item.nativeTurnCount, 2);
     assert.equal(item.nativeExit, 0);
     assert.equal(item.toolCallsObserved, 0);
@@ -109,20 +121,24 @@ test("the README default-vs-vibe-coder comparison preserves its recorded native 
   assert.equal(data.conditions[0]!.tone, "none-supplied");
   assert.equal(data.conditions[1]!.delivery, "tonedial-test-native-interactive");
   assert.equal(data.conditions[1]!.tone, "vibe-coder");
-  assert.equal(data.conditions[0]!.proseWords, 15);
-  assert.equal(data.conditions[1]!.proseWords, 5);
-  assert.equal(code(data.conditions[0]!.responseText), code(data.conditions[1]!.responseText));
+  assert.equal(data.conditions[0]!.responseWords, 148);
+  assert.equal(data.conditions[1]!.responseWords, 82);
+  assert.ok(data.conditions[1]!.responseWords < data.conditions[0]!.responseWords);
 });
 
 test("every README locale renders and links the same comparison evidence", () => {
+  const { instruction } = JSON.parse(readFileSync(join(root, "docs/media/readme/verbosity-comparison.json"), "utf8")) as {
+    instruction: string;
+  };
   for (const language of LANGUAGES) {
     const readmePath = join(root, language === "en" ? "README.md" : `README.${language}.md`);
     const readme = readFileSync(readmePath, "utf8");
     assert.ok(readme.includes(`docs/media/readme/${language}/verbosity-comparison.svg`));
     assert.ok(readme.includes("docs/media/readme/verbosity-comparison.json"));
     assert.ok(readme.includes("gpt-5.6-sol"));
-    assert.ok(readme.includes("15"));
-    assert.ok(readme.includes("5"));
+    assert.ok(readme.includes(instruction));
+    assert.ok(readme.includes("148"));
+    assert.ok(readme.includes("82"));
 
     const rendered = spawnSync(process.execPath, [join(root, "scripts/verbosity-svg.ts"), language], {
       cwd: root,
@@ -131,11 +147,12 @@ test("every README locale renders and links the same comparison evidence", () =>
     assert.equal(rendered.status, 0, rendered.stderr);
     assert.equal(rendered.stdout, readFileSync(join(root, `docs/media/readme/${language}/verbosity-comparison.svg`), "utf8"));
     assert.ok(rendered.stdout.includes("gpt-5.6-sol"));
-    assert.ok(rendered.stdout.includes("Use an explicit guard"));
+    assert.ok(rendered.stdout.includes("first-time users"));
+    assert.ok(rendered.stdout.includes("README Quickstart"));
     assert.ok(rendered.stdout.includes("tonedial test codex --preset vibe-coder"));
     assert.ok(rendered.stdout.includes("2026-10-18"));
 
     const examples = readFileSync(join(root, "docs", language === "en" ? "EXAMPLES.md" : `EXAMPLES.${language}.md`), "utf8");
-    assert.ok(examples.includes(language === "en" ? "../README.md#same-model-less-preamble" : `../README.${language}.md`));
+    assert.ok(examples.includes(language === "en" ? "../README.md#same-model-a-tighter-plan" : `../README.${language}.md`));
   }
 });

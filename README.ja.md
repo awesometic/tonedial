@@ -19,14 +19,18 @@
 
 **[7キャラクターすべてを見る →](https://github.com/awesometic/tonedial/blob/main/docs/EXAMPLES.ja.md)**
 
-## 同じモデル、前置きは短く
+## 同じモデル、より簡潔な計画
 
-`gpt-5.6-sol` / `high` で、Codexデフォルトの新規セッション1回と、下記の `vibe-coder` プロファイル全体を適用した新規セッション1回を比較しました。
+`gpt-5.6-sol` / `high` で、一方の新規セッションにはCodexデフォルトを、もう一方には下記の `vibe-coder` プロファイル全体を適用しました。
 `verbosity=1` はこのプロファイルの一要素であり、唯一の違いではありません。
 
-<img src="https://raw.githubusercontent.com/awesometic/tonedial/main/docs/media/readme/ja/verbosity-comparison.svg" alt="GPT-5.6 Sol highがCodexデフォルトとvibe-coderプロファイル全体で同じ明示的ガードの修正を返した比較。プロファイル側の英文説明は15語から5語になっています" width="760">
+**指示**
 
-<sub>同じ質問 · 各新規セッションの最初の完了応答 · 英文の説明 15語 → 5語。単一の比較例であり、1軸だけを分離したベンチマークではありません。 <a href="https://github.com/awesometic/tonedial/blob/main/docs/media/readme/verbosity-comparison.json">入力と生成記録</a>.</sub>
+> I want to make ToneDial easier for first-time users. The README should get them from installation through `tonedial init` to their first preview with `tonedial test codex --preset <slug>`, and the CLI should make that next step obvious after `init`. Give me a prioritized three-step improvement plan for the README and first-run CLI flow.
+
+<img src="https://raw.githubusercontent.com/awesometic/tonedial/main/docs/media/readme/ja/verbosity-comparison.svg" alt="GPT-5.6 Sol highが同じToneDial改善計画の指示にCodexデフォルトとvibe-coderプロファイル全体で回答した比較。プロファイル側の英文応答は148語から82語になっています" width="760">
+
+<sub>同じ指示 · 各新規セッションの最初の完了応答 · 英文応答 148語 → 82語。単一の比較例であり、1軸だけを分離したベンチマークではありません。応答は口調の違いを示す例です。製品の動作とコマンドは下記のガイドを参照してください。 <a href="https://github.com/awesometic/tonedial/blob/main/docs/media/readme/verbosity-comparison.json">入力と生成記録</a>.</sub>
 
 ## こんな使い方はいかがですか？
 
