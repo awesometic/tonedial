@@ -2,7 +2,7 @@ status: 1
 --- stdout --- [bytes=120; endsWithNewline=true]
 ToneDial · update
 
-  tonedial 0.1.6
+  tonedial 0.1.7
 
   패키지 업데이트:
     npm update -g tonedial --prefix "<ROOT>/npm prefix"
