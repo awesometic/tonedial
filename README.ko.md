@@ -2,7 +2,7 @@
 
 **코딩 에이전트에 캐릭터를 더하세요.**
 
-캐릭터를 고르고 열두 축으로 말투를 맞춰 보세요. 저장한 말투는 여러 프로젝트에서 쓸 수 있습니다.
+ToneDial은 코딩 에이전트의 말투를 조절해 여러 프로젝트에서 다시 쓰는 로컬 CLI입니다.
 
 **캐릭터 7개 · 말투 축 12개 · CLI 언어 5개 · 런타임 의존성 없음**
 
@@ -32,9 +32,23 @@
 
 <sub>같은 지침 · 새 세션마다 첫 완료 응답 · 영문 응답 148단어 → 82단어. 단일 비교 예시이며, 축 하나만 분리한 벤치마크는 아닙니다. 응답은 말투 차이를 보여 주는 예시입니다. 제품 동작과 명령어는 아래 안내 문서를 기준으로 합니다. <a href="https://github.com/awesometic/tonedial/blob/main/docs/media/readme/verbosity-comparison.json">입력과 생성 기록</a>.</sub>
 
-## 이렇게 활용해 보세요
+## 바로 시작하기
 
-[설치](#바로-시작하기)를 마쳤다면 원하는 설정을 골라 보세요.
+**Node 24 이상**과 npm이 필요합니다.
+
+```bash
+npm install --global tonedial
+tonedial init --tools none --global --lang ko
+tonedial set
+```
+
+설정 과정에서 파일 변경 내용을 보여주고 승인을 받습니다. 에이전트 연결 없이 다이얼부터 열어 봅니다.
+
+[에이전트 연결하기](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#connecting-an-agent) · [임시 설정으로 시험하기](https://github.com/awesometic/tonedial/blob/main/docs/TESTING.md#isolated-candidate)
+
+## 말투 복사하기
+
+프로필 전체를 복사하거나 원하는 설정의 출발점으로 써 보세요.
 각 명령은 프로필 전체를 저장하고 적용하며, `--auto`는 표시된 변경 내용을 승인합니다.
 
 실제 `tonedial test codex` 응답 · `gpt-6.1-sol` / `high` · 설정별 질문의 첫 답변을 그대로 실었습니다.
@@ -49,7 +63,7 @@
 권장안으로 바로 진행하고, 한 것과 남은 것만 짧게 알려 주는 코딩 파트너입니다.
 
 <details>
-<summary>이 설정 복사하기</summary>
+<summary>설정과 실제 응답</summary>
 
 ```bash
 tonedial create '완전한 바이브코더' --slug vibe-coder --auto \
@@ -65,8 +79,6 @@ tonedial create '완전한 바이브코더' --slug vibe-coder --auto \
 
 이 말투로 시험하기: `tonedial test codex --preset vibe-coder`
 
-</details>
-
 **Codex**
 
 > 사장님, `null`과 `undefined`는 빈 문자열로 처리하는 걸 권장합니다.
@@ -77,13 +89,14 @@ tonedial create '완전한 바이브코더' --slug vibe-coder --auto \
 > }
 > ```
 
+</details>
 
 ### 위로가 필요할 때
 
 친절과 칭찬을 아끼지 않고, 지칠 때 위로도 건네는 든든한 동료입니다.
 
 <details>
-<summary>이 설정 복사하기</summary>
+<summary>설정과 실제 응답</summary>
 
 ```bash
 tonedial create '위로가 필요할 때' --slug steady-companion --auto \
@@ -99,8 +112,6 @@ tonedial create '위로가 필요할 때' --slug steady-companion --auto \
 
 이 말투로 시험하기: `tonedial test codex --preset steady-companion`
 
-</details>
-
 **Codex**
 
 > 파트너, 나는 **`null`과 `undefined`를 빈 문자열로 처리하는 방법**을 고를게. 디버깅에 지쳤을 땐 작은 돌부리 하나부터 치우자.
@@ -115,13 +126,14 @@ tonedial create '위로가 필요할 때' --slug steady-companion --auto \
 >
 > 이 두 입력으로 동작을 확인하고, 잠깐 쉬어 가도 괜찮아.
 
+</details>
 
 ### 거친 게 좋아
 
 욕도 서슴없이 하고 사용자를 깔보지만, 맡긴 일은 해내는 해결사입니다.
 
 <details>
-<summary>이 설정 복사하기</summary>
+<summary>설정과 실제 응답</summary>
 
 ```bash
 tonedial create '거친 게 좋아' --slug rough-but-reliable --auto \
@@ -137,8 +149,6 @@ tonedial create '거친 게 좋아' --slug rough-but-reliable --auto \
 
 이 말투로 시험하기: `tonedial test codex --preset rough-but-reliable`
 
-</details>
-
 **Codex**
 
 > 야, `null`에 바로 `trim()`을 부르는 건 존나 허술하고, 없는 값에 일을 시키는 헛발질이다. 내가 고른 해법은 `??`다—이 구멍은 씨발 확실히 막는다.
@@ -151,22 +161,10 @@ tonedial create '거친 게 좋아' --slug rough-but-reliable --auto \
 >
 > `null`·`undefined`는 빈 문자열로 처리하고, 문자열은 기존처럼 앞뒤 공백을 제거한다.
 
+</details>
+
 Codex가 대화를 열면 위 질문을 입력하면 됩니다.
 모델과 추론 강도는 ToneDial 프로필과 별도로 Codex에서 정하는 설정입니다.
-
-## 바로 시작하기
-
-**Node 24 이상**과 npm이 필요합니다.
-
-```bash
-npm install --global tonedial
-tonedial init --tools none --global --lang ko
-tonedial set
-```
-
-설정 과정에서 파일 변경 내용을 보여주고 승인을 받습니다. 에이전트 연결 없이 다이얼부터 열어 봅니다.
-
-[에이전트 연결하기](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#connecting-an-agent) · [임시 설정으로 시험하기](https://github.com/awesometic/tonedial/blob/main/docs/TESTING.md#isolated-candidate)
 
 ## 캐릭터 고르기
 

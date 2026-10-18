@@ -127,6 +127,9 @@ for (const language of LANGUAGES) {
     const readme = readFileSync(join(root, language === "en" ? "README.md" : `README.${language}.md`), "utf8");
     assert.ok(readme.includes(`https://github.com/awesometic/tonedial/blob/main/docs/media/readme/${language}/use-cases.json`));
     assert.ok(readme.includes(data.question), "README must preserve the actual question");
+    const recipeDetails = [...readme.matchAll(/<details>\s*<summary>[^<]+<\/summary>([\s\S]*?)<\/details>/gu)]
+      .map(match => match[1]!);
+    assert.equal(recipeDetails.length, data.recipes.length, "each recipe needs one collapsed command-and-reply block");
     const workspace = createGoldenWorkspace("en");
     t.after(() => workspace.dispose());
     const initialized = await captureCli(workspace, ["init", "--global", "--tools", "none", "--lang", language, "--auto", "--json"]);
@@ -167,6 +170,8 @@ for (const language of LANGUAGES) {
       assert.ok(readme.includes(recipe.description));
       assert.ok(readme.includes("```bash\n" + recipe.command + "\n```"), recipe.slug + ": README changed or omitted the command");
       assert.ok(readme.includes(quote(recipe.text)), recipe.slug + ": README changed or omitted the native response");
+      assert.ok(recipeDetails.some(block => block.includes(recipe.command) && block.includes(quote(recipe.text))),
+        recipe.slug + ": command and reply must stay in the same collapsed block");
       const created = await captureCli(workspace, [...recipe.argv, "--json"]);
       assert.equal(created.status, 0, created.stdout + created.stderr);
       const payload = JSON.parse(created.stdout);

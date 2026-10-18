@@ -2,7 +2,7 @@
 
 **コーディングエージェントにキャラクターを。**
 
-キャラクターを選び、12個のダイヤルで口調を調整。保存した声をプロジェクトをまたいで使えます。
+ToneDialは、コーディングエージェントの口調を調整し、複数のプロジェクトで再利用するローカルCLIです。
 
 **7キャラクター · 12の口調軸 · CLIは5言語 · 実行時の依存パッケージなし**
 
@@ -32,9 +32,23 @@
 
 <sub>同じ指示 · 各新規セッションの最初の完了応答 · 英文応答 148語 → 82語。単一の比較例であり、1軸だけを分離したベンチマークではありません。応答は口調の違いを示す例です。製品の動作とコマンドは下記のガイドを参照してください。 <a href="https://github.com/awesometic/tonedial/blob/main/docs/media/readme/verbosity-comparison.json">入力と生成記録</a>.</sub>
 
-## こんな使い方はいかがですか？
+## 試してみる
 
-[セットアップ](#試してみる)後に、使いたい設定を選んでください。
+**Node 24以降**とnpmが必要です。
+
+```bash
+npm install --global tonedial
+tonedial init --tools none --global --lang ja
+tonedial set
+```
+
+設定時にファイル変更を表示し、承認を求めます。エージェントに接続せず、まずダイヤルを試せます。
+
+[エージェントを接続する](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#connecting-an-agent) · [一時設定で試す](https://github.com/awesometic/tonedial/blob/main/docs/TESTING.md#isolated-candidate)
+
+## 話し方をコピーする
+
+プロファイル全体をコピーするか、自分の設定の出発点として使えます。
 各コマンドはプロファイル全体を保存して適用し、`--auto` は表示された変更を承認します。
 
 実際の `tonedial test codex` 応答 · `gpt-6.1-sol` / `high` · 各設定で質問に対する最初の回答をそのまま掲載しています。
@@ -49,7 +63,7 @@
 おすすめを選んで進め、完了したことと残りの作業だけを短く伝えるコーディング相棒。
 
 <details>
-<summary>この設定をコピー</summary>
+<summary>設定と実際の応答</summary>
 
 ```bash
 tonedial create 'とことんバイブコーディング' --slug vibe-coder --auto \
@@ -65,8 +79,6 @@ tonedial create 'とことんバイブコーディング' --slug vibe-coder --au
 
 この口調を試す: `tonedial test codex --preset vibe-coder`
 
-</details>
-
 **Codex**
 
 > ボス、`null` は空文字として扱う形にします。
@@ -77,13 +89,14 @@ tonedial create 'とことんバイブコーディング' --slug vibe-coder --au
 > }
 > ```
 
+</details>
 
 ### 励ましてほしいとき
 
 たっぷりの優しさと褒め言葉に、ときどき慰めの言葉を添える、頼れる相棒。
 
 <details>
-<summary>この設定をコピー</summary>
+<summary>設定と実際の応答</summary>
 
 ```bash
 tonedial create '励ましてほしいとき' --slug steady-companion --auto \
@@ -99,8 +112,6 @@ tonedial create '励ましてほしいとき' --slug steady-companion --auto \
 
 この口調を試す: `tonedial test codex --preset steady-companion`
 
-</details>
-
 **Codex**
 
 > 相棒、お疲れさま。私なら、**`null` を空文字にしてから `trim()` する方法**を選ぶよ。
@@ -115,13 +126,14 @@ tonedial create '励ましてほしいとき' --slug steady-companion --auto \
 >
 > 再現例は明快で、発生条件も的確。修正を一つに絞るのは実用的で、置き換え単位の指定も丁寧だね。ここは一緒に荷物を一つ下ろそう。急がなくて大丈夫、ひと息ついてね。
 
+</details>
 
 ### 口が悪いほうが好き
 
 悪態も見下す口ぶりも遠慮なし。それでも仕事はきっちりこなす修理屋。
 
 <details>
-<summary>この設定をコピー</summary>
+<summary>設定と実際の応答</summary>
 
 ```bash
 tonedial create '口が悪いほうが好き' --slug rough-but-reliable --auto \
@@ -137,8 +149,6 @@ tonedial create '口が悪いほうが好き' --slug rough-but-reliable --auto \
 
 この口調を試す: `tonedial test codex --preset rough-but-reliable`
 
-</details>
-
 **Codex**
 
 > おい、俺なら `??` で `null` と `undefined` を空文字にする。このクソ例外は一手で片づく。
@@ -151,22 +161,10 @@ tonedial create '口が悪いほうが好き' --slug rough-but-reliable --auto \
 >
 > `label(null)` は `''` を返す。
 
+</details>
+
 Codex が会話を始めたら、上の質問を入力してください。
 モデルと推論強度は ToneDial のプロファイルとは別の Codex 設定です。
-
-## 試してみる
-
-**Node 24以降**とnpmが必要です。
-
-```bash
-npm install --global tonedial
-tonedial init --tools none --global --lang ja
-tonedial set
-```
-
-設定時にファイル変更を表示し、承認を求めます。エージェントに接続せず、まずダイヤルを試せます。
-
-[エージェントを接続する](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#connecting-an-agent) · [一時設定で試す](https://github.com/awesometic/tonedial/blob/main/docs/TESTING.md#isolated-candidate)
 
 ## キャラクターを選ぶ
 

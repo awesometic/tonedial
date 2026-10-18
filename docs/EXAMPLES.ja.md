@@ -2,8 +2,8 @@
 
 [English](./EXAMPLES.md) | [한국어](./EXAMPLES.ko.md) | **日本語** | [简体中文](./EXAMPLES.zh.md) | [Español](./EXAMPLES.es.md)
 
-同じ質問に、7つのキャラクターが答えます。
-実際のCodex応答を、ターミナル風の対話として表示しています。
+ToneDialの7つの組み込みプロファイルが、同じ関数名の質問に答えた実際のCodex対話です。
+応答は原文のままで、画像はスクリーンショットではなく整形した対話記録です。
 
 [Codexデフォルトと `vibe-coder` プロファイル全体の比較はREADMEで確認できます。](../README.ja.md)
 
@@ -131,10 +131,10 @@
 
 </details>
 
-## 記録の限界
+## 記録方法と制限
 
 <details>
-<summary>実行情報と記録の限界</summary>
+<summary>詳しい記録方法と制限を見る</summary>
 
 | 項目 | 記録 |
 |---|---|

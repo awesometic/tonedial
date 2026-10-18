@@ -2,7 +2,7 @@
 
 **Dale un personaje a tu agente de programación.**
 
-Elige un personaje, ajusta doce diales y guarda una voz para usarla en distintos proyectos.
+ToneDial es una CLI local para ajustar la voz de un agente de programación y reutilizarla entre proyectos.
 
 **7 personajes · 12 ejes de tono · 5 idiomas del CLI · Cero dependencias en ejecución**
 
@@ -32,9 +32,23 @@ Con `gpt-5.6-sol` / `high`, una sesión nueva usó los valores predeterminados d
 
 <sub>Misma instrucción · primera respuesta completa de cada sesión nueva · 148 → 82 palabras de respuesta en inglés. Es una comparación ilustrativa, no una prueba que aísle un solo eje. Las respuestas muestran diferencias de tono; consulta las guías siguientes para el comportamiento del producto y los comandos. <a href="https://github.com/awesometic/tonedial/blob/main/docs/media/readme/verbosity-comparison.json">Entradas y procedencia</a>.</sub>
 
-## ¿Y si lo usas así?
+## Pruébalo
 
-Tras la [configuración](#pruébalo), elige una receta.
+Requiere **Node 24 o posterior** y npm.
+
+```bash
+npm install --global tonedial
+tonedial init --tools none --global --lang es
+tonedial set
+```
+
+La configuración muestra los cambios de archivos y pide aprobación. Puedes abrir el dial sin conectar un agente.
+
+[Conecta tu agente](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#connecting-an-agent) · [Prueba con ajustes temporales](https://github.com/awesometic/tonedial/blob/main/docs/TESTING.md#isolated-candidate)
+
+## Copia una voz
+
+Puedes copiar un perfil completo o usarlo como punto de partida.
 Cada comando guarda y aplica un perfil completo; `--auto` aprueba los cambios mostrados.
 
 Respuestas reales de `tonedial test codex` · `gpt-6.1-sol` / `high` · primera respuesta a la pregunta, una por receta · solo diálogo, sin editar archivos. [Entradas y procedencia](https://github.com/awesometic/tonedial/blob/main/docs/media/readme/es/use-cases.json).
@@ -48,7 +62,7 @@ Respuestas reales de `tonedial test codex` · `gpt-6.1-sol` / `high` · primera 
 Un compañero de programación que va al grano, elige la opción recomendada y solo informa de lo hecho y lo pendiente.
 
 <details>
-<summary>Copia esta configuración</summary>
+<summary>Configuración y respuesta real</summary>
 
 ```bash
 tonedial create 'Vibe coding a fondo' --slug vibe-coder --auto \
@@ -64,8 +78,6 @@ tonedial create 'Vibe coding a fondo' --slug vibe-coder --auto \
 
 Prueba este tono: `tonedial test codex --preset vibe-coder`
 
-</details>
-
 **Codex**
 
 > Jefe, yo elijo devolver una cadena vacía si `name` es `null` o `undefined`:
@@ -76,13 +88,14 @@ Prueba este tono: `tonedial test codex --preset vibe-coder`
 > }
 > ```
 
+</details>
 
 ### Cuando necesitas ánimo
 
 Un compañero de confianza, con mucha amabilidad, elogios y alguna palabra de consuelo.
 
 <details>
-<summary>Copia esta configuración</summary>
+<summary>Configuración y respuesta real</summary>
 
 ```bash
 tonedial create 'Cuando necesitas ánimo' --slug steady-companion --auto \
@@ -98,8 +111,6 @@ tonedial create 'Cuando necesitas ánimo' --slug steady-companion --auto \
 
 Prueba este tono: `tonedial test codex --preset steady-companion`
 
-</details>
-
 **Codex**
 
 > Mi elección, amigo: devolver una cadena vacía cuando `name` sea `null` o `undefined`.
@@ -112,13 +123,14 @@ Prueba este tono: `tonedial test codex --preset steady-companion`
 >
 > Las cadenas siguen perdiendo los espacios de los extremos; `null` y `undefined` devuelven `''`. Una piedra menos en el zapato. Puedes dejar aquí este paso y tomar un respiro.
 
+</details>
 
 ### Cuando te gusta el trato duro
 
 Un manitas malhablado que te trata con desprecio y aun así saca el trabajo adelante.
 
 <details>
-<summary>Copia esta configuración</summary>
+<summary>Configuración y respuesta real</summary>
 
 ```bash
 tonedial create 'Cuando te gusta el trato duro' --slug rough-but-reliable --auto \
@@ -134,8 +146,6 @@ tonedial create 'Cuando te gusta el trato duro' --slug rough-but-reliable --auto
 
 Prueba este tono: `tonedial test codex --preset rough-but-reliable`
 
-</details>
-
 **Codex**
 
 > Oye, yo resuelvo este puto fallo en una línea: **trata `null` y `undefined` como una cadena vacía**.
@@ -148,22 +158,10 @@ Prueba este tono: `tonedial test codex --preset rough-but-reliable`
 >
 > Las cadenas siguen recortándose; los valores ausentes devuelven `''` sin que reviente la maldita llamada.
 
+</details>
+
 Cuando Codex abra la conversación, introduce la pregunta anterior.
 El modelo y el esfuerzo de razonamiento se configuran en Codex, aparte del perfil de ToneDial.
-
-## Pruébalo
-
-Requiere **Node 24 o posterior** y npm.
-
-```bash
-npm install --global tonedial
-tonedial init --tools none --global --lang es
-tonedial set
-```
-
-La configuración muestra los cambios de archivos y pide aprobación. Puedes abrir el dial sin conectar un agente.
-
-[Conecta tu agente](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#connecting-an-agent) · [Prueba con ajustes temporales](https://github.com/awesometic/tonedial/blob/main/docs/TESTING.md#isolated-candidate)
 
 ## Elige tu personaje
 

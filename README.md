@@ -2,7 +2,7 @@
 
 **Give your coding agent a character.**
 
-Pick a character, tune twelve dials, and save a voice to use across projects.
+ToneDial is a local CLI for tuning and reusing a coding agent's voice across projects.
 
 **7 characters · 12 tone axes · 5 CLI languages · Zero runtime dependencies**
 
@@ -32,9 +32,23 @@ At `gpt-5.6-sol` / `high`, one fresh session used Codex defaults and one used th
 
 <sub>Same instruction · first completed reply in each fresh session · 148 → 82 response words. One illustrative pair, not an isolated-axis benchmark. The replies demonstrate style; use the guides below for product behavior and commands. <a href="https://github.com/awesometic/tonedial/blob/main/docs/media/readme/verbosity-comparison.json">Inputs & provenance</a>.</sub>
 
-## How would you use it?
+## Try it
 
-After [setup](#try-it), choose a recipe.
+Requires **Node 24+** and npm.
+
+```bash
+npm install --global tonedial
+tonedial init --tools none --global --lang en
+tonedial set
+```
+
+Setup previews file changes for approval. This opens the dial without connecting an agent.
+
+[Connect your agent](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#connecting-an-agent) · [Try with disposable settings](https://github.com/awesometic/tonedial/blob/main/docs/TESTING.md#isolated-candidate)
+
+## Copy a voice
+
+Copy a complete profile or use it as a starting point.
 Each command saves and applies a complete profile; `--auto` approves the displayed changes.
 
 Actual `tonedial test codex` replies · `gpt-6.1-sol` / `high` · first reply to the question, one per recipe · dialogue only, no file edits. [Inputs & provenance](https://github.com/awesometic/tonedial/blob/main/docs/media/readme/en/use-cases.json).
@@ -48,7 +62,7 @@ Actual `tonedial test codex` replies · `gpt-6.1-sol` / `high` · first reply to
 A terse coding partner who picks the recommended option and reports only what is done and what remains.
 
 <details>
-<summary>Copy this configuration</summary>
+<summary>Configuration and recorded reply</summary>
 
 ```bash
 tonedial create 'Full-on vibe coder' --slug vibe-coder --auto \
@@ -64,8 +78,6 @@ tonedial create 'Full-on vibe coder' --slug vibe-coder --auto \
 
 Try this voice: `tonedial test codex --preset vibe-coder`
 
-</details>
-
 **Codex**
 
 > Boss, use an empty string for `null` or `undefined`:
@@ -76,13 +88,14 @@ Try this voice: `tonedial test codex --preset vibe-coder`
 > }
 > ```
 
+</details>
 
 ### When you need reassurance
 
 A steady companion with generous kindness, praise and occasional comfort.
 
 <details>
-<summary>Copy this configuration</summary>
+<summary>Configuration and recorded reply</summary>
 
 ```bash
 tonedial create 'When you need reassurance' --slug steady-companion --auto \
@@ -98,8 +111,6 @@ tonedial create 'When you need reassurance' --slug steady-companion --auto \
 
 Try this voice: `tonedial test codex --preset steady-companion`
 
-</details>
-
 **Codex**
 
 > My choice, friend: treat `null` and `undefined` as an empty label.
@@ -112,13 +123,14 @@ Try this voice: `tonedial test codex --preset steady-companion`
 >
 > Strings still get trimmed, and missing names return `''`. One less debugging tripwire—you can take a breather here.
 
+</details>
 
 ### When you like it rough
 
 A foul-mouthed fixer who talks down to you and still delivers the work.
 
 <details>
-<summary>Copy this configuration</summary>
+<summary>Configuration and recorded reply</summary>
 
 ```bash
 tonedial create 'When you like it rough' --slug rough-but-reliable --auto \
@@ -134,8 +146,6 @@ tonedial create 'When you like it rough' --slug rough-but-reliable --auto \
 
 Try this voice: `tonedial test codex --preset rough-but-reliable`
 
-</details>
-
 **Codex**
 
 > Use `''` for null or undefined, hey. That unguarded call is a fucking crash trap with the resilience of wet cardboard; my fix handles this shit in one goddamn line.
@@ -146,22 +156,10 @@ Try this voice: `tonedial test codex --preset rough-but-reliable`
 > }
 > ```
 
+</details>
+
 Enter the question after Codex opens the conversation.
 Model and reasoning effort are Codex settings, separate from the ToneDial profile.
-
-## Try it
-
-Requires **Node 24+** and npm.
-
-```bash
-npm install --global tonedial
-tonedial init --tools none --global --lang en
-tonedial set
-```
-
-Setup previews file changes for approval. This opens the dial without connecting an agent.
-
-[Connect your agent](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#connecting-an-agent) · [Try with disposable settings](https://github.com/awesometic/tonedial/blob/main/docs/TESTING.md#isolated-candidate)
 
 ## Pick your character
 

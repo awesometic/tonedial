@@ -107,6 +107,8 @@ The consumer test checks locale links, seven raw replies/hashes, current inputs,
 The three custom recipes below each README's opening gallery are recorded separately in `use-cases.json`.
 Each locale owns its actual first completed replies to one shared question, full compiler inputs,
 copyable CLI commands and native invocation metadata.
+Keep each recipe title and description visible, with its complete command and recorded reply together
+inside one collapsed details block so the README stays short to scan.
 Run each recipe through the native interactive `tonedial test codex` client with `gpt-6.1-sol` and `high`.
 Keep the opening prompt unchanged, wait for its response, then enter the question as a separate turn.
 Use invocation-only model flags without saving personal defaults;

@@ -1,6 +1,6 @@
 # Using ToneDial
 
-Pick a character, adjust its tone, then save your profile.
+ToneDial is a local CLI for saving tone axes, roles, address forms, register and a safeword as one reusable coding-agent profile.
 
 ```bash
 tonedial use ego-sword
@@ -13,7 +13,7 @@ tonedial save "My Sword"
 For a checkout, use [build and run from source](../CONTRIBUTING.md#build-and-run-from-source).
 Use the [candidate procedure](./TESTING.md#isolated-candidate) for disposable setup.
 
-[Profiles & roles](#presets-and-personal-settings) · [Read settings](#read-current-settings) · [Axes](#tone-and-axes) · [Dial](#the-inline-dial) · [Connect](#connecting-an-agent) · [Reload](#changing-an-open-conversation) · [Recover](#recovery) · [Commands & JSON](#command-reference-and-json) · [Try a conversation](#try-a-fresh-conversation)
+[Profiles & roles](#presets-and-personal-settings) · [Try a conversation](#try-a-fresh-conversation) · [Read settings](#read-current-settings) · [Axes](#tone-and-axes) · [Dial](#the-inline-dial) · [Connect](#connecting-an-agent) · [Reload](#changing-an-open-conversation) · [Recover](#recovery) · [Commands & JSON](#command-reference-and-json)
 
 ## Presets and personal settings
 

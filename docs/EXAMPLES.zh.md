@@ -2,8 +2,8 @@
 
 [English](./EXAMPLES.md) | [한국어](./EXAMPLES.ko.md) | [日本語](./EXAMPLES.ja.md) | **简体中文** | [Español](./EXAMPLES.es.md)
 
-同一个问题，七种角色回答。
-将实际 Codex 回复排成终端对话形式。
+ToneDial 的 7 个内置配置回答了同一个函数命名问题，内容来自实际 Codex 对话。
+回复保留原文；图片是整理后的对话记录，不是截图。
 
 [在 README 中比较 Codex 默认设置和完整的 `vibe-coder` 配置。](../README.zh.md)
 
@@ -139,10 +139,10 @@
 
 </details>
 
-## 记录限制
+## 记录方式与限制
 
 <details>
-<summary>执行信息与记录限制</summary>
+<summary>查看详细记录与限制</summary>
 
 | 项目 | 记录 |
 |---|---|

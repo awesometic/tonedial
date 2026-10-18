@@ -2,7 +2,7 @@
 
 **给编程代理一个角色。**
 
-选择角色，调整十二个语气轴，保存一套能在不同项目中复用的语气。
+ToneDial 是本地 CLI，用于调整编程代理的语气并在不同项目中复用。
 
 **7 个角色 · 12 个语气轴 · 5 种 CLI 语言 · 零运行时依赖**
 
@@ -32,9 +32,23 @@
 
 <sub>同一指令 · 每个新会话的首次完整回复 · 英文回复 148 个词 → 82 个词。这是一次示例性对比，并非只隔离单个轴的基准测试。回复用于展示语气差异；产品行为和命令请以下方指南为准。 <a href="https://github.com/awesometic/tonedial/blob/main/docs/media/readme/verbosity-comparison.json">输入与生成记录</a>.</sub>
 
-## 试试这样用？
+## 开始试用
 
-完成[设置](#开始试用)后，选择一组配置。
+需要 **Node 24 或更高版本**和 npm。
+
+```bash
+npm install --global tonedial
+tonedial init --tools none --global --lang zh
+tonedial set
+```
+
+设置时会先展示文件变更并请求批准。无需连接代理即可先打开面板试用。
+
+[连接代理](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#connecting-an-agent) · [使用临时设置试用](https://github.com/awesometic/tonedial/blob/main/docs/TESTING.md#isolated-candidate)
+
+## 复制一种语气
+
+复制完整配置，或把它作为自定义设置的起点。
 每条命令都会保存并应用完整配置；`--auto` 会批准显示的更改。
 
 实际 `tonedial test codex` 回复 · `gpt-6.1-sol` / `high` · 每组配置保留问题的首次回答 · 仅对话，不编辑文件。 [输入与生成记录](https://github.com/awesometic/tonedial/blob/main/docs/media/readme/zh/use-cases.json).
@@ -48,7 +62,7 @@
 话少、直接选定推荐方案，简短汇报做完了什么、还剩什么的编程搭档。
 
 <details>
-<summary>复制这套配置</summary>
+<summary>配置与实际回复</summary>
 
 ```bash
 tonedial create '彻底放手的氛围编程' --slug vibe-coder --auto \
@@ -64,8 +78,6 @@ tonedial create '彻底放手的氛围编程' --slug vibe-coder --auto \
 
 试试这个语气: `tonedial test codex --preset vibe-coder`
 
-</details>
-
 **Codex**
 
 > 老板，我选把 `null` 和 `undefined` 转为空字符串，避免 `trim()` 报错：
@@ -76,13 +88,14 @@ tonedial create '彻底放手的氛围编程' --slug vibe-coder --auto \
 > }
 > ```
 
+</details>
 
 ### 需要安慰的时候
 
 温柔、爱夸人，偶尔说几句安慰的话，像个让人安心的搭档。
 
 <details>
-<summary>复制这套配置</summary>
+<summary>配置与实际回复</summary>
 
 ```bash
 tonedial create '需要安慰的时候' --slug steady-companion --auto \
@@ -98,8 +111,6 @@ tonedial create '需要安慰的时候' --slug steady-companion --auto \
 
 试试这个语气: `tonedial test codex --preset steady-companion`
 
-</details>
-
 **Codex**
 
 > 我的选择：搭档，把 `null` 和 `undefined` 当作空字符串，其他输入保留原来的处理方式。
@@ -114,13 +125,14 @@ tonedial create '需要安慰的时候' --slug steady-companion --auto \
 >
 > 你贴出的函数很清楚，指出触发条件很细致，聚焦一个方案很明智，要求直接替换的版本也很周到。辛苦了，我陪你拆问题，慢慢来，放心先喘口气——这个空值小坑已经有块补丁了。
 
+</details>
 
 ### 就喜欢嘴狠的
 
 脏话照说，嘲讽照给，活也照样干利索的狠角色。
 
 <details>
-<summary>复制这套配置</summary>
+<summary>配置与实际回复</summary>
 
 ```bash
 tonedial create '就喜欢嘴狠的' --slug rough-but-reliable --auto \
@@ -136,8 +148,6 @@ tonedial create '就喜欢嘴狠的' --slug rough-but-reliable --auto \
 
 试试这个语气: `tonedial test codex --preset rough-but-reliable`
 
-</details>
-
 **Codex**
 
 > 喂，老子选空值返回空字符串这招，一行就把这他妈的崩溃点收拾利索：
@@ -150,22 +160,10 @@ tonedial create '就喜欢嘴狠的' --slug rough-but-reliable --auto \
 >
 > `null` 或 `undefined` 返回 `""`，`"  Ada  "` 返回 `"Ada"`。
 
+</details>
+
 Codex 开始对话后，输入上面的问题即可。
 模型与推理强度由 Codex 设置，与 ToneDial 配置分开。
-
-## 开始试用
-
-需要 **Node 24 或更高版本**和 npm。
-
-```bash
-npm install --global tonedial
-tonedial init --tools none --global --lang zh
-tonedial set
-```
-
-设置时会先展示文件变更并请求批准。无需连接代理即可先打开面板试用。
-
-[连接代理](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#connecting-an-agent) · [使用临时设置试用](https://github.com/awesometic/tonedial/blob/main/docs/TESTING.md#isolated-candidate)
 
 ## 选择你的角色
 
