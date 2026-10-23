@@ -446,7 +446,7 @@ const messages: Messages = {
       `置換に失敗し、旧インストールも復元できません。${previous} を lib に名前変更してください。`,
   },
   help: {
-    more: "コマンド別ヘルプ：tonedial <command> --help\n全体のリファレンス：tonedial --help",
+    more: "コマンド別ヘルプ：tonedial <command> --help\n全体のリファレンス：tonedial --help\n\n問題が起きたときや、アイデア・フィードバックがあるときは、お気軽にお寄せください :)\nhttps://github.com/awesometic/tonedial/issues/new/choose",
     tagline: "エージェントの口調を一度設定し、使い続ける",
     footer: "接続は既定でグローバルです。現在の場所は --here、別の場所は --project PATH を使います。無人書き込みには範囲の明示が必要です。",
     groups: { tone: "口調", presets: "プリセットライブラリ", agents: "接続", upkeep: "保守", flags: "オプション" },

@@ -1038,7 +1038,7 @@ const enMessages: Messages = {
       `Install replacement failed and the old install could not be restored. Rename ${previous} to lib.`,
   },
   help: {
-    more: "Command help: tonedial <command> --help\nFull reference: tonedial --help",
+    more: "Command help: tonedial <command> --help\nFull reference: tonedial --help\n\nIf you run into a problem or have ideas or feedback, feel free to share them :)\nhttps://github.com/awesometic/tonedial/issues/new/choose",
     tagline: "set a coding agent's manner once and keep using it",
     footer: "Connections default to global. Use --here for cwd or --project PATH elsewhere. Unattended writes require an explicit scope.",
     groups: { tone: "Tone", presets: "Preset library", agents: "Connections", upkeep: "Maintenance", flags: "Options" },
@@ -1747,7 +1747,7 @@ const koMessages: Messages = {
       `설치 교체에 실패했고 이전 설치도 복구하지 못했습니다. 이전 설치 경로: ${previous}\n이름을 lib로 바꿔 주세요.`,
   },
   help: {
-    more: "명령별 도움말: tonedial <command> --help\n전체 도움말: tonedial --help",
+    more: "명령별 도움말: tonedial <command> --help\n전체 도움말: tonedial --help\n\n문제가 발생했거나 아이디어, 피드백이 있으시면 자유롭게 작성해 주세요 :)\nhttps://github.com/awesometic/tonedial/issues/new/choose",
     tagline: "코딩 에이전트의 말투를 한 번 정하고 계속 씁니다",
     footer: "기본 연결 범위는 전역입니다. 현재 프로젝트는 --here, 다른 곳은 --project PATH로 선택합니다. 질문 없이 파일을 바꾸려면 범위를 직접 선택해 주세요.",
     groups: { tone: "말투", presets: "프리셋 보관함", agents: "연결", upkeep: "관리", flags: "옵션" },

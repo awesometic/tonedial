@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=4228; endsWithNewline=true]
+--- stdout --- [bytes=4388; endsWithNewline=true]
 tonedial — 코딩 에이전트의 말투를 한 번 정하고 계속 씁니다
 
 tonedial <command> [options]
@@ -72,5 +72,8 @@ tonedial <command> [options]
 선택합니다. 질문 없이 파일을 바꾸려면 범위를 직접 선택해 주세요.
 명령별 도움말: tonedial <command> --help
 전체 도움말: tonedial --help
+
+문제가 발생했거나 아이디어, 피드백이 있으시면 자유롭게 작성해 주세요 :)
+https://github.com/awesometic/tonedial/issues/new/choose
 --- stderr --- [bytes=0; endsWithNewline=false]
 

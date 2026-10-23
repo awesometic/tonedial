@@ -446,7 +446,7 @@ const messages: Messages = {
       `安装替换失败，且无法恢复旧版。请将 ${previous} 重命名为 lib。`,
   },
   help: {
-    more: "命令帮助：tonedial <command> --help\n完整参考：tonedial --help",
+    more: "命令帮助：tonedial <command> --help\n完整参考：tonedial --help\n\n如果遇到问题，或者有想法或反馈，欢迎随时分享 :)\nhttps://github.com/awesometic/tonedial/issues/new/choose",
     tagline: "一次设置，持续使用代理语气",
     footer: "默认连接范围为全局。当前目录使用 --here，其他目录使用 --project PATH。无人值守写入必须明确范围。",
     groups: { tone: "语气", presets: "预设库", agents: "连接", upkeep: "维护", flags: "选项" },

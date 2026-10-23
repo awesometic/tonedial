@@ -731,6 +731,7 @@ test("full and command help remain readable at measured widths in both locales",
           assert.ok(text.includes(copy.help.examples), `${name}: examples missing`);
           assert.match(text, new RegExp(`tonedial ${name}\\b`), `${name}: syntax missing`);
         } else {
+          assert.ok(text.includes("https://github.com/awesometic/tonedial/issues/new/choose"), `${language}: issue-reporting URL is missing or split`);
           assert.ok(lines.some(line => maxCells(line) > 79) || columns === 60, "wide help still uses the retired cap");
         }
       }

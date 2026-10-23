@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=4052; endsWithNewline=true]
+--- stdout --- [bytes=4190; endsWithNewline=true]
 tonedial — set a coding agent's manner once and keep using it
 
 tonedial <command> [options]
@@ -79,5 +79,8 @@ Connections default to global. Use --here for cwd or --project PATH elsewhere.
 Unattended writes require an explicit scope.
 Command help: tonedial <command> --help
 Full reference: tonedial --help
+
+If you run into a problem or have ideas or feedback, feel free to share them :)
+https://github.com/awesometic/tonedial/issues/new/choose
 --- stderr --- [bytes=0; endsWithNewline=false]
 

@@ -446,7 +446,7 @@ const messages: Messages = {
       `Falló el reemplazo y no se pudo restaurar la instalación anterior. Renombra ${previous} como lib.`,
   },
   help: {
-    more: "Ayuda del comando: tonedial <command> --help\nReferencia completa: tonedial --help",
+    more: "Ayuda del comando: tonedial <command> --help\nReferencia completa: tonedial --help\n\nSi encuentras algún problema o tienes ideas o comentarios, no dudes en compartirlos :)\nhttps://github.com/awesometic/tonedial/issues/new/choose",
     tagline: "configura una vez el tono de tu agente y sigue usándolo",
     footer: "Las conexiones son globales por defecto. Usa --here para el directorio actual o --project PATH para otro. Las escrituras sin interacción requieren un ámbito explícito.",
     groups: { tone: "Tono", presets: "Biblioteca de preajustes", agents: "Conexiones", upkeep: "Mantenimiento", flags: "Opciones" },

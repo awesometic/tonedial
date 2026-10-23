@@ -613,6 +613,7 @@ See [candidate checks](./TESTING.md#isolated-candidate) for installation recover
 
 Bare `tonedial` shows first-use help without initializing state.
 Use `--help`, `<command> --help` or `--verbose` (`-v`) for details.
+Top-level help includes a link to the GitHub issue forms.
 Successful tone mutations recompile in the same action.
 
 | Command | Purpose |
