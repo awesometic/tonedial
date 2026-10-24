@@ -4,7 +4,7 @@ import { join, relative } from "node:path";
 import { test, type TestContext } from "node:test";
 
 import { AXIS_ORDER } from "../src/core/anchors.ts";
-import { AGE_BANDS, GENDERS, SETTING_KEYS } from "../src/core/config.ts";
+import { ADDRESS_FREQUENCIES, AGE_BANDS, GENDERS, SETTING_KEYS } from "../src/core/config.ts";
 import { LANGUAGES, catalogue, type Language } from "../src/core/i18n.ts";
 import { humanText } from "../src/ui/format.ts";
 import { maxCells } from "../src/ui/width.ts";
@@ -143,7 +143,7 @@ test("get key explanations and get/set help reuse localized setting meanings and
     await init(value, language);
     const copy = catalogue(language);
     const flat = (text: string) => text.replace(/\s+/g, "");
-    for (const key of ["language", "speech_level"] as const) {
+    for (const key of ["language", "speech_level", "address_frequency"] as const) {
       const result = await captureCli(value, ["get", key]);
       assert.equal(result.status, 0);
       assert.ok(flat(result.stdout).includes(flat(copy.settingHints[key])), `${language}: ${key}`);
@@ -152,9 +152,31 @@ test("get key explanations and get/set help reuse localized setting meanings and
       const help = await captureCli(value, [command, "--help"]);
       assert.equal(help.status, 0);
       for (const key of [...AXIS_ORDER, ...SETTING_KEYS]) assert.ok(help.stdout.includes(key), `${language}: ${command} help lost ${key}`);
-      for (const token of [...AGE_BANDS, ...GENDERS, ...LANGUAGES]) assert.ok(help.stdout.includes(token), `${language}: ${command} help lost ${token}`);
+      for (const token of [...AGE_BANDS, ...GENDERS, ...LANGUAGES, ...ADDRESS_FREQUENCIES]) assert.ok(help.stdout.includes(token), `${language}: ${command} help lost ${token}`);
       assert.ok(flat(help.stdout).includes(flat(copy.axisHints.warmth!.low)));
       assert.ok(flat(help.stdout).includes(flat(copy.axisHints.warmth!.high)));
+    }
+  }
+});
+
+test("every README exposes a runnable address-frequency example and all choices", async t => {
+  for (const language of LANGUAGES) {
+    const text = readFileSync(new URL(language === "en" ? "../README.md" : `../README.${language}.md`, import.meta.url), "utf8");
+    const example = [...text.matchAll(/^tonedial set (.+)$/gm)].find(match => match[1]!.includes("address_frequency="));
+    assert.ok(example, `${language}: README has no address-frequency example`);
+    for (const frequency of ADDRESS_FREQUENCIES) assert.ok(text.includes(`\`${frequency}\``), `${language}: README omits ${frequency}`);
+    const selected = /(?:^|\s)address_frequency=(\w+)(?=\s|$)/.exec(example[1]!);
+    assert.ok(selected && (ADDRESS_FREQUENCIES as readonly string[]).includes(selected[1]!));
+    const value = workspace(t);
+    await init(value, language);
+    const result = await captureCli(value, ["set", ...example[1]!.split(/\s+/), "--json"]);
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+    const current = await captureCli(value, ["get", "address_frequency", "--json"]);
+    assert.equal(JSON.parse(current.stdout).values.address_frequency, selected[1]);
+    for (const command of [undefined, "address", "create"]) {
+      const help = await captureCli(value, [...(command ? [command] : []), "--help"]);
+      assert.equal(help.status, 0);
+      assert.ok(help.stdout.includes("address_frequency"), `${language}: ${command ?? "full"} help omits frequency`);
     }
   }
 });

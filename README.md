@@ -175,11 +175,15 @@ Model and reasoning effort are Codex settings, separate from the ToneDial profil
 
 ```bash
 tonedial use ego-sword
-tonedial set verbosity=1 warmth=3
+tonedial set verbosity=1 warmth=3 address_frequency=rarely
 tonedial save "My Sword"
 ```
 
 Use `tonedial create` to build your own. Profiles keep tone, roles, address forms, register and safeword together.
+
+Set `address_frequency` to `none` to omit user names and titles, `auto` (default) to choose from context,
+`rarely` for occasional use, or `frequently` for main replies while skipping brief follow-ups.
+The choice is saved with the profile. [Address settings](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#set-address-roles-and-language).
 
 ## Turn the dials
 

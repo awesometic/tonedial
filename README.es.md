@@ -177,11 +177,16 @@ El modelo y el esfuerzo de razonamiento se configuran en Codex, aparte del perfi
 
 ```bash
 tonedial use ego-sword
-tonedial set verbosity=1 warmth=3
+tonedial set verbosity=1 warmth=3 address_frequency=rarely
 tonedial save "My Sword"
 ```
 
 Crea el tuyo con `tonedial create`. Cada perfil guarda tono, roles, formas de trato, registro y palabra clave.
+
+Elige la frecuencia de nombres y tratamientos con `address_frequency`: `none` los omite,
+`auto` (predeterminado) decide según el contexto, `rarely` los usa de vez en cuando y
+`frequently` los usa en respuestas sustantivas y los omite en seguimientos breves.
+La opción también se guarda en el perfil. [Ajustes de tratamiento](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#set-address-roles-and-language).
 
 ## Ajusta los diales
 

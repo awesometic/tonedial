@@ -179,11 +179,16 @@ Codex 开始对话后，输入上面的问题即可。
 
 ```bash
 tonedial use ego-sword
-tonedial set verbosity=1 warmth=3
+tonedial set verbosity=1 warmth=3 address_frequency=rarely
 tonedial save "My Sword"
 ```
 
 也可用 `tonedial create` 创建自己的角色。语气、角色、称呼、敬语形式和安全词一起保存在配置中。
+
+用 `address_frequency` 选择用户姓名和称呼的使用频率。
+`none` 表示省略，`auto` 是根据语境选择的默认值，`rarely` 表示偶尔使用。
+`frequently` 在主要回答中使用，在简短的后续回答中省略。
+该值也会保存在配置中。[称呼设置](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#set-address-roles-and-language)。
 
 ## 调节语气
 

@@ -180,11 +180,16 @@ Codex가 대화를 열면 위 질문을 입력하면 됩니다.
 
 ```bash
 tonedial use ego-sword
-tonedial set verbosity=1 warmth=3
+tonedial set verbosity=1 warmth=3 address_frequency=rarely
 tonedial save "My Sword"
 ```
 
 `tonedial create`로 직접 만들 수도 있습니다. 말투, 역할, 호칭, 말씨, 세이프워드를 프로필 하나에 저장합니다.
+
+`address_frequency`로 사용자 이름·호칭을 얼마나 자주 쓸지 정합니다.
+`none`은 생략하고 `auto`(기본값)는 문맥에 맞게 선택합니다.
+`rarely`는 드물게, `frequently`는 주요 답변에서 자주 사용하되 짧은 후속 답변에서는 생략합니다.
+선택한 빈도도 프로필에 함께 저장됩니다. [호칭 설정](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#set-address-roles-and-language).
 
 ## 말투 조절하기
 

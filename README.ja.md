@@ -180,11 +180,16 @@ Codex が会話を始めたら、上の質問を入力してください。
 
 ```bash
 tonedial use ego-sword
-tonedial set verbosity=1 warmth=3
+tonedial set verbosity=1 warmth=3 address_frequency=rarely
 tonedial save "My Sword"
 ```
 
 `tonedial create` で自分のキャラクターも作れます。口調、役割、呼称、敬語区分、合言葉を1つのプロファイルに保存します。
+
+`address_frequency` でユーザーの名前や呼称を使う頻度を選べます。
+`none` は省略、`auto` は文脈に合わせる既定値、`rarely` は時々使います。
+`frequently` は内容のある回答で使い、短い続きでは省略します。
+この値もプロファイルに保存されます。[呼称の設定](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#set-address-roles-and-language)。
 
 ## ダイヤルを回す
 
