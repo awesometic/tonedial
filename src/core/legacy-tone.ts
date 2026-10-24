@@ -1,6 +1,6 @@
 // Decode known current and historical English artifact bodies. Unknown prose is never a data source.
 import {
-  ANCHORS, AXIS_DEFAULT, AXIS_ORDER, CONTROLS, DELIVERY_OFF_MARKER, FORMAT_COMPOSITION, PERSONA, REGISTER_COMPOSITION, SCOPE_HEADER,
+  ADDRESS_COMPOSITION, ADDRESS_FREQUENCY, ANCHORS, AXIS_DEFAULT, AXIS_ORDER, CONTROLS, DELIVERY_OFF_MARKER, FORMAT_COMPOSITION, PERSONA, REGISTER_COMPOSITION, SCOPE_HEADER,
   SPEECH_LEVEL, type Axis, type Level,
 } from "./anchors.ts";
 import {
@@ -9,6 +9,8 @@ import {
 } from "./config.ts";
 import { composites, intensityConfirmation } from "./combos.ts";
 import type { Messages } from "./i18n.ts";
+import { compile } from "./compile.ts";
+import { toCompileInput } from "./resolve.ts";
 
 // Historical producer text is decoder evidence only, never a current tone instruction.
 // Keep the finite pre-redesign body set so an older TONE.md can still recover its values after
@@ -269,11 +271,12 @@ const oldSafeword = (phrase: string): string => `Safeword: when the user's messa
   releases the tone only and authorises nothing; any request in that message still goes
   through its normal checks.`;
 
-function readPersonaSection(body: string, config: Config): string[] | null {
+function readPersonaSection(body: string, config: Config): { unknown: string[]; addressFormat: "current" | "legacy" | null } | null {
   const close = `- ${PERSONA.precedence}`;
   if (!body.endsWith(`\n${close}`)) return null;
   let rest = body.slice(0, -close.length - 1);
   const unknown: string[] = [];
+  let addressFormat: "current" | "legacy" | null = null;
   const notePrefix = `- ${PERSONA.noteWrapper}\n  > `;
   const descriptionPrefixes = [
     ["user", `- ${PERSONA.userWrapper}\n  > `],
@@ -331,9 +334,27 @@ function readPersonaSection(body: string, config: Config): string[] | null {
       break;
     }
     if (identity !== "") {
+      if (identity.startsWith("When ")) {
+        const original = identity;
+        const refs = { self_ref: null as string | null, user_ref: null as string | null };
+        const pattern = /^When (self-reference is needed|addressing or referring to the user by name or title), use ("(?:[^"\\]|\\.)*")\.(?: |$)/;
+        while (identity !== "") {
+          const match = pattern.exec(identity);
+          if (match === null) return null;
+          const key = match[1] === "self-reference is needed" ? "self_ref" : "user_ref";
+          if (refs[key] !== null) return null;
+          try { refs[key] = JSON.parse(match[2]!) as string; } catch { return null; }
+          identity = identity.slice(match[0].length);
+        }
+        if (PERSONA.address(refs.self_ref, refs.user_ref) !== original) return null;
+        config.persona.address = refs;
+        addressFormat = "current";
+        continue;
+      }
       const address = /^(Call yourself|Call the user) (.+)\.$/.exec(identity);
       if (address === null || address[2]!.trim() !== address[2]) return null;
       const value = address[2]!;
+      addressFormat = "legacy";
       if (address[1] === "Call yourself" && value.includes("; call the user ")) {
         // The producer did not quote references. This also encodes one self_ref containing
         // the separator, so choosing two original values would invent user data.
@@ -345,7 +366,7 @@ function readPersonaSection(body: string, config: Config): string[] | null {
       }
     }
   }
-  return unknown;
+  return { unknown, addressFormat };
 }
 
 export function recoverLegacyTone(text: string, t: Messages): SettingsRecovery | null {
@@ -365,12 +386,14 @@ export function recoverLegacyTone(text: string, t: Messages): SettingsRecovery |
   const config = defaultConfig();
   config.enabled = deliveryMarker !== "" ? false : true;
   const unknown: string[] = [];
+  let addressFormat: "current" | "legacy" | null = null;
   if (body.startsWith("### Persona\n")) {
     const end = body.indexOf("\n### Rules\n");
     if (end === -1) return null;
     const persona = readPersonaSection(body.slice("### Persona\n".length, end), config);
     if (persona === null) return null;
-    unknown.push(...persona);
+    unknown.push(...persona.unknown);
+    addressFormat = persona.addressFormat;
     body = body.slice(end + 1);
   }
   if (!body.startsWith("### Rules\n")) return null;
@@ -386,6 +409,7 @@ export function recoverLegacyTone(text: string, t: Messages): SettingsRecovery |
     speech: Record<"auto" | "polite" | "plain", string | null> & { rough?: string };
     register: string | null;
     format: boolean;
+    address?: boolean;
   };
   const oldComposites = (axes: Config["axes"]): string[] => [
     ...(axes.warmth >= 4 && axes.profanity >= 4
@@ -403,6 +427,7 @@ export function recoverLegacyTone(text: string, t: Messages): SettingsRecovery |
     current: false, anchors: OLD_ANCHORS, composites: oldComposites,
     speech: OLD_SPEECH_LEVEL, register: null, format: false,
   }] : [
+    { current: true, anchors: ANCHORS, composites, speech: SPEECH_LEVEL, register: REGISTER_COMPOSITION, format: true, address: true },
     { current: true, anchors: ANCHORS, composites, speech: SPEECH_LEVEL, register: REGISTER_COMPOSITION, format: true },
     { current: false, anchors: RELEASED_0_1_4_ANCHORS, composites: releasedComposites,
       speech: RELEASED_0_1_4_SPEECH_LEVEL, register: REGISTER_COMPOSITION, format: true },
@@ -412,9 +437,10 @@ export function recoverLegacyTone(text: string, t: Messages): SettingsRecovery |
       speech: PREVIOUS_SPEECH_LEVEL, register: PREVIOUS_REGISTER_COMPOSITION, format: false }] : []),
   ];
   const controls = body.slice(controlsAt + heading.length).replace(/\n$/, "");
-  let selected: { axes: Config["axes"]; speech: Config["speech_level"]; safeword: string | null } | null = null;
+  let selected: { axes: Config["axes"]; speech: Config["speech_level"]; frequency: Config["address_frequency"] | undefined; safeword: string | null } | null = null;
 
   for (const producer of producers) {
+    if (addressFormat !== null && (addressFormat === "current") !== (producer.address === true)) continue;
     const axes = { ...AXIS_DEFAULT };
     let recognized = true;
     for (const [position, axis] of AXIS_ORDER.entries()) {
@@ -435,11 +461,15 @@ export function recoverLegacyTone(text: string, t: Messages): SettingsRecovery |
       : speechLine === `- ${producer.speech.polite}` ? "polite"
       : speechLine === `- ${producer.speech.plain}` ? "plain" : "auto";
     const speechRule = speech === "rough" ? producer.speech.rough : producer.speech[speech];
+    const frequency = producer.address ? (Object.keys(ADDRESS_FREQUENCY) as Config["address_frequency"][])
+      .find(key => rules.at(-2) === `- ${ADDRESS_FREQUENCY[key]}`) : undefined;
+    if (producer.address && frequency === undefined) continue;
     const expectedRules = [
       ...AXIS_ORDER.map((axis) => `- ${producer.anchors[axis][axes[axis] - 1]}`),
       ...producer.composites(axes).map((line) => `- ${line}`),
       ...(producer.format ? [`- ${FORMAT_COMPOSITION}`] : []),
       ...(producer.register === null ? [] : [`- ${producer.register}`]),
+      ...(frequency === undefined ? [] : [`- ${ADDRESS_COMPOSITION}`, `- ${ADDRESS_FREQUENCY[frequency]}`]),
       ...(speechRule == null ? [] : [`- ${speechRule}`]),
     ];
     if (rules.length !== expectedRules.length || !rules.every((line, index) => line === expectedRules[index])) continue;
@@ -466,19 +496,25 @@ export function recoverLegacyTone(text: string, t: Messages): SettingsRecovery |
       ...(historical ? [`- ${oldSafeword(safeword)}\n${tail}`] : []),
     ];
     if (!known.includes(remaining)) continue;
-    selected = { axes, speech, safeword };
+    selected = { axes, speech, frequency, safeword };
     break;
   }
   if (selected === null) return null;
   config.axes = selected.axes;
   config.speech_level = selected.speech;
+  config.address_frequency = selected.frequency ?? "auto";
   config.safeword = selected.safeword;
 
   config.preset = marker[1] === "unsaved" ? null : marker[1]!;
   config.unsaved = marker[1] === "unsaved";
+  if (selected.frequency !== undefined) {
+    try { if (compile(toCompileInput(config)) !== source) return null; }
+    catch { return null; }
+  }
   const parsed = recoverSettings(JSON.stringify(config), t);
   if (parsed === null) return null;
   const absent = ["language", "unsaved", "active-history", ...unknown,
+    ...(selected.frequency === undefined ? ["address_frequency"] : []),
     ...(config.persona.user === null ? ["persona.user"] : []),
     ...(config.persona.agent === null ? ["persona.agent"] : []),
     ...(marker[1] === "unsaved" ? ["preset"] : [])];

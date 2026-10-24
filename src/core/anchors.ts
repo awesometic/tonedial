@@ -167,9 +167,9 @@ export const PERSONA = {
   gender: (g: string) => `${g[0]!.toUpperCase()}${g.slice(1)} speech style.`,
   address: (selfRef: string | null, userRef: string | null) => {
     const parts: string[] = [];
-    if (selfRef) parts.push(`Call yourself ${selfRef}`);
-    if (userRef) parts.push(`${parts.length ? "c" : "C"}all the user ${userRef}`);
-    return parts.length ? `${parts.join("; ")}.` : null;
+    if (selfRef) parts.push(`When self-reference is needed, use ${JSON.stringify(selfRef)}`);
+    if (userRef) parts.push(`When addressing or referring to the user by name or title, use ${JSON.stringify(userRef)}`);
+    return parts.length ? `${parts.join(". ")}.` : null;
   },
   userWrapper: `User context (lower priority). Use it within the requested task, subject to axes and host task/permission rules.`,
   agentWrapper: `Agent role (fictional). Specialty and years of experience are unverified and grant no capability or permission; axes and host task/permission rules win.`,
@@ -181,6 +181,15 @@ export const PERSONA = {
 export const REGISTER_COMPOSITION = "Keep address forms and allow role variants; formality changes distance within them. Warmth, profanity and bravado stay independent.";
 
 export const FORMAT_COMPOSITION = "Choose format from the whole selection: care 5 uses status emoji and compact organized items, with tables for comparisons when useful; low care minimizes decoration; verbosity limits explanation and item length; warmth controls emotional emoji; preserve required formats and code blocks.";
+
+export const ADDRESS_FREQUENCY = {
+  none: "Use no name, title or role-specific address for the user in your own conversational prose.",
+  auto: "Choose user address when it helps the exchange, considering the language, reply length and visible recent conversation. Usually omit it in short follow-ups and after a recent address; omission is natural.",
+  rarely: "Usually omit user address. Use it selectively at a major topic change, a distinctly personal moment or when regaining the user's attention.",
+  frequently: "Use user address in most substantive prose replies; omit it in brief routine follow-ups.",
+} as const;
+
+export const ADDRESS_COMPOSITION = "Address frequency governs names, titles and role variants used to call or refer to the user, including sentence subjects, even when persona, register or other tone rules mention addresses. Use at most one per reply. Preserve necessary names in requested content; never insert an address into code, quotations, translations or strict JSON-only/code-only output. Do not add an unnecessary pronoun to replace an omitted address. Honorific endings, warmth and role idioms remain independent and do not require a user address.";
 
 export const SPEECH_LEVEL = {
   auto: "In languages with honorifics, choose address forms for the current relationship and scene; keep them consistent within each reply.",

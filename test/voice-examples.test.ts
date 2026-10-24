@@ -6,7 +6,8 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 
-import { compile, type Config } from "../src/core/compile.ts";
+import type { Config } from "../src/core/compile.ts";
+import { assertRecordedTone } from "./support/recorded-tone.ts";
 import { AXIS_ORDER } from "../src/core/anchors.ts";
 import { BUNDLED, localizedPreset } from "../src/core/presets.ts";
 import { catalogue, LANGUAGES } from "../src/core/i18n.ts";
@@ -158,13 +159,13 @@ for (const language of LANGUAGES) {
       assert.equal(recipe.preQuestionResponses.length, recipe.nativeTurnCount - 1);
       assert.equal(recipe.preQuestionResponses[0], recipe.openingResponseText);
       assert.equal(hash(recipe.tone), recipe.toneSha256);
-      assert.equal(compile(recipe.input), recipe.tone);
+      assertRecordedTone(recipe.input, recipe.tone);
       assert.equal(recipe.input.preset, recipe.slug);
       assert.deepEqual(recipe.argv.slice(0, 5), ["create", recipe.title, "--slug", recipe.slug, "--auto"]);
       assert.deepEqual(recipe.argv.slice(5).map(arg => arg.slice(0, arg.indexOf("="))), [
         ...AXIS_ORDER, "speech_level", "persona.age", "persona.gender", "persona.note", "safeword",
         "persona.self_ref", "persona.user_ref", "persona.user", "persona.agent",
-      ], "recipes must set every tone field rather than inherit the reader's current profile");
+      ], "captured recipes must retain their complete historical assignments");
       assert.equal(recipe.command, recipeCommand(recipe.argv));
       assert.ok(readme.includes(recipe.title));
       assert.ok(readme.includes(recipe.description));
@@ -176,7 +177,7 @@ for (const language of LANGUAGES) {
       assert.equal(created.status, 0, created.stdout + created.stderr);
       const payload = JSON.parse(created.stdout);
       assert.equal(payload.created, true);
-      assert.deepEqual(payload.config, recipe.input, recipe.slug + ": copied command differs from the recorded tone");
+      assert.deepEqual(payload.config, { ...recipe.input, address_frequency: "auto" }, recipe.slug + ": captured fields changed; new frequency defaults to auto");
     }
   });
 
@@ -221,7 +222,7 @@ for (const language of LANGUAGES) {
       assert.equal(reply.preQuestionResponses.length, reply.nativeTurnCount! - 1);
       assert.equal(reply.preQuestionResponses[0], reply.openingResponseText);
       assert.equal(hash(reply.tone), reply.toneSha256);
-      assert.equal(compile(reply.input), reply.tone);
+      assertRecordedTone(reply.input, reply.tone);
       const preset = localizedPreset(BUNDLED.find(preset => preset.slug === reply.preset)!, catalogue(language).cli);
       assert.deepEqual(reply.input.persona, preset.settings!.persona);
       assert.ok(page.includes(quote(reply.text)), reply.preset + ": page changed or omitted the native response");

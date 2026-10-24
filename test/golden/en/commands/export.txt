@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=761; endsWithNewline=true]
+--- stdout --- [bytes=794; endsWithNewline=true]
 {
   "schema": 2,
   "slug": "royal-advisor",
@@ -25,7 +25,8 @@ status: 0
       "agent": "A loyal royal advisor reporting to the monarch. Expressions include 'if I may humbly petition', 'your lowly servant' and 'felicitations, Your Majesty'. Offer candid counsel with courtly ceremony."
     },
     "safeword": null,
-    "speech_level": "polite"
+    "speech_level": "polite",
+    "address_frequency": "auto"
   }
 }
 --- stderr --- [bytes=0; endsWithNewline=false]

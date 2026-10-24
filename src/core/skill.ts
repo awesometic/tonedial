@@ -37,7 +37,7 @@ const PRESETS_MD = `## Current settings and saved presets
 
 \`tonedial get --json\` reports the current editable settings in a flat \`values\` object.
 \`get <key> --json\` selects one of those keys, preserving numbers, literal text and nulls.
-The keys are the twelve axes, \`language\`, \`speech_level\`, \`safeword\`, and
+The keys are the twelve axes, \`language\`, \`speech_level\`, \`address_frequency\`, \`safeword\`, and
 \`persona.age\`, \`persona.gender\`, \`persona.self_ref\`, \`persona.user_ref\`,
 \`persona.note\`, \`persona.user\`, and \`persona.agent\`.
 \`language\` selects the CLI interface, not the agent's reply language.
@@ -118,7 +118,7 @@ enabled or running. Neither command changes axes, persona, address, register, sa
 /** Explicit setting requests use the same CLI mapping through either installed entry point. */
 const SETTINGS_MD = `## Explicit settings
 
-Persona, address, safeword, and \`speech_level\` are separate from the axes.
+Persona, address, safeword, \`speech_level\`, and \`address_frequency\` are separate from the axes.
 \`playfulness\` increases the frequency and exaggeration of the chosen role's expressions:
 literal wording at 1, one restrained touch at 2, two recognizable touches at 3,
 frequent theatrical idioms at 4, and a character voice throughout at 5.
@@ -134,6 +134,7 @@ interpolating it into shell code.
 |---|---|
 | What to call the user only | \`tonedial set "persona.user_ref=friend" --json\` |
 | What to call yourself only | \`tonedial set "persona.self_ref=guide" --json\` |
+| User address frequency | \`tonedial set address_frequency=rarely --json\` |
 | Both address terms, self first and user second | \`tonedial address "assistant" "reader" --json\` |
 | Both role descriptions, agent first and user second | \`tonedial persona "Fictional database reviewer" "Developer" --json\` |
 | Persona age band | \`tonedial set persona.age=30s --json\` |
@@ -144,6 +145,16 @@ interpolating it into shell code.
 | Safeword phrase | \`tonedial set "safeword=plain answer please" --json\` |
 | Honorific register system | \`tonedial set speech_level=polite --json\` |
 | Curt, blunt non-honorific endings | \`tonedial set speech_level=rough --json\` |
+
+\`address_frequency\` accepts \`none\`, \`auto\` (default), \`rarely\`, or \`frequently\`.
+It controls names and titles used to call or refer to the user, including sentence subjects
+and role variants. \`none\` omits them without deleting the saved address terms;
+\`auto\` chooses from context; \`rarely\` selects major transitions, personal moments or
+attention; \`frequently\` uses most substantive replies and skips brief follow-ups.
+At most one address appears per reply. Necessary names in requested content remain literal.
+Self-reference is used only when needed, independently of user address frequency.
+Profiles carry the frequency; axis-only reset and legacy presets preserve it.
+Changing an address term alone never changes its frequency.
 
 Age bands are \`unspecified\`, \`teens\`, \`20s\`, \`30s\`, \`40s\`, and \`50s+\`.
 Gender values are \`unspecified\`, \`masculine\`, \`feminine\`, and \`neutral\`.
@@ -466,6 +477,11 @@ do not prove actual host activation or model compliance.
 
 ## Settings that are not axes
 
+\`address_frequency\` controls user names and titles: \`none\`, \`auto\` (default),
+\`rarely\`, or \`frequently\`. It is independent of register, formality and warmth.
+Role titles follow the same frequency; role idioms do not require calling the user.
+\`none\` preserves saved terms and names needed in requested content.
+
 \`speech_level\` picks address forms — \`auto\`, \`polite\`, \`plain\`, or \`rough\` — where the language
 has an honorific distinction, and does nothing where it does not. Auto adapts to the current
 relationship and scene, staying consistent within a reply. Plain uses ordinary non-honorific forms;
@@ -494,7 +510,7 @@ selected by critique or persona. Bravado grades effort claims without replacing 
  * command name stays `/tone` even though the tool is `tonedial`: it is what a person types
  * mid-sentence, and the two extra characters are paid every time.
  */
-export const TONE_COMMAND_VERSION = 16;
+export const TONE_COMMAND_VERSION = 17;
 
 export const TONE_COMMAND_MD = `---
 description: Check, change, pause, resume, or reload this agent's tone, preset, or ToneDial settings

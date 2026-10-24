@@ -1,6 +1,6 @@
 {
   "name": "all-5",
-  "chars": 5565,
+  "chars": 6296,
   "config": {
     "preset": null,
     "axes": {
@@ -18,6 +18,7 @@
       "bravado": 5
     },
     "speech_level": "auto",
+    "address_frequency": "auto",
     "persona": null,
     "safeword": "진심으로 부탁할게"
   }

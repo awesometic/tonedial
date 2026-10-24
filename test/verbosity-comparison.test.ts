@@ -6,7 +6,8 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 
-import { compile, type Config } from "../src/core/compile.ts";
+import type { Config } from "../src/core/compile.ts";
+import { assertRecordedTone } from "./support/recorded-tone.ts";
 import { LANGUAGES } from "../src/core/i18n.ts";
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
@@ -101,7 +102,7 @@ test("the README default-vs-vibe-coder comparison preserves its recorded native 
   assert.equal(recipe.tone.length, data.profile.toneChars);
   assert.equal(hash(recipe.tone), data.profile.toneSha256);
   assert.equal(recipe.toneSha256, data.profile.toneSha256);
-  assert.equal(compile(recipe.input), recipe.tone);
+  assertRecordedTone(recipe.input, recipe.tone);
   assert.equal(data.profile.testCommand, "tonedial test codex --preset vibe-coder");
 
   assert.deepEqual(data.conditions.map(item => item.id), ["codex-default", "vibe-coder"]);

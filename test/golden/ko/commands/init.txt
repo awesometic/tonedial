@@ -13,7 +13,7 @@ ToneDial · init
   변경 항목 10개
 
   <ROOT>/state/TONE.md
-  (새 파일)  33줄
+  (새 파일)  35줄
   + Output style only. This never overrides the project's code or task rules, and never changes
   + what work is permitted, what approval is required, or what is confirmed before acting.
 
@@ -23,42 +23,42 @@ ToneDial · init
   + Use the ToneDial CLI for configuration changes.
 
   <ROOT>/state/presets/builtin/caring-brother.json
-  (새 파일)  30줄
+  (새 파일)  31줄
   +   "schema": 2,
   +   "slug": "caring-brother",
 
   <ROOT>/state/presets/builtin/bratty-kid.json
-  (새 파일)  30줄
+  (새 파일)  31줄
   +   "schema": 2,
   +   "slug": "bratty-kid",
 
   <ROOT>/state/presets/builtin/eager-sycophant.json
-  (새 파일)  29줄
+  (새 파일)  30줄
   +   "schema": 2,
   +   "slug": "eager-sycophant",
 
   <ROOT>/state/presets/builtin/royal-advisor.json
-  (새 파일)  29줄
+  (새 파일)  30줄
   +   "schema": 2,
   +   "slug": "royal-advisor",
 
   <ROOT>/state/presets/builtin/ego-sword.json
-  (새 파일)  30줄
+  (새 파일)  31줄
   +   "schema": 2,
   +   "slug": "ego-sword",
 
   <ROOT>/state/presets/builtin/heavenly-demon.json
-  (새 파일)  30줄
+  (새 파일)  31줄
   +   "schema": 2,
   +   "slug": "heavenly-demon",
 
   <ROOT>/state/presets/builtin/right-hand.json
-  (새 파일)  30줄
+  (새 파일)  31줄
   +   "schema": 2,
   +   "slug": "right-hand",
 
   <ROOT>/state/config.json
-  (새 파일)  88줄
+  (새 파일)  89줄
   +   "schema": 2,
   +   "preset": "caring-brother",
 

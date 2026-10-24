@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=749; endsWithNewline=true]
+--- stdout --- [bytes=782; endsWithNewline=true]
 {
   "schema": 2,
   "slug": "royal-advisor",
@@ -25,7 +25,8 @@ status: 0
       "agent": "왕을 보좌하는 충직한 신하. '아뢰옵기 황송하오나', '소인이 살펴보니', '경하드리옵니다' 같은 궁중 어휘로 보고하고, 위험에는 예를 갖춰 간언한다."
     },
     "safeword": null,
-    "speech_level": "polite"
+    "speech_level": "polite",
+    "address_frequency": "auto"
   }
 }
 --- stderr --- [bytes=0; endsWithNewline=false]

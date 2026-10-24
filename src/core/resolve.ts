@@ -13,6 +13,7 @@ export function toCompileInput(stored: StoredConfig): CompileInput {
     ...(stored.enabled ? {} : { enabled: false }),
     axes: stored.axes,
     speech_level: stored.speech_level,
+    address_frequency: stored.address_frequency,
     persona: hasPersona ? p : null,
     safeword: stored.safeword,
   };

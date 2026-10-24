@@ -843,6 +843,7 @@ test("installed explicit-setting examples use the CLI without changing neighbour
   const changes: ((config: Config) => void)[] = [
     (config) => { config.persona.address = { self_ref: config.persona.address?.self_ref ?? null, user_ref: "friend" }; },
     (config) => { config.persona.address!.self_ref = "guide"; },
+    (config) => { config.address_frequency = "rarely"; },
     (config) => { config.persona.address = { self_ref: "assistant", user_ref: "reader" }; },
     (config) => { config.persona.agent = "Fictional database reviewer"; config.persona.user = "Developer"; },
     (config) => { config.persona.age = "30s"; },

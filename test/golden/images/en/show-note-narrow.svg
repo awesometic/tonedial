@@ -1,7 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="876" height="1044" viewBox="0 0 876 1044" role="img" aria-labelledby="title description">
+<svg xmlns="http://www.w3.org/2000/svg" width="876" height="1072" viewBox="0 0 876 1072" role="img" aria-labelledby="title description">
 <title id="title">ToneDial screen (en · show-note-narrow)</title>
 <desc id="description">  ToneDial · show · Caring Brother (unsaved changes)
-  TONE.md 3,918 characters
+  TONE.md 4,723 characters
 
                          Current   Initial · ! risky tone
   form      formality    ▮▯▯▯▯  1   *3
@@ -28,7 +28,8 @@
   older brother.
   persona note: Prefer direct explanations. Preserve
   uncertainty and mention concrete next steps.
-  no safeword · register plain (non-honorific)
+  no safeword · register plain (non-honorific) · address
+  auto
   Interface en
   Connections: none
 
@@ -38,7 +39,7 @@
 </desc>
 <rect width="100%" height="100%" rx="16" fill="#171b20"/>
 <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, system-ui" font-size="22"><text x="60" y="48" fill="#edf3f6" font-weight="400" opacity="1">ToneDial · show · Caring Brother (unsaved changes)</text>
-<text x="60" y="76" fill="#edf3f6" font-weight="400" opacity="1">TONE.md 3,918 characters</text>
+<text x="60" y="76" fill="#edf3f6" font-weight="400" opacity="1">TONE.md 4,723 characters</text>
 <text x="382" y="132" fill="#edf3f6" font-weight="400" opacity="1">Current</text>
 <text x="522" y="132" fill="#edf3f6" font-weight="400" opacity="1">Initial · ! risky tone</text>
 <text x="60" y="160" fill="#edf3f6" font-weight="400" opacity="1">form</text>
@@ -102,10 +103,11 @@
 <text x="60" y="748" fill="#edf3f6" font-weight="400" opacity="1">older brother.</text>
 <text x="60" y="776" fill="#edf3f6" font-weight="400" opacity="1">persona note: Prefer direct explanations. Preserve</text>
 <text x="60" y="804" fill="#edf3f6" font-weight="400" opacity="1">uncertainty and mention concrete next steps.</text>
-<text x="60" y="832" fill="#edf3f6" font-weight="400" opacity="1">no safeword · register plain (non-honorific)</text>
-<text x="60" y="860" fill="#edf3f6" font-weight="400" opacity="1">Interface en</text>
-<text x="60" y="888" fill="#edf3f6" font-weight="400" opacity="1">Connections: none</text>
-<text x="60" y="944" fill="#edf3f6" font-weight="400" opacity="1">* differs from ToneDial's default · Not saved to a</text>
-<text x="88" y="972" fill="#edf3f6" font-weight="400" opacity="1">profile.</text>
-<text x="60" y="1000" fill="#edf3f6" font-weight="400" opacity="1">tonedial save "My Tone"</text></g>
+<text x="60" y="832" fill="#edf3f6" font-weight="400" opacity="1">no safeword · register plain (non-honorific) · address</text>
+<text x="60" y="860" fill="#edf3f6" font-weight="400" opacity="1">auto</text>
+<text x="60" y="888" fill="#edf3f6" font-weight="400" opacity="1">Interface en</text>
+<text x="60" y="916" fill="#edf3f6" font-weight="400" opacity="1">Connections: none</text>
+<text x="60" y="972" fill="#edf3f6" font-weight="400" opacity="1">* differs from ToneDial's default · Not saved to a</text>
+<text x="88" y="1000" fill="#edf3f6" font-weight="400" opacity="1">profile.</text>
+<text x="60" y="1028" fill="#edf3f6" font-weight="400" opacity="1">tonedial save "My Tone"</text></g>
 </svg>

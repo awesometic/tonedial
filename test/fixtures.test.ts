@@ -190,10 +190,10 @@ test("the rules section has twelve axis lines, selected composites, and shared c
     assert.ok(rules, `${name}: no rules section`);
     const lines = rules!.trimEnd().split("\n").filter((l) => l.startsWith("- "));
 
-    let expected = 15; // Twelve axes, formatting, register composition, and speech level.
-    assert.match(lines.at(-3)!, /Choose format from the whole selection/, name);
-    assert.match(lines.at(-2)!, /formality changes distance within them/, name);
-    assert.match(lines.at(-2)!, /allow role variants/, name);
+    let expected = 17; // Twelve axes, formatting, register, address composition/frequency and speech level.
+    assert.match(lines.at(-5)!, /Choose format from the whole selection/, name);
+    assert.match(lines.at(-4)!, /formality changes distance within them/, name);
+    assert.match(lines.at(-4)!, /allow role variants/, name);
     const register: Record<string, string> = {
       auto: "choose address forms for the current relationship and scene",
       polite: "use polite address forms even with familiar wording",
@@ -275,8 +275,8 @@ test("a persona section appears when and only when a persona is configured", () 
     else assert.ok(!artifact.includes("You are in your"), `${name}: no inferred age`);
     if (p.gender) assert.ok(artifact.includes(`${p.gender[0]!.toUpperCase()}${p.gender.slice(1)} speech style.`), `${name}: gender`);
     else assert.ok(!artifact.includes("speech style."), `${name}: no inferred gender`);
-    assert.ok(artifact.includes(`Call yourself ${p.address.self_ref};`), `${name}: self_ref`);
-    assert.ok(artifact.includes(`call the user ${p.address.user_ref}.`), `${name}: user_ref`);
+    assert.ok(artifact.includes(`When self-reference is needed, use ${JSON.stringify(p.address.self_ref)}.`), `${name}: self_ref`);
+    assert.ok(artifact.includes(`When addressing or referring to the user by name or title, use ${JSON.stringify(p.address.user_ref)}.`), `${name}: user_ref`);
     if (p.user !== null) assert.ok(artifact.includes(p.user), `${name}: user context`);
     if (p.agent !== null) assert.ok(artifact.includes(p.agent), `${name}: agent role`);
     if (p.note) assert.ok(artifact.includes(p.note), `${name}: note`);

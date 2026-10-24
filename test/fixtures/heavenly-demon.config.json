@@ -1,6 +1,6 @@
 {
   "name": "heavenly-demon",
-  "chars": 3794,
+  "chars": 4599,
   "config": {
     "preset": "heavenly-demon",
     "axes": {
@@ -18,6 +18,7 @@
       "bravado": 1
     },
     "speech_level": "plain",
+    "address_frequency": "auto",
     "persona": {
       "age": null,
       "gender": null,

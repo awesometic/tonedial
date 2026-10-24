@@ -102,6 +102,7 @@ const messages: Messages = {
     user: "Tu rol o contexto (hasta 200 caracteres)",
     agent: "Rol del agente (hasta 200 caracteres)",
     register: "Registro (auto, polite, plain, rough)",
+    addressFrequency: "Frecuencia del nombre o tratamiento (none, auto, rarely, frequently)",
     safeword: "Palabra clave",
     needsName: "create necesita un nombre visible. Ejecuta tonedial create en un terminal o indica un nombre y ajustes key=value opcionales con --auto.",
     exists: (slug) => `${slug}: ya existe un preajuste. Elige otro identificador o actualízalo con save.`,
@@ -178,6 +179,8 @@ const messages: Messages = {
     guardsRetired: "guards se ha retirado. ToneDial ya no añade solicitudes de protección. No se cambió ningún ajuste.",
     fixedWidthRetired: "fixed_width se ha retirado. La salida se adapta al ancho del terminal. No se cambió ningún ajuste.",
     speechLevel: (options) => `speech_level · disponibles: ${options.join(", ")}`,
+    addressFrequency: (options) => `address_frequency · disponibles: ${options.join(", ")}`,
+    addressUse: (frequency) => `frecuencia del tratamiento ${frequency}`,
     safewordShort: (phrase) => `Palabra clave ${phrase}: demasiado corta; podría activarse por accidente`,
     safewordSet: (phrase) =>
       `Palabra clave ${phrase}`,
@@ -682,6 +685,7 @@ export const es: Catalogue = {
   settingHints: {
     safeword: "petición de una respuesta sencilla para un solo mensaje",
     speech_level: "auto: según la relación · polite: formas honoríficas · plain: formas normales sin honoríficos · rough: terminaciones no honoríficas cortas y tajantes; no añaden por sí mismas bromas, palabrotas, críticas ni burlas · formality controla el lenguaje y la distancia",
+    address_frequency: "none: omitir nombres y tratamientos del usuario · auto: según el contexto · rarely: cambios importantes, momentos personales o para recuperar la atención · frequently: respuestas sustantivas, omitiendo seguimientos breves",
     language: "idioma de la interfaz CLI · independiente de las respuestas del agente",
     "persona.age": "franja de edad que puede asociar el modelo",
     "persona.gender": "género que puede asociar el modelo",

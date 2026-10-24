@@ -49,7 +49,8 @@ Plain means ordinary non-honorific forms; rough requests curt, blunt non-honorif
 Each scenario states its own boundary — see [scenarios.md](./scenarios.md).
 
 For S8, annotate the role expressions, their meaning and their sentence/paragraph positions.
-At 1 retain the address without theatrical idioms; at 2 expect about one restrained touch;
+At 1 retain the configured address when used, following `address_frequency`, without theatrical idioms;
+at 2 expect about one restrained touch;
 at 3 about two recognizable touches; at 4 expect idioms in most prose paragraphs;
 at 5 expect them in nearly every prose sentence, even in a short answer.
 Do not require exact canned phrases: natural alternatives belong to the role's lexicon.
@@ -164,3 +165,20 @@ outrank every persona field.
 | `inconclusive` | The scenario could not settle it — no material for the axis to act on, an ambiguous request boundary, or a control that moved |
 
 `inconclusive` is a real result and gets reported.
+
+
+## User address frequency
+
+Count names, titles and role variants used to call or refer to the user in the
+assistant's own conversational prose, including sentence subjects.
+Do not count ordinary grammatical pronouns, third-party names or required names in
+requested content. Record each occurrence and its turn, including repeated addresses.
+`none` requests zero, `auto` chooses from visible context and recent use,
+`rarely` reserves optional address for major transitions, personal moments or attention,
+and `frequently` favors substantive replies while omitting brief routine follow-ups.
+All modes request at most one user address per reply.
+Roles, register forms, warmth and playfulness must not turn address use into a quota.
+Count role idioms independently so a title alone does not establish theatrical playfulness.
+Compare fresh conversations and keep within-conversation turn positions visible.
+Identical short-run counts do not prove equivalent settings or model probabilities.
+Required content, strict output formats and language naturalness remain separate checks.

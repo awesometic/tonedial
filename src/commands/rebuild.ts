@@ -48,7 +48,7 @@ export type AppRebuildResult = CommandResult & ({
 });
 
 const CONFIG_MAX_BYTES = 1024 * 1024;
-const scalarFields = ["enabled", "preset", "unsaved", "safeword", "speech_level", "language"] as const;
+const scalarFields = ["enabled", "preset", "unsaved", "safeword", "speech_level", "address_frequency", "language"] as const;
 const personaFields = ["age", "gender", "note", "user", "agent"] as const;
 
 function capturedText(capture: RawEntryCapture): string | null {
@@ -401,6 +401,7 @@ export async function runAppRebuild(ctx: Ctx): Promise<AppRebuildResult> {
       if (settings !== undefined) {
         if (!kept.has("safeword")) config.safeword = settings.safeword;
         if (!kept.has("speech_level")) config.speech_level = settings.speech_level;
+        if (!kept.has("address_frequency")) config.address_frequency = settings.address_frequency;
         for (const key of personaFields) if (!kept.has(`persona.${key}`)) config.persona[key] = settings.persona[key];
         const address = { self_ref: config.persona.address?.self_ref ?? null, user_ref: config.persona.address?.user_ref ?? null };
         for (const key of ["self_ref", "user_ref"] as const) {

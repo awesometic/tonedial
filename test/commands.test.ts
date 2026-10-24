@@ -869,7 +869,7 @@ test("save captures axes and the complete profile settings, excluding interface 
   const saved = JSON.parse(readFileSync(join(customPresetDir(paths().presets), "my-operator.json"), "utf8"));
   assert.deepEqual(Object.keys(saved.values).sort(), ["care", "conviction", "playfulness", "verbosity", "warmth"]);
   assert.equal(saved.schema, 2);
-  assert.deepEqual(saved.settings, { persona: config().persona, safeword: "연기 그만", speech_level: "auto" });
+  assert.deepEqual(saved.settings, { persona: config().persona, safeword: "연기 그만", speech_level: "auto", address_frequency: "auto" });
   assert.equal(Object.hasOwn(saved, "language"), false);
   assert.equal(Object.hasOwn(saved, "wiring"), false);
 });
@@ -899,15 +899,15 @@ test("slugs are lowercase Latin letters, digits, and dashes", async () => {
 test("export and import round-trip full profiles without activating them", async () => {
   await initializeState();
   assert.equal(await cli("set", "safeword=연기 그만", "persona.note=A senior engineer.",
-    "persona.user=likes small tools", "persona.agent=plain-speaking reviewer", "speech_level=rough"), 0);
+    "persona.user=likes small tools", "persona.agent=plain-speaking reviewer", "speech_level=rough", "address_frequency=rarely"), 0);
   assert.equal(await cli("use", "terse-operator"), 0);
   assert.equal(await cli("save", "Portable"), 0);
   out = [];
   assert.equal(await cli("export", "portable"), 0);
   const exported = stdout();
   assert.equal(JSON.parse(exported).schema, 2);
-  assert.deepEqual(JSON.parse(exported).settings, { persona: config().persona, safeword: "연기 그만", speech_level: "rough" });
-  assert.equal(await cli("set", "speech_level=plain"), 0);
+  assert.deepEqual(JSON.parse(exported).settings, { persona: config().persona, safeword: "연기 그만", speech_level: "rough", address_frequency: "rarely" });
+  assert.equal(await cli("set", "speech_level=plain", "address_frequency=none"), 0);
   const beforeImport = readFileSync(paths().config);
   const beforeArtifact = tone();
 
@@ -931,6 +931,7 @@ test("export and import round-trip full profiles without activating them", async
   assert.equal(tone(), beforeArtifact);
   assert.equal(await cli("use", "portable"), 0);
   assert.equal(config().speech_level, "rough");
+  assert.equal(config().address_frequency, "rarely");
   assert.equal(tone(), compile(toCompileInput(config())));
 });
 
@@ -1042,7 +1043,7 @@ test("create saves and switches complete profiles while interface language stays
   out = [];
   assert.equal(await cli("create", "내 자비스", "--slug", "my-jarvis", "warmth=2",
     "persona.self_ref=저", "persona.user_ref=사용자님", "persona.user=Maintains services",
-    "persona.agent=A fictional reviewer", "speech_level=rough", "--auto", "--json"), 0, stderr());
+    "persona.agent=A fictional reviewer", "speech_level=rough", "address_frequency=frequently", "--auto", "--json"), 0, stderr());
   const result = JSON.parse(stdout());
   assert.equal(result.created, true);
   assert.ok(result.diff.some((entry: { path: string }) => entry.path === paths().config));
@@ -1050,10 +1051,11 @@ test("create saves and switches complete profiles while interface language stays
   const preset = JSON.parse(readFileSync(join(customPresetDir(paths().presets), "my-jarvis.json"), "utf8"));
   const saved = config();
   assert.deepEqual(preset, { schema: 2, slug: "my-jarvis", displayName: "내 자비스", values: { warmth: 2 },
-    settings: { persona: saved.persona, safeword: saved.safeword, speech_level: saved.speech_level } });
+    settings: { persona: saved.persona, safeword: saved.safeword, speech_level: saved.speech_level, address_frequency: saved.address_frequency } });
   assert.equal(saved.preset, "my-jarvis");
   assert.equal(saved.unsaved, false);
   assert.equal(saved.speech_level, "rough");
+  assert.equal(saved.address_frequency, "frequently");
   assert.equal(saved.persona.agent, "A fictional reviewer");
   assert.equal(saved.persona.user, "Maintains services");
   assert.deepEqual(saved.persona.address, { self_ref: "저", user_ref: "사용자님" });

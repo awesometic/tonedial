@@ -102,6 +102,7 @@ const messages: Messages = {
     user: "あなたの役割や背景（200文字まで）",
     agent: "エージェントの役割（200文字まで）",
     register: "敬語区分（auto, polite, plain, rough）",
+    addressFrequency: "呼称の頻度（none, auto, rarely, frequently）",
     safeword: "合言葉",
     needsName: "create には表示名が必要です。ターミナルで tonedial create を実行するか、名前と任意の key=value 設定を --auto とともに指定してください。",
     exists: (slug) => `${slug}: 既に存在します。別のスラッグを選ぶか、save で更新してください。`,
@@ -178,6 +179,8 @@ const messages: Messages = {
     guardsRetired: "guards は廃止されました。ToneDialはガード要求を追加しません。設定は変更していません。",
     fixedWidthRetired: "fixed_width は廃止されました。出力はターミナル幅に自動追従します。設定は変更していません。",
     speechLevel: (options) => `speech_level · 選択肢：${options.join(", ")}`,
+    addressFrequency: (options) => `address_frequency · 選択肢: ${options.join(", ")}`,
+    addressUse: (frequency) => `呼称の頻度 ${frequency}`,
     safewordShort: (phrase) => `合言葉 ${phrase}: 短すぎるため、意図せず反応する可能性があります`,
     safewordSet: (phrase) =>
       `合言葉 ${phrase}`,
@@ -682,6 +685,7 @@ export const ja: Catalogue = {
   settingHints: {
     safeword: "1つのメッセージに一度だけ平易な回答を求める文句",
     speech_level: "auto: 関係に合わせる · polite: 敬語 · plain: 通常の常体 · rough: 短くぶっきらぼうな常体・それ自体では冗談・罵り・批判・嘲りを加えない · 表現の格式と距離感は formality で調整",
+    address_frequency: "none: 呼称を省略 · auto: 文脈に合わせる · rarely: 大きな話題転換や個人的な場面、注意を戻す時に選択 · frequently: 主な回答で使い、短い続きでは省略",
     language: "CLIの表示言語 · エージェントの回答言語とは別",
     "persona.age": "モデルに連想させる年齢層",
     "persona.gender": "モデルに連想させるジェンダー",

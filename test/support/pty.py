@@ -580,7 +580,7 @@ def persona_case(root: Path, language: str, node: str, binary: Path, interrupt: 
                 raise ScenarioError("interrupted persona changed files")
         else:
             config = json.loads((state / "config.json").read_text())
-            if config["persona"]["agent"] != "Fictional reviewer" or config["persona"]["user"] != original["persona"]["user"]:
+            if config.get("address_frequency") != original.get("address_frequency") or config["persona"]["agent"] != "Fictional reviewer" or config["persona"]["user"] != original["persona"]["user"]:
                 raise ScenarioError("persona did not apply the agent role and keep the user's role")
             if config["axes"] != original["axes"] or config["persona"]["address"] != original["persona"]["address"]:
                 raise ScenarioError("persona changed axes or address terms")
@@ -617,7 +617,7 @@ def create_case(root: Path, language: str, node: str, binary: Path, outcome: str
                     raise ScenarioError("create interview: Ctrl+C did not interrupt")
             else:
                 answers = [b"PTY Jarvis\n", b"pty-jarvis\n", b"guide\n", b"friend\n",
-                           b"Maintains services\n", b"Fictional reviewer\n", b"polite\n", b"plain answer please\n"]
+                           b"Maintains services\n", b"Fictional reviewer\n", b"polite\n", b"rarely\n", b"plain answer please\n"]
                 for index, answer in enumerate(answers):
                     if outcome == "retry" and index == 4:
                         start = session.mark()
@@ -652,11 +652,11 @@ def create_case(root: Path, language: str, node: str, binary: Path, outcome: str
             preset = json.loads((state / "presets" / "custom" / "pty-jarvis.json").read_text())
             if config["preset"] != "pty-jarvis" or config["axes"]["formality"] != 1:
                 raise ScenarioError("create approval did not apply the selected axes")
-            if config["persona"]["agent"] != "Fictional reviewer" or config["persona"]["user"] != "Maintains services" or config["persona"]["address"]["user_ref"] != "friend":
+            if config.get("address_frequency") != "rarely" or config["persona"]["agent"] != "Fictional reviewer" or config["persona"]["user"] != "Maintains services" or config["persona"]["address"]["user_ref"] != "friend":
                 raise ScenarioError("create approval did not keep shared settings")
             if set(preset) != {"schema", "slug", "displayName", "values", "settings"} or preset["schema"] != 2:
                 raise ScenarioError("create approval did not save the complete profile")
-            if preset["settings"]["persona"] != config["persona"]:
+            if preset["settings"].get("address_frequency") != "rarely" or preset["settings"]["persona"] != config["persona"]:
                 raise ScenarioError("create approval lost the profile's personal settings")
             if "Fictional reviewer" not in (state / "TONE.md").read_text():
                 raise ScenarioError("create approval did not compile the shared role")

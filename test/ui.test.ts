@@ -498,7 +498,7 @@ test("every command's --json envelope keeps the keys a consumer reads", async ()
       preset: "string", preview: "boolean", combinations: "array", unsaved: "boolean", enabled: "boolean",
       axes: "object", defaults: "object", kinds: "object", groups: "object",
       riskAxes: "array", riskThresholds: "object", persona: "object", safeword: "null",
-      speech_level: "string", language: "string",
+      speech_level: "string", address_frequency: "string", language: "string",
       chars: "number", artifact: "object",
     },
     list: { presets: "array", active: "string", skipped: "array" },
@@ -826,7 +826,7 @@ test("--explain names every settable key, and every one of them is settable", as
 
   // Exercise each declared key through the real assignment and persistence boundary.
   const values: Record<string, string> = {
-    safeword: "just tell me", speech_level: "plain",
+    safeword: "just tell me", speech_level: "plain", address_frequency: "rarely",
     "persona.age": "30s", "persona.gender": "unspecified",
     "persona.self_ref": "I", "persona.user_ref": "boss", "persona.note": "a build engineer",
     "persona.user": "a careful builder", "persona.agent": "a plain-speaking reviewer",

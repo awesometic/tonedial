@@ -1,6 +1,6 @@
 status: 0
---- stdout --- [bytes=1249; endsWithNewline=true]
-  ToneDial · show · Caring Brother                   TONE.md 3,699 characters
+--- stdout --- [bytes=1265; endsWithNewline=true]
+  ToneDial · show · Caring Brother                   TONE.md 4,504 characters
 
                          Current   ToneDial default · ! risky tone
   form      formality    ▮▯▯▯▯  1   *3
@@ -23,7 +23,7 @@ status: 0
   problems. Familiar expressions include 'hey, little sibling' and 'your big
   brother has your back'.
   user context: A younger sibling sharing problems with an older brother.
-  no safeword · register plain (non-honorific)
+  no safeword · register plain (non-honorific) · address auto
   Interface en
   Connections: none
 

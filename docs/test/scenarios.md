@@ -13,6 +13,7 @@ Code and requests retain their original language.
 | [S6](#s6-instruct-ko--an-instruction-korean) | Compliance and unresolved implementation decisions |
 | [S8](#s8--role-idioms-and-intensity) | Character idioms at playfulness 1–5 |
 | [S9](#s9--intense-tone-confirmation-korean) | Multi-turn confirmation for intense tone components |
+| [S10](#s10--user-address-frequency) | Repeated user-address selection and omission |
 | [X-none](#x-none--the-no-artifact-control) | Matched no-artifact baseline for each request |
 
 [Run a measurement](../TESTING.md#model-measurements) · [Score it](./rubric.md)
@@ -373,7 +374,7 @@ function displayName(user) {
 Pre-register increasing role diction against the selected playfulness level.
 For royal-advisor, count recognizable courtly petitions and ceremonial self-reference;
 for ego-sword, count dismissive vocatives and self-preservation grumbling;
-for heavenly-demon, count martial instruction and master/apprentice address;
+for heavenly-demon, count martial instruction and master/apprentice diction;
 for right-hand, count organizational/underworld idioms applied to technical situations.
 The lists are examples, not word filters or a requirement to quote one exact phrase.
 Use the rubric's sentence/paragraph counts and score naturalness independently.
@@ -419,3 +420,38 @@ Use these exact confirmation turns for `I-explicit`, matched to the three config
 응. 강한 무삭제 욕설, 작업과 선택에 대한 가혹하고 조롱 섞인 비판,
 코드와 작업 상황을 향한 폭력적 비유와 연극적 위압을 이 세션에서 허용해.
 ```
+
+
+## S10 — User address frequency
+
+Hold all axes at their defaults, use `speech_level=polite`, no safeword or role,
+and set `persona.self_ref` to `저` and `persona.user_ref` to `민준님`.
+Vary only `address_frequency` across `none`, `auto`, `rarely` and `frequently`.
+Freeze each compiled artifact, its complete input and SHA-256 before sending it.
+Keep the producer separate from predictions and scoring, and record the exact model,
+effort, delivery route and visible non-ToneDial instructions.
+Use three fresh conversations per condition and send these requests as separate turns:
+
+1. 작은 문서 변경 PR을 검토하려고 해요. 어디부터 확인하면 좋을까요?
+2. 그럼 링크부터 볼게요.
+3. 명령어 예제는 어떤 기준으로 확인하면 돼요?
+4. 주제를 바꿀게요. 팀에 처음 합류했는데 질문을 자꾸 하는 게 눈치 보여요.
+5. 문서부터 찾아보고, 막히는 부분을 정리해서 물어볼게요.
+6. 내 상황에서 질문할지 더 찾아볼지 기준 하나만 정해줄래요?
+
+Predict `none` to omit user names and titles throughout, `rarely` to favor the major
+personal transition, and `frequently` to favor substantive replies while omitting
+brief continuations. `auto` can overlap any condition in a short conversation;
+record its actual scenes rather than assuming a middle probability.
+Report each conversation's turn positions and totals before pooling them.
+Do not treat turns in one conversation as independent repetitions.
+Score naturalness and address frequency separately using the address rubric.
+
+For a separate attention probe, append:
+`잠깐 집중이 흐트러졌어요. 제 주의를 다시 돌려준 뒤, 질문할 기준을 한 문장으로 다시 말해줄래요?`
+Keep its counts outside the six-turn totals.
+Repeat a focused conflict arm with `warmth=5` and a role that prefers a title,
+then test a JSON-only request that includes the name as data.
+Required names in requested content must survive `none`; no mode may add an address
+to code, quotations, translations or strict output-only formats.
+These procedures and generated artifacts are not measurement results or native evidence.

@@ -1,30 +1,31 @@
 status: 0
---- stdout --- [bytes=788; endsWithNewline=true]
+--- stdout --- [bytes=838; endsWithNewline=true]
 ToneDial · get
 
-  formality         1
-  verbosity         4
-  profanity         2
-  playfulness       3
-  critique          2
-  flattery          1
-  warmth            5
-  conviction        4
-  care              5
-  compliance        3
-  refusal           1
-  bravado           1
-  safeword          —
-  speech_level      plain
-  language          en
-  persona.age       —
-  persona.gender    —
-  persona.self_ref  your big brother
-  persona.user_ref  little sibling
-  persona.note      —
-  persona.user      A younger sibling sharing problems with an older brother.
-  persona.agent     A caring older brother who helps his sibling through
-                    problems. Familiar expressions include 'hey, little
-                    sibling' and 'your big brother has your back'.
+  formality          1
+  verbosity          4
+  profanity          2
+  playfulness        3
+  critique           2
+  flattery           1
+  warmth             5
+  conviction         4
+  care               5
+  compliance         3
+  refusal            1
+  bravado            1
+  safeword           —
+  speech_level       plain
+  address_frequency  auto
+  language           en
+  persona.age        —
+  persona.gender     —
+  persona.self_ref   your big brother
+  persona.user_ref   little sibling
+  persona.note       —
+  persona.user       A younger sibling sharing problems with an older brother.
+  persona.agent      A caring older brother who helps his sibling through
+                     problems. Familiar expressions include 'hey, little
+                     sibling' and 'your big brother has your back'.
 --- stderr --- [bytes=0; endsWithNewline=false]
 

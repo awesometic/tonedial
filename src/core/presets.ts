@@ -61,15 +61,15 @@ export type Preset = {
   settings?: PresetSettings;
 };
 
-export type PresetSettings = Pick<Config, "persona" | "safeword" | "speech_level">;
+export type PresetSettings = Pick<Config, "persona" | "safeword" | "speech_level" | "address_frequency">;
 
 export function presetSettings(config: Config): PresetSettings {
-  return structuredClone({ persona: config.persona, safeword: config.safeword, speech_level: config.speech_level });
+  return structuredClone({ persona: config.persona, safeword: config.safeword, speech_level: config.speech_level, address_frequency: config.address_frequency });
 }
 
 export function defaultProfileSettings(t: Messages, slug?: string, speech_level: Config["speech_level"] = "auto"): PresetSettings {
   const defaults: RoleDefaults = slug ? t.persona.bundled[slug]! : t.persona.defaults;
-  return { persona: { ...defaultConfig().persona, ...structuredClone(defaults) }, safeword: null, speech_level };
+  return { persona: { ...defaultConfig().persona, ...structuredClone(defaults) }, safeword: null, speech_level, address_frequency: "auto" };
 }
 
 /** Localized built-in defaults become literal saved settings; custom profiles never translate. */
@@ -186,8 +186,9 @@ export function parsePreset(text: string, slug: string, t: Messages): Preset {
   if (raw.schema === PRESET_SCHEMA) {
     const fields = presetObject(raw.settings, slug, t);
     const keys = ["persona", "safeword", "speech_level"];
-    const unknown = Object.keys(fields).filter((key) => !keys.includes(key));
-    if (unknown.length) throw new ConfigError(t.config.unknownKey(unknown.join(", "), keys));
+    const allowed = [...keys, "address_frequency"];
+    const unknown = Object.keys(fields).filter((key) => !allowed.includes(key));
+    if (unknown.length) throw new ConfigError(t.config.unknownKey(unknown.join(", "), allowed));
     if (keys.some((key) => !Object.hasOwn(fields, key))) throw new ConfigError(t.preset.notAPreset(slug));
     settings = presetSettings(parseConfig(JSON.stringify({ schema: 1, ...fields }), t));
   }

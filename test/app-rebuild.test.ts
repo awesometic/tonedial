@@ -71,11 +71,12 @@ test("an older installation with retired flat caches upgrades completely and pre
     config.persona.note = PRIVATE;
     config.safeword = "dummy plain reply";
     config.speech_level = "polite";
+    config.address_frequency = "rarely";
     config.seedVersion = 1;
     const custom = join(f.ctx.paths.presets, "custom", "custom-work.json");
     fs.mkdirSync(join(f.ctx.paths.presets, "custom"), { recursive: true });
     const customBytes = serializePreset({ schema: 2, slug: "custom-work", displayName: "Saved work profile", values: { care: 2 },
-      settings: { persona: config.persona, safeword: "saved profile reply", speech_level: "plain" } });
+      settings: { persona: config.persona, safeword: "saved profile reply", speech_level: "plain", address_frequency: "frequently" } });
     fs.writeFileSync(custom, customBytes, { mode: 0o640 });
     const customIdentity = fs.lstatSync(custom, { bigint: true }).ino;
     const retired = RETIRED_PRESETS.flatMap(preset => {
@@ -108,6 +109,7 @@ test("an older installation with retired flat caches upgrades completely and pre
     assert.equal(repaired.unsaved, config.unsaved);
     assert.equal(repaired.safeword, config.safeword);
     assert.equal(repaired.speech_level, config.speech_level);
+    assert.equal(repaired.address_frequency, "rarely");
     assert.equal(repaired.seedVersion, SEED_VERSION);
     const recovered = (result.json.recoveredPresets as string[]).map(slug => resolvePreset(f.ctx.paths.presets, slug, EN)!.preset);
     assert.equal(recovered.length, RETIRED_PRESETS.length, "old cache definitions must remain selectable");

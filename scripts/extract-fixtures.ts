@@ -100,13 +100,16 @@ const INTENSITY_CONSENT = "- Strong profanity, harsh mocking, fictional violent 
 const INTENSITY_BOUNDARY = "- Tone intensity never includes hate speech about protected traits or realistic or credible threats, even after confirmation. Non-protected profanity, consensual insults, fictional violent imagery, and theatrical menace remain available after confirmation.";
 
 /** Fails when the axis values and the artifact text disagree about a composite. */
-function checkComposites(name: string, axes: Axes, artifact: string): void {
+function checkComposites(name: string, axes: Axes, artifact: string, frequency: string): void {
   const rules = artifact.split("### Rules\n")[1]?.split("### Controls")[0];
   if (!rules) throw new Error(`${name}: artifact has no rules section`);
   const lines = rules.trimEnd().split("\n").filter((l) => l.startsWith("- "));
 
-  let expected = 15; // Twelve axes, format/register composition and the selected speech-level rule.
-  if (!lines.at(-3)?.startsWith("- Choose format from the whole selection:") ||
+  const frequencyPrefix: Record<string, string> = { none: "- Use no name, title or role-specific address", auto: "- Choose user address when it helps", rarely: "- Usually omit user address.", frequently: "- Use user address in most substantive prose replies;" };
+  let expected = 17; // Twelve axes, format/register, address composition/frequency and speech level.
+  if (!Object.hasOwn(frequencyPrefix, frequency) || !lines.at(-2)?.startsWith(frequencyPrefix[frequency]!) ||
+      !lines.at(-3)?.startsWith("- Address frequency governs names, titles and role variants") ||
+      !lines.at(-5)?.startsWith("- Choose format from the whole selection:") ||
       !lines.some(line => line.includes("formality changes distance within them")) ||
       !lines.at(-1)?.startsWith("- In languages with honorifics,")) {
     throw new Error(`${name}: format/register composition or speech-level rule missing`);
@@ -202,7 +205,7 @@ function profilePersona(front: Front, artifact: string): Persona | null {
   const user = text("persona_user");
   const agent = text("persona_agent");
   if ([...user].length > 200 || [...agent].length > 200) throw new Error("profile description exceeds 200 code points");
-  if (!artifact.includes(`- Call yourself ${self_ref}; call the user ${user_ref}.`) ||
+  if (!artifact.includes(`- When self-reference is needed, use ${JSON.stringify(self_ref)}. When addressing or referring to the user by name or title, use ${JSON.stringify(user_ref)}.`) ||
       !artifact.includes(`  > ${user}\n`) || !artifact.includes(`  > ${agent}\n`)) {
     throw new Error("profile fields disagree with the artifact");
   }
@@ -224,7 +227,7 @@ function buildConfig(name: string, front: Front, artifact: string) {
   const extra = Object.keys(frontAxes).filter((k) => !AXES.includes(k));
   if (extra.length) throw new Error(`${name}: unknown axes ${extra.join(", ")}`);
 
-  checkComposites(name, axes, artifact);
+  checkComposites(name, axes, artifact, String(front.address_frequency ?? "auto"));
 
   if (typeof front.safeword !== "string") throw new Error(`${name}: safeword input missing`);
   const declared = front.safeword === "none" ? null : front.safeword;
@@ -245,6 +248,7 @@ function buildConfig(name: string, front: Front, artifact: string) {
       preset: presetSlug(artifact),
       axes,
       speech_level,
+      address_frequency: front.address_frequency ?? "auto",
       persona: PERSONA_OVERRIDES[name] ?? profilePersona(front, artifact),
       safeword: actual,
     },

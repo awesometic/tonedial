@@ -4,7 +4,7 @@ ToneDial · compile
 
   TONE.md current
   <ROOT>/state/TONE.md
-  TONE.md 3,699 characters
+  TONE.md 4,504 characters
 
   tonedial show
 --- stderr --- [bytes=0; endsWithNewline=false]

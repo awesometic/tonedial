@@ -1,7 +1,7 @@
 // Read active settings without compiling, repairing, or interpreting stored text.
 
 import type { CommandResult, Ctx } from "../cli.ts";
-import { isAxis, AGE_BANDS, GENDERS, ConfigError, nearest, settingValues, type SettableKey } from "../core/config.ts";
+import { isAxis, ADDRESS_FREQUENCIES, AGE_BANDS, GENDERS, ConfigError, nearest, settingValues, type SettableKey } from "../core/config.ts";
 import { LANGUAGES, catalogue, detectLanguage, isLanguage, type Catalogue } from "../core/i18n.ts";
 import { humanText } from "../ui/format.ts";
 import { maxCells, padEnd, wrap } from "../ui/width.ts";
@@ -13,7 +13,7 @@ export function settingHelp(key: SettableKey, copy: Catalogue): string[] {
     const hint = copy.axisHints[key]!;
     return [hint.owns, `1–5 · 1 ${hint.low} · 5 ${hint.high}`];
   }
-  const choices = key === "language" ? LANGUAGES : key === "persona.age" ? AGE_BANDS : key === "persona.gender" ? GENDERS : null;
+  const choices = key === "address_frequency" ? ADDRESS_FREQUENCIES : key === "language" ? LANGUAGES : key === "persona.age" ? AGE_BANDS : key === "persona.gender" ? GENDERS : null;
   return [copy.settingHints[key], ...(choices ? [choices.join(" | ")] : [])];
 }
 

@@ -1,78 +1,81 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1142" height="792" viewBox="0 0 1142 792" role="img" aria-labelledby="title description">
+<svg xmlns="http://www.w3.org/2000/svg" width="1156" height="820" viewBox="0 0 1156 820" role="img" aria-labelledby="title description">
 <title id="title">ToneDial screen (en · get)</title>
 <desc id="description">ToneDial · get
 
-  formality         1
-  verbosity         4
-  profanity         2
-  playfulness       3
-  critique          2
-  flattery          1
-  warmth            5
-  conviction        4
-  care              5
-  compliance        3
-  refusal           1
-  bravado           1
-  safeword          —
-  speech_level      plain
-  language          en
-  persona.age       —
-  persona.gender    —
-  persona.self_ref  your big brother
-  persona.user_ref  little sibling
-  persona.note      —
-  persona.user      A younger sibling sharing problems with an older brother.
-  persona.agent     A caring older brother who helps his sibling through
-                    problems. Familiar expressions include 'hey, little
-                    sibling' and 'your big brother has your back'.
+  formality          1
+  verbosity          4
+  profanity          2
+  playfulness        3
+  critique           2
+  flattery           1
+  warmth             5
+  conviction         4
+  care               5
+  compliance         3
+  refusal            1
+  bravado            1
+  safeword           —
+  speech_level       plain
+  address_frequency  auto
+  language           en
+  persona.age        —
+  persona.gender     —
+  persona.self_ref   your big brother
+  persona.user_ref   little sibling
+  persona.note       —
+  persona.user       A younger sibling sharing problems with an older brother.
+  persona.agent      A caring older brother who helps his sibling through
+                     problems. Familiar expressions include 'hey, little
+                     sibling' and 'your big brother has your back'.
 </desc>
 <rect width="100%" height="100%" rx="16" fill="#171b20"/>
 <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, system-ui" font-size="22"><text x="32" y="48" fill="#edf3f6" font-weight="400" opacity="1">ToneDial · get</text>
 <text x="60" y="104" fill="#edf3f6" font-weight="400" opacity="1">formality</text>
-<text x="312" y="104" fill="#edf3f6" font-weight="400" opacity="1">1</text>
+<text x="326" y="104" fill="#edf3f6" font-weight="400" opacity="1">1</text>
 <text x="60" y="132" fill="#edf3f6" font-weight="400" opacity="1">verbosity</text>
-<text x="312" y="132" fill="#edf3f6" font-weight="400" opacity="1">4</text>
+<text x="326" y="132" fill="#edf3f6" font-weight="400" opacity="1">4</text>
 <text x="60" y="160" fill="#edf3f6" font-weight="400" opacity="1">profanity</text>
-<text x="312" y="160" fill="#edf3f6" font-weight="400" opacity="1">2</text>
+<text x="326" y="160" fill="#edf3f6" font-weight="400" opacity="1">2</text>
 <text x="60" y="188" fill="#edf3f6" font-weight="400" opacity="1">playfulness</text>
-<text x="312" y="188" fill="#edf3f6" font-weight="400" opacity="1">3</text>
+<text x="326" y="188" fill="#edf3f6" font-weight="400" opacity="1">3</text>
 <text x="60" y="216" fill="#edf3f6" font-weight="400" opacity="1">critique</text>
-<text x="312" y="216" fill="#edf3f6" font-weight="400" opacity="1">2</text>
+<text x="326" y="216" fill="#edf3f6" font-weight="400" opacity="1">2</text>
 <text x="60" y="244" fill="#edf3f6" font-weight="400" opacity="1">flattery</text>
-<text x="312" y="244" fill="#edf3f6" font-weight="400" opacity="1">1</text>
+<text x="326" y="244" fill="#edf3f6" font-weight="400" opacity="1">1</text>
 <text x="60" y="272" fill="#edf3f6" font-weight="400" opacity="1">warmth</text>
-<text x="312" y="272" fill="#edf3f6" font-weight="400" opacity="1">5</text>
+<text x="326" y="272" fill="#edf3f6" font-weight="400" opacity="1">5</text>
 <text x="60" y="300" fill="#edf3f6" font-weight="400" opacity="1">conviction</text>
-<text x="312" y="300" fill="#edf3f6" font-weight="400" opacity="1">4</text>
+<text x="326" y="300" fill="#edf3f6" font-weight="400" opacity="1">4</text>
 <text x="60" y="328" fill="#edf3f6" font-weight="400" opacity="1">care</text>
-<text x="312" y="328" fill="#edf3f6" font-weight="400" opacity="1">5</text>
+<text x="326" y="328" fill="#edf3f6" font-weight="400" opacity="1">5</text>
 <text x="60" y="356" fill="#edf3f6" font-weight="400" opacity="1">compliance</text>
-<text x="312" y="356" fill="#edf3f6" font-weight="400" opacity="1">3</text>
+<text x="326" y="356" fill="#edf3f6" font-weight="400" opacity="1">3</text>
 <text x="60" y="384" fill="#edf3f6" font-weight="400" opacity="1">refusal</text>
-<text x="312" y="384" fill="#edf3f6" font-weight="400" opacity="1">1</text>
+<text x="326" y="384" fill="#edf3f6" font-weight="400" opacity="1">1</text>
 <text x="60" y="412" fill="#edf3f6" font-weight="400" opacity="1">bravado</text>
-<text x="312" y="412" fill="#edf3f6" font-weight="400" opacity="1">1</text>
+<text x="326" y="412" fill="#edf3f6" font-weight="400" opacity="1">1</text>
 <text x="60" y="440" fill="#edf3f6" font-weight="400" opacity="1">safeword</text>
-<text x="312" y="440" fill="#edf3f6" font-weight="400" opacity="1">—</text>
+<text x="326" y="440" fill="#edf3f6" font-weight="400" opacity="1">—</text>
 <text x="60" y="468" fill="#edf3f6" font-weight="400" opacity="1">speech_level</text>
-<text x="312" y="468" fill="#edf3f6" font-weight="400" opacity="1">plain</text>
-<text x="60" y="496" fill="#edf3f6" font-weight="400" opacity="1">language</text>
-<text x="312" y="496" fill="#edf3f6" font-weight="400" opacity="1">en</text>
-<text x="60" y="524" fill="#edf3f6" font-weight="400" opacity="1">persona.age</text>
-<text x="312" y="524" fill="#edf3f6" font-weight="400" opacity="1">—</text>
-<text x="60" y="552" fill="#edf3f6" font-weight="400" opacity="1">persona.gender</text>
-<text x="312" y="552" fill="#edf3f6" font-weight="400" opacity="1">—</text>
-<text x="60" y="580" fill="#edf3f6" font-weight="400" opacity="1">persona.self_ref</text>
-<text x="312" y="580" fill="#edf3f6" font-weight="400" opacity="1">your big brother</text>
-<text x="60" y="608" fill="#edf3f6" font-weight="400" opacity="1">persona.user_ref</text>
-<text x="312" y="608" fill="#edf3f6" font-weight="400" opacity="1">little sibling</text>
-<text x="60" y="636" fill="#edf3f6" font-weight="400" opacity="1">persona.note</text>
-<text x="312" y="636" fill="#edf3f6" font-weight="400" opacity="1">—</text>
-<text x="60" y="664" fill="#edf3f6" font-weight="400" opacity="1">persona.user</text>
-<text x="312" y="664" fill="#edf3f6" font-weight="400" opacity="1">A younger sibling sharing problems with an older brother.</text>
-<text x="60" y="692" fill="#edf3f6" font-weight="400" opacity="1">persona.agent</text>
-<text x="312" y="692" fill="#edf3f6" font-weight="400" opacity="1">A caring older brother who helps his sibling through</text>
-<text x="312" y="720" fill="#edf3f6" font-weight="400" opacity="1">problems. Familiar expressions include 'hey, little</text>
-<text x="312" y="748" fill="#edf3f6" font-weight="400" opacity="1">sibling' and 'your big brother has your back'.</text></g>
+<text x="326" y="468" fill="#edf3f6" font-weight="400" opacity="1">plain</text>
+<text x="60" y="496" fill="#edf3f6" font-weight="400" opacity="1">address_frequency</text>
+<text x="326" y="496" fill="#edf3f6" font-weight="400" opacity="1">auto</text>
+<text x="60" y="524" fill="#edf3f6" font-weight="400" opacity="1">language</text>
+<text x="326" y="524" fill="#edf3f6" font-weight="400" opacity="1">en</text>
+<text x="60" y="552" fill="#edf3f6" font-weight="400" opacity="1">persona.age</text>
+<text x="326" y="552" fill="#edf3f6" font-weight="400" opacity="1">—</text>
+<text x="60" y="580" fill="#edf3f6" font-weight="400" opacity="1">persona.gender</text>
+<text x="326" y="580" fill="#edf3f6" font-weight="400" opacity="1">—</text>
+<text x="60" y="608" fill="#edf3f6" font-weight="400" opacity="1">persona.self_ref</text>
+<text x="326" y="608" fill="#edf3f6" font-weight="400" opacity="1">your big brother</text>
+<text x="60" y="636" fill="#edf3f6" font-weight="400" opacity="1">persona.user_ref</text>
+<text x="326" y="636" fill="#edf3f6" font-weight="400" opacity="1">little sibling</text>
+<text x="60" y="664" fill="#edf3f6" font-weight="400" opacity="1">persona.note</text>
+<text x="326" y="664" fill="#edf3f6" font-weight="400" opacity="1">—</text>
+<text x="60" y="692" fill="#edf3f6" font-weight="400" opacity="1">persona.user</text>
+<text x="326" y="692" fill="#edf3f6" font-weight="400" opacity="1">A younger sibling sharing problems with an older brother.</text>
+<text x="60" y="720" fill="#edf3f6" font-weight="400" opacity="1">persona.agent</text>
+<text x="326" y="720" fill="#edf3f6" font-weight="400" opacity="1">A caring older brother who helps his sibling through</text>
+<text x="326" y="748" fill="#edf3f6" font-weight="400" opacity="1">problems. Familiar expressions include 'hey, little</text>
+<text x="326" y="776" fill="#edf3f6" font-weight="400" opacity="1">sibling' and 'your big brother has your back'.</text></g>
 </svg>

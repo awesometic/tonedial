@@ -1,6 +1,6 @@
 {
   "name": "persona-leak-b",
-  "chars": 3756,
+  "chars": 4561,
   "config": {
     "preset": null,
     "axes": {
@@ -18,6 +18,7 @@
       "bravado": 1
     },
     "speech_level": "auto",
+    "address_frequency": "auto",
     "persona": {
       "age": "50s+",
       "gender": "feminine",

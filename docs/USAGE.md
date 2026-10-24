@@ -88,6 +88,7 @@ tonedial persona "A fictional SRE specialist" "A developer maintaining services"
 tonedial set persona.user="I maintain services and prefer direct trade-offs"
 tonedial set persona.agent="A fictional SRE specialist with 12 years' experience; speaks plainly"
 tonedial set speech_level=polite      # auto (default) | polite | plain | rough
+tonedial set address_frequency=rarely # none | auto (default) | rarely | frequently
 tonedial set "safeword=plain answer please"
 tonedial set language=ko              # en | ko | ja | zh (Simplified) | es
 tonedial save                         # also update the selected user profile
@@ -98,6 +99,24 @@ tonedial save                         # also update the selected user profile
 In the guided form, Enter keeps the current value and `""` clears it; invalid descriptions are retried before either role is applied.
 `show` displays the current descriptions and their counts; `show <slug>` displays the saved profile's descriptions.
 Use `set persona.agent=...` or `set persona.user=...` to change just one.
+
+`address_frequency` controls how often the agent calls or refers to you by name or title,
+including role-specific forms and names used as sentence subjects.
+`none` omits these expressions without deleting the saved address terms.
+`auto` selects from the language, conversation and recent address use;
+`rarely` selects major transitions, personal moments or attention;
+`frequently` uses most substantive replies and omits brief routine follow-ups.
+Every mode requests at most one user address per reply.
+Self-reference is used only when needed, and required names in requested content stay literal.
+Code, quotations, translations and strict JSON-only/code-only output never receive an added address.
+Honorific endings, formality, warmth and role idioms remain independent.
+These are instructions to the model, not guaranteed probabilities or a conversation counter.
+
+Profiles save and restore the frequency with the other tone settings.
+`reset`, old axis-only presets and changing an address term preserve the current frequency.
+Older configurations and complete profiles that omit the field load with `auto`.
+An older CLI cannot read a newly saved `address_frequency` field; retain a pre-upgrade
+configuration/profile copy before downgrading rather than removing the state root.
 
 ### Read current settings
 
@@ -133,6 +152,7 @@ Wiring, file paths and internal ownership records are diagnosed with `doctor`, o
 | `persona.age` | Age band | `unspecified`, `teens`, `20s`, `30s`, `40s`, `50s+`, or a number stored as a band |
 | `persona.gender` | Gender presentation | `unspecified`, `masculine`, `feminine`, `neutral` |
 | `persona.note` | Additional persona text | Existing free-text behavior; empty assignment clears |
+| `address_frequency` | User names and titles in conversational prose | `none`, `auto` (default), `rarely`, `frequently` |
 | `speech_level` | Honorific address forms | `auto`, `polite`, `plain`, `rough` |
 | `safeword` | Request one plain answer | Empty assignment clears; grants no permission |
 | `language` | CLI interface | `en`, `ko`, `ja`, `zh`, `es`; `init` also accepts `--lang` |

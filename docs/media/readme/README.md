@@ -102,7 +102,7 @@ Never polish replies, rerun a completed response for preferred wording or inheri
 Keep provider journals/auth material private; samples prove neither hook activation nor scored adherence.
 The public JSON retains every assistant response before the fixed question and any explicit
 intensity-approval turn, so their order can be audited without publishing the native journal.
-The consumer test checks locale links, seven raw replies/hashes, current inputs, page text, featured selection and deterministic SVGs.
+The consumer test checks locale links, seven raw replies/hashes, captured inputs, page text, featured selection and deterministic SVGs.
 
 The three custom recipes below each README's opening gallery are recorded separately in `use-cases.json`.
 Each locale owns its actual first completed replies to one shared question, full compiler inputs,
@@ -115,7 +115,13 @@ Use invocation-only model flags without saving personal defaults;
 record the native session's observed model, reasoning effort and turn count.
 Keep session journals private and publish only the selected verbatim response and relevant provenance.
 Keep the commands and verbatim Markdown replies aligned with that locale's README.
-The consumer test exercises every command with disposable state and checks the resulting compiler input and transcript hashes.
+The recorded artifacts and commands predate `address_frequency`.
+Keep their inputs, artifact bytes, replies and hashes unchanged.
+The consumer test checks the complete historical artifact outside the explicitly added address policy,
+then exercises each command with disposable state and the new `auto` default.
+Running a captured command now preserves the current frequency; use
+`tonedial set address_frequency=auto` first when the contextual default is wanted.
+Changed compiler bytes require fresh evidence; the old replies do not establish frequency behavior.
 These dialogue-only examples neither edit a project nor establish hook activation or scored adherence;
 preserve their recorded deviations as well as their replies.
 

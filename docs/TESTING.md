@@ -277,7 +277,7 @@ Stop if delivery or the clean control cannot be established; do not manufacture 
 Lock the prediction before running. Copy the complete fenced artifact and fixed scenario request/code verbatim; add no measurement or tone coaching to the request.
 For Route D set the pack's complete input: preset identity, all axes, persona, register and exact safeword.
 Fresh unattended init needs explicit scope/tools and loads the first profile's role/register defaults with safeword unset.
-An axis-only probe must explicitly clear persona/address and restore auto register; `reset` preserves these settings.
+An axis-only probe must explicitly clear persona/address and restore auto register and `address_frequency=auto`; `reset` preserves these settings.
 Verify compiled artifact bytes equal the pack and retain its SHA-256/full input/compiler revision plus guide fingerprint and actual delivery evidence.
 Run each request at least twice in fresh sessions and report explicit `n`; controls use the matched request and a fresh no-tone session.
 Compare only identical route/input/request conditions, and use both small and class-sized surfaces before generalizing axis counts.
@@ -285,9 +285,9 @@ Compare only identical route/input/request conditions, and use both small and cl
 ### One-off single-axis arm
 
 Prepare fresh temporary state/project and retain the same absolute installed candidate/environment.
-Use explicit-scope state-only init, then `reset`; clear persona/address/safeword through the CLI and restore auto register before changing only the selected axis to its 1–5 level.
+Use explicit-scope state-only init, then `reset`; clear persona/address/safeword through the CLI and restore auto register and `address_frequency=auto` before changing only the selected axis to its 1–5 level.
 Do not save it as a preset or hand-edit a managed artifact.
-Require `preset: null`, empty persona/address, `speech_level: auto`, no safeword, other style axes at 3 and other permission axes (`profanity`, `flattery`, `refusal`, `bravado`) at 1.
+Require `preset: null`, empty persona/address, `speech_level: auto`, `address_frequency: auto`, no safeword, other style axes at 3 and other permission axes (`profanity`, `flattery`, `refusal`, `bravado`) at 1.
 Name the arm `A-<axis><level>` in the result, not the artifact. Retain complete `show --json`, immutable artifact bytes/SHA-256, compiler revision and guide fingerprint.
 Before a native run, approve a host in that disposable scope, recheck unchanged input, and observe that exact fingerprint delivered.
 Repeat adjacent levels from fresh defaults with matched no-tone controls. Use `S1-fn-ko` and `S7-fn-polite-ko` for contextual auto forms and the formality contrast.

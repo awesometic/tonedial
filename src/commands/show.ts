@@ -185,6 +185,7 @@ export function runShow(ctx: Ctx, args: string[]): CommandResult {
       persona: shown.persona,
       safeword: values.safeword,
       speech_level: values.speech_level,
+      address_frequency: values.address_frequency,
       // Interface language never changes the compiled tone.
       language: values.language,
       chars: size.chars,
@@ -214,7 +215,7 @@ function titleRow(name: string, sizeLabel: string, ctx: Ctx): string {
  */
 function stateRow(values: ReturnType<typeof settingValues>, t: Messages): string {
   const safeword = values.safeword ? t.settings.safewordSet(humanText(values.safeword)) : t.settings.noSafeword;
-  return `${safeword} · ${t.settings.register(values.speech_level)}`;
+  return `${safeword} · ${t.settings.register(values.speech_level)} · ${t.settings.addressUse(values.address_frequency)}`;
 }
 
 // Presence alone establishes neither current contents nor native loading.

@@ -1,11 +1,12 @@
 import {
-  ANCHORS, AXIS_ORDER, CONTROLS, DELIVERY_OFF_MARKER, FORMAT_COMPOSITION, GENERATION_COMMENT, PERSONA,
+  ADDRESS_COMPOSITION, ADDRESS_FREQUENCY, ANCHORS, AXIS_ORDER, CONTROLS, DELIVERY_OFF_MARKER, FORMAT_COMPOSITION, GENERATION_COMMENT, PERSONA,
   REGISTER_COMPOSITION, SCOPE_HEADER, SPEECH_LEVEL, STYLE_MARKER,
   type Axes,
 } from "./anchors.ts";
 import { composites, intensityConfirmation, PERSONA_DESCRIPTION_MAX, type Persona } from "./combos.ts";
 
 export type SpeechLevel = keyof typeof SPEECH_LEVEL;
+export type AddressFrequency = keyof typeof ADDRESS_FREQUENCY;
 
 export type Config = {
   preset: string | null;
@@ -13,6 +14,8 @@ export type Config = {
   enabled?: boolean;
   axes: Axes;
   speech_level: SpeechLevel;
+  /** Historical direct inputs default to contextual address use. */
+  address_frequency?: AddressFrequency;
   persona: Persona | null;
   /** null when the user has not set one, which is the documented default. */
   safeword: string | null;
@@ -65,6 +68,9 @@ function validate(config: Config): void {
   if (!Object.hasOwn(SPEECH_LEVEL, config.speech_level)) {
     throw new RangeError(`speech_level is ${config.speech_level}, not auto, polite, plain, or rough`);
   }
+  if (config.address_frequency !== undefined && !Object.hasOwn(ADDRESS_FREQUENCY, config.address_frequency)) {
+    throw new RangeError("address_frequency must be none, auto, rarely, or frequently");
+  }
   if (config.persona !== null) {
     for (const field of ["user", "agent"] as const) {
       const value = config.persona[field];
@@ -99,7 +105,9 @@ export function compile(config: Config): string {
   const rules = AXIS_ORDER.map((axis) => `- ${ANCHORS[axis][config.axes[axis] - 1]}`);
   rules.push(...composites(config.axes).map((line) => `- ${line}`));
 
-  rules.push(`- ${FORMAT_COMPOSITION}`, `- ${REGISTER_COMPOSITION}`, `- ${SPEECH_LEVEL[config.speech_level]}`);
+  rules.push(`- ${FORMAT_COMPOSITION}`, `- ${REGISTER_COMPOSITION}`,
+    `- ${ADDRESS_COMPOSITION}`, `- ${ADDRESS_FREQUENCY[config.address_frequency ?? "auto"]}`,
+    `- ${SPEECH_LEVEL[config.speech_level]}`);
 
   out.push("### Rules", ...rules);
 

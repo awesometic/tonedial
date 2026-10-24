@@ -8,7 +8,7 @@ import type { CommandResult, Ctx } from "../cli.ts";
 import { AXIS_DEFAULT, AXIS_ORDER, riskyAxes, type Axes, type Level } from "../core/anchors.ts";
 import { check as checkCombos, PERSONA_DESCRIPTION_MAX } from "../core/combos.ts";
 import {
-  AGE_BANDS, GENDERS, SPEECH_LEVELS,
+  ADDRESS_FREQUENCIES, AGE_BANDS, GENDERS, SPEECH_LEVELS,
   ConfigError, SETTING_KEYS, isAxis, nearest, nearestAxis, serializeConfig, settingValues, type Config, type SettableKey,
 } from "../core/config.ts";
 import { toCompileInput } from "../core/resolve.ts";
@@ -57,6 +57,14 @@ function assign(config: Config, key: string, value: string, t: Messages, asJson:
   if (key === "safeword") {
     const phrase = value.trim();
     config.safeword = phrase === "" ? null : phrase;
+    return;
+  }
+
+  if (key === "address_frequency") {
+    if (!(ADDRESS_FREQUENCIES as readonly string[]).includes(value)) {
+      throw new ConfigError(t.settings.addressFrequency(ADDRESS_FREQUENCIES));
+    }
+    config.address_frequency = value as Config["address_frequency"];
     return;
   }
 

@@ -6,7 +6,7 @@ import { basename, dirname, isAbsolute, join } from "node:path";
 import { catalogue, type Messages } from "./i18n.ts";
 import { AXIS_DEFAULT, AXIS_ORDER, type Axes, type Axis, type Level } from "./anchors.ts";
 import { PERSONA_DESCRIPTION_MAX, type Persona } from "./combos.ts";
-import type { SpeechLevel } from "./compile.ts";
+import type { AddressFrequency, SpeechLevel } from "./compile.ts";
 import { decodeTupleKey, emptyWiring, normalizeWiring, registrationKey, resourceKey } from "../wiring/ownership.ts";
 import { AGENT_TOOLS } from "./paths.ts";
 
@@ -15,6 +15,7 @@ export const LEGACY_CONFIG_SCHEMA = 1 as const;
 
 export const AGE_BANDS = ["unspecified", "teens", "20s", "30s", "40s", "50s+"] as const;
 export const GENDERS = ["unspecified", "masculine", "feminine", "neutral"] as const;
+export const ADDRESS_FREQUENCIES = ["none", "auto", "rarely", "frequently"] as const;
 export const SPEECH_LEVELS = ["auto", "polite", "plain", "rough"] as const;
 
 export const WIRING_SCOPES = ["global", "project"] as const;
@@ -130,6 +131,7 @@ export type Config = {
   persona: Persona;
   safeword: string | null;
   speech_level: SpeechLevel;
+  address_frequency: AddressFrequency;
   /** The interface language. Never reaches `tone.md`. */
   language: string;
   /** Destination/resource ownership. Schema 1 contains the legacy per-tool map. */
@@ -167,6 +169,7 @@ export function defaultConfig(): Config {
     persona: { age: null, gender: null, address: null, note: null, user: null, agent: null },
     safeword: null,
     speech_level: "auto",
+    address_frequency: "auto",
     language: "en",
     wiring: emptyWiring(),
     managedSeeds: {},
@@ -634,7 +637,7 @@ export function parseConfig(text: string, t: Messages = catalogue("en").cli): Co
   // file is user-editable, and a tool that eats what a person typed has no business asking
   // them to trust it with someone else's files later.
   const KNOWN = ["schema", "enabled", "preset", "unsaved", "axes", "persona", "safeword", "guards", "fixed_width",
-    "speech_level", "language", "seedVersion", "managedSeeds", "wiring"];
+    "speech_level", "address_frequency", "language", "seedVersion", "managedSeeds", "wiring"];
   const unknown = Object.keys(raw).filter((k) => !KNOWN.includes(k));
   if (unknown.length) throw new ConfigError(t.config.unknownKey(unknown.join(", "), KNOWN));
 
@@ -647,6 +650,10 @@ export function parseConfig(text: string, t: Messages = catalogue("en").cli): Co
   const speech = asString(raw.speech_level, "speech_level", t) ?? "auto";
   if (!(SPEECH_LEVELS as readonly string[]).includes(speech)) {
     throw new ConfigError(t.settings.speechLevel(SPEECH_LEVELS));
+  }
+  const frequency = raw.address_frequency === undefined ? "auto" : raw.address_frequency;
+  if (typeof frequency !== "string" || !(ADDRESS_FREQUENCIES as readonly string[]).includes(frequency)) {
+    throw new ConfigError(t.settings.addressFrequency(ADDRESS_FREQUENCIES));
   }
   const safeword = asString(raw.safeword, "safeword", t);
   if (safeword !== null) {
@@ -670,6 +677,7 @@ export function parseConfig(text: string, t: Messages = catalogue("en").cli): Co
     persona: readPersona(raw.persona, t),
     safeword,
     speech_level: speech as SpeechLevel,
+    address_frequency: frequency as AddressFrequency,
     // Absent in a config written before these existed, which is a normal thing to meet: the
     // fallback language and a seed version of zero both say "this home predates the seeds".
     language: asString(raw.language, "language", t) ?? "en",
@@ -703,6 +711,7 @@ export function serializeConfig(config: Config, t: Messages = catalogue("en").cl
         persona: current.persona,
         safeword: current.safeword,
         speech_level: current.speech_level,
+        address_frequency: current.address_frequency,
         language: current.language,
         wiring,
         managedSeeds,
@@ -741,6 +750,7 @@ export function prepareApprovedMigration(
       persona: structuredClone(legacy.persona),
       safeword: legacy.safeword,
       speech_level: legacy.speech_level,
+      address_frequency: legacy.address_frequency,
       language: legacy.language,
       wiring: emptyWiring(),
       managedSeeds: structuredClone(managedSeeds),
@@ -754,7 +764,7 @@ export function prepareApprovedMigration(
   };
 }
 
-export const USER_SETTING_KEYS = ["enabled", "preset", "unsaved", "axes", "persona", "safeword", "speech_level", "language"] as const;
+export const USER_SETTING_KEYS = ["enabled", "preset", "unsaved", "axes", "persona", "safeword", "speech_level", "address_frequency", "language"] as const;
 
 export type SettingsRecovery = {
   config: ConfigV2;
@@ -948,7 +958,7 @@ export const isAxis = (name: string): name is Axis =>
  * Command tests exercise this inventory through both setting and reading values.
  */
 export const SETTING_KEYS = [
-  "safeword", "speech_level", "language",
+  "safeword", "speech_level", "address_frequency", "language",
   "persona.age", "persona.gender", "persona.self_ref", "persona.user_ref", "persona.note",
   "persona.user", "persona.agent",
 ] as const;
@@ -962,6 +972,7 @@ export function settingValues(config: Config) {
     ...Object.fromEntries(AXIS_ORDER.map(axis => [axis, config.axes[axis]])) as Axes,
     safeword: config.safeword,
     speech_level: config.speech_level,
+    address_frequency: config.address_frequency,
     language: config.language,
     "persona.age": config.persona.age,
     "persona.gender": config.persona.gender,

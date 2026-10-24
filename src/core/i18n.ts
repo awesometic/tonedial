@@ -6,7 +6,7 @@ import { dirname } from "node:path";
 
 import type { SettingKey } from "./config.ts";
 import type { Persona } from "./combos.ts";
-import type { SpeechLevel } from "./compile.ts";
+import type { AddressFrequency, SpeechLevel } from "./compile.ts";
 import type { RecoveryPhase } from "./operations.ts";
 import { ja } from "./locales/ja.ts";
 import { zh } from "./locales/zh.ts";
@@ -175,6 +175,7 @@ export type Messages = {
     user: string;
     agent: string;
     register: string;
+    addressFrequency: string;
     safeword: string;
     needsName: string;
     exists: (slug: string) => string;
@@ -248,6 +249,8 @@ export type Messages = {
     guardsRetired: string;
     fixedWidthRetired: string;
     speechLevel: (options: readonly string[]) => string;
+    addressFrequency: (options: readonly string[]) => string;
+    addressUse: (frequency: AddressFrequency) => string;
     safewordShort: (phrase: string) => string;
     safewordSet: (phrase: string) => string;
     noSafeword: string;
@@ -690,6 +693,7 @@ const enMessages: Messages = {
     user: "Your role or background (up to 200 characters)",
     agent: "Agent role (up to 200 characters)",
     register: "Honorific forms (auto, polite, plain, rough)",
+    addressFrequency: "Address frequency (none, auto, rarely, frequently)",
     safeword: "Safeword",
     needsName: "create needs a display name. Run tonedial create in a terminal, or supply a name and optional key=value settings with --auto.",
     exists: (slug) => `${slug}: a preset already exists. Choose another slug, or use save to update it.`,
@@ -766,6 +770,8 @@ const enMessages: Messages = {
     guardsRetired: "guards is retired. ToneDial no longer adds guard requests. No settings were changed.",
     fixedWidthRetired: "fixed_width is retired. Output now follows terminal width automatically. No settings were changed.",
     speechLevel: (options) => `speech_level · available: ${options.join(", ")}`,
+    addressFrequency: (options) => `address_frequency · available: ${options.join(", ")}`,
+    addressUse: (frequency) => `address ${frequency}`,
     safewordShort: (phrase) => `safeword ${phrase}: too short and may trigger by accident`,
     safewordSet: (phrase) =>
       `safeword ${phrase}`,
@@ -1278,6 +1284,7 @@ const en: Catalogue = {
   settingHints: {
     safeword: "request for one plain answer to one message",
     speech_level: "auto: adapt to the relationship · polite: honorific forms · plain: ordinary non-honorific forms · rough: curt, blunt non-honorific endings; adds no jokes, profanity, criticism or mockery · wording and distance: formality",
+    address_frequency: "none: omit user names and titles · auto: choose from context · rarely: major transitions, personal moments or attention · frequently: most substantive replies, skipping brief follow-ups",
     language: "CLI interface language · unrelated to agent replies",
     "persona.age": "age band the model may associate with",
     "persona.gender": "gender the model may associate with",
@@ -1397,6 +1404,7 @@ const koMessages: Messages = {
     user: "사용자 역할·배경(최대 200자)",
     agent: "에이전트 역할(최대 200자)",
     register: "말씨(auto, polite, plain, rough)",
+    addressFrequency: "호칭 사용 빈도(none, auto, rarely, frequently)",
     safeword: "세이프워드",
     needsName: "create에는 표시 이름이 필요합니다. 터미널에서 tonedial create를 실행하거나, 이름과 필요한 키=값 설정을 --auto와 함께 지정하세요.",
     exists: (slug) => `${slug}: 이미 있는 프리셋입니다. 다른 슬러그를 쓰거나 save로 갱신하세요.`,
@@ -1476,6 +1484,8 @@ const koMessages: Messages = {
     guardsRetired: "guards 설정은 더 이상 쓰지 않습니다. ToneDial은 가드 요청을 넣지 않습니다. 설정은 바꾸지 않았습니다.",
     fixedWidthRetired: "fixed_width 설정은 더 이상 쓰지 않습니다. 출력은 터미널 폭에 자동으로 맞춥니다. 설정은 바꾸지 않았습니다.",
     speechLevel: (options) => `speech_level · 사용 가능: ${options.join(", ")}`,
+    addressFrequency: (options) => `address_frequency · 사용 가능: ${options.join(", ")}`,
+    addressUse: (frequency) => `호칭 빈도 ${frequency}`,
     safewordShort: (phrase) => `세이프워드 ${phrase}: 너무 짧아 실수로 작동할 수 있습니다`,
     safewordSet: (phrase) => `세이프워드 ${phrase}`,
     noSafeword: "세이프워드 없음",
@@ -1990,6 +2000,7 @@ const ko: Catalogue = {
   settingHints: {
     safeword: "한 메시지만 담백하게 답해 달라는 요청 문구",
     speech_level: "auto: 관계에 맞게 선택 · polite: 존댓말 · plain: 일반 반말 · rough: 짧고 퉁명스러운 반말 어미·자체로 농담·욕설·비판·조롱은 추가하지 않음 · 표현의 격식과 거리감은 formality로 조절",
+    address_frequency: "none: 사용자 호칭 생략 · auto: 문맥에 맞게 선택 · rarely: 큰 전환·개인적인 대화·주의 환기에서 가끔 사용 · frequently: 주요 답변에서 자주 사용하고 짧은 후속 답변에서는 생략",
     language: "CLI 인터페이스 언어 · 에이전트 답변 언어와 무관",
     "persona.age": "모델이 연상할 나이대",
     "persona.gender": "모델이 연상할 성별",

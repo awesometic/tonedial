@@ -102,6 +102,7 @@ const messages: Messages = {
     user: "你的角色或背景（最多 200 字符）",
     agent: "代理角色（最多 200 字符）",
     register: "敬语形式（auto, polite, plain, rough）",
+    addressFrequency: "称呼频率（none, auto, rarely, frequently）",
     safeword: "安全词",
     needsName: "create 需要显示名称。请在终端运行 tonedial create，或提供名称、可选的 key=value 设置及 --auto。",
     exists: (slug) => `${slug}：预设已存在。请选择其他标识名，或用 save 更新。`,
@@ -178,6 +179,8 @@ const messages: Messages = {
     guardsRetired: "guards 已停用，ToneDial 不再添加防护请求。设置未变更。",
     fixedWidthRetired: "fixed_width 已停用，输出会自动跟随终端宽度。设置未变更。",
     speechLevel: (options) => `speech_level · 可选：${options.join(", ")}`,
+    addressFrequency: (options) => `address_frequency · 可选: ${options.join(", ")}`,
+    addressUse: (frequency) => `称呼频率 ${frequency}`,
     safewordShort: (phrase) => `安全词 ${phrase}：太短，可能误触发`,
     safewordSet: (phrase) =>
       `安全词 ${phrase}`,
@@ -682,6 +685,7 @@ export const zh: Catalogue = {
   settingHints: {
     safeword: "对一条消息请求一次平实回答的短语",
     speech_level: "auto：按关系选择 · polite：敬语 · plain：普通非敬语 · rough：简短生硬的非敬语句尾；本身不增加玩笑、脏话、批评或嘲讽 · 措辞和距离感由 formality 调整",
+    address_frequency: "none: 省略用户称呼 · auto: 根据语境选择 · rarely: 重大话题转换、个人交流或提醒注意时偶尔使用 · frequently: 在主要回答中使用，简短后续回答中省略",
     language: "CLI 界面语言 · 与代理回答语言无关",
     "persona.age": "模型可能联想的年龄段",
     "persona.gender": "模型可能联想的性别",

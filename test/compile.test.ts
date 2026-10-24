@@ -149,8 +149,8 @@ test("a partial persona renders only what is set", () => {
     persona: { age: null, gender: null, address: { self_ref: null, user_ref: "선생님" }, note: null, user: null, agent: null },
   };
   const out = compile(userOnly);
-  assert.ok(out.includes("- Call the user 선생님."), "a lone user_ref leads its own sentence");
-  assert.ok(!out.includes("Call yourself"), "no self-reference is invented");
+  assert.ok(out.includes('- When addressing or referring to the user by name or title, use "선생님".'), "a lone user_ref leads its own sentence");
+  assert.ok(!out.includes("When self-reference is needed"), "no self-reference is invented");
   assert.ok(!out.includes("speech style"), "no gender is invented");
   assert.ok(out.includes("Persona sets flavour only."), "the precedence sentence still closes it");
 });
@@ -203,8 +203,8 @@ test("speech_level selects forms while preserving familiarity, warmth and strong
     assert.deepEqual(config, before);
     const rules = out.split("### Rules\n")[1]!.split("### Controls")[0]!.trimEnd().split("\n");
     assert.equal(rules.at(-1), `- In languages with honorifics, use ${phrase}.`, level);
-    assert.match(rules.at(-2)!, /formality changes distance within them/);
-    assert.match(rules.at(-2)!, /Warmth, profanity and bravado stay independent/);
+    assert.match(rules.at(-4)!, /formality changes distance within them/);
+    assert.match(rules.at(-4)!, /Warmth, profanity and bravado stay independent/);
     assert.match(out, /harshest uncensored profanity used in heated real-world and community speech/);
     assert.match(out, /at least four distinct, intensely warm expressions/);
     assert.match(out, /Character: use affectionate swearing/);
@@ -220,9 +220,11 @@ test("the speech-level line comes after any composite, not before it", () => {
   const rules = compile({ ...composite, speech_level: "plain" })
     .split("### Rules\n")[1]!.split("### Controls")[0]!.trimEnd().split("\n");
   assert.equal(rules.at(-1), "- In languages with honorifics, use plain address forms even with formal wording.");
-  assert.match(rules.at(-2)!, /Keep address forms/);
-  assert.match(rules.at(-3)!, /Choose format from the whole selection/);
-  assert.equal(rules.at(-4), "- Grumble without being passive; make the complaint itself clear.");
+  assert.match(rules.at(-2)!, /Choose user address/);
+  assert.match(rules.at(-3)!, /Address frequency governs/);
+  assert.match(rules.at(-4)!, /Keep address forms/);
+  assert.match(rules.at(-5)!, /Choose format from the whole selection/);
+  assert.equal(rules.at(-6), "- Grumble without being passive; make the complaint itself clear.");
 });
 
 test("rough changes only the register request, preserving configured address and independent axes", () => {
@@ -253,7 +255,7 @@ test("register choices replace only the final register rule across contrasting a
     assert.equal(outputs[index], outputs[0]!.replace(`- ${SPEECH_LEVEL.auto}`, `- ${SPEECH_LEVEL[["auto", "polite", "plain", "rough"][index] as keyof typeof SPEECH_LEVEL]}`));
   }
   assert.match(outputs[3]!, /adds no jokes, profanity, criticism, or mockery/);
-  assert.match(outputs[3]!, /Call yourself/);
+  assert.match(outputs[3]!, /When self-reference is needed/);
   assert.match(outputs[3]!, /invent no insult or criticism/);
 });
 

@@ -53,6 +53,7 @@ export async function runCreate(ctx: Ctx, args: string[]): Promise<CommandResult
           ["persona.user", ctx.t.create.user, config.persona.user ?? ""],
           ["persona.agent", ctx.t.create.agent, config.persona.agent ?? ""],
           ["speech_level", ctx.t.create.register, config.speech_level],
+          ["address_frequency", ctx.t.create.addressFrequency, config.address_frequency],
           ["safeword", ctx.t.create.safeword, config.safeword ?? ""],
         ];
         for (const [key, label, value] of fields) {
