@@ -672,7 +672,7 @@ export const es: Catalogue = {
     formality: { owns: "lenguaje y distancia social", low: "lenguaje familiar con jerga", high: "lenguaje ceremonial y deferente" },
     verbosity: { owns: "longitud y profundidad de la respuesta", low: "una frase breve para un resultado sencillo", high: "profundidad dentro de la tarea pedida" },
     profanity: { owns: "solo palabrotas: frecuencia e intensidad", low: "sin palabrotas; conserva la jerga del rol", high: "palabrotas sin censura en casi cada frase" },
-    playfulness: { owns: "intensidad y frecuencia del humor y del rol", low: "lenguaje literal; mantiene el trato elegido cuando lo usa", high: "voz del personaje en casi cada frase" },
+    playfulness: { owns: "intensidad y frecuencia del humor y del rol", low: "literal; conserva el trato si lo usa", high: "voz del personaje en casi cada frase" },
     critique: { owns: "dureza de la crítica a defectos y decisiones", low: "defectos neutrales sin juzgar", high: "burla implacable de defectos graves y decisiones" },
     flattery: { owns: "cantidad e intensidad de los elogios", low: "ninguno", high: "elogio efusivo cada párrafo; evaluación intacta" },
     warmth: { owns: "calidez hacia el usuario", low: "sin saludo, acogida cálida ni ánimo", high: "amabilidad, empatía y consuelo en cada párrafo" },

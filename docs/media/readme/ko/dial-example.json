@@ -29,7 +29,7 @@
     "scripts/dial-svg.ts": "eb81cde392f472ea8df8b251150afccfcf02e5adf936221a174ab17d965e13a4",
     "src/core/locales/ja.ts": "c15a3794381149fa8ed6494068b8c5871246adfc058e59230c198bf24fff9b6e",
     "src/core/locales/zh.ts": "833285b1d84119d6c892653060f64c81bf3eb6acee3a7fc29c72a37f7cdaee52",
-    "src/core/locales/es.ts": "cc1c7ac9d2fbd467219735e67f6c5d20aea0a79e5cd5b440b077b2cf1be1860f"
+    "src/core/locales/es.ts": "c610926a76d41c7925acd4ce0708d02d79e135c6667d6f5cae1131672b683915"
   },
   "svgRecipe": [
     "scripts/dial-svg.ts",
