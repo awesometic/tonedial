@@ -638,8 +638,13 @@ export async function runDoctor(ctx: Ctx, _args: string[]): Promise<CommandResul
     typeof route === "object" && route !== null && route.tool === "codex" && route.configuration === "configured");
   const report = await doctorReport(ctx, rollbackLines.length === 0, !codexSetup);
   return {
-    lines: [...app.lines, ...native.lines, ...report.lines,
-      ...rollbackLines],
+    lines: [
+      ...app.lines,
+      ...native.lines,
+      ...((app.lines.length || native.lines.length) && report.lines.length ? [""] : []),
+      ...report.lines,
+      ...rollbackLines,
+    ],
     json: {
       ...report.json, ...app.json,
       root: ctx.agent.root, stateRoot: ctx.paths.root, agentRoot: ctx.agent.root, live: ctx.agent.live,
@@ -1294,17 +1299,16 @@ function renderCheckBlocks(
       (check.state === "absent" || check.detail === ctx.t.doctor.hookNotConnected) && check.repair === undefined;
   });
   const unconnectedNames = new Set(unconnected.map(({ tool }) => TARGETS[tool].label));
+  const lastAgentIndex = checks.findLastIndex((check) => settings.some(({ tool }) => TARGETS[tool].label === check.name));
   const blocks: string[][] = [];
-  let grouped = false;
-  for (const check of checks) {
-    if (unconnectedNames.has(check.name)) {
-      if (!grouped) {
-        blocks.push(unconnectedReport(unconnected, ctx));
-        grouped = true;
-      }
-      continue;
+  for (let index = 0; index < checks.length; index++) {
+    const check = checks[index]!;
+    if (!unconnectedNames.has(check.name)) {
+      blocks.push(report(check, ctx));
     }
-    blocks.push(report(check, ctx));
+    if (index === lastAgentIndex && unconnected.length) {
+      blocks.push(unconnectedReport(unconnected, ctx));
+    }
   }
   return blocks.flatMap((block, index) => index === 0 ? block : ["", ...block]);
 }

@@ -612,9 +612,9 @@ const enMessages: Messages = {
     previewTone: (name) => `Preview preset: ${name} · saved settings unchanged`,
     usageConsent: "Accept usage and charges, and start?",
     usageDeclined: "Cancelled · no conversation opened",
-    interpretationCaveat: "The model may overthink this preview or explain ToneDial at length. You are responsible for the resulting usage and charges.",
+    interpretationCaveat: "The model may spend extra tokens reasoning about the preview; usage and charges remain yours.",
     protection: "Dialogue only; the opening prompt forbids file changes and native tool restrictions apply.",
-    automationCaveat: "The client is asked to skip existing tone hooks and automatic instructions for this preview. Managed policy still applies; this is not filesystem isolation.",
+    automationCaveat: "Asks the client to skip existing tone hooks and automatic instructions; managed policy still applies, and this is not filesystem isolation.",
     cost: "Your account tokens and limits are used; charges may apply.",
     history: "The provider may retain this conversation in its own history.",
     launchFailed: (provider) => `Could not start ${provider}. Check its installation and try again.`,
@@ -946,15 +946,15 @@ const enMessages: Messages = {
       disabled: "Hook disabled in the registered settings file",
       unknown: "Hook enablement unknown in the registered settings file",
     },
-    hookSettingScope: "Hook status is read from the inspected settings file only; host overrides and session delivery are unverified.",
+    hookSettingScope: "Reads the inspected settings file only; host overrides and session delivery are unverified.",
     hookGroupHeading: "Agent hooks",
     hookGroupUnknown: (tools) => `Not connected: ${tools.join(", ")}.`,
     hookNotConnected: "No managed ToneDial hook to inspect. To connect, run init with this agent selected in the same scope.",
     hookNeedsInspection: "Resolve the reported hook settings or program issue before checking enablement in the app.",
     hookGuidance: {
-      claude: "/hooks → SessionStart: check the ToneDial command and its settings source. If hooks are off, set disableAllHooks to false in the effective settings; also check workspace trust and managed policy.",
+      claude: "/hooks → SessionStart: check the ToneDial command and settings source. If hooks are off, set disableAllHooks to false and check workspace trust.",
       codex: "/hooks → SessionStart → ToneDial: review the command and enable the hook. If asked, review and trust the project first.",
-      antigravity: "Antigravity IDE agent panel … → Customizations → Hooks, or Desktop Settings → Customizations → Hooks: check the ToneDial PreInvocation command and enable it if it is off.",
+      antigravity: "Antigravity IDE agent panel … → Customizations → Hooks (or Desktop Settings → Customizations → Hooks): check the ToneDial PreInvocation command and enable it.",
     },
     nativeMissing: (path, event) => `No ToneDial ${event} hook · ${path}`,
     nativeStale: "ToneDial hook uses an older reader or runtime configuration.",
@@ -1146,7 +1146,7 @@ const enMessages: Messages = {
         overlap: "The state root overlaps agent instructions. Choose a separate state directory before setup.",
         operation: "An operation needs recovery. Inspect its recorded ID and recover that operation before migrating.",
       };
-      return `Legacy migration is blocked:\n${path}\n${explanations[reason] ?? "Ownership or migration eligibility could not be verified. Preserve the files and review the diagnosis."}\nNothing was written. Inspect the same scope with:\n${doctorCommand}\nPreserve the original files; tonedial show --json reads saved settings. A separate TONEDIAL_HOME must be used consistently and may leave old native connections active.`;
+      return `Legacy migration is blocked:\n${path}\n${explanations[reason] ?? "Ownership or migration eligibility could not be verified. Preserve the files and review the diagnosis."}\nNothing was written. Inspect the same scope with:\n${doctorCommand}\nPreserve the original files; tonedial show --json reads saved settings.`;
     },
     npxUnsupported:
       "npx installs are not supported. They leave no persistent copy for `tonedial`, so the skill " +
@@ -1323,9 +1323,9 @@ const koMessages: Messages = {
     previewTone: (name) => `미리보기 프리셋: ${name} · 저장된 설정 유지`,
     usageConsent: "사용량·비용 부담에 동의하고 시작할까요?",
     usageDeclined: "취소됨 · 대화를 열지 않았습니다",
-    interpretationCaveat: "모델이 과하게 추론하거나 ToneDial 설정을 길게 설명할 수 있습니다. 늘어난 사용량과 비용도 본인 부담입니다.",
+    interpretationCaveat: "모델이 미리보기를 해석하느라 토큰을 더 쓸 수 있으며, 사용량과 요금은 본인 부담입니다.",
     protection: "대화만 하는 세션입니다. 시작 프롬프트에 파일 수정 금지를 넣고 도구 사용을 제한합니다.",
-    automationCaveat: "시험 세션에는 기존 톤 훅과 자동 지침을 끄도록 요청합니다. 관리 정책은 그대로 적용되며 파일시스템 차단은 아닙니다.",
+    automationCaveat: "이번 세션에서는 기존 톤 훅과 자동 지침을 건너뛰도록 요청합니다. 관리 정책은 그대로 적용되며 파일시스템 차단은 아닙니다.",
     cost: "본인 계정의 토큰·사용 한도를 쓰며 요금이 나올 수 있습니다.",
     history: "도구가 자체 대화 기록을 남길 수 있습니다.",
     launchFailed: (provider) => `${provider}를 시작하지 못했습니다. 설치 상태를 확인하고 다시 시도해 주세요.`,
@@ -1659,15 +1659,15 @@ const koMessages: Messages = {
       disabled: "등록된 설정 파일에서 훅이 꺼져 있음",
       unknown: "등록된 설정 파일에서 훅 활성화 여부를 확인할 수 없음",
     },
-    hookSettingScope: "훅 상태는 검사한 설정 파일만 읽어 표시합니다. 앱의 설정 덮어쓰기와 세션 전달 여부는 확인하지 않습니다.",
+    hookSettingScope: "검사한 설정 파일만 읽은 결과이며, 앱의 설정 덮어쓰기나 세션 전달 여부는 확인하지 않습니다.",
     hookGroupHeading: "에이전트 훅",
     hookGroupUnknown: (tools) => `연결 안 됨: ${tools.join(", ")}`,
     hookNotConnected: "검사할 ToneDial 관리 훅이 없습니다. 연결하려면 같은 범위에서 init을 실행하고 이 에이전트를 선택해 주세요.",
     hookNeedsInspection: "위에 나온 훅 설정이나 실행 프로그램 문제를 먼저 확인한 뒤 앱에서 활성화 여부를 확인해 주세요.",
     hookGuidance: {
-      claude: "/hooks → SessionStart에서 ToneDial 실행 명령과 설정 출처를 확인해 주세요. 훅이 꺼져 있으면 적용 중인 설정의 disableAllHooks를 false로 바꾸세요. 프로젝트 신뢰와 관리자 정책도 확인해 주세요.",
+      claude: "/hooks → SessionStart에서 ToneDial 실행 명령과 설정 출처를 확인하세요. 훅이 꺼져 있으면 disableAllHooks를 false로 바꾸고 프로젝트 신뢰 설정도 확인하세요.",
       codex: "/hooks → SessionStart → ToneDial에서 실행 명령을 확인하고 훅을 켜세요. 프로젝트 신뢰를 요청하면 먼저 내용을 확인하고 승인해 주세요.",
-      antigravity: "Antigravity IDE 에이전트 패널 … → Customizations → Hooks 또는 데스크톱 Settings → Customizations → Hooks에서 ToneDial PreInvocation 명령을 확인하고 꺼져 있으면 켜세요.",
+      antigravity: "Antigravity IDE 에이전트 패널 … → Customizations → Hooks(또는 데스크톱 Settings → Customizations → Hooks)에서 ToneDial PreInvocation 명령을 확인하고 켜세요.",
     },
     nativeMissing: (path, event) => `ToneDial ${event} 훅 없음 · ${path}`,
     nativeStale: "ToneDial 훅이 이전 전달 스크립트나 런타임 설정을 사용합니다.",
@@ -1858,7 +1858,7 @@ const koMessages: Messages = {
         overlap: "상태 디렉터리가 에이전트 지침 경로와 겹칩니다. 별도 상태 디렉터리를 선택한 뒤 설정해 주세요.",
         operation: "복구가 필요한 작업이 있습니다. 기록된 ID로 그 작업부터 복구한 뒤 이전 상태를 옮겨 주세요.",
       };
-      return `이전 상태를 옮길 수 없습니다:\n${path}\n${explanations[reason] ?? "관리 기록이나 이전 상태를 옮길 조건을 확인하지 못했습니다. 파일을 보존하고 진단 내용을 확인해 주세요."}\n아무것도 쓰지 않았습니다. 같은 범위를 확인하려면 실행하세요:\n${doctorCommand}\n원본 파일을 보존하세요. tonedial show --json으로 저장된 설정을 읽습니다. 별도 TONEDIAL_HOME을 선택하면 이후에도 같은 값을 써야 하며 이전 연결은 계속 작동할 수 있습니다.`;
+      return `이전 상태를 옮길 수 없습니다:\n${path}\n${explanations[reason] ?? "관리 기록이나 이전 상태를 옮길 조건을 확인하지 못했습니다. 파일을 보존하고 진단 내용을 확인해 주세요."}\n아무것도 쓰지 않았습니다. 같은 범위를 확인하려면 실행하세요:\n${doctorCommand}\n원본 파일을 보존하세요. 저장된 설정은 tonedial show --json으로 읽을 수 있습니다.`;
     },
     npxUnsupported:
       "npx 설치는 지원하지 않습니다. 설치 사본이 남지 않아 `tonedial` 명령과 이를 호출하는 " +

@@ -480,7 +480,7 @@ export async function runAppRebuild(ctx: Ctx): Promise<AppRebuildResult> {
   const source = current !== null ? "settings" : savedSource !== null ? "snapshot" : artifactSource !== null ? "artifact" : "preset";
   const missingFields = [...new Set([...defaulted, ...damagedFields].filter(field => !obsoleteFields.includes(field)))];
   const presentation = [
-    `  ${ctx.ui.dim(t.recovery.source[source])}`,
+    ...(source === "settings" ? [] : [`  ${ctx.ui.dim(t.recovery.source[source])}`]),
     `  ${t.recovery.keptSettings}`,
     ...(damagedFields.includes("fixed_width") ? [`  ${t.recovery.obsoleteWidthDiscarded}`] : []),
     ...(damagedFields.includes("guards") ? [`  ${t.recovery.obsoleteGuardsDiscarded}`] : []),

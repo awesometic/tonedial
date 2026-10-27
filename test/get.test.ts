@@ -4,7 +4,7 @@ import { join, relative } from "node:path";
 import { test, type TestContext } from "node:test";
 
 import { AXIS_ORDER } from "../src/core/anchors.ts";
-import { ADDRESS_FREQUENCIES, AGE_BANDS, GENDERS, SETTING_KEYS } from "../src/core/config.ts";
+import { ADDRESS_FREQUENCIES, AGE_BANDS, GENDERS, SETTING_KEYS, SPEECH_LEVELS } from "../src/core/config.ts";
 import { LANGUAGES, catalogue, type Language } from "../src/core/i18n.ts";
 import { humanText } from "../src/ui/format.ts";
 import { maxCells } from "../src/ui/width.ts";
@@ -147,12 +147,15 @@ test("get key explanations and get/set help reuse localized setting meanings and
       const result = await captureCli(value, ["get", key]);
       assert.equal(result.status, 0);
       assert.ok(flat(result.stdout).includes(flat(copy.settingHints[key])), `${language}: ${key}`);
+      if (key === "speech_level") {
+        for (const level of SPEECH_LEVELS) assert.ok(result.stdout.includes(level), `${language}: get speech_level lost ${level}`);
+      }
     }
     for (const command of ["get", "set"]) {
       const help = await captureCli(value, [command, "--help"]);
       assert.equal(help.status, 0);
       for (const key of [...AXIS_ORDER, ...SETTING_KEYS]) assert.ok(help.stdout.includes(key), `${language}: ${command} help lost ${key}`);
-      for (const token of [...AGE_BANDS, ...GENDERS, ...LANGUAGES, ...ADDRESS_FREQUENCIES]) assert.ok(help.stdout.includes(token), `${language}: ${command} help lost ${token}`);
+      for (const token of [...AGE_BANDS, ...GENDERS, ...LANGUAGES, ...ADDRESS_FREQUENCIES, ...SPEECH_LEVELS]) assert.ok(help.stdout.includes(token), `${language}: ${command} help lost ${token}`);
       assert.ok(flat(help.stdout).includes(flat(copy.axisHints.warmth!.low)));
       assert.ok(flat(help.stdout).includes(flat(copy.axisHints.warmth!.high)));
     }

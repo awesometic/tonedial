@@ -21,9 +21,9 @@ const messages: Messages = {
     previewTone: (name) => `预览预设：${name} · 不修改已保存的设置`,
     usageConsent: "是否接受用量和费用并开始？",
     usageDeclined: "已取消 · 未打开对话",
-    interpretationCaveat: "模型可能过度解读此预览，或长篇解释 ToneDial。产生的用量和费用由你承担。",
+    interpretationCaveat: "模型解析此预览可能消耗额外令牌；产生的用量和费用由你承担。",
     protection: "仅限对话；开场提示禁止修改文件，同时适用客户端原有的工具限制。",
-    automationCaveat: "本次预览会要求客户端跳过现有语气钩子和自动指令。托管策略仍然生效；这不代表文件系统隔离。",
+    automationCaveat: "本次预览会请求客户端跳过现有语气钩子和自动指令；托管策略仍然生效，且这不代表文件系统隔离。",
     cost: "将消耗账号的令牌和配额，可能产生费用。",
     history: "服务商可能将此对话保存在自己的历史记录中。",
     launchFailed: (provider) => `无法启动 ${provider}。请检查安装情况后重试。`,
@@ -355,15 +355,15 @@ const messages: Messages = {
       disabled: "已注册设置文件中的钩子已禁用",
       unknown: "已注册设置文件中的钩子启用状态未知",
     },
-    hookSettingScope: "钩子状态仅来自所检查的设置文件；主机覆盖项和会话注入尚未验证。",
+    hookSettingScope: "仅读取所检查的设置文件；主机覆盖项和会话注入尚未验证。",
     hookGroupHeading: "代理钩子",
     hookGroupUnknown: (tools) => `未连接：${tools.join(", ")}`,
     hookNotConnected: "没有可检查的受管理钩子。要连接，请在同一范围运行 init 并选择此代理。",
     hookNeedsInspection: "在应用中检查启用状态前，请先解决报告的钩子设置或程序问题。",
     hookGuidance: {
-      claude: "/hooks → SessionStart：检查 ToneDial 命令及其设置来源。若钩子已关闭，请在生效设置中将 disableAllHooks 设为 false，并检查工作区信任及托管策略。",
+      claude: "/hooks → SessionStart：检查 ToneDial 命令和设置来源。若钩子已关闭，请将 disableAllHooks 设为 false 并检查工作区信任。",
       codex: "/hooks → SessionStart → ToneDial：检查命令并启用钩子。如有提示，请先检查并信任项目。",
-      antigravity: "Antigravity IDE 代理面板 … → Customizations → Hooks，或 Desktop Settings → Customizations → Hooks：检查 ToneDial PreInvocation 命令，若禁用则启用。",
+      antigravity: "Antigravity IDE 代理面板 … → Customizations → Hooks（或 Desktop Settings → Customizations → Hooks）：检查并启用 ToneDial PreInvocation 命令。",
     },
     nativeMissing: (path, event) => `无 ToneDial ${event} 钩子 · ${path}`,
     nativeStale: "ToneDial 钩子使用旧版读取程序或运行时配置。",
@@ -547,7 +547,7 @@ const messages: Messages = {
         overlap: "状态根目录与代理指令重叠。设置前请选择独立的状态目录。",
         operation: "有操作需要恢复。请检查记录 ID，恢复该操作后再迁移。",
       };
-      return `旧版迁移已阻止：\n${path}\n${explanations[reason] ?? "无法验证所有权或迁移资格。请保留文件并查看诊断。"}\n未写入任何内容。检查同一范围：\n${doctorCommand}\n请保留原文件；tonedial show --json 可读取保存设置。独立 TONEDIAL_HOME 必须始终一致使用，旧原生连接可能仍然生效。`;
+      return `旧版迁移已阻止：\n${path}\n${explanations[reason] ?? "无法验证所有权或迁移资格。请保留文件并查看诊断。"}\n未写入任何内容。检查同一范围：\n${doctorCommand}\n请保留原文件；tonedial show --json 可读取保存设置。`;
     },
     npxUnsupported:
       "不支持 npx 安装，因为不会留下持久的 tonedial 副本，技能和后备指令无法运行。" +

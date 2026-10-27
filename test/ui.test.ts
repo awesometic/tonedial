@@ -15,6 +15,7 @@ import { parseConfig, SETTING_KEYS } from "../src/core/config.ts";
 /** The catalogue for the unit-level render calls. Language coverage is asserted separately. */
 const EN = catalogue("en").cli;
 import { gaugeBlock, gaugeHeader } from "../src/ui/gauge.ts";
+import { isCopyableLine, receiptLines } from "../src/ui/format.ts";
 import { palette } from "../src/ui/style.ts";
 import { UNKNOWN_WIDTH, cells, maxCells, padEnd, resolveBudget, truncate, wrap } from "../src/ui/width.ts";
 import { isDiffBody, isUnbreakable } from "./support/width-contract.ts";
@@ -272,7 +273,11 @@ for (const language of LANGUAGES) {
     assert.equal(json.tools[0].configuration, "configured");
     out = [];
     assert.equal(await cli("doctor", "--here"), 0, err.join(""));
-    assert.match(out.join("").replace(/\s+/g, " "), /\/hooks → SessionStart → ToneDial/);
+    const doctorOut = out.join("");
+    assert.match(doctorOut.replace(/\s+/g, " "), /\/hooks → SessionStart → ToneDial/);
+    for (const line of doctorOut.split("\n")) {
+      assert.ok(maxCells(line) <= UNKNOWN_WIDTH || isUnbreakable(line), `${language} doctor --here overflow: ${line}`);
+    }
     const hookPath = join(home, ".codex", "hooks.json");
     const document = JSON.parse(readFileSync(hookPath, "utf8"));
     rmSync(hookPath);
@@ -316,6 +321,43 @@ test("an unreadable import keeps its path copyable and reflows the diagnostic", 
     assert.equal(target, path, `${language}: the path was split or lost`);
     assert.ok(diagnostic.length > 1, `${language}: the diagnostic did not reflow`);
     for (const line of diagnostic) assert.ok(maxCells(line) <= resolveBudget(40), `${language}: ${line}`);
+  }
+});
+
+test("slash-command prose wraps while arbitrary paths with spaces and indented commands stay whole", async () => {
+  const hookGuidance = "/hooks → SessionStart: check the ToneDial command and settings source. If hooks are off, set disableAllHooks to false and check workspace trust.";
+  const topLevelSpacePath = "/a valid top level file name.json";
+  const colonSegmentPath = "/folder: name/file.json";
+  const toneNamedPath = "/tone folder/file.json";
+  const customRootPath = "/custom-mount/workspace with spaces/my preset file.json";
+  const indentedNpmGlobal = "  npm install --global tonedial";
+  const indentedInstall = "  curl -fsSL https://raw.githubusercontent.com/awesometic/tonedial/main/install.sh | sh";
+  const indentedRollback = "  tonedial doctor --fix --rollback op_1234567890abcdef";
+  const trailingDotCommand = "tonedial wire --project .";
+  const dotSpaceArgCommand = 'tonedial set persona.note="Mr. Smith"';
+  const copyable = [
+    topLevelSpacePath,
+    colonSegmentPath,
+    toneNamedPath,
+    customRootPath,
+    indentedNpmGlobal,
+    indentedInstall,
+    indentedRollback,
+    trailingDotCommand,
+    dotSpaceArgCommand,
+  ];
+  assert.equal(isCopyableLine(hookGuidance), false);
+  for (const line of copyable) {
+    assert.equal(isCopyableLine(line), true, line);
+    assert.deepEqual(receiptLines(line, 15), [line], line);
+  }
+  const folded = receiptLines([hookGuidance, ...copyable].join("\n"), 20);
+  for (const line of copyable) {
+    assert.ok(folded.includes(line), `copyable line must stay whole: ${line}`);
+  }
+  for (const line of folded) {
+    if (copyable.includes(line)) continue;
+    assert.ok(maxCells(line) <= 20, `prose line did not wrap at 20 cells: ${line}`);
   }
 });
 

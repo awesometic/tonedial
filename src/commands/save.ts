@@ -78,7 +78,7 @@ export async function savePreset(
   const result = await applyPlanned(ctx, [...selectionReads, presetChange, toneChange], [finalConfig], options.create === true, review);
 
   if (options.create && !result.applied) return {
-    lines: [...result.lines, `  ${ctx.t.create.notCreated}`],
+    lines: [...result.lines, ...(result.lines.length ? [""] : []), `  ${ctx.t.create.notCreated}`],
     json: { slug, displayName, created: false, reason: result.reason, diff: result.diff },
   };
 
@@ -89,6 +89,7 @@ export async function savePreset(
     // makes the slug beside it harder to read than losing the tail does.
     lines: [
       ...(options.create ? result.lines : []),
+      ...(options.create && result.lines.length ? [""] : []),
       ...wrap(replaced ? ctx.t.preset.replaced(slug) : ctx.t.preset.savedTarget(slug), ctx.ui.width - 2)
         .map((line) => `  ${ctx.ui.success(ctx.ui.bold(line))}`),
       `  ${truncate(

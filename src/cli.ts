@@ -1,7 +1,6 @@
 // Argument parsing, dispatch, and human/JSON output.
 
 import { parseArgs } from "node:util";
-import { isAbsolute } from "node:path";
 
 import { ConfigError, SETTING_KEYS, isConfigV2, nearest } from "./core/config.ts";
 import { AXIS_ORDER } from "./core/anchors.ts";
@@ -15,7 +14,7 @@ import { catalogue, configLanguage, detectLanguage, messages, type Catalogue, ty
 import { isColourMode, palette, type Palette } from "./ui/style.ts";
 import { cells, maxCells, resolveBudget, wrap } from "./ui/width.ts";
 import { interactive } from "./ui/prompt.ts";
-import { humanText } from "./ui/format.ts";
+import { humanText, isCopyableLine } from "./ui/format.ts";
 import type { Change } from "./wiring/apply.ts";
 
 import { planConfig, runCompile } from "./commands/compile.ts";
@@ -363,7 +362,7 @@ function commandUsage(name: string, copy: Catalogue, ui: Palette): string {
     const syntax = FLAG_SYNTAX.find(([candidate]) => candidate === key)?.[1] ?? `--${key}`;
     return [syntax, t.help.flags[key]] as [string, string];
   });
-  const width = Math.max(...flags.map(([flag]) => cells(flag)));
+  const width = Math.max(...flags.map(([flag]) => maxCells(flag)));
   const keyWidth = Math.max(...[...AXIS_ORDER, ...SETTING_KEYS].map(key => maxCells(key)));
   return [
     ui.bold(`tonedial ${syntax}`),
@@ -645,9 +644,10 @@ const CONTINUATION = "    ";
 
 /** Fold warning prose without reflowing copyable paths or commands. */
 function notice(message: string, ui: Palette): string {
-  const folded = message.split("\n").flatMap(line =>
-    isAbsolute(line) || /^(?:tonedial|npm|curl) /.test(line)
-      ? [humanText(line)] : wrap(humanText(line), ui.width - cells(MARKER)));
+  const folded = message.split("\n").flatMap(line => {
+    const safe = humanText(line);
+    return isCopyableLine(safe) ? [safe] : wrap(safe, ui.width - cells(MARKER));
+  });
   return folded
     .map((line, i) => (i === 0 ? `${ui.warn(MARKER)}${line}` : `${CONTINUATION}${line}`))
     .join("\n") + "\n";
@@ -660,8 +660,10 @@ function fail(asJson: boolean, message: string, code: number, ui: Palette): numb
     );
   } else {
     // A standalone path is a copy target, not prose to split into unusable fragments.
-    const lines = message.split("\n").flatMap((line) =>
-      isAbsolute(line) || /^(?:tonedial|curl) |^npm (?:install|uninstall|update) -|^https?:\/\//.test(line) ? [humanText(line)] : wrap(humanText(line), ui.width));
+    const lines = message.split("\n").flatMap((line) => {
+      const safe = humanText(line);
+      return isCopyableLine(safe) ? [safe] : wrap(safe, ui.width);
+    });
     process.stderr.write(lines.map((line) => ui.error(line)).join("\n") + "\n");
   }
   return code;

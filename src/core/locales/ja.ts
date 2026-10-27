@@ -10,7 +10,7 @@ const messages: Messages = {
     invalidConfig: "保存済み設定を安全に読み取れません。復旧方法を選ぶ前に tonedial doctor --json を実行してください。",
     unsupportedProvider: (provider) => `${provider}: 会話プレビューは claude または codex に対応しています。`,
     noProvider: "PATHにClaude CodeもCodexも見つかりません。",
-    providerRequired: "tonedial test claude または tonedial test codex で明示的に選択してください。",
+    providerRequired: "プロバイダーを明示的に選択してください：tonedial test claude または tonedial test codex。",
     providerUnavailable: (provider) => `${provider} がPATHに見つかりません。`,
     targetUnavailable: (path) => `テスト用フォルダーが利用できないか、ディレクトリではありません：\n${path}\n--project DIR で既存のフォルダーを選んでください。`,
     terminalRequired: "会話テストには対話型ターミナルが必要です。--dry-run または --json で起動計画を確認できます。",
@@ -21,9 +21,9 @@ const messages: Messages = {
     previewTone: (name) => `プリセットのプレビュー：${name} · 保存済み設定は変更しません`,
     usageConsent: "使用量と料金に同意して開始しますか？",
     usageDeclined: "キャンセル · 会話は開いていません",
-    interpretationCaveat: "モデルがこのプレビューを深読みしたり、ToneDialを長く説明したりする場合があります。発生した使用量と料金は利用者の負担です。",
+    interpretationCaveat: "プレビューの解釈で追加のトークンを消費する場合があり、使用量と料金は利用者の負担です。",
     protection: "会話のみです。開始プロンプトはファイル変更を禁止し、クライアント本来のツール制限も適用されます。",
-    automationCaveat: "このプレビューでは既存の口調フックや自動指示を読み込まないようクライアントに要求します。管理ポリシーは適用されます。ファイルシステムの隔離ではありません。",
+    automationCaveat: "既存の口調フックや自動指示をスキップするようクライアントに求めますが、管理ポリシーは適用され、ファイルシステムの隔離ではありません。",
     cost: "アカウントのトークンと利用枠を使用します。料金が発生する場合があります。",
     history: "プロバイダー側の履歴に会話が保存される場合があります。",
     launchFailed: (provider) => `${provider} を起動できません。インストール状況を確認して再試行してください。`,
@@ -355,15 +355,15 @@ const messages: Messages = {
       disabled: "登録済み設定ファイルでフックが無効です",
       unknown: "登録済み設定ファイルでフックの有効状態は不明です",
     },
-    hookSettingScope: "フック状態は確認対象の設定ファイルのみから取得します。ホスト側の上書きとセッションへの配信は未検証です。",
+    hookSettingScope: "確認対象の設定ファイルのみの結果であり、ホスト側の上書きとセッションへの配信は未検証です。",
     hookGroupHeading: "エージェントのフック",
     hookGroupUnknown: (tools) => `未接続：${tools.join(", ")}`,
     hookNotConnected: "確認する管理対象フックがありません。接続するには同じ範囲でこのエージェントを選んで init を実行してください。",
     hookNeedsInspection: "アプリで有効状態を確認する前に、報告されたフック設定かプログラムの問題を解決してください。",
     hookGuidance: {
-      claude: "/hooks → SessionStart：ToneDialのコマンドと設定元を確認してください。無効なら有効な設定で disableAllHooks を false にします。ワークスペースの信頼と管理ポリシーも確認してください。",
+      claude: "/hooks → SessionStart：ToneDialのコマンドと設定元を確認してください。無効なら disableAllHooks を false にし、ワークスペースの信頼も確認してください。",
       codex: "/hooks → SessionStart → ToneDial：コマンドを確認し、フックを有効にしてください。求められた場合は先にプロジェクトを確認し、信頼してください。",
-      antigravity: "Antigravity IDEのエージェントパネル … → Customizations → Hooks、またはDesktop Settings → Customizations → Hooks：ToneDial PreInvocation コマンドを確認し、無効なら有効にしてください。",
+      antigravity: "Antigravity IDEのエージェントパネル … → Customizations → Hooks（またはDesktop Settings → Customizations → Hooks）：ToneDial PreInvocation コマンドを確認して有効にしてください。",
     },
     nativeMissing: (path, event) => `ToneDial ${event} フックなし · ${path}`,
     nativeStale: "ToneDialフックが古いリーダーか実行設定を使用しています。",
@@ -547,7 +547,7 @@ const messages: Messages = {
         overlap: "状態ルートがエージェントの指示と重なっています。設定前に別のディレクトリを選んでください。",
         operation: "復旧が必要な操作があります。記録IDを確認し、その操作を復旧してから移行してください。",
       };
-      return `旧形式の移行を中止しました：\n${path}\n${explanations[reason] ?? "所有権か移行条件を検証できません。ファイルを保持し、診断を確認してください。"}\n書き込みはしていません。同じ範囲を確認：\n${doctorCommand}\n元のファイルを保持してください。tonedial show --json は保存済み設定を読みます。別の TONEDIAL_HOME は一貫して使用する必要があり、旧接続が残る場合があります。`;
+      return `旧形式の移行を中止しました：\n${path}\n${explanations[reason] ?? "所有権か移行条件を検証できません。ファイルを保持し、診断を確認してください。"}\n書き込みはしていません。同じ範囲を確認：\n${doctorCommand}\n元のファイルを保持してください。tonedial show --json は保存済み設定を読みます。`;
     },
     npxUnsupported:
       "npx 経由では永続的な tonedial が残らず、スキルと代替行が実行できないため未対応です。" +

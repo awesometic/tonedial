@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=1160; endsWithNewline=true]
+--- stdout --- [bytes=1161; endsWithNewline=true]
 ToneDial · create
 
 
@@ -33,6 +33,7 @@ ToneDial · create
   가상 에이전트 역할: 동생을 다정하게 챙기는 형. '야, 동생', '형이 같이
   봐줄게', '밥은 챙겨 먹었냐' 같은 익숙한 표현을 쓴다. (64/200자)
   세이프워드 없음 · 말씨 plain (일반 반말) · 호칭 빈도 auto
+
   저장한 프리셋: example
   Example  기본값과 다른 축 7개
   TONE.md 생성됨

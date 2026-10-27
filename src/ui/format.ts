@@ -43,9 +43,20 @@ export function humanText(value: string): string {
 }
 
 /** Prose reflows; an explicitly separate path or command remains byte-for-byte copyable. */
+const COPYABLE_COMMAND = /^(?:tonedial\s+(?!(?:is\s+not|no\s+est[aá]|が|不在)\s)\S|curl\s+\S|npm\s+(?:(?:i|install|uninstall|update)(?:\s+-[a-z-]+|\s+tonedial)\b|(?:prefix|root)\s+-)|https?:\/\/\S+$)/;
+
+export function isCopyableLine(line: string): boolean {
+  const trimmed = line.trimStart();
+  if (!trimmed) return false;
+  if (COPYABLE_COMMAND.test(trimmed)) return true;
+  const candidate = trimmed.startsWith("→ ") ? trimmed.slice(2).trimStart() : trimmed;
+  if (/^\/hooks\s*→/.test(candidate)) return false;
+  return isAbsolute(candidate) || /^[A-Za-z]:[\\/]/.test(candidate) || candidate.startsWith("<ROOT>/") || candidate.startsWith("<ROOT>\\");
+}
+
 export function receiptLines(text: string, width: number): string[] {
-  return text.split("\n").flatMap((line, index) =>
-    isAbsolute(line) || (index > 0 && /^(?:tonedial|npm) /.test(line)) ? [line] : wrap(line, width));
+  return text.split("\n").flatMap((line) =>
+    isCopyableLine(line) ? [line] : wrap(line, width));
 }
 
 /** Configuration receipts never claim that a host has activated the installed hook. */

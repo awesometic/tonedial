@@ -185,32 +185,34 @@ test("inline keeps one ordered gauge list, selected semantics and actions within
   }
 });
 
-test("every localized axis hint keeps the pending dial editable at 60 × 24", async () => {
+test("every localized axis hint keeps the pending dial editable at 60 × 24 and 80 × 24", async () => {
   for (const language of LANGUAGES) {
     const copy = catalogue(language);
-    const stdin = fakeStdin();
-    const { stream, written } = fakeStdout(60, 24);
-    const result = dial({ ...AXIS_DEFAULT }, PLAIN, copy, stdin, stream, {
-      presetName: "A deliberately long profile name that must not steal rows from the dial",
-    });
-    try {
-      stdin.press("right");
-      for (const axis of AXIS_ORDER) {
-        const lines = inlineFrame(written);
-        const visible = lines.join("\n");
-        assert.ok(lines.length < 24, `${language}/${axis}: the dial needs a cursor row`);
-        assert.equal(lines.filter((line) => /[▮▯]/u.test(line)).length, AXIS_ORDER.length,
-          `${language}/${axis}: normal minimum size fell back to the small-terminal notice`);
-        assert.ok(lines.some((line) => line.startsWith("> ") && line.includes(axis)), `${language}/${axis}: selection disappeared`);
-        assert.ok(visible.includes(copy.axisHints[axis]!.owns), `${language}/${axis}: ownership hint is hidden`);
-        assert.ok(visible.includes(copy.axisHints[axis]!.low), `${language}/${axis}: low endpoint is hidden`);
-        assert.ok(visible.includes(copy.axisHints[axis]!.high), `${language}/${axis}: high endpoint is hidden`);
-        assert.ok(visible.includes(copy.cli.artifact.dialActions), `${language}/${axis}: actions are hidden`);
-        stdin.press("down");
+    for (const columns of [60, 80] as const) {
+      const stdin = fakeStdin();
+      const { stream, written } = fakeStdout(columns, 24);
+      const result = dial({ ...AXIS_DEFAULT }, PLAIN, copy, stdin, stream, {
+        presetName: "A deliberately long profile name that must not steal rows from the dial",
+      });
+      try {
+        stdin.press("right");
+        for (const axis of AXIS_ORDER) {
+          const lines = inlineFrame(written);
+          const visible = lines.join("\n");
+          assert.ok(lines.length < 24, `${language}/${columns}/${axis}: the dial needs a cursor row`);
+          assert.equal(lines.filter((line) => /[▮▯]/u.test(line)).length, AXIS_ORDER.length,
+            `${language}/${columns}/${axis}: normal size fell back to the small-terminal notice`);
+          assert.ok(lines.some((line) => line.startsWith("> ") && line.includes(axis)), `${language}/${columns}/${axis}: selection disappeared`);
+          assert.ok(visible.includes(copy.axisHints[axis]!.owns), `${language}/${columns}/${axis}: ownership hint is hidden`);
+          assert.ok(visible.includes(copy.axisHints[axis]!.low), `${language}/${columns}/${axis}: low endpoint is hidden`);
+          assert.ok(visible.includes(copy.axisHints[axis]!.high), `${language}/${columns}/${axis}: high endpoint is hidden`);
+          assert.ok(visible.includes(copy.cli.artifact.dialActions), `${language}/${columns}/${axis}: actions are hidden`);
+          stdin.press("down");
+        }
+      } finally {
+        stdin.press("q");
+        await result;
       }
-    } finally {
-      stdin.press("q");
-      await result;
     }
   }
 });

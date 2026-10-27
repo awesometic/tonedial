@@ -18,17 +18,17 @@
   "imageSha256": "0e311df88303f43151c14f46be1da14833d7a37710cdc1d81dfab1d872d35b49",
   "inputs": {
     "scripts/dial-frame.ts": "71ba709632f41d76e5d36bdcf7bdcdb864459b56b9e351622d6e54117dc1205a",
-    "src/ui/dial.ts": "89be03aa196219d24ce36b286287f1cd586e58b6417eff433f82c1c3fd70f98c",
+    "src/ui/dial.ts": "0201f9a30bc3b085e9e813e7bdd2306a2e2eb9ad6a8792ca264776800c360efd",
     "src/ui/gauge.ts": "7b4a8d69780103421c1ec691746be8defae8d1489768367e8b9e0f909f9eca1a",
     "src/ui/prompt.ts": "9e7e02e17aea1158203b9e584d90aba5213902b0c246fe281d91f3290231b50d",
     "src/ui/style.ts": "2dc560ebc69677d391ec8ab39817c3a89545d6b8b603c080a7f6d09a75450a8e",
     "src/ui/width.ts": "eb1013f8511ccfc8b9eca78e3d74433cfcf30096b7faf71ba118a5cd42163acd",
-    "src/core/i18n.ts": "115ce322091dfa33342aa16151494c84e501454f423f490ea74116e318bda313",
+    "src/core/i18n.ts": "e3e1144b1ebb302ddf9ff96f53c1330417f5e11184d1bb024f996f92dbff2990",
     "src/core/anchors.ts": "04dfe16db4000c9d03148073008be84573bf6810f0015aeb6da96b22e3e9f028",
     "src/core/presets.ts": "fca9c7e372d2ad8ee8ef2cfe8254af0438f9b37f390205924bb53ee42ccb215d",
     "scripts/dial-svg.ts": "eb81cde392f472ea8df8b251150afccfcf02e5adf936221a174ab17d965e13a4",
-    "src/core/locales/ja.ts": "c15a3794381149fa8ed6494068b8c5871246adfc058e59230c198bf24fff9b6e",
-    "src/core/locales/zh.ts": "833285b1d84119d6c892653060f64c81bf3eb6acee3a7fc29c72a37f7cdaee52",
-    "src/core/locales/es.ts": "c610926a76d41c7925acd4ce0708d02d79e135c6667d6f5cae1131672b683915"
+    "src/core/locales/ja.ts": "aab8f873de0ee6065ae2c9dd25bae39974c8eeb5ac99cd9bd56dfcdb3af14e59",
+    "src/core/locales/zh.ts": "b9f9ae512849116d217548ab5b5417d0bd0c08d55ea55c5f6853f9301d8c2935",
+    "src/core/locales/es.ts": "35be15321519a8dd45e96a20eed2cc5545ff73bde8bc3301c9d6365aae5cb1c9"
   }
 }

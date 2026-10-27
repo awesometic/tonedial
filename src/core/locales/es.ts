@@ -21,9 +21,9 @@ const messages: Messages = {
     previewTone: (name) => `Vista previa: ${name} · sin cambiar los ajustes guardados`,
     usageConsent: "¿Aceptas el consumo y los cargos e inicias la conversación?",
     usageDeclined: "Cancelado · no se abrió ninguna conversación",
-    interpretationCaveat: "El modelo puede analizar demasiado esta vista previa o explicar ToneDial extensamente. El consumo y los cargos resultantes corren por tu cuenta.",
+    interpretationCaveat: "El modelo puede usar tokens adicionales al razonar sobre la vista previa; el consumo y los cargos corren por tu cuenta.",
     protection: "Solo diálogo: el mensaje inicial prohíbe modificar archivos y se aplican las restricciones de herramientas del cliente.",
-    automationCaveat: "Se solicita al cliente omitir los hooks de tono e instrucciones automáticas existentes. Las políticas administradas siguen vigentes; esto no aísla el sistema de archivos.",
+    automationCaveat: "Pide al cliente omitir los hooks de tono e instrucciones automáticas existentes; las políticas administradas siguen vigentes y no aísla el sistema de archivos.",
     cost: "Se consumen los tokens y límites de tu cuenta; pueden aplicarse cargos.",
     history: "El proveedor puede guardar esta conversación en su historial.",
     launchFailed: (provider) => `No se pudo iniciar ${provider}. Comprueba su instalación y vuelve a intentarlo.`,
@@ -355,15 +355,15 @@ const messages: Messages = {
       disabled: "Hook desactivado en el archivo de ajustes registrado",
       unknown: "Activación del hook desconocida en el archivo registrado",
     },
-    hookSettingScope: "El estado del hook solo procede del archivo inspeccionado; no se verificaron las anulaciones del cliente ni la entrega a la sesión.",
+    hookSettingScope: "Lee solo el archivo de ajustes inspeccionado; no se verifican las anulaciones del cliente ni la entrega a la sesión.",
     hookGroupHeading: "Hooks de agentes",
     hookGroupUnknown: (tools) => `Sin conectar: ${tools.join(", ")}.`,
     hookNotConnected: "No hay un hook gestionado que inspeccionar. Para conectar, ejecuta init en el mismo ámbito y elige este agente.",
     hookNeedsInspection: "Resuelve el problema de ajustes o del programa del hook antes de comprobar su activación en la aplicación.",
     hookGuidance: {
-      claude: "/hooks → SessionStart: revisa el comando ToneDial y su origen. Si los hooks están desactivados, pon disableAllHooks en false en los ajustes efectivos; revisa también la confianza y la política administrada.",
+      claude: "/hooks → SessionStart: revisa el comando ToneDial y su origen. Si los hooks están desactivados, pon disableAllHooks en false y revisa la confianza del espacio.",
       codex: "/hooks → SessionStart → ToneDial: revisa el comando y activa el hook. Si se solicita, revisa y confía primero en el proyecto.",
-      antigravity: "Panel del agente de Antigravity IDE … → Customizations → Hooks, o Desktop Settings → Customizations → Hooks: revisa el comando ToneDial PreInvocation y actívalo si está desactivado.",
+      antigravity: "Panel del agente de Antigravity IDE … → Customizations → Hooks (o Desktop Settings → Customizations → Hooks): revisa el comando ToneDial PreInvocation y actívalo.",
     },
     nativeMissing: (path, event) => `Sin hook ${event} de ToneDial · ${path}`,
     nativeStale: "El hook de ToneDial usa un lector o una configuración de ejecución antiguos.",
@@ -547,7 +547,7 @@ const messages: Messages = {
         overlap: "El estado se solapa con las instrucciones del agente. Elige un directorio de estado separado antes de configurar.",
         operation: "Hay una operación que necesita recuperación. Revisa su ID y recupérala antes de migrar.",
       };
-      return `Migración antigua bloqueada:\n${path}\n${explanations[reason] ?? "No se pudo verificar la propiedad o la posibilidad de migrar. Conserva los archivos y revisa el diagnóstico."}\nNo se escribió nada. Inspecciona el mismo ámbito con:\n${doctorCommand}\nConserva los originales; tonedial show --json lee los ajustes guardados. Un TONEDIAL_HOME separado debe usarse de forma constante y puede dejar activas las conexiones antiguas.`;
+      return `Migración antigua bloqueada:\n${path}\n${explanations[reason] ?? "No se pudo verificar la propiedad o la posibilidad de migrar. Conserva los archivos y revisa el diagnóstico."}\nNo se escribió nada. Inspecciona el mismo ámbito con:\n${doctorCommand}\nConserva los originales; tonedial show --json lee los ajustes guardados.`;
     },
     npxUnsupported:
       "No se admite instalar con npx: no deja una copia persistente de tonedial, por lo que la habilidad " +

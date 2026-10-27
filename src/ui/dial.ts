@@ -59,14 +59,14 @@ export function dial(
     const changed = AXIS_ORDER.some((axis) => axes[axis] !== start[axis]);
     const nameBudget = width - 2 - maxCells(t.artifact.dialPreview("", changed));
     const name = truncate(readDisplayName(options.presetName, t.preset.unsaved), Math.max(2, nameBudget));
-    const body = [
+    const titleLines = [
       `  ${ui.bold(truncate(help ? t.artifact.dialHelpTitle : t.artifact.dialTitle, width - 2))}`,
       `  ${(changed ? ui.warn : ui.accent)(t.artifact.dialPreview(name, changed))}`,
-      "",
     ];
+    let body: string[];
     let footer: string[];
     if (help) {
-      body.push(...t.artifact.dialHelp.flatMap(indented));
+      body = [...titleLines, "", ...t.artifact.dialHelp.flatMap(indented)];
       footer = indented(t.artifact.dialHelpKeys);
     } else {
       const axis = AXIS_ORDER[cursor]!;
@@ -78,6 +78,7 @@ export function dial(
       ];
       const gauges = [gaugeHeader(paint, t), ...gaugeBlock(axes, paint, cursor)];
       if (width >= 119) {
+        body = [...titleLines, ""];
         const column = Math.max(...gauges.map((line) => maxCells(stripVTControlCharacters(line))));
         const beside = detail(width - column - 4);
         for (let index = 0; index < Math.max(gauges.length, beside.length); index++) {
@@ -85,13 +86,31 @@ export function dial(
           body.push(beside[index] === undefined ? line
             : `${line}${" ".repeat(column - maxCells(stripVTControlCharacters(line)) + 4)}${beside[index]}`);
         }
+        footer = [...indented(t.artifact.dialKeys), ...indented(t.artifact.dialActions)];
       } else {
-        body.push(...gauges, "", ...detail(width - 2).map((line) => `  ${line}`));
+        const detailLines = detail(width - 2).map((line) => `  ${line}`);
+        const combinedFooter = `${t.artifact.dialKeys}   ${t.artifact.dialActions}`;
+        const compactFooter = maxCells(combinedFooter) <= width - 2
+          ? [`  ${combinedFooter}`]
+          : [...indented(t.artifact.dialKeys), ...indented(t.artifact.dialActions)];
+        footer = [...indented(t.artifact.dialKeys), ...indented(t.artifact.dialActions)];
+        body = [...titleLines, "", ...gauges, "", ...detailLines];
+        if (body.length + 1 + footer.length > availableRows) {
+          footer = compactFooter;
+        }
+        if (body.length + 1 + footer.length > availableRows) {
+          body = [...titleLines, ...gauges, "", ...detailLines];
+        }
+        if (body.length + 1 + footer.length > availableRows) {
+          body = [...titleLines, ...gauges, ...detailLines];
+        }
       }
-      footer = [...indented(t.artifact.dialKeys), ...indented(t.artifact.dialActions)];
     }
 
-    const lines = [...body, "", ...footer];
+    let lines = [...body, "", ...footer];
+    if (lines.length > availableRows && !help && width < 119) {
+      lines = [...body, ...footer];
+    }
     return lines.length > availableRows ? tooSmall() : { lines, editable: !help };
   };
 

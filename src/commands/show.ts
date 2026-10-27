@@ -2,7 +2,6 @@
 // them when narrow. A nonempty artifact and recorded connections never prove native loading.
 
 import { existsSync, readFileSync } from "node:fs";
-import { isAbsolute } from "node:path";
 import { stripVTControlCharacters } from "node:util";
 
 import type { CommandResult, Ctx } from "../cli.ts";
@@ -16,7 +15,7 @@ import { inspectContextLayout } from "../core/seeds.ts";
 import { catalogue, isLanguage, type Messages } from "../core/i18n.ts";
 import { explainBlock, gaugeBlock, gaugeHeader } from "../ui/gauge.ts";
 import { planConfig } from "./compile.ts";
-import { artifactSize, combination, humanText, nextStep, riskWarnings } from "../ui/format.ts";
+import { artifactSize, combination, humanText, isCopyableLine, nextStep, riskWarnings } from "../ui/format.ts";
 import { maxCells, truncate, wrap } from "../ui/width.ts";
 import { inspectContextConsumers } from "../wiring/targets.ts";
 
@@ -128,7 +127,7 @@ export function runShow(ctx: Ctx, args: string[]): CommandResult {
     // Layout guidance can carry an absolute state-root path. Keep that copy target whole while
     // folding its prose within the screen's two-cell indent.
     for (const line of advice.split("\n").flatMap((line) =>
-      isAbsolute(line) ? [line] : wrap(line, ui.width - 2)
+      isCopyableLine(line) ? [line] : wrap(line, ui.width - 2)
     )) {
       lines.push(`  ${ui.warn(line)}`);
     }
