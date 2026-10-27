@@ -127,12 +127,12 @@ Self **I** · user address **Boss**
 <details>
 <summary>View capture details and limits</summary>
 
-| Field | Recorded value |
-|---|---|
-| Model / effort | `gpt-6.1-sol` / `high` |
-| Client | Codex CLI `0.160.0` |
-| Date | 2026-10-16 |
-| Product revision | `25b1fc5` |
+| Field            | Recorded value         |
+| ---------------- | ---------------------- |
+| Model / effort   | `gpt-6.1-sol` / `high` |
+| Client           | Codex CLI `0.160.0`    |
+| Date             | 2026-10-16             |
+| Product revision | `25b1fc5`              |
 
 Real Codex replies using all seven current presets.
 Each preset/language uses its first completed response, without polishing or selecting a preferred rerun.
