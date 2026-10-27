@@ -144,7 +144,7 @@ These are dialogue-preview examples, not hook-activation or repeated-adherence m
 [Complete input, reply and hash records](./media/readme/en/voice-examples.json)
 
 No tool calls were observed, and every sample compares disposable ToneDial state and target bytes before and after the session.
-Invocation controls do not establish managed-policy or OS-level filesystem isolation. Completed responses were never rerun to obtain different wording.
+Invocation controls do not establish managed-policy or OS-level filesystem isolation.
 
 </details>
 

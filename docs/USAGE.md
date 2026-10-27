@@ -56,16 +56,16 @@ tonedial save "My Jarvis" --slug my-jarvis
 tonedial save                        # update the selected user profile
 ```
 
-The guided form collects name, slug, self/user address, user context, agent role, register and safeword.
+The guided form collects name, slug, self/user address, user context, agent role, register, `address_frequency` and safeword.
 It starts with current settings, filling missing address/description values with editable neutral defaults.
-Enter keeps a displayed value; `""` clears an optional field, including suggested addresses during `init`.
+Enter keeps a displayed value; `""` clears an optional field in `create` and `persona`, or suggested addresses during `init` (`init`'s safeword prompt starts empty, so Enter leaves it unset).
 Each role description allows **200 Unicode code points**, including spaces and punctuation.
 Invalid fields retry without discarding earlier answers.
 
 After the dial, review the file changes, profile name, addresses and descriptions, then approve once to save and apply.
 Esc in the dial or declining approval leaves settings and the library unchanged.
-`create` refuses an existing slug; `save` updates user profiles.
-Bare `save` keeps the selected user profile's name and slug; a bundled or unset selection needs a new display name.
+`create` takes a single display-name argument followed by optional `key=value` assignments, and refuses an existing slug.
+`save` joins positional words as the display name and updates custom profiles; bare `save` or `save --slug <slug>` updates an existing custom profile, while a bundled or unset selection needs a new display name.
 Use `--slug` to choose an identifier separately from the name, including for Korean names.
 
 For scripted creation:
@@ -96,7 +96,8 @@ tonedial save                         # also update the selected user profile
 
 `set persona.agent="..."` adds a role to the current tone, preserves axes and recompiles immediately.
 `persona` sets both descriptions together, agent first and user second, with at most 200 Unicode code points each.
-In the guided form, Enter keeps the current value and `""` clears it; invalid descriptions are retried before either role is applied.
+In the guided `persona` form, Enter keeps the current value and `""` clears it; invalid descriptions are retried before either role is applied.
+To clear saved addresses, run `tonedial address "" ""` or `tonedial set persona.self_ref= persona.user_ref=` (in interactive `tonedial address`, Enter keeps the current value).
 `show` displays the current descriptions and their counts; `show <slug>` displays the saved profile's descriptions.
 Use `set persona.agent=...` or `set persona.user=...` to change just one.
 
@@ -110,7 +111,7 @@ Every mode requests at most one user address per reply.
 Self-reference is used only when needed, and required names in requested content stay literal.
 Code, quotations, translations and strict JSON-only/code-only output never receive an added address.
 Honorific endings, formality, warmth and role idioms remain independent.
-These are instructions to the model, not guaranteed probabilities or a conversation counter.
+These modes set prompt instructions rather than a conversation counter.
 
 Profiles save and restore the frequency with the other tone settings.
 `reset`, old axis-only presets and changing an address term preserve the current frequency.
@@ -164,8 +165,7 @@ tonedial set "persona.note="
 
 Long descriptions are rejected before writing, never truncated; literal `unspecified` remains text.
 Persona and safeword begin unset before profile defaults are applied.
-Axes take precedence over unanchored persona text, then model defaults.
-The output-style header requests this scope but does not filter role meaning or guarantee it stays out of answer content.
+Axes take precedence over unanchored persona text, which is framed as output style rather than verified facts or answer filters.
 Explicit config JSON and review diffs can contain the descriptions; native test plans omit the injected prompt.
 
 `speech_level` chooses address forms; `formality` changes wording and distance within them.
@@ -186,7 +186,6 @@ tonedial get speech_level
 It does not add swearing, stronger criticism or role idioms by itself.
 The register request has no effect where a language lacks the relevant honorific distinction.
 Familiar polite, formal plain and affectionate swearing remain valid: warmth and profanity are independent.
-These are prompt requests, not measured adherence.
 Profiles containing `rough` require a CLI that supports that value; older versions reject them.
 
 ### Make the character louder
@@ -202,7 +201,6 @@ Profiles containing `rough` require a CLI that supports that value; older versio
 Courtly phrases such as “아뢰옵기 황송하오나” and underworld metaphors such as “이 함수, 장부에서 지울까요?” stay available.
 There is no role-word blacklist or silent substitution; role language can sound rude or violent.
 `profanity` grades swearing and `bravado` grades effort claims independently.
-Actual frequency and naturalness require model measurements.
 
 ### Move or back up a profile
 
@@ -252,7 +250,6 @@ Compilation is local and deterministic, with no model call.
 | behaviour | `bravado` | **1** | none · one playful effort overstatement · one credit claim and one boast · two boasts/claims and one dramatic effort remark · credit and dramatized effort in every answer without replacing the persona |
 
 The four bold defaults have a natural floor of 1; setting everything to 3 activates them.
-Endpoints describe requests, not measured model behavior.
 
 ```bash
 tonedial show --explain
@@ -315,9 +312,8 @@ traits and realistic or credible threats remain excluded at every level.
 After approval, strong non-protected profanity, consensual user-directed insulting or roasting
 roleplay, fictional violent imagery and theatrical noncredible menace remain available. The
 profanity axis changes coarseness without inventing insults or criticism; it preserves those
-selected by critique or persona. ToneDial compiles this as a conversation request. It stores
-and authenticates no session approval and cannot prove that approval occurred or that the
-model followed it.
+selected by critique or persona. ToneDial compiles this as a conversation request and stores no
+session approval state.
 
 <details>
 <summary>Artifact character count</summary>
@@ -334,7 +330,6 @@ Representative sizes with other persona fields and safeword unset:
 | Default axes, both descriptions at 200 | 2,316 |
 | All axes at 5, both descriptions at 200 | 3,034 |
 
-These are generated-size observations, not model limits or adherence evidence.
 JSON size results retain `chars` and omit retired `target`, `cap`, `overTarget` and `overCap` fields.
 Mutation receipts show generated/current status; `--verbose` adds the numeric size.
 `show` and `compile` include it by default; diagnosis uses `doctor --verbose` or `doctor --json`.
@@ -432,7 +427,9 @@ Tone changes regenerate the artifact without rewriting the guide.
 Setup merges owned entries and preserves unrelated handlers; no home instruction-file import is added.
 Antigravity's skill link is `.agents/skills/tonedial` in a project or `~/.gemini/config/skills/tonedial` globally.
 Its `~/.gemini/antigravity-ide/` and `~/.gemini/antigravity/` app-data directories are not hook locations.
-`init --commands` adds Claude's optional `/tone` command and requires Claude in the selection.
+`init --commands` adds Claude's optional `/tone` command and requires Claude in the selection; `init --migrate-legacy` imports legacy tone state.
+When `codex` is connected interactively and installed on `PATH`, `init` offers to open Codex after the receipt so you can review `/hooks`.
+`wire` accepts a positional tool name or `--tools <list>` (or prompts interactively when neither is given).
 
 ### Review host enablement
 
@@ -456,7 +453,7 @@ Other registered connections are grouped by scope/directory and shared file stat
 Missing files mean some or all recorded files were absent, not that no connection was registered.
 These are presence checks; `--fix` leaves other scopes alone.
 Use the displayed read-only `doctor` command to inspect them, or `eject` if no longer needed.
-Eject disconnects every agent in that displayed scope, including those with present files; use scoped `unwire <tool>` for one.
+Eject disconnects every agent in that displayed scope, including those with present files; use scoped `unwire <tool>` for one (or bare `unwire` in a scope to disconnect all tools there).
 Unimplemented targets do not appear as connections or hook observations.
 
 JSON `hookSettings` records each tool's `state` (`enabled`, `disabled`, `unknown`), `basis` and inspected `path`.
@@ -486,8 +483,6 @@ That continuation can add usage/history; it cannot silently replace the first di
 Antigravity refreshes at `PreInvocation`; no verified final response body exists on that route, so it has no `Stop` feedback.
 Checks are length/presentation heuristics, not semantic character validation.
 Missing/slow input, malformed metadata, recognized data/code and some ambiguous data-like prose skip feedback.
-Safeword release and required formats are preserved as instructions, not guaranteed model behavior.
-Wiring and a compiled artifact prove neither activation nor adherence.
 
 ## Changing an open conversation
 
@@ -600,7 +595,7 @@ The file-change preview still requires separate approval after selection.
 | A missing/invalid user profile | Add `--restore-preset <slug>` with the operation source; retain its damaged preimage |
 | Other values | Disclosed defaults |
 
-Review native attention separately; explicitly select tools when adding/reconciling a route.
+Review native attention separately; explicitly select tools (`--tools <list>`) when adding or reconciling a route during `doctor --fix`.
 Keep rollback IDs and originals.
 If both native and app phases changed files, roll back **native first, then app**, using each reported ID:
 
@@ -646,18 +641,18 @@ Successful tone mutations recompile in the same action.
 | `reset [axis]` | Restore one/all axes; keep other settings |
 | `show [slug]` | Inspect current/saved tone; `--explain` adds settings/risks |
 | `use <slug>` | Apply a profile; `--project <dir>` also exports the artifact |
-| `save [display name]` | Save current profile; bare updates the selected user profile |
-| `create [display name] [key=value …]` | Create/apply after approval; `--slug` selects the identifier |
+| `save [display name] [--slug <slug>]` | Save current profile; bare or `--slug` updates a custom profile |
+| `create [display name] [key=value …]` | Create/apply after approval; accepts `--slug`, `--auto`, `--dry-run` |
 | `list` | List profiles; `--verbose` adds axis values |
 | `export <slug>` / `import <file-or-https-url>` | Transfer complete profiles |
-| `edit [preset <slug>]` | Open config/profile in the editor; `--dry-run` previews |
-| `init` | Initialize/rebuild app files; optionally connect tools |
-| `wire [tool]` / `unwire [tool]` | Connect/disconnect in the selected scope |
-| `doctor` | Diagnose; `--fix` rebuilds; `--quarantine-operation <id>` preserves an unreadable record; `--rollback <id>` restores an operation |
-| `eject` | Disconnect a scope; retain shared state |
+| `edit [preset <slug>]` | Open config/custom profile in the editor; `--dry-run` previews |
+| `init` | Initialize/rebuild app files; accepts scope flags, `--tools`, `--lang`, `--commands`, `--migrate-legacy`, `--auto`, `--dry-run` |
+| `wire [tool \| --tools <list>]` / `unwire [tool]` | Connect/disconnect in the selected scope (`--auto`, `--dry-run`) |
+| `doctor` | Diagnose; `--fix` rebuilds (`--tools`, `--from-preset`, `--from-operation [--restore-preset]`, `--quarantine-operation`, `--rollback`) |
+| `eject` | Disconnect a scope; retain shared state (`--auto`, `--dry-run`) |
 | `compile` | Repair missing/stale `TONE.md`; `--check` inspects without writes |
-| `test [claude\|codex]` | Fresh preview; `--preset` selects a profile; JSON/dry-run launch nothing |
-| `update` | Update the running npm or curl installation after approval |
+| `test [claude\|codex]` | Fresh preview; accepts `--preset`, `--project`, `--accept-usage`, `--dry-run` |
+| `update` | Update the running npm or curl installation (`--global`, `--auto`, `--dry-run`) |
 
 Ordinary changes compile automatically; `compile --check --json` also supplies reload paths.
 
@@ -673,9 +668,10 @@ Ordinary changes compile automatically; `compile --check --json` also supplies r
 | Compile check | Human: current/stale/missing; JSON: character count and absolute `agentsPath`/`path`, not existence/delivery proof |
 | Explicit editor | `edit --json` still launches the requested editor; live output uses stderr |
 
-`edit` refuses to apply config if the wiring ownership graph changes or cannot be proved unchanged, including invalid JSON.
-Live config/artifact/native files remain intact; an extant edited copy is privately retained at its reported temp path.
-Change ownership through scoped disconnect or approved setup/recovery.
+`edit` opens `config.json`; `edit preset <slug>` opens a custom or legacy user profile (bundled profiles are refused).
+For `config.json`, `edit` checks wiring ownership before writing: if the staging file was deleted, is not a valid JSON object, or changes `wiring` ownership, `edit` refuses before modifying live files and retains any remaining staging copy at its reported temp path (change wiring through `wire`, `unwire`, `eject`, `init` or `doctor --fix`).
+Concurrent on-disk changes also abort before writing and retain the staging copy when present.
+Once `config.json` ownership is verified—or during `edit preset <slug>`—validation failures (invalid settings, malformed preset JSON, or changing a preset's internal `"slug"` field) and staging-file deletion in `edit preset <slug>` still record the operation and commit the raw edit to the target path before reporting the error, so you can re-run `edit` or recover with `doctor --fix`.
 
 ## Try a fresh conversation
 
@@ -715,11 +711,9 @@ Managed policy and native support remain independent: **this is not whole-folder
 Native exit status applies; unsupported clients must not retry with weaker restrictions.
 See the [Claude CLI reference](https://code.claude.com/docs/en/cli-reference) and [Codex configuration reference](https://learn.chatgpt.com/docs/config-file/config-reference).
 
-Complete persona text and `note` reach the client/model and may enter history or process arguments under OS access policy.
-Keep credentials/private material out of preview persona fields.
-JSON/dry-run prompt nothing, launch/probe no provider and omit the injected prompt.
-They still need a named executable on `PATH`, an existing target and readable config; name the provider when both are installed.
-This initial-prompt preview proves neither native activation nor model adherence.
+Complete persona text and `note` reach the client/model and may enter history or process arguments under OS access policy; keep credentials and private material out of preview persona fields.
+JSON and dry-run prompt nothing, launch or probe no provider and omit the injected prompt, though they still require a named executable on `PATH`, an existing target and readable config (name the provider when both are installed).
+This initial-prompt preview does not establish native hook activation or model adherence.
 
 ## Limits
 
@@ -745,8 +739,7 @@ npm install --global tonedial
 tonedial update
 ```
 
-`update --dry-run` previews the update without replacing the package.
-Use `--auto` to approve an unattended update; JSON output never prompts.
+`update --dry-run` previews the update without replacing the package; `--global` is accepted explicitly and `--auto` approves an unattended update (JSON output never prompts).
 For npm installations, ToneDial runs npm only after checking that its global target matches the running copy.
 A different prefix or linked development copy is reported without updating another installation.
 The receipt reports the installed version, not a separate registry freshness check.
@@ -764,6 +757,7 @@ For source builds, see [CONTRIBUTING.md](../CONTRIBUTING.md#build-and-run-from-s
 curl -fsSL https://raw.githubusercontent.com/awesometic/tonedial/main/install.sh | sh
 ```
 
+Requires `curl` and `tar` on `PATH` (in addition to `node`).
 The same `tonedial update` command also updates curl installations.
 For local installer verification before publication, use the [isolated candidate procedure](./TESTING.md#isolated-candidate).
 

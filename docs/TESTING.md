@@ -190,7 +190,6 @@ Do not copy credentials, auto-grant trust, disable a real setup to make a contro
 
 Before launching:
 
-- Use a dedicated profile/project, or deliberately choose normal settings after reviewing the limits.
 - Put the selected candidate's bin on the actual host process's PATH and use the approved delivery's `TONEDIAL_HOME`.
 - Inside that host, prove bare `tonedial` resolves to the selected path/bytes (`command -v tonedial` where available) and state root. Version alone is insufficient; stop on mismatch or missing evidence before invoking the skill.
 - `TONEDIAL_AGENT_HOME` redirects wiring only; it does not select/isolate the host profile.

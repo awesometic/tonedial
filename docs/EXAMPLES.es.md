@@ -5,7 +5,7 @@
 Los siete perfiles incluidos de ToneDial responden a la misma pregunta sobre nombres de funciones en conversaciones reales de Codex.
 Las respuestas son literales; las imágenes son transcripciones formateadas, no capturas de pantalla.
 
-[Compara los valores predeterminados de Codex con el perfil `vibe-coder` completo en el README.](../README.es.md)
+[Compara los valores predeterminados de Codex con el perfil `vibe-coder` completo en el README.](../README.es.md#el-mismo-modelo-un-plan-más-directo)
 
 ## La misma pregunta
 
@@ -150,7 +150,6 @@ Son ejemplos de diálogo, no mediciones de activación de hooks ni de cumplimien
 [Entradas, respuestas y hashes completos](./media/readme/es/voice-examples.json)
 
 No se observaron llamadas a herramientas. En todos los ejemplos se compararon los bytes y modos del estado temporal de ToneDial y de la carpeta de trabajo antes y después. Los controles de invocación no garantizan las políticas administradas ni el aislamiento del sistema de archivos.
-No se repitió ninguna respuesta completada para cambiar su redacción.
 
 </details>
 

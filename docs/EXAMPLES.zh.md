@@ -5,7 +5,7 @@
 ToneDial 的 7 个内置配置回答了同一个函数命名问题，内容来自实际 Codex 对话。
 回复保留原文；图片是整理后的对话记录，不是截图。
 
-[在 README 中比较 Codex 默认设置和完整的 `vibe-coder` 配置。](../README.zh.md)
+[在 README 中比较 Codex 默认设置和完整的 `vibe-coder` 配置。](../README.zh.md#同一模型更精简的计划)
 
 ## 相同的问题
 
@@ -163,7 +163,6 @@ Heavenly Demon 的启动回复没有先列出并请求批准强烈语气；预�
 [完整输入、回复及哈希记录](./media/readme/zh/voice-examples.json)
 
 未观察到工具调用；每个示例都比较了临时 ToneDial 状态和目标目录文件在执行前后的字节及模式。调用时请求的限制不保证托管策略或操作系统级文件系统隔离。
-没有为了改变措辞而重新运行已完成的回复。
 
 </details>
 

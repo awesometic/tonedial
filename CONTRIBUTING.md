@@ -103,9 +103,7 @@ Use the [connection reference](./docs/USAGE.md#connecting-an-agent) alongside th
 4. **Preservation:** cover trust/enablement, discovery, both scopes, foreign hooks, removal and recovery in disposable paths. Run applicable `extension-points`, `native-routes` and `wiring` tests, including modified/foreign negative cases.
 5. **Actual host:** use an [explicitly approved trial](./docs/TESTING.md#actual-host-and-one-day-trial). Record host/version, CLI/IDE/Desktop surface, scope, event, trust and fresh/resumed/compacted-session observations in the PR and integration status. Without a real session, report the activation gap.
 
-Actual-host sessions and personal/global config changes require explicit authorization.
-Keep authentication in place; never copy credentials or disconnect a user's integration to make a control.
-Preview prompts/tool flags do not establish OS isolation.
+Actual-host sessions and personal/global config changes require explicit authorization; see [TESTING.md](./docs/TESTING.md#actual-host-and-one-day-trial) for trial, credential and isolation rules.
 
 ## Presets and copy
 
