@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=646; endsWithNewline=true]
+--- stdout --- [bytes=608; endsWithNewline=true]
 ToneDial · eject
 
   Connection scope: project
@@ -27,7 +27,7 @@ ToneDial · eject
 
   Full diff: --verbose
 
-  Claude Code, Antigravity IDE/Desktop, Codex CLI connections disconnected
+  Codex CLI connections disconnected
   Presets and settings kept.
   <ROOT>/state
 --- stderr --- [bytes=0; endsWithNewline=false]

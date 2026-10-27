@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=683; endsWithNewline=true]
+--- stdout --- [bytes=645; endsWithNewline=true]
 ToneDial · eject
 
   연결 범위: 프로젝트
@@ -27,7 +27,7 @@ ToneDial · eject
 
   전체 변경 내용: --verbose
 
-  Claude Code, Antigravity IDE/Desktop, Codex CLI 연결을 해제했습니다
+  Codex CLI 연결을 해제했습니다
   프리셋과 설정은 유지했습니다.
   <ROOT>/state
 --- stderr --- [bytes=0; endsWithNewline=false]

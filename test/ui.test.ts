@@ -319,6 +319,45 @@ test("an unreadable import keeps its path copyable and reflows the diagnostic", 
   }
 });
 
+test("eject and unwire receipts name only the connected agents that were disconnected", async () => {
+  mkdirSync(join(home, "project"));
+  assert.equal(await cli("init", "--here", "--tools", "codex", "--auto"), 0, err.join(""));
+  out = [];
+  assert.equal(await cli("eject", "--here", "--auto"), 0, err.join(""));
+  const receipt = out.join("");
+  assert.match(receipt, /Codex CLI connections disconnected/);
+  assert.doesNotMatch(receipt, /Claude Code.*connections disconnected/);
+  assert.doesNotMatch(receipt, /Antigravity.*connections disconnected/);
+});
+
+test("empty disconnect reports already disconnected when only config formatting changes", async () => {
+  mkdirSync(join(home, "project"));
+  await initializeState();
+  const path = join(home, "state", "config.json");
+  const original = JSON.parse(readFileSync(path, "utf8"));
+  assert.deepEqual(original.wiring.registrations, {});
+  for (const command of ["unwire", "eject"]) {
+    for (const json of [false, true]) {
+      writeFileSync(path, JSON.stringify(original));
+      out = [];
+      assert.equal(await cli(command, "--here", "--auto", ...(json ? ["--json"] : [])), 0, err.join(""));
+      assert.deepEqual(JSON.parse(readFileSync(path, "utf8")), original);
+      assert.notEqual(readFileSync(path, "utf8"), JSON.stringify(original));
+      if (json) {
+        const result = JSON.parse(out.join(""));
+        assert.equal(result.applied, true);
+        assert.equal(result.reason, "written");
+        assert.deepEqual(result.unlinked, []);
+        assert.deepEqual(result.diff.map((change: { path: string }) => change.path), [path]);
+      } else {
+        const receipt = out.join("").replace(/\s+/g, " ");
+        assert.match(receipt, /already disconnected/);
+        assert.doesNotMatch(receipt, /connections disconnected/);
+      }
+    }
+  }
+});
+
 test("default show keeps all axes before complete role settings within 80 columns", async () => {
   await initializeState();
   await cli("use", "bratty-kid");

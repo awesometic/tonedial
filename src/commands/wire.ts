@@ -325,7 +325,10 @@ export async function runUnwire(ctx: Ctx, args: string[]): Promise<CommandResult
   // refusal names the file. A partial disconnect would leave an install nobody can describe, and
   // the escape is already per-tool: `unwire <tool>` clears the ones that are still recognisable
   // and leaves the damaged one for a person to look at.
+  const disconnected: AgentTool[] = [];
   for (const tool of tools) {
+    const beforeActions = operationActions.length;
+    const beforeChanges = changes.length;
     const registrationId = registrationKey(tool, scope, destination);
     const registration = isConfigV2(config) ? config.wiring.registrations[registrationId] : undefined;
     const resources = registration && isConfigV2(config)
@@ -401,6 +404,10 @@ export async function runUnwire(ctx: Ctx, args: string[]): Promise<CommandResult
         planChange(path, (before) => removeDelivery(tool, before, path), ctx.t), undefined,
       ));
     }
+    const touched = Boolean(registration && isConfigV2(config))
+      || operationActions.length > beforeActions
+      || changes.slice(beforeChanges).some((change) => change.before !== change.after);
+    if (touched) disconnected.push(tool);
   }
   // Disconnect is not initialization. Keep a missing/legacy config as read-only evidence;
   // otherwise an empty eject creates a config-only layout that subsequent init must refuse.
@@ -423,7 +430,7 @@ export async function runUnwire(ctx: Ctx, args: string[]): Promise<CommandResult
   });
 
   return {
-    lines: [...result.lines, ...(result.lines.length ? [""] : []), ...summary(ctx, result.reason, tools, "disconnect")],
+    lines: [...result.lines, ...(result.lines.length ? [""] : []), ...summary(ctx, result.reason === "written" && !disconnected.length ? "nothing" : result.reason, disconnected.length ? disconnected : tools, "disconnect")],
     json: {
       unlinked: result.applied ? unlinked : [],
       root: ctx.agent.root,
