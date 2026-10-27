@@ -669,7 +669,12 @@ Ordinary changes compile automatically; `compile --check --json` also supplies r
 | Explicit editor | `edit --json` still launches the requested editor; live output uses stderr |
 
 `edit` opens `config.json`; `edit preset <slug>` opens a custom or legacy user profile (bundled profiles are refused).
-For `config.json`, `edit` checks wiring ownership before writing: if the staging file was deleted, is not a valid JSON object, or changes `wiring` ownership, `edit` refuses before modifying live files and retains any remaining staging copy at its reported temp path (change wiring through `wire`, `unwire`, `eject`, `init` or `doctor --fix`).
+For `config.json`, `edit` checks wiring ownership before writing.
+Staging content that is not a valid JSON object or that changes `wiring` ownership is refused before modifying live files,
+and any remaining staging copy is retained at its reported temp path
+(change wiring through `wire`, `unwire`, `eject`, `init` or `doctor --fix`).
+Deleting the staging file is refused when it would change ownership; with empty ownership,
+the deletion is committed to the live config as a raw edit before an error is reported.
 Concurrent on-disk changes also abort before writing and retain the staging copy when present.
 Once `config.json` ownership is verified—or during `edit preset <slug>`—validation failures (invalid settings, malformed preset JSON, or changing a preset's internal `"slug"` field) and staging-file deletion in `edit preset <slug>` still record the operation and commit the raw edit to the target path before reporting the error, so you can re-run `edit` or recover with `doctor --fix`.
 
