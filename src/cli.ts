@@ -109,8 +109,8 @@ export type CommandResult = {
   /**
    * Something to do once the receipt is on screen, and only then.
    *
-   * It exists for a handoff: `init` can offer to open Codex so a hook it just wrote can be
-   * trusted there, and Codex takes the terminal the moment it starts. Anything still unprinted
+   * It exists for a handoff: `init` can offer to open Codex or Claude Code so a hook it just wrote
+   * can be trusted there, and the host takes the terminal the moment it starts. Anything still unprinted
    * would be lost behind it, and a setup that half-printed and then gave the screen away is not
    * a finished setup. It never runs under `--json`, where the payload is the whole answer and
    * nobody is watching a terminal.

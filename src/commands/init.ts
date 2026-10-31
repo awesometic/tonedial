@@ -1,7 +1,7 @@
 // Initialize or rebuild application state; native setup requires selected tools.
 
 import { createInterface } from "node:readline/promises";
-import { dirname, join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { lstatSync, readdirSync } from "node:fs";
 
 import type { CommandResult, Ctx } from "../cli.ts";
@@ -232,7 +232,7 @@ export async function runInit(entry: Ctx, _args: string[]): Promise<CommandResul
 
   // Spread rather than assigned: `exactOptionalPropertyTypes` draws a line between "no handoff"
   // and "a handoff that is undefined", and the first one is what this means.
-  const after = codexHandoff(ctx, applied, tools.includes("codex"));
+  const after = hostHandoff(ctx, applied, tools);
   return {
     lines,
     ...(after ? { after } : {}),
@@ -320,9 +320,7 @@ async function rebuildExisting(entry: Ctx): Promise<CommandResult> {
   if (ctx.flags.commands && !tools.includes("claude")) throw new ConfigError(ctx.t.errors.commandsNeedClaude);
   const scoped: Ctx = { ...ctx, flags: { ...ctx.flags, tools: tools.length ? tools.join(",") : "none" } };
   const native = await runRebuildNative(scoped, app.legacy);
-  const codexConfigured = Array.isArray(native.json.tools) && native.json.tools.some(route =>
-    typeof route === "object" && route !== null && route.tool === "codex" && typeof route.path === "string");
-  const after = codexHandoff(scoped, native.json.applied === true || native.json.reason === "nothing", codexConfigured);
+  const after = hostHandoff(scoped, native.json.applied === true || native.json.reason === "nothing", tools);
   return {
     lines: [...(ctx.canPrompt ? [] : introduction), ...resultHeading, ...app.lines, ...native.lines,
       ...recoveryRollbackLines(ctx.t, app.json.operationId, native.json.operationId)],
@@ -341,30 +339,42 @@ async function rebuildExisting(entry: Ctx): Promise<CommandResult> {
   };
 }
 
-/** Offer a post-receipt Codex handoff; the host owns hook-trust review and approval. */
-function codexHandoff(
+/** Offer a post-receipt host handoff; the host owns hook-trust review and approval. */
+function hostHandoff(
   ctx: Ctx,
   applied: boolean,
-  codexConfigured: boolean,
+  configured: readonly AgentTool[],
 ): (() => Promise<void>) | undefined {
-  if (!applied || !codexConfigured) return undefined;
+  if (!applied) return undefined;
   // `--auto` is the unattended path and `--dry-run` wrote nothing; neither has a question to ask.
   if (!ctx.canPrompt || ctx.flags.auto || ctx.flags.dryRun) return undefined;
-  const codex = onPath("codex", ctx.env);
-  if (codex === null) return undefined;
+  // Codex keeps its own hook-trust record. Claude Code only asks each folder for workspace trust,
+  // so a global Claude route has no single folder to open. Codex comes first when both are
+  // installed; a connected host that is not installed gives way to the next one.
+  const hosts = (["codex", "claude"] as const).filter((host) =>
+    configured.includes(host) && (host === "codex" || !ctx.agent.live));
+  const tool = hosts.find((host) => onPath(host, ctx.env) !== null);
+  if (tool === undefined) return undefined;
+  // Absolute before the Claude spawn changes directory, so a relative PATH entry cannot pick a
+  // program from inside the project instead of the one checked here.
+  const program = resolve(onPath(tool, ctx.env)!);
+  const [steps, question] = tool === "codex"
+    ? [ctx.t.wiring.codexOpenSteps, ctx.t.wiring.codexOpen]
+    : [ctx.t.wiring.claudeOpenSteps, ctx.t.wiring.claudeOpen];
   // A recorded hash cannot verify the current definition's trust. Let the host own review.
   return async () => {
     // What is about to happen, before it happens. A prompt that only says "open Codex?" leaves
     // the person guessing whether their shell is coming back and what they are meant to do once
     // they are there — and the answer to the first one is what makes saying no safe.
-    for (const folded of wrap(ctx.t.wiring.codexOpenSteps, ctx.ui.width - 2)) {
+    for (const folded of wrap(steps, ctx.ui.width - 2)) {
       process.stdout.write(`  ${folded}\n`);
     }
-    if ((await confirm(`  ${ctx.t.wiring.codexOpen}`)) !== "yes") return;
+    if ((await confirm(`  ${question}`)) !== "yes") return;
     // Inherited stdio: this is a handoff, not a subprocess whose output this tool mediates.
-    // Codex owns the terminal until the user leaves it, and its exit status is its own — the
-    // setup it was opened to finish is already on disk and already reported.
-    spawnSync(codex, [], { stdio: "inherit" });
+    // The host owns the terminal until the user leaves it, and its exit status is its own — the
+    // setup it was opened to finish is already on disk and already reported. Claude Code asks
+    // for trust in the folder it starts in, so it starts in the wired project.
+    spawnSync(program, [], { stdio: "inherit", ...(tool === "claude" ? { cwd: ctx.agent.root } : {}) });
   };
 }
 

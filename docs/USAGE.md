@@ -429,6 +429,8 @@ Antigravity's skill link is `.agents/skills/tonedial` in a project or `~/.gemini
 Its `~/.gemini/antigravity-ide/` and `~/.gemini/antigravity/` app-data directories are not hook locations.
 `init --commands` adds Claude's optional `/tone` command and requires Claude in the selection; `init --migrate-legacy` imports legacy tone state.
 When `codex` is connected interactively and installed on `PATH`, `init` offers to open Codex after the receipt so you can review `/hooks`.
+When `claude` is connected to a project interactively and installed on `PATH`, `init` offers to open Claude Code there so you can answer its workspace trust prompt.
+When both are connected, the first installed of Codex and Claude Code is offered.
 `wire` accepts a positional tool name or `--tools <list>` (or prompts interactively when neither is given).
 
 ### Review host enablement
@@ -436,6 +438,7 @@ When `codex` is connected interactively and installed on `PATH`, `init` offers t
 | Host | Where to review |
 |---|---|
 | Codex | `/hooks` → `SessionStart` → ToneDial; review the command and enable the hook |
+| Claude Code | Interactive sessions run hooks only in trusted folders; `/hooks` → `SessionStart` lists the ToneDial command and its settings source |
 | Antigravity IDE | Agent panel `… → Customizations → Hooks` |
 | Antigravity Desktop | `Settings → Customizations → Hooks` |
 
@@ -708,6 +711,8 @@ not the isolated effect of `verbosity=1`.
 
 Compilation happens in memory and leaves ToneDial state unchanged.
 This explicit preview uses the chosen tone even while persistent hook delivery is off.
+The preview sends the tone once, in the opening prompt, without hook refresh or `Stop` feedback.
+Judge it by the first few replies; longer conversations can drift.
 The opening prompt requests dialogue only and no file changes throughout that folder.
 Claude disables built-in tools and denies MCP tools; Codex requests a read-only sandbox without approval escalation.
 Claude safe mode and Codex invocation-only hook/doc overrides request exclusion of previous connected ToneDial context.

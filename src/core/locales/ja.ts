@@ -24,6 +24,7 @@ const messages: Messages = {
     interpretationCaveat: "プレビューの解釈で追加のトークンを消費する場合があり、使用量と料金は利用者の負担です。",
     protection: "会話のみです。開始プロンプトはファイル変更を禁止し、クライアント本来のツール制限も適用されます。",
     automationCaveat: "既存の口調フックや自動指示をスキップするようクライアントに求めますが、管理ポリシーは適用され、ファイルシステムの隔離ではありません。",
+    driftCaveat: "口調は開始時に一度だけ送られます。プレビューは最初の数回の返答で判断してください。会話が長くなると口調がずれることがあります。",
     cost: "アカウントのトークンと利用枠を使用します。料金が発生する場合があります。",
     history: "プロバイダー側の履歴に会話が保存される場合があります。",
     launchFailed: (provider) => `${provider} を起動できません。インストール状況を確認して再試行してください。`,
@@ -248,6 +249,9 @@ const messages: Messages = {
     codexOpen: "今すぐCodexを開きますか？",
     codexOpenSteps:
       "このターミナルでCodexが開きます。上の手順でフックを有効にし、終了するとここに戻ります。",
+    claudeTrust: (global) => `${global ? "" : "先にClaude Codeでこのプロジェクトを信頼してください。\n"}Claude Code: 対話セッションは信頼したフォルダーでのみフックを実行します。/hooks → SessionStartでToneDialのコマンドを確認してください。`,
+    claudeOpen: "今すぐこのプロジェクトでClaude Codeを開きますか？",
+    claudeOpenSteps: "このターミナルでClaude Codeが開きます。このフォルダーを信頼するか聞かれたらそこで答え、終了するとここに戻ります。",
     scopeHere: "接続範囲：プロジェクト",
     alreadyMatch: (tools) => `${tools}: 既に一致、変更なし`,
     alreadyDisconnected: (tools) => `${tools}: 接続解除済み、変更なし`,

@@ -211,6 +211,7 @@ tonedial test codex --preset my-sword
 ```
 
 - Las vistas previas usan tu cuenta del proveedor; se aplican el consumo, los cargos y el historial habituales.
+- La vista previa envía el tono una sola vez, al inicio. Júzgala por sus primeras respuestas; en conversaciones largas, el tono puede desviarse.
 - El tono cambia el estilo. Los permisos y las aprobaciones del cliente siguen vigentes.
 - El comportamiento varía según el modelo. Es para divertirse; no se recomienda en producción.
 

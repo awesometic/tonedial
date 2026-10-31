@@ -364,6 +364,8 @@ charges for this launch. A general request to try a tone is not consent to skip 
 Use \`--dry-run\` or \`--json\` to inspect a plan without launching the provider or running a
 capability/version probe. Executable availability may be inspected through the CLI's path check.
 JSON omits the injected private tone and argument vector; it is a plan, not an executed chat.
+The preview sends the tone once, without hook refresh or \`Stop\` feedback. Tell the user to judge it
+by the first few replies; longer conversations can drift.
 
 The opening prompt forbids changes anywhere in the target folder and requests dialogue only.
 Claude requests safe mode to exclude ordinary hooks, memory, skills and output styles while

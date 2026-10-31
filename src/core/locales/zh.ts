@@ -24,6 +24,7 @@ const messages: Messages = {
     interpretationCaveat: "模型解析此预览可能消耗额外令牌；产生的用量和费用由你承担。",
     protection: "仅限对话；开场提示禁止修改文件，同时适用客户端原有的工具限制。",
     automationCaveat: "本次预览会请求客户端跳过现有语气钩子和自动指令；托管策略仍然生效，且这不代表文件系统隔离。",
+    driftCaveat: "语气只在开始时发送一次。请以前几条回复判断预览效果；对话变长后语气可能会偏离。",
     cost: "将消耗账号的令牌和配额，可能产生费用。",
     history: "服务商可能将此对话保存在自己的历史记录中。",
     launchFailed: (provider) => `无法启动 ${provider}。请检查安装情况后重试。`,
@@ -248,6 +249,9 @@ const messages: Messages = {
     codexOpen: "现在打开 Codex 吗？",
     codexOpenSteps:
       "Codex 将在此终端打开。按上述步骤启用钩子，退出后返回。",
+    claudeTrust: (global) => `${global ? "" : "请先在 Claude Code 中信任此项目。\n"}Claude Code：交互式会话只在受信任的文件夹中运行钩子。/hooks → SessionStart 可查看 ToneDial 命令。`,
+    claudeOpen: "现在在这个项目中打开 Claude Code 吗？",
+    claudeOpenSteps: "Claude Code 将在此终端打开。如果它询问是否信任此文件夹，请在那里回答，退出后即可返回。",
     scopeHere: "连接范围：项目",
     alreadyMatch: (tools) => `${tools}：已匹配，无变更`,
     alreadyDisconnected: (tools) => `${tools}：已断开，无变更`,

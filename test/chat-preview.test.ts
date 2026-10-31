@@ -131,6 +131,42 @@ function nativeCalls(): { argv: string[]; cwd: string; marker: string; home: str
   return existsSync(calls) ? readFileSync(calls, "utf8").trim().split("\n").map((line) => JSON.parse(line)) : [];
 }
 
+test("init opens the first installed host after project wiring, in the project, through an absolute path", async () => {
+  // Codex is wired but not installed, so Claude Code is offered. The relative PATH entry also exists
+  // inside the project; only the stub beside the caller may run.
+  const project = join(scratch, "wired project");
+  const caller = join(scratch, "caller");
+  mkdirSync(join(project, "relbin"), { recursive: true });
+  mkdirSync(join(caller, "relbin"), { recursive: true });
+  install("claude");
+  writeFileSync(join(caller, "relbin", "claude"), readFileSync(join(bin, "claude")), { mode: 0o700 });
+  rmSync(join(bin, "claude"));
+  writeFileSync(join(project, "relbin", "claude"), `#!${process.execPath}\nrequire("fs").writeFileSync(${JSON.stringify(join(scratch, "decoy-ran"))}, "");\n`, { mode: 0o700 });
+  const childEnv = { ...env, TONEDIAL_HOME: join(scratch, "fresh-state"), PATH: `relbin:${bin}` };
+  // Each confirmation opens its own reader, so answer each question when it appears.
+  const run = (args: string[]) => new Promise<{ status: number | null; stdout: string }>((done) => {
+    const child = spawn(process.execPath, ["--import", pathToFileURL(preload).href, BIN, ...args], { cwd: caller, env: childEnv });
+    let stdout = "";
+    let answered = 0;
+    child.stdout.on("data", (chunk) => {
+      stdout += chunk;
+      while (answered < (stdout.match(/\[y\/N\]/g) ?? []).length) { answered++; child.stdin.write("y\n"); }
+    });
+    child.on("close", (status) => done({ status, stdout }));
+  });
+  assert.equal((await run(["init", "--lang", "en", "--tools", "none", "--global", "--auto"])).status, 0);
+  const wired = await run(["init", "--lang", "en", "--tools", "codex,claude", "--project", project]);
+  assert.equal(wired.status, 0, wired.stdout);
+  assert.ok(wired.stdout.includes(catalogue("en").cli.wiring.claudeOpen));
+  assert.deepEqual(nativeCalls().map(({ argv, cwd }) => ({ argv, cwd })), [{ argv: [], cwd: project }]);
+  assert.equal(existsSync(join(scratch, "decoy-ran")), false, "a program inside the project must not run");
+
+  const global = await run(["init", "--lang", "en", "--tools", "claude", "--global"]);
+  assert.equal(global.status, 0, global.stdout);
+  assert.ok(!global.stdout.includes(catalogue("en").cli.wiring.claudeOpen), "a global Claude route has no folder to open");
+  assert.equal(nativeCalls().length, 1);
+});
+
 for (const provider of ["claude", "codex"] as const) {
   test(`${provider} receives one fresh dialogue prompt and leaves target and saved state intact`, () => {
     install(provider);
@@ -360,7 +396,7 @@ test("usage notices remain before provider choice when one invocation skips cons
   const visible = result.stdout.replace(/\s+/g, " ");
   const choice = visible.indexOf(EN.chooseProvider.trim().replace(/\s+/g, " "));
   assert.ok(choice >= 0, "provider choice is missing");
-  for (const notice of [EN.cost, EN.interpretationCaveat, EN.history, EN.protection, EN.automationCaveat]) {
+  for (const notice of [EN.cost, EN.interpretationCaveat, EN.history, EN.protection, EN.automationCaveat, EN.driftCaveat]) {
     const content = notice.replace(/\s+/g, " ");
     const index = visible.indexOf(content);
     assert.ok(index >= 0 && index < choice, "usage notice must be visible before provider choice");
@@ -431,7 +467,7 @@ test("required usage notices and default-no consent fit a narrow terminal in bot
     }
     const flattened = visible.replace(/\s+/g, " ");
     const copy = catalogue(language).cli.test;
-    for (const notice of [copy.cost, copy.interpretationCaveat, copy.history, copy.protection, copy.automationCaveat]) {
+    for (const notice of [copy.cost, copy.interpretationCaveat, copy.history, copy.protection, copy.automationCaveat, copy.driftCaveat]) {
       assert.ok(flattened.includes(notice.replace(/\s+/g, " ")), `${language}: required notice was lost`);
     }
     assert.match(visible, /\[y\/N\]/);

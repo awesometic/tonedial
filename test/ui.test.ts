@@ -295,6 +295,21 @@ for (const language of LANGUAGES) {
   });
 }
 
+for (const language of LANGUAGES) {
+  test(`Claude receipts name workspace trust per scope in ${language}`, async () => {
+    mkdirSync(join(home, "project"));
+    const localized = catalogue(language).cli;
+    const [projectTrust, sharedTrust] = localized.wiring.claudeTrust(false).split("\n");
+    const flat = (text: string) => text.replace(/\s+/g, " ");
+    assert.equal(await cli("init", "--global", "--tools", "claude", "--lang", language, "--auto"), 0, err.join(""));
+    assert.ok(flat(out.join("")).includes(flat(sharedTrust!)), `${language}: global receipt lost the trust rule`);
+    assert.ok(!flat(out.join("")).includes(flat(projectTrust!)), `${language}: global receipt named one project`);
+    out = [];
+    assert.equal(await cli("wire", "--here", "claude", "--auto"), 0, err.join(""));
+    assert.ok(flat(out.join("")).includes(flat(projectTrust!)), `${language}: project receipt lost its trust step`);
+  });
+}
+
 test("a rejected connection command identifies itself and its scope without writes", async () => {
   mkdirSync(join(home, "project"));
   await initializeState();

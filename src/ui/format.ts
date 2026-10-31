@@ -82,6 +82,7 @@ export function nativeSetup(
   }
   const codex = routes.find(({ tool }) => tool === "codex");
   if (codex) lines.push(t.wiring.codexTrust(global || codex.inherited));
+  if (routes.some(({ tool }) => tool === "claude")) lines.push(t.wiring.claudeTrust(global));
   return lines;
 }
 

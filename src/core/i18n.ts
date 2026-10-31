@@ -103,6 +103,8 @@ export type Messages = {
     interpretationCaveat: string;
     protection: string;
     automationCaveat: string;
+    /** The preview sends the tone once, without hook refresh, so only early replies represent it. */
+    driftCaveat: string;
     cost: string;
     history: string;
     launchFailed: (provider: string) => string;
@@ -312,6 +314,10 @@ export type Messages = {
     codexOpen: string;
     /** What that costs and what to do there, said before the question rather than after. */
     codexOpenSteps: string;
+    /** Claude Code holds back settings-file hooks until the folder's workspace trust is accepted. */
+    claudeTrust: (global: boolean) => string;
+    claudeOpen: string;
+    claudeOpenSteps: string;
     scopeHere: string;
     alreadyMatch: (tools: string) => string;
     alreadyDisconnected: (tools: string) => string;
@@ -615,6 +621,7 @@ const enMessages: Messages = {
     interpretationCaveat: "The model may spend extra tokens reasoning about the preview; usage and charges remain yours.",
     protection: "Dialogue only; the opening prompt forbids file changes and native tool restrictions apply.",
     automationCaveat: "Asks the client to skip existing tone hooks and automatic instructions; managed policy still applies, and this is not filesystem isolation.",
+    driftCaveat: "The tone is sent once, at the start. Judge the preview by its first few replies; longer conversations can drift.",
     cost: "Your account tokens and limits are used; charges may apply.",
     history: "The provider may retain this conversation in its own history.",
     launchFailed: (provider) => `Could not start ${provider}. Check its installation and try again.`,
@@ -839,6 +846,9 @@ const enMessages: Messages = {
     codexOpen: "Open Codex now?",
     codexOpenSteps:
       "Codex opens in this terminal. Enable the hook with the steps above, then exit to return.",
+    claudeTrust: (global) => `${global ? "" : "Trust this project in Claude Code first.\n"}Claude Code: interactive sessions run hooks only in trusted folders. /hooks → SessionStart shows the ToneDial command.`,
+    claudeOpen: "Open Claude Code in this project now?",
+    claudeOpenSteps: "Claude Code opens in this terminal. If it asks whether you trust this folder, answer there, then exit to return.",
     scopeHere: "Connection scope: project",
     alreadyMatch: (tools) => `${tools}: already match · no changes`,
     alreadyDisconnected: (tools) => `${tools}: already disconnected · no changes`,
@@ -1326,6 +1336,7 @@ const koMessages: Messages = {
     interpretationCaveat: "모델이 미리보기를 해석하느라 토큰을 더 쓸 수 있으며, 사용량과 요금은 본인 부담입니다.",
     protection: "대화만 하는 세션입니다. 시작 프롬프트에 파일 수정 금지를 넣고 도구 사용을 제한합니다.",
     automationCaveat: "이번 세션에서는 기존 톤 훅과 자동 지침을 건너뛰도록 요청합니다. 관리 정책은 그대로 적용되며 파일시스템 차단은 아닙니다.",
+    driftCaveat: "톤은 대화를 시작할 때 한 번만 보냅니다. 미리보기는 처음 몇 개 답변으로 판단하세요. 대화가 길어지면 톤이 흐려질 수 있습니다.",
     cost: "본인 계정의 토큰·사용 한도를 쓰며 요금이 나올 수 있습니다.",
     history: "도구가 자체 대화 기록을 남길 수 있습니다.",
     launchFailed: (provider) => `${provider}를 시작하지 못했습니다. 설치 상태를 확인하고 다시 시도해 주세요.`,
@@ -1552,6 +1563,9 @@ const koMessages: Messages = {
     codexOpen: "지금 Codex를 열까요?",
     codexOpenSteps:
       "Codex는 이 터미널에서 열립니다. 위 순서로 훅을 켠 뒤 종료하면 여기로 돌아옵니다.",
+    claudeTrust: (global) => `${global ? "" : "먼저 Claude Code에서 이 프로젝트를 신뢰해 주세요.\n"}Claude Code: 대화형 세션은 신뢰한 폴더에서만 훅을 실행합니다. /hooks → SessionStart에서 ToneDial 명령을 확인하세요.`,
+    claudeOpen: "지금 이 프로젝트에서 Claude Code를 열까요?",
+    claudeOpenSteps: "Claude Code는 이 터미널에서 열립니다. 이 폴더를 신뢰하는지 물으면 거기서 답하세요. 종료하면 여기로 돌아옵니다.",
     scopeHere: "연결 범위: 프로젝트",
     alreadyMatch: (tools) => `${tools}: 이미 일치 · 변경 없음`,
     alreadyDisconnected: (tools) => `${tools}: 이미 연결 해제됨 · 변경 없음`,

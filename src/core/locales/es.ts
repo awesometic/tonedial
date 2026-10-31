@@ -24,6 +24,7 @@ const messages: Messages = {
     interpretationCaveat: "El modelo puede usar tokens adicionales al razonar sobre la vista previa; el consumo y los cargos corren por tu cuenta.",
     protection: "Solo diálogo: el mensaje inicial prohíbe modificar archivos y se aplican las restricciones de herramientas del cliente.",
     automationCaveat: "Pide al cliente omitir los hooks de tono e instrucciones automáticas existentes; las políticas administradas siguen vigentes y no aísla el sistema de archivos.",
+    driftCaveat: "El tono se envía una sola vez, al inicio. Juzga la vista previa por sus primeras respuestas; en conversaciones largas, el tono puede desviarse.",
     cost: "Se consumen los tokens y límites de tu cuenta; pueden aplicarse cargos.",
     history: "El proveedor puede guardar esta conversación en su historial.",
     launchFailed: (provider) => `No se pudo iniciar ${provider}. Comprueba su instalación y vuelve a intentarlo.`,
@@ -248,6 +249,9 @@ const messages: Messages = {
     codexOpen: "¿Abrir Codex ahora?",
     codexOpenSteps:
       "Codex se abre en este terminal. Activa el hook siguiendo los pasos anteriores y sal para volver.",
+    claudeTrust: (global) => `${global ? "" : "Confía primero en este proyecto en Claude Code.\n"}Claude Code: las sesiones interactivas solo ejecutan hooks en carpetas de confianza. /hooks → SessionStart muestra el comando de ToneDial.`,
+    claudeOpen: "¿Abrir Claude Code en este proyecto ahora?",
+    claudeOpenSteps: "Claude Code se abre en este terminal. Si te pregunta si confías en esta carpeta, responde allí y sal para volver.",
     scopeHere: "Ámbito de conexión: proyecto",
     alreadyMatch: (tools) => `${tools}: ya coinciden · sin cambios`,
     alreadyDisconnected: (tools) => `${tools}: ya desconectados · sin cambios`,

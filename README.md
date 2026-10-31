@@ -208,6 +208,7 @@ tonedial test codex --preset my-sword
 ```
 
 - Previews use your provider account; normal usage, charges and history apply.
+- A preview sends the tone once. Judge it by the first few replies; longer chats can drift.
 - Tone changes style. Host permissions and approval requirements stay in place.
 - Model behavior varies. This is for fun, not recommended for production use.
 

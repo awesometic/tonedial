@@ -67,7 +67,7 @@ export async function runTest(ctx: Ctx, args: string[]): Promise<CommandResult> 
   if (installed.length === 0) throw new ConfigError(copy.noProvider);
   if (selected === undefined && installed.length > 1 && planOnly) throw new ConfigError(copy.providerRequired);
 
-  const usageLines = [copy.cost, copy.interpretationCaveat, copy.history, copy.protection, copy.automationCaveat]
+  const usageLines = [copy.cost, copy.interpretationCaveat, copy.history, copy.protection, copy.automationCaveat, copy.driftCaveat]
     .flatMap((notice, index) => wrap(notice, ctx.ui.width - 4).map((line, continuation) =>
       index === 0 ? `  ${ctx.ui.bold(line)}` : `  ${continuation === 0 ? "- " : "  "}${line}`));
   if (!planOnly) {
