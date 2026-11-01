@@ -425,6 +425,10 @@ Read-only doctor, dry runs and operation-ID rollback retain their scope exceptio
 Delivery reads the managed `AGENTS.md` guide before `TONE.md` from the same state root.
 Claude Code replaces hook context over 10,000 characters with a short preview.
 When Claude Code is connected and the guide and an enabled tone exceed that, tone-changing commands and `doctor` show a notice; the change is still saved.
+For Codex, ToneDial writes the pair as JSON `additionalContext` with `additionalContextLimit: 0` on `SessionStart` and `UserPromptSubmit`.
+Codex then skips its default preview of hook context over about 2,500 tokens (observed on Codex 0.164.0).
+Hooks written by earlier versions keep that preview until `doctor --fix` or `init` rewrites them; a project inheriting a global hook needs `init --global --tools codex`.
+Codex keys hook trust to the definition, so review a rewritten hook again in `/hooks`.
 Tone changes regenerate the artifact without rewriting the guide.
 Setup merges owned entries and preserves unrelated handlers; no home instruction-file import is added.
 Antigravity's skill link is `.agents/skills/tonedial` in a project or `~/.gemini/config/skills/tonedial` globally.

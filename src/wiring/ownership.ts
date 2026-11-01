@@ -136,6 +136,7 @@ function cloneManaged(source: ManagedResource["managed"]): ManagedResource["mana
   for (const key of ["event", "matcher", "handlerSha256", "command", "runtime", "statusMessage", "name", "description", "regionId"] as const) {
     if (source[key] !== undefined) managed[key] = source[key];
   }
+  if (source.additionalContextLimit !== undefined) managed.additionalContextLimit = source.additionalContextLimit;
   if (source.args !== undefined) managed.args = [...source.args];
   // One spelling survives a rewrite. Keeping both would leave a stale singular beside the list
   // that supersedes it, with nothing checking they still agree.
@@ -152,6 +153,7 @@ function cloneManaged(source: ManagedResource["managed"]): ManagedResource["mana
       ...(event.statusMessage === undefined ? {} : { statusMessage: event.statusMessage }),
       ...(event.name === undefined ? {} : { name: event.name }),
       ...(event.description === undefined ? {} : { description: event.description }),
+      ...(event.additionalContextLimit === undefined ? {} : { additionalContextLimit: event.additionalContextLimit }),
     }));
   }
   return managed;

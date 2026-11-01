@@ -64,7 +64,10 @@ export function orderedHook(tool: AgentTool, stateRoot: string, runtime: string)
     const eventArgs = event === undefined ? args : [...args, "--event", event];
     if (tool === "claude") return { type: "command", command: runtime, args: eventArgs, statusMessage: HOOK_DESCRIPTION };
     const command = [runtime, ...eventArgs].map((part) => `"${shellQuote(part)}"`).join(" ");
-    return { type: "command", command, ...(tool === "codex" ? { statusMessage: HOOK_DESCRIPTION } : {}) };
+    if (tool !== "codex") return { type: "command", command };
+    // Codex previews context over ~2,500 tokens unless the handler lifts its limit; Stop's
+    // continuation prompt keeps the host default.
+    return { type: "command", command, statusMessage: HOOK_DESCRIPTION, ...(event === "Stop" ? {} : { additionalContextLimit: 0 }) };
   };
   if (tool === "antigravity") return { event: "PreInvocation", matchers: [], handler: handler("PreInvocation") };
   const events: HookEventSpec[] = (["UserPromptSubmit", "Stop"] as const).map((event) => ({
@@ -84,7 +87,7 @@ export function orderedHook(tool: AgentTool, stateRoot: string, runtime: string)
 export function recordedHook(resource: ManagedResource, registrationId: string): HookSpec | null {
   const metadata = resource.managedByRegistration?.[registrationId];
   if (!metadata) return null;
-  const { version, event, matchers, command, args, statusMessage, name, description, events } = metadata;
+  const { version, event, matchers, command, args, statusMessage, name, description, additionalContextLimit, events } = metadata;
   const completeRegularEvents = events === undefined ||
     (events.length === 2 && new Set(events.map((part) => part.event)).size === 2 &&
       events.some((part) => part.event === "UserPromptSubmit") && events.some((part) => part.event === "Stop"));
@@ -92,7 +95,7 @@ export function recordedHook(resource: ManagedResource, registrationId: string):
       (event === "PreInvocation" ? matchers?.length !== 0 || events !== undefined
         : event !== "SessionStart" || !matchers?.length ||
           !completeRegularEvents)) return null;
-  const eventSpec = (part: { event: string; matchers: string[]; command: string; args?: string[]; statusMessage?: string; name?: string; description?: string }): HookEventSpec => ({
+  const eventSpec = (part: { event: string; matchers: string[]; command: string; args?: string[]; statusMessage?: string; name?: string; description?: string; additionalContextLimit?: number }): HookEventSpec => ({
     event: part.event as HookEvent,
     matchers: part.matchers,
     handler: {
@@ -101,6 +104,7 @@ export function recordedHook(resource: ManagedResource, registrationId: string):
       ...(part.statusMessage === undefined ? {} : { statusMessage: part.statusMessage }),
       ...(part.name === undefined ? {} : { name: part.name }),
       ...(part.description === undefined ? {} : { description: part.description }),
+      ...(part.additionalContextLimit === undefined ? {} : { additionalContextLimit: part.additionalContextLimit }),
     },
   });
   const primary = eventSpec({
@@ -111,6 +115,7 @@ export function recordedHook(resource: ManagedResource, registrationId: string):
     ...(statusMessage === undefined ? {} : { statusMessage }),
     ...(name === undefined ? {} : { name }),
     ...(description === undefined ? {} : { description }),
+    ...(additionalContextLimit === undefined ? {} : { additionalContextLimit }),
   });
   return {
     ...(primary.event === "SessionStart" ? {} : { event: primary.event }),
@@ -139,15 +144,19 @@ export function sameDelivery(left: HookSpec | null, right: HookSpec | null): boo
   return canonical(left) === canonical(right);
 }
 
-/** Display differences may share a command; a changed runtime or payload may not. */
+/**
+ * Display fields and Codex's context limit may differ under one command; a changed runtime or
+ * payload may not. A project keeps inheriting an older global hook until a global refresh adds
+ * the limit, rather than refusing to connect.
+ */
 function sameDeliveryCommand(left: HookSpec | null, right: HookSpec | null): boolean {
   const commandOnly = (spec: HookSpec | null): HookSpec | null => {
     if (spec === null) return null;
-    const { statusMessage: _status, name: _name, description: _description, ...handler } = spec.handler;
+    const { statusMessage: _status, name: _name, description: _description, additionalContextLimit: _limit, ...handler } = spec.handler;
     return {
       ...(spec.event ? { event: spec.event } : {}), matchers: spec.matchers, handler,
       ...(spec.events === undefined ? {} : { events: spec.events.map((part) => {
-        const { statusMessage: _partStatus, name: _partName, description: _partDescription, ...partHandler } = part.handler;
+        const { statusMessage: _partStatus, name: _partName, description: _partDescription, additionalContextLimit: _partLimit, ...partHandler } = part.handler;
         return { event: part.event, matchers: part.matchers, handler: partHandler };
       }) }),
     };
@@ -275,6 +284,7 @@ export function planOrderedDelivery(
     ...(desired.handler.statusMessage === undefined ? {} : { statusMessage: desired.handler.statusMessage }),
     ...(desired.handler.name === undefined ? {} : { name: desired.handler.name }),
     ...(desired.handler.description === undefined ? {} : { description: desired.handler.description }),
+    ...(desired.handler.additionalContextLimit === undefined ? {} : { additionalContextLimit: desired.handler.additionalContextLimit as number }),
     ...(desired.events === undefined ? {} : {
       events: desired.events.map((part): ManagedHookEvent => ({
         event: part.event,
@@ -284,6 +294,7 @@ export function planOrderedDelivery(
         ...(part.handler.statusMessage === undefined ? {} : { statusMessage: part.handler.statusMessage }),
         ...(part.handler.name === undefined ? {} : { name: part.handler.name }),
         ...(part.handler.description === undefined ? {} : { description: part.handler.description }),
+        ...(part.handler.additionalContextLimit === undefined ? {} : { additionalContextLimit: part.handler.additionalContextLimit as number }),
       })),
     }),
     handlerSha256: orderedFingerprint(desired, path, t),

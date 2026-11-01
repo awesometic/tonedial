@@ -42,6 +42,9 @@ const artifactPath = () => join(state, CONTEXT_ARTIFACT_FILENAME);
 const lockPath = () => join(state, "operations.lock");
 const guide = `${GUIDE_FORMAT_MARKER}\nShort operating boundaries.\n`;
 const artifact = "# Tone\nThe current compiled tone.\n";
+/** Codex reads the pair as JSON context so its handler's additionalContextLimit applies. */
+const codexContext = (body: string, event = "SessionStart") =>
+  JSON.stringify({ hookSpecificOutput: { hookEventName: event, additionalContext: body } }) + "\n";
 
 function writePair(): void {
   writeFileSync(guidePath(), guide);
@@ -75,12 +78,15 @@ function invoke(
   });
 }
 
-test("emitted reader runs outside the package and preserves the ordered plain payload", () => {
+test("emitted reader runs outside the package and preserves the ordered payload", () => {
   writePair();
   const before = readdirSync(state).sort();
   const result = invoke("codex");
   assert.equal(result.status, 0, result.error?.message ?? result.stderr);
-  assert.equal(result.stdout, guide + "\n\n" + artifact);
+  assert.equal(result.stdout, codexContext(guide + "\n\n" + artifact));
+  const claude = invoke("claude");
+  assert.equal(claude.status, 0, claude.error?.message ?? claude.stderr);
+  assert.equal(claude.stdout, guide + "\n\n" + artifact, "Claude keeps the plain payload");
   assert.equal(result.stderr, "");
   assert.deepEqual(readdirSync(state).sort(), before);
   assert.equal(existsSync(join(scratch, "node_modules")), false);
@@ -118,7 +124,8 @@ test("regular prompt events refresh the complete safe pair, while Stop can reque
   for (const provider of ["codex", "claude"]) {
     const prompt = invoke(provider, ["--event", "UserPromptSubmit"]);
     assert.equal(prompt.status, 0, prompt.error?.message ?? prompt.stderr);
-    assert.equal(prompt.stdout, guide + "\n\n" + markedArtifact);
+    assert.equal(prompt.stdout, provider === "codex"
+      ? codexContext(guide + "\n\n" + markedArtifact, "UserPromptSubmit") : guide + "\n\n" + markedArtifact);
     assert.equal(prompt.stderr, "");
 
     const stop = invoke(provider, ["--event", "Stop"], 5000, state, {}, JSON.stringify({
@@ -323,7 +330,7 @@ test("a stable configured symlink root alias remains readable", () => {
   symlinkSync(state, alias, "dir");
   const result = invoke("codex", [], 5000, alias);
   assert.equal(result.status, 0, result.error?.message ?? result.stderr);
-  assert.equal(result.stdout, guide + "\n\n" + artifact);
+  assert.equal(result.stdout, codexContext(guide + "\n\n" + artifact));
   assert.equal(result.stderr, "");
 });
 
@@ -431,7 +438,7 @@ moduleApi.syncBuiltinESMExports();
 });
 
 test("reader source is versioned, closed to providers, and has no package imports", () => {
-  assert.equal(READER_PROTOCOL_VERSION, 3);
+  assert.equal(READER_PROTOCOL_VERSION, 4);
   assert.match(READER_SOURCE, /^#!\/usr\/bin\/env node\n/);
   assert.deepEqual(
     [...READER_SOURCE.matchAll(/from ["']([^"']+)["']/g)].map((match) => match[1]),

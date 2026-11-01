@@ -10,7 +10,7 @@ import type { Messages } from "../core/i18n.ts";
 /** Startup and resume. A hook that fired on neither would be a hook nothing runs. */
 const MATCHER = "startup|resume";
 
-/** Historical token override, retained for legacy fingerprints only. New hooks use host defaults. */
+/** Historical token override on the legacy plain-stdout hook, retained for its fingerprints only. */
 const CONTEXT_LIMIT = 5000;
 
 /** Legacy fingerprints expand $HOME inside quotes; a quoted tilde would stay literal. */

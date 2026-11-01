@@ -52,6 +52,7 @@ export type ManagedHookEvent = {
   statusMessage?: string;
   name?: string;
   description?: string;
+  additionalContextLimit?: number;
 };
 
 /** The lexical access path a registration used for a physically shared text resource. */
@@ -89,6 +90,8 @@ export type ManagedResource = {
     statusMessage?: string;
     name?: string;
     description?: string;
+    /** Codex's per-handler token threshold for JSON additionalContext; 0 passes it whole. */
+    additionalContextLimit?: number;
     regionId?: string;
     /** Additional event handlers in the same provider document. */
     events?: ManagedHookEvent[];
@@ -373,7 +376,7 @@ function readExpected(raw: unknown, field: string, t: Messages): ResourceExpecte
 
 function readManagedEvent(raw: unknown, field: string, t: Messages): ManagedHookEvent {
   const source = requiredObject(raw, field, t);
-  rejectUnknown(source, ["event", "matchers", "command", "args", "statusMessage", "name", "description"], field, t);
+  rejectUnknown(source, ["event", "matchers", "command", "args", "statusMessage", "name", "description", "additionalContextLimit"], field, t);
   const event = requiredString(source.event, `${field}.event`, t);
   if (event !== "UserPromptSubmit" && event !== "Stop") invalidValue(`${field}.event`, t);
   const matchers = source.matchers === undefined ? [] : stringArray(source.matchers, `${field}.matchers`, t);
@@ -391,12 +394,15 @@ function readManagedEvent(raw: unknown, field: string, t: Messages): ManagedHook
     if (value.includes("\0")) invalidValue(`${field}.${key}`, t);
     result[key] = value;
   }
+  if (source.additionalContextLimit !== undefined) {
+    result.additionalContextLimit = requiredInteger(source.additionalContextLimit, `${field}.additionalContextLimit`, t);
+  }
   return result;
 }
 
 function readManaged(raw: unknown, field: string, t: Messages): ManagedResource["managed"] {
   const source = requiredObject(raw, field, t);
-  rejectUnknown(source, ["version", "event", "matcher", "matchers", "handlerSha256", "command", "runtime", "args", "statusMessage", "name", "description", "regionId", "events"], field, t);
+  rejectUnknown(source, ["version", "event", "matcher", "matchers", "handlerSha256", "command", "runtime", "args", "statusMessage", "name", "description", "additionalContextLimit", "regionId", "events"], field, t);
   const managed: ManagedResource["managed"] = {
     version: requiredInteger(source.version, `${field}.version`, t),
   };
@@ -408,6 +414,10 @@ function readManaged(raw: unknown, field: string, t: Messages): ManagedResource[
     const value = requiredString(source[key], `${field}.${key}`, t);
     if (managed.version !== 2 || value.includes("\0")) invalidValue(`${field}.${key}`, t);
     managed[key] = value;
+  }
+  if (source.additionalContextLimit !== undefined) {
+    if (managed.version !== 2) invalidValue(`${field}.additionalContextLimit`, t);
+    managed.additionalContextLimit = requiredInteger(source.additionalContextLimit, `${field}.additionalContextLimit`, t);
   }
   const handlerSha256 = optionalHash(source.handlerSha256, `${field}.handlerSha256`, t);
   if (handlerSha256 !== undefined) managed.handlerSha256 = handlerSha256;

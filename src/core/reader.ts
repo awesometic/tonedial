@@ -6,7 +6,7 @@ import {
 } from "./paths.ts";
 import { DELIVERY_OFF_MARKER } from "./anchors.ts";
 
-export const READER_PROTOCOL_VERSION = 3 as const;
+export const READER_PROTOCOL_VERSION = 4 as const;
 export const GUIDE_FORMAT_VERSION = 1 as const;
 export const GUIDE_FORMAT_MARKER = `<!-- tonedial-guide:${GUIDE_FORMAT_VERSION} -->`;
 
@@ -439,6 +439,9 @@ async function main() {
       }
     } else if (provider === "antigravity") {
       process.stdout.write(JSON.stringify({ injectSteps: [{ ephemeralMessage: pair.body }] }) + "\n");
+    } else if (provider === "codex") {
+      // Codex applies the handler's additionalContextLimit to JSON context, not to plain stdout.
+      process.stdout.write(JSON.stringify({ hookSpecificOutput: { hookEventName: event, additionalContext: pair.body } }) + "\n");
     } else {
       process.stdout.write(pair.body);
     }

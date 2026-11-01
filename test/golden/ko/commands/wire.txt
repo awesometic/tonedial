@@ -9,7 +9,7 @@ ToneDial · wire
   변경 항목 6개
 
   <ROOT>/state/reader.mjs
-  (새 파일)  407줄
+  (새 파일)  410줄
   + #!/usr/bin/env node
   + import {
 
@@ -24,7 +24,7 @@ ToneDial · wire
   + each one **owns**, which is what tells you which axis a request is actually about.
 
   <ROOT>/project/.codex/hooks.json
-  (새 파일)  39줄
+  (새 파일)  41줄
   +   "description": "ToneDial: load saved response tone",
   +   "hooks": {
 
@@ -32,7 +32,7 @@ ToneDial · wire
     <ROOT>/project/.agents/skills/tonedial
 
   <ROOT>/state/config.json
-  (수정)  +169 -51
+  (수정)  +173 -51
   -     "registrations": {},
   -     "resources": {}
   +     "registrations": {

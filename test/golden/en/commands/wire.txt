@@ -9,7 +9,7 @@ ToneDial · wire
   Changes: 6
 
   <ROOT>/state/reader.mjs
-  (new file)  407 lines
+  (new file)  410 lines
   + #!/usr/bin/env node
   + import {
 
@@ -24,7 +24,7 @@ ToneDial · wire
   + each one **owns**, which is what tells you which axis a request is actually about.
 
   <ROOT>/project/.codex/hooks.json
-  (new file)  39 lines
+  (new file)  41 lines
   +   "description": "ToneDial: load saved response tone",
   +   "hooks": {
 
@@ -32,7 +32,7 @@ ToneDial · wire
     <ROOT>/project/.agents/skills/tonedial
 
   <ROOT>/state/config.json
-  (modified)  +169 -51
+  (modified)  +173 -51
   -     "registrations": {},
   -     "resources": {}
   +     "registrations": {

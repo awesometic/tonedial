@@ -232,7 +232,10 @@ function readerHealth(ctx: Ctx, config: Config, configRead: Change, seeds: reado
       });
       const expected = provider === "antigravity"
         ? JSON.stringify({ injectSteps: config.enabled ? [{ ephemeralMessage: body }] : [] }) + "\n"
-        : config.enabled ? body : "";
+        : !config.enabled ? ""
+          : provider === "codex"
+            ? JSON.stringify({ hookSpecificOutput: { hookEventName: "SessionStart", additionalContext: body } }) + "\n"
+            : body;
       if (probe.error || probe.status !== 0 || probe.stderr !== "" || probe.stdout !== expected) return result;
     }
     result.reason = "changed";
@@ -488,7 +491,9 @@ function diagnoseNative(
   const state: State =
     configuration === "configured" && runtime.state === "available" &&
     hookSetting.state !== "disabled" ? "ok" : "problem";
-  const repair = repairable ? repairCommand(ctx, `init --tools ${route.tool}`) : undefined;
+  // An inherited hook lives in the global file, and only a global refresh rewrites it.
+  const repair = configuration === "stale" && route.inherited ? `tonedial init --tools ${route.tool} --global`
+    : repairable ? repairCommand(ctx, `init --tools ${route.tool}`) : undefined;
   return {
     integration,
     hookSetting,

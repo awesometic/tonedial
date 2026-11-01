@@ -434,7 +434,7 @@ test("doctor and the reader accept a CRLF guide while preserving its bytes and o
   const output = childProcess.execFileSync(process.execPath, [reader, "--provider", "codex", "--state", paths.root], {
     env, encoding: "utf8", timeout: 5000,
   });
-  assert.equal(output, `${guide}\n\n${artifact}`);
+  assert.equal(JSON.parse(output).hookSpecificOutput.additionalContext, `${guide}\n\n${artifact}`);
 
   const report = await invoke(["doctor", "--here"]);
   assert.equal(report.code, 0, report.output);

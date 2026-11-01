@@ -93,12 +93,18 @@ for (const tool of ["codex", "claude", "antigravity"] as const) {
       const run = () => tool === "claude"
         ? execFileSync(hook.command, hook.args, { env, encoding: "utf8", timeout: 5000 })
         : execFileSync("/bin/sh", ["-c", hook.command], { env, encoding: "utf8", timeout: 5000 });
-      assert.equal(run(), `${readFileSync(paths.agents, "utf8")}\n\n${readFileSync(paths.tone, "utf8")}`);
+      const body = `${readFileSync(paths.agents, "utf8")}\n\n${readFileSync(paths.tone, "utf8")}`;
+      assert.equal(run(), tool === "codex"
+        ? JSON.stringify({ hookSpecificOutput: { hookEventName: "SessionStart", additionalContext: body } }) + "\n" : body);
+      assert.equal(hook.additionalContextLimit, tool === "codex" ? 0 : undefined,
+        "only Codex lifts its hook context preview, and only through JSON context");
       for (const event of ["UserPromptSubmit", "Stop"] as const) {
         const eventBlocks = document.hooks[event];
         assert.equal(eventBlocks.length, 1, `${event} has one managed entry`);
         assert.equal((eventBlocks[0] as { matcher?: string }).matcher, undefined, `${event} has no lifecycle matcher`);
-        const eventHandler = (eventBlocks[0] as { hooks: Array<{ command: string; args?: string[] }> }).hooks[0]!;
+        const eventHandler = (eventBlocks[0] as { hooks: Array<{ command: string; args?: string[]; additionalContextLimit?: number }> }).hooks[0]!;
+        assert.equal(eventHandler.additionalContextLimit, tool === "codex" && event === "UserPromptSubmit" ? 0 : undefined,
+          `${event} keeps the host's continuation limit unless it delivers the pair`);
         if (tool === "claude") {
           assert.deepEqual(eventHandler.args?.slice(-2), ["--event", event]);
         } else {
@@ -144,7 +150,8 @@ for (const tool of ["codex", "claude", "antigravity"] as const) {
       const output = tool === "claude"
         ? execFileSync(afterHook.command, afterHook.args, { env, encoding: "utf8", timeout: 5000 })
         : execFileSync("/bin/sh", ["-c", afterHook.command], { env, encoding: "utf8", timeout: 5000 });
-      assert.equal(output, `${readFileSync(paths.agents, "utf8")}\n\n${readFileSync(paths.tone, "utf8")}`);
+      const body = `${readFileSync(paths.agents, "utf8")}\n\n${readFileSync(paths.tone, "utf8")}`;
+      assert.equal(tool === "codex" ? JSON.parse(output).hookSpecificOutput.additionalContext : output, body);
     }
     const doctor = await invoke(["doctor", "--here"]);
     assert.equal(doctor.code, 0, JSON.stringify(doctor.value));
@@ -238,6 +245,85 @@ test("older recorded hooks inherit unchanged and refresh metadata only in the se
   const disconnectedProject = await invoke(["unwire", "--here", "codex", "--auto"]);
   assert.equal(disconnectedProject.code, 0, JSON.stringify(disconnectedProject.value));
   assert.equal(existsSync(path), false, "the final consumer removes the created hook document");
+});
+
+/** Rewrite the one recorded Codex hook at `path` as the previous release wrote it, without the context limit. */
+function downgradeCodexLimit(path: string): { id: string; oldSettings: string } {
+  const paths = resolvePaths(env);
+  const config = parseConfig(readFileSync(paths.config, "utf8"));
+  assert.ok(isConfigV2(config));
+  const resource = Object.values(config.wiring.resources).find((entry) => entry.kind === "hook" && entry.path === realpathSync(path))!;
+  const id = resource.consumers[0]!;
+  const records = [resource.managed, ...Object.values(resource.managedByRegistration!)];
+  for (const metadata of records) {
+    delete metadata.additionalContextLimit;
+    for (const event of metadata.events ?? []) delete event.additionalContextLimit;
+  }
+  const document = JSON.parse(readFileSync(path, "utf8"));
+  for (const blocks of Object.values(document.hooks) as Array<Array<{ hooks: Array<Record<string, unknown>> }>>) {
+    for (const block of blocks) for (const handler of block.hooks) delete handler.additionalContextLimit;
+  }
+  const oldSettings = `${JSON.stringify(document, null, 2)}\n`;
+  writeFileSync(path, oldSettings);
+  const hash = orderedFingerprint(recordedHook(resource, id)!, path, catalogue("en").cli);
+  for (const metadata of records) metadata.handlerSha256 = hash;
+  resource.expected.sha256 = createHash("sha256").update(oldSettings).digest("hex");
+  writeFileSync(paths.config, serializeConfig(config));
+  return { id, oldSettings };
+}
+
+test("a Codex hook recorded before the context limit is refreshed by doctor --fix with its ownership", async () => {
+  assert.equal((await invoke(["init", "--here", "--tools", "codex", "--auto"])).code, 0);
+  const paths = resolvePaths(env);
+  const path = resolveAgentPaths({ global: false, project: null }, env, project).hookFile("codex");
+  const { id } = downgradeCodexLimit(path);
+
+  const stale = await invoke(["doctor", "--here"]);
+  assert.equal(stale.value.integrations.find((entry: { tool: string }) => entry.tool === "codex").configuration, "stale");
+  const fixed = await invoke(["doctor", "--fix", "--here", "--auto"]);
+  assert.equal(fixed.code, 0, JSON.stringify(fixed.value));
+  const refreshed = JSON.parse(readFileSync(path, "utf8"));
+  for (const event of ["SessionStart", "UserPromptSubmit", "Stop"]) {
+    assert.equal(refreshed.hooks[event].length, 1, `${event} was replaced, not duplicated`);
+    assert.equal(refreshed.hooks[event][0].hooks[0].additionalContextLimit, event === "Stop" ? undefined : 0);
+  }
+  const persisted = parseConfig(readFileSync(paths.config, "utf8"));
+  assert.ok(isConfigV2(persisted));
+  const owner = Object.values(persisted.wiring.resources).find((entry) => entry.kind === "hook")!.managedByRegistration![id]!;
+  assert.equal(owner.additionalContextLimit, 0);
+  assert.deepEqual(owner.events?.map((event) => [event.event, event.additionalContextLimit]),
+    [["UserPromptSubmit", 0], ["Stop", undefined]]);
+  const current = await invoke(["doctor", "--here"]);
+  assert.equal(current.value.integrations.find((entry: { tool: string }) => entry.tool === "codex").configuration, "configured");
+
+  const invalid = JSON.parse(readFileSync(paths.config, "utf8"));
+  Object.values(invalid.wiring.resources as Record<string, any>).find((entry) => entry.kind === "hook").managed.additionalContextLimit = -1;
+  assert.throws(() => parseConfig(JSON.stringify(invalid)), /additionalContextLimit/);
+});
+
+test("a project keeps inheriting an older global Codex hook, and doctor names the global refresh", async () => {
+  assert.equal((await invoke(["init", "--global", "--tools", "codex", "--auto"])).code, 0);
+  const path = resolveAgentPaths({ global: true, project: null }, env, project).hookFile("codex");
+  const { oldSettings } = downgradeCodexLimit(path);
+  const connected = await invoke(["init", "--here", "--tools", "codex", "--auto"]);
+  assert.equal(connected.code, 0, JSON.stringify(connected.value));
+  assert.equal(readFileSync(path, "utf8"), oldSettings, "project setup does not rewrite the global hook");
+  const stale = await invoke(["doctor", "--here"]);
+  const check = stale.value.checks.find((entry: { name: string }) => entry.name === "Codex CLI");
+  assert.equal(check.repair, "tonedial init --tools codex --global");
+  const refreshed = await invoke(check.repair.split(" ").slice(1).concat("--auto"));
+  assert.equal(refreshed.code, 0, JSON.stringify(refreshed.value));
+  assert.equal(JSON.parse(readFileSync(path, "utf8")).hooks.SessionStart[0].hooks[0].additionalContextLimit, 0);
+  const current = await invoke(["doctor", "--here"]);
+  assert.equal(current.value.integrations.find((entry: { tool: string }) => entry.tool === "codex").configuration, "configured");
+});
+
+test("an older project Codex hook is still reported as a duplicate of new global delivery", async () => {
+  assert.equal((await invoke(["init", "--here", "--tools", "codex", "--auto"])).code, 0);
+  downgradeCodexLimit(resolveAgentPaths({ global: false, project: null }, env, project).hookFile("codex"));
+  const global = await invoke(["init", "--global", "--tools", "codex", "--auto"]);
+  assert.equal(global.code, 0, JSON.stringify(global.value));
+  assert.deepEqual(global.value.native.tools[0].duplicates.map((entry: { state: string }) => entry.state), ["stale-duplicate"]);
 });
 
 test("Codex setup and removal preserve existing or edited file descriptions", async () => {

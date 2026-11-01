@@ -143,7 +143,7 @@ test("explicit native rebuild keeps compatibility delivery and separately rolls 
   assert.equal(codex.hooks.SessionStart.length, 1, "the legacy handler is replaced, not retained beside the new one");
   const command = codex.hooks.SessionStart[0].hooks[0].command;
   const output = execFileSync("/bin/sh", ["-c", command], { env, encoding: "utf8", timeout: 5000 });
-  assert.equal(output, `${readFileSync(paths.agents, "utf8")}\n\n${artifact}`);
+  assert.equal(JSON.parse(output).hookSpecificOutput.additionalContext, `${readFileSync(paths.agents, "utf8")}\n\n${artifact}`);
   const repeated = await invoke(args);
   assert.equal(repeated.code, 0, repeated.stdout);
 
@@ -184,7 +184,7 @@ test("migration through a project alias retains the native hook, foreign handler
     .filter((handler: { command: string }) => handler.command !== foreign.command);
   assert.equal(native.length, 1, "one replacement delivery survives on the physical hook target");
   const output = execFileSync("/bin/sh", ["-c", native[0].command], { env, encoding: "utf8", timeout: 5000 });
-  assert.equal(output, `${readFileSync(paths.agents, "utf8")}\n\n${artifact}`);
+  assert.equal(JSON.parse(output).hookSpecificOutput.additionalContext, `${readFileSync(paths.agents, "utf8")}\n\n${artifact}`);
   const journal = JSON.parse(readFileSync(join(paths.operations, `${applied.value.native.operationId}.json`), "utf8"));
   assert.equal(journal.actions.filter((action: { kind: string; realPath: string }) =>
     action.kind === "file" && action.realPath === realpathSync(hookPath)).length, 1);

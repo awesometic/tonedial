@@ -9,7 +9,7 @@ ToneDial · eject
   변경 항목 3개
 
   <ROOT>/project/.codex/hooks.json
-  (수정)  +0 -39
+  (수정)  +0 -41
   - {
   -   "description": "ToneDial: load saved response tone",
   -   "hooks": {
@@ -19,7 +19,7 @@ ToneDial · eject
     <ROOT>/project/.agents/skills/tonedial
 
   <ROOT>/state/config.json
-  (수정)  +2 -102
+  (수정)  +2 -106
   -     "registrations": {
   -       "[\"codex\",\"project\",\"<ROOT>/project\"]": {
   +     "registrations": {},
