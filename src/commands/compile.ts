@@ -3,10 +3,10 @@
 import type { CommandResult, Ctx } from "../cli.ts";
 import { lstatSync } from "node:fs";
 import { compile, measure, type SizeReport } from "../core/compile.ts";
-import { ConfigError, defaultConfig, parseConfig, type Config } from "../core/config.ts";
+import { ConfigError, defaultConfig, isConfigV2, parseConfig, type Config } from "../core/config.ts";
 import { toCompileInput } from "../core/resolve.ts";
-import { contextArtifactTargets } from "../core/seeds.ts";
-import { artifactSize, humanText, nextStep } from "../ui/format.ts";
+import { contextArtifactTargets, GUIDE_MD } from "../core/seeds.ts";
+import { artifactSize, claudeContextCap, humanText, nextStep } from "../ui/format.ts";
 import { wrap } from "../ui/width.ts";
 import { confirm } from "../ui/prompt.ts";
 import { captureRawEntry, gate, planChange, rawReadChange, type Change } from "../wiring/apply.ts";
@@ -35,6 +35,13 @@ export function planArtifact(ctx: Ctx, config: Config): { change: Change; artifa
   const change: ArtifactChange = { ...artifactChange(ctx, targets[0]!, artifact),
     contextCompanions: targets.slice(1).map((target) => artifactChange(ctx, target, artifact)) };
   return { change, artifact, size };
+}
+
+/** While Claude Code is wired and delivery is on, the reader sends the guide, a blank line and the tone. */
+export function contextCapWarnings(config: Config, chars: number, t: Ctx["t"]): string[] {
+  const claude = isConfigV2(config) && Object.values(config.wiring.registrations)
+    .some((registration) => registration.target === "claude" && registration.context === "pair");
+  return config.enabled && claude ? claudeContextCap([...GUIDE_MD].length + 2 + chars, t) : [];
 }
 
 /** Shared mutation gate, including file review before profile creation. */
@@ -119,6 +126,6 @@ export async function runCompile(ctx: Ctx): Promise<CommandResult> {
       ...nextStep(check && !current ? "tonedial compile" : "tonedial show", ctx.ui),
     ],
     json: { path: ctx.paths.tone, agentsPath: ctx.paths.agents, enabled: config.enabled, written: !check, ...size },
-    warnings: [],
+    warnings: contextCapWarnings(config, size.chars, ctx.t),
   };
 }

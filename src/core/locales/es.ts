@@ -190,6 +190,7 @@ const messages: Messages = {
   },
   artifact: {
     size: (chars) => `TONE.md ${chars} caracteres`,
+    contextCap: (cap, total) => `Claude Code reemplaza el contexto de hooks de más de ${cap} caracteres por una vista previa breve, así que el modelo solo ve el inicio del tono. La guía y el tono suman ${total} caracteres; acorta el valor largo entre persona.note, persona.self_ref, persona.user_ref y safeword.`,
     wouldWrite: "se escribiría",
     wrote: "escrito",
     notWritten: "Falta TONE.md. Ejecuta tonedial compile",

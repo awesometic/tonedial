@@ -16,6 +16,15 @@ export function nextStep(command: string, ui: Palette): string[] {
   return ["", `  ${ui.accent(humanText(command))}`];
 }
 
+/** Claude Code replaces hook context above this many characters with a short preview. */
+const CLAUDE_CONTEXT_CAP = 10_000;
+
+/** Advisory notice for hook output that Claude Code measures without its final newline. */
+export function claudeContextCap(output: number, t: Messages): string[] {
+  const measured = output - 1;
+  return measured > CLAUDE_CONTEXT_CAP ? [t.artifact.contextCap(num(CLAUDE_CONTEXT_CAP), num(measured))] : [];
+}
+
 /** One advisory notice from the shared axis metadata, without changing selected levels. */
 export function riskWarnings(axes: Axes, t: Messages): string[] {
   const risks = riskyAxes(axes);

@@ -19,7 +19,7 @@ import { artifactSize, combination, humanText, riskWarnings } from "../ui/format
 import { guardTerminal, interactive } from "../ui/prompt.ts";
 import { createInterface } from "node:readline/promises";
 import { cells, padEnd, truncate, wrap } from "../ui/width.ts";
-import { applyPlanned, planArtifact, planConfig } from "./compile.ts";
+import { applyPlanned, contextCapWarnings, planArtifact, planConfig } from "./compile.ts";
 
 /** A raw number is bucketed on write; the stored and compiled value is always the band. */
 function bucketAge(value: string, t: Messages, asJson: boolean): string {
@@ -267,7 +267,8 @@ async function commit(
       config: toCompileInput(config),
       chars: size.chars,
     },
-    warnings: [...applied.warnings, ...riskWarnings(config.axes, ctx.t), ...comboWarnings(config, ctx.t)],
+    warnings: [...applied.warnings, ...riskWarnings(config.axes, ctx.t), ...comboWarnings(config, ctx.t),
+      ...contextCapWarnings(config, size.chars, ctx.t)],
   };
 }
 
@@ -445,6 +446,7 @@ export async function runReset(ctx: Ctx, args: string[]): Promise<CommandResult>
       ...(ctx.flags.verbose ? [`  ${ctx.ui.dim(artifactSize(size, ctx.t))}`] : []),
     ],
     json: { reset: axis ?? "all", chars: size.chars },
-    warnings: [...riskWarnings(config.axes, ctx.t), ...comboWarnings(config, ctx.t)],
+    warnings: [...riskWarnings(config.axes, ctx.t), ...comboWarnings(config, ctx.t),
+      ...contextCapWarnings(config, size.chars, ctx.t)],
   };
 }

@@ -3,6 +3,7 @@
 import { test, beforeEach, afterEach } from "node:test";
 import assert from "node:assert/strict";
 import { mkdirSync, mkdtempSync, realpathSync, rmSync, readFileSync, writeFileSync, readdirSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -309,6 +310,61 @@ for (const language of LANGUAGES) {
     assert.ok(flat(out.join("")).includes(flat(projectTrust!)), `${language}: project receipt lost its trust step`);
   });
 }
+
+test("the Claude context cap notice follows the delivered guide-and-tone size", async () => {
+  mkdirSync(join(home, "project"));
+  assert.equal(await cli("init", "--here", "--tools", "claude", "--lang", "en", "--auto"), 0, err.join(""));
+  const setNote = async (note: string) => {
+    out = [];
+    assert.equal(await cli("set", `persona.note=${note}`, "--json"), 0, err.join(""));
+    const warnings = JSON.parse(out.join("")).warnings as string[];
+    // Measure what the installed reader actually hands Claude Code, not the CLI's own formula.
+    const state = join(home, "state");
+    const reader = spawnSync(process.execPath, [join(state, "reader.mjs"), "--provider", "claude", "--state", state],
+      { input: "", encoding: "utf8" });
+    assert.equal(reader.status, 0, reader.stderr);
+    return { total: [...reader.stdout].length, warnings };
+  };
+  const notice = (total: number) => EN.artifact.contextCap("10,000", total.toLocaleString("en-US"));
+  const base = await setNote("x");
+  // Claude Code measures the output without its final newline, so 10,001 written characters fit.
+  const atCap = await setNote("x".repeat(2 + 10_000 - base.total));
+  assert.equal(atCap.total, 10_001, "the note no longer grows the payload one character at a time");
+  assert.deepEqual(atCap.warnings, [], "a payload at the cap is delivered whole");
+  const over = await setNote("x".repeat(3 + 10_000 - base.total));
+  assert.deepEqual(over.warnings, [notice(10_001)]);
+  out = [];
+  assert.equal(await cli("doctor", "--here", "--json"), 0, err.join(""));
+  const capCheck = JSON.parse(out.join("")).checks.find((check: { name: string }) => check.name === "Claude Code context");
+  assert.equal(capCheck?.state, "problem", "doctor did not report the oversized Claude payload");
+  assert.equal(capCheck.detail, notice(10_001));
+  out = [];
+  assert.equal(await cli("off", "--json"), 0, err.join(""));
+  assert.deepEqual(JSON.parse(out.join("")).warnings, [], "paused delivery sends no hook context");
+  out = [];
+  assert.equal(await cli("doctor", "--here", "--json"), 0, err.join(""));
+  assert.ok(!JSON.parse(out.join("")).checks.some((check: { name: string }) => check.name === "Claude Code context"));
+  out = [];
+  assert.equal(await cli("on", "--json"), 0, err.join(""));
+  assert.deepEqual(JSON.parse(out.join("")).warnings, [notice(10_001)], "resumed delivery is oversized again");
+  const settingsPath = join(home, "project", ".claude", "settings.json");
+  writeFileSync(settingsPath, JSON.stringify({ ...JSON.parse(readFileSync(settingsPath, "utf8")), disableAllHooks: true }));
+  out = [];
+  assert.equal(await cli("doctor", "--here", "--json"), 0, err.join(""));
+  assert.ok(!JSON.parse(out.join("")).checks.some((check: { name: string }) => check.name === "Claude Code context"),
+    "disabled hooks deliver nothing, which doctor already reports");
+});
+
+test("hosts without Claude Code get no Claude context cap notice", async () => {
+  mkdirSync(join(home, "project"));
+  assert.equal(await cli("init", "--here", "--tools", "codex", "--lang", "en", "--auto"), 0, err.join(""));
+  out = [];
+  assert.equal(await cli("set", `persona.note=${"x".repeat(12_000)}`, "--json"), 0, err.join(""));
+  assert.deepEqual(JSON.parse(out.join("")).warnings, []);
+  out = [];
+  assert.equal(await cli("doctor", "--here", "--json"), 0, err.join(""));
+  assert.ok(!JSON.parse(out.join("")).checks.some((check: { name: string }) => check.name === "Claude Code context"));
+});
 
 test("a rejected connection command identifies itself and its scope without writes", async () => {
   mkdirSync(join(home, "project"));

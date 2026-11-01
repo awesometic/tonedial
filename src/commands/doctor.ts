@@ -28,7 +28,7 @@ import {
   type SeedState,
 } from "../core/seeds.ts";
 import { toCompileInput } from "../core/resolve.ts";
-import { artifactSize, humanText, nextStep, receiptLines, recoveryRollbackLines, section } from "../ui/format.ts";
+import { artifactSize, claudeContextCap, humanText, nextStep, receiptLines, recoveryRollbackLines, section } from "../ui/format.ts";
 import { wrap } from "../ui/width.ts";
 import { applyRollback, assertFresh, planChange, previewRollback, type Change } from "../wiring/apply.ts";
 import { confirm } from "../ui/prompt.ts";
@@ -820,6 +820,12 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true, showCodexActi
       ...(guidance === "" ? [] : [guidance])];
   }
 
+  // Measured from the files on disk; Claude Code's own truncation is not observed here.
+  if (config.enabled && payload.totalChars !== null
+    && integrations.some(({ tool, configuration }) => tool === "claude" && configuration === "configured")
+    && !hookSettings.some(({ tool, state }) => tool === "claude" && state === "disabled")) {
+    for (const detail of claudeContextCap(payload.totalChars, ctx.t)) checks.push({ name: "Claude Code context", state: "problem", detail });
+  }
   checks.push(seedCheck(ctx, config, seeds));
   checks.push({
     name: "reader",

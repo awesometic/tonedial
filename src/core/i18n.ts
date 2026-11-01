@@ -260,6 +260,8 @@ export type Messages = {
   };
   artifact: {
     size: (chars: string) => string;
+    /** Claude Code's hook context cap; advisory, never a block on the change. */
+    contextCap: (cap: string, total: string) => string;
     wouldWrite: string;
     wrote: string;
     notWritten: string;
@@ -787,6 +789,7 @@ const enMessages: Messages = {
   },
   artifact: {
     size: (chars) => `TONE.md ${chars} characters`,
+    contextCap: (cap, total) => `Claude Code replaces hook context over ${cap} characters with a short preview, so the model sees only the start of this tone. The guide and tone total ${total} characters; shorten whichever of persona.note, persona.self_ref, persona.user_ref or safeword is long.`,
     wouldWrite: "would write",
     wrote: "written",
     notWritten: "TONE.md is missing. Run tonedial compile",
@@ -1504,6 +1507,7 @@ const koMessages: Messages = {
   },
   artifact: {
     size: (chars) => `TONE.md ${chars}자`,
+    contextCap: (cap, total) => `Claude Code는 ${cap}자가 넘는 훅 내용을 짧은 미리보기로 바꾸므로 모델은 톤의 앞부분만 봅니다. 안내 파일과 톤을 합치면 ${total}자입니다. persona.note, persona.self_ref, persona.user_ref, safeword 중 긴 값을 줄이세요.`,
     wouldWrite: "기록 예정",
     wrote: "기록됨",
     notWritten: "TONE.md가 없습니다. tonedial compile을 실행해 주세요",

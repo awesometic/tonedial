@@ -12,7 +12,7 @@ import {
   BUNDLED, SLUG_PATTERN, matchesPreset, withPreset, assertPresetSelection, customPresetDir, inspectPresetLibrary, parsePreset,
   preparePresetWrite, resolvePreset, type Preset, type PresetEntry,
 } from "../core/presets.ts";
-import { applyPlanned, planArtifact, planConfig } from "./compile.ts";
+import { applyPlanned, contextCapWarnings, planArtifact, planConfig } from "./compile.ts";
 import { check as checkCombos } from "../core/combos.ts";
 import { artifactSize, combination, humanText, riskWarnings } from "../ui/format.ts";
 import { captureRawEntry, planChange, rawReadChange, rawReadCheck, type Change, type RawEntryCapture } from "../wiring/apply.ts";
@@ -132,7 +132,7 @@ export async function runEdit(ctx: Ctx, args: string[]): Promise<CommandResult> 
       return {
         lines,
         json: { path: target.path, editor: editor[0], opened: true, changed: true, chars: size.chars },
-        warnings: stateWarnings(ctx, config),
+        warnings: stateWarnings(ctx, config, size.chars),
       };
     }
 
@@ -200,7 +200,7 @@ export async function runEdit(ctx: Ctx, args: string[]): Promise<CommandResult> 
         const finalConfig = { ...configRead.change, after: serializeConfig(config, ctx.t) };
         await commit([configRead.change, presetChange, toneChange], [finalConfig]);
         lines.push(`  ${ctx.ui.dim(artifactSize(size, ctx.t))}`);
-        warnings.push(...stateWarnings(ctx, config));
+        warnings.push(...stateWarnings(ctx, config, size.chars));
       } else {
         await commit([configRead.change, presetChange]);
       }
@@ -228,11 +228,12 @@ export async function runEdit(ctx: Ctx, args: string[]): Promise<CommandResult> 
 }
 
 /** The notices every other state-changing command emits, through the same owners they use. */
-function stateWarnings(ctx: Ctx, config: Config): string[] {
+function stateWarnings(ctx: Ctx, config: Config, chars: number): string[] {
   return [
     ...checkCombos(config.axes).map((w) => combination(w, ctx.t)),
     ...settingsWarnings(config, ctx.t, ctx.asJson),
     ...riskWarnings(config.axes, ctx.t),
+    ...contextCapWarnings(config, chars, ctx.t),
   ];
 }
 

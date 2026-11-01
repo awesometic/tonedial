@@ -190,6 +190,7 @@ const messages: Messages = {
   },
   artifact: {
     size: (chars) => `TONE.md ${chars} 字符`,
+    contextCap: (cap, total) => `Claude Code 会把超过 ${cap} 字符的钩子内容替换为简短预览，因此模型只能看到语气的开头部分。指南和语气合计 ${total} 字符；请缩短 persona.note、persona.self_ref、persona.user_ref、safeword 中较长的值。`,
     wouldWrite: "将写入",
     wrote: "已写入",
     notWritten: "缺少 TONE.md，请运行 tonedial compile",

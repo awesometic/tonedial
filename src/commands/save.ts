@@ -7,7 +7,7 @@ import { BUNDLED, PRESET_SCHEMA, SLUG_PATTERN, preparePresetWrite, presetSetting
 import { artifactSize, humanText, nextStep } from "../ui/format.ts";
 import { cells, truncate, wrap } from "../ui/width.ts";
 import { PERSONA_DESCRIPTION_MAX } from "../core/combos.ts";
-import { applyPlanned, planArtifact, planConfig } from "./compile.ts";
+import { applyPlanned, contextCapWarnings, planArtifact, planConfig } from "./compile.ts";
 import { planChange, rawReadChange, rawReadCheck } from "../wiring/apply.ts";
 
 /** Only the axes that moved. Every axis is still emitted; sparsity is storage, not compilation. */
@@ -102,5 +102,6 @@ export async function savePreset(
     ],
     json: { slug, displayName, values, settings: preset.settings, nonDefaultAxes: count, replaced, chars: size.chars,
       ...(options.create ? { created: true, diff: result.diff, operationId: result.operationId } : {}) },
+    warnings: contextCapWarnings(config, size.chars, ctx.t),
   };
 }

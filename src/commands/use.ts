@@ -9,7 +9,7 @@ import { ConfigError, serializeConfig } from "../core/config.ts";
 import { exportAliasesState, projectTonePath } from "../core/paths.ts";
 import { check as checkCombos } from "../core/combos.ts";
 import { withPreset, assertPresetSelection, inspectPresetLibrary, resolvePreset } from "../core/presets.ts";
-import { applyPlanned, planArtifact, planConfig } from "./compile.ts";
+import { applyPlanned, contextCapWarnings, planArtifact, planConfig } from "./compile.ts";
 import { planChange, rawReadCheck } from "../wiring/apply.ts";
 import { artifactSize, combination, humanText, nextStep } from "../ui/format.ts";
 import { truncate, wrap } from "../ui/width.ts";
@@ -108,6 +108,7 @@ export async function runUse(ctx: Ctx, args: string[]): Promise<CommandResult> {
     },
     warnings: [
       ...checkCombos(config.axes).map((w) => combination(w, ctx.t)),
+      ...contextCapWarnings(config, size.chars, ctx.t),
     ],
   };
 }

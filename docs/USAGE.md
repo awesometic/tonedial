@@ -423,6 +423,8 @@ Read-only doctor, dry runs and operation-ID rollback retain their scope exceptio
 | Antigravity IDE/Desktop | `.agents/hooks.json` / `~/.gemini/config/hooks.json` | Named `tonedial` hook with direct `PreInvocation` commands; JSON `injectSteps[].ephemeralMessage` |
 
 Delivery reads the managed `AGENTS.md` guide before `TONE.md` from the same state root.
+Claude Code replaces hook context over 10,000 characters with a short preview.
+When Claude Code is connected and the guide and an enabled tone exceed that, tone-changing commands and `doctor` show a notice; the change is still saved.
 Tone changes regenerate the artifact without rewriting the guide.
 Setup merges owned entries and preserves unrelated handlers; no home instruction-file import is added.
 Antigravity's skill link is `.agents/skills/tonedial` in a project or `~/.gemini/config/skills/tonedial` globally.

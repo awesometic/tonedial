@@ -3,7 +3,7 @@
 import type { CommandResult, Ctx } from "../cli.ts";
 import { serializeConfig } from "../core/config.ts";
 import { wrap } from "../ui/width.ts";
-import { applyPlanned, planArtifact, planConfig } from "./compile.ts";
+import { applyPlanned, contextCapWarnings, planArtifact, planConfig } from "./compile.ts";
 
 async function setDelivery(ctx: Ctx, enabled: boolean): Promise<CommandResult> {
   const { change: configChange, config } = planConfig(ctx);
@@ -21,6 +21,7 @@ async function setDelivery(ctx: Ctx, enabled: boolean): Promise<CommandResult> {
       .flatMap((line) => wrap(line, ctx.ui.width - 2))
       .map((line) => `  ${ctx.ui.bold(changed ? ctx.ui.success(line) : line)}`),
     json: { enabled, changed, path: ctx.paths.tone, chars: size.chars },
+    warnings: contextCapWarnings(config, size.chars, ctx.t),
   };
 }
 

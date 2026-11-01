@@ -91,6 +91,7 @@ export async function runCreate(ctx: Ctx, args: string[]): Promise<CommandResult
       warnings: result.json.created === true ? [
         ...settingsWarnings(config, ctx.t, ctx.asJson), ...riskWarnings(config.axes, ctx.t),
         ...checkCombos(config.axes).map((notice) => combination(notice, ctx.t)),
+        ...(result.warnings ?? []),
       ] : [],
     };
   } catch (cause) {

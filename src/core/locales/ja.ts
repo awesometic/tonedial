@@ -190,6 +190,7 @@ const messages: Messages = {
   },
   artifact: {
     size: (chars) => `TONE.md ${chars}文字`,
+    contextCap: (cap, total) => `Claude Codeは${cap}文字を超えるフックの内容を短いプレビューに置き換えるため、モデルが見るのは口調の冒頭だけです。ガイドと口調の合計は${total}文字です。persona.note、persona.self_ref、persona.user_ref、safewordのうち長い値を短くしてください。`,
     wouldWrite: "書き込み予定",
     wrote: "書き込み済み",
     notWritten: "TONE.md がありません。tonedial compile を実行してください",

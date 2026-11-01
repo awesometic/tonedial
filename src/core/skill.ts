@@ -169,7 +169,8 @@ Agent experience and specialty are roleplay, not verified credentials or tool ca
 Both descriptions lose to axes and task/permission rules, and may influence content.
 A persona note expresses manner or role, loses to axes, and may also influence
 content; it is not a way to override task or permission rules.
-Persona notes have no length limit.
+Persona notes have no length limit. If the CLI reports that Claude Code will cut the hook context
+to a short preview, relay it and offer to shorten the long setting it names; the change is already saved.
 
 ToneDial has no guard toggle or automatic emergency register. All axis levels 1–5 are choices
 the user can request. Report advisory \`riskAxes\` and combination notices without lowering
