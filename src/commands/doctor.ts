@@ -661,7 +661,7 @@ export async function runDoctor(ctx: Ctx, _args: string[]): Promise<CommandResul
   };
 }
 
-async function doctorReport(ctx: Ctx, showRollbackCommands = true, showCodexAction = true): Promise<CommandResult> {
+async function doctorReport(ctx: Ctx, showRollbackCommands = true): Promise<CommandResult> {
   // Recovery must remain available even if an interrupted operation left config unparseable.
   const inspected = inspectOperations(ctx.paths);
   const recovery = {
@@ -813,7 +813,6 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true, showCodexActi
       : integration === undefined ? ctx.t.doctor.hookNotConnected
       : integration.configuration !== "configured" || integration.runtime.state !== "available"
         ? ctx.t.doctor.hookNeedsInspection
-      : setting.tool === "codex" && !showCodexAction ? ""
       : ctx.t.doctor.hookGuidance[setting.tool];
     const detail = check.humanDetail ?? [check.detail];
     const state = ctx.t.doctor.hookSettingState[setting.state];

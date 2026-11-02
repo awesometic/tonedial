@@ -707,6 +707,13 @@ test("a clean preview exit names the step that keeps what was heard", () => {
   const failed = invoke(["codex", "--accept-usage", "--color=never"], true, { TONEDIAL_TEST_STATUS: "3" });
   assert.equal(failed.status, 3);
   assert.ok(failed.stdout.endsWith("native display output\n"), "a failed session gets no follow-up step");
+  // Paused delivery reaches no conversation even once connected, so no connect step is offered.
+  const config = JSON.parse(readFileSync(join(state, "config.json"), "utf8"));
+  config.enabled = false;
+  writeFileSync(join(state, "config.json"), JSON.stringify(config));
+  const paused = invoke(["codex", "--accept-usage", "--color=never"], true);
+  assert.equal(paused.status, 0, paused.stderr);
+  assert.ok(paused.stdout.endsWith("native display output\n"), paused.stdout);
 });
 
 test("a missing provider points at the installed one with the same flags", () => {

@@ -185,7 +185,6 @@ const messages: Messages = {
     genderLabel: (gender) => `性別 ${gender}`,
     noteChars: (count) => `メモ ${count}文字`,
     descriptionOverCap: (field, given, cap) => `${field}: ${given}文字 · 上限 ${cap}`,
-    descriptionChars: (field, count) => `${field === "user" ? "ユーザー背景" : "架空の役割"} · ${count}文字`,
     charCount: (count) => `${count}文字`,
     descriptionFull: (field, value) => `${field === "user" ? "ユーザー背景" : field === "agent" ? "架空の役割" : "追加の話し方・役割"}: ${value}`,
   },

@@ -25,8 +25,8 @@ export async function runUse(ctx: Ctx, args: string[]): Promise<CommandResult> {
   if (!slug) throw new ConfigError(ctx.t.preset.needsSlugArg);
   const library = inspectPresetLibrary(ctx.paths.presets, ctx.t);
   const known = library.entries.map((entry) => entry.preset.slug);
-  const selected = slug ? resolvePreset(ctx.paths.presets, slug, ctx.t, library) : null;
-  if (selected === null) throw new ConfigError(ctx.t.preset.unknown(slug ?? "", known));
+  const selected = resolvePreset(ctx.paths.presets, slug, ctx.t, library);
+  if (selected === null) throw new ConfigError(ctx.t.preset.unknown(slug, known));
   assertPresetSelection(selected, ctx.t);
   const preset = selected.preset;
   // The resolver's exact source and precedence reads remain bound through publication.

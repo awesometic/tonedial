@@ -260,7 +260,6 @@ export type Messages = {
     noteChars: (count: number) => string;
     /** Hard-bounded role descriptions are rejected before a config mutation. */
     descriptionOverCap: (field: string, given: number, cap: number) => string;
-    descriptionChars: (field: "user" | "agent", count: number) => string;
     charCount: (count: number) => string;
     descriptionFull: (field: "user" | "agent" | "note", value: string) => string;
   };
@@ -539,7 +538,7 @@ export type Messages = {
     recoveryOptions: string;
     /** Section headings, so seventeen commands read as four short lists. */
     groups: { tone: string; presets: string; agents: string; upkeep: string; flags: string };
-    /** The two commands someone who has just installed this should run. */
+    /** Introduces the first-run commands someone who has just installed this should run. */
     firstSteps: string;
     examples: string;
     commands: { on: string; off: string; init: string; set: string; get: string; address: string; persona: string; reset: string; show: string; create: string; save: string; list: string; edit: string; use: string; compile: string; export: string; import: string; wire: string; unwire: string; doctor: string; update: string; eject: string; test: string };
@@ -826,7 +825,6 @@ const enMessages: Messages = {
     genderLabel: (gender) => `gender ${gender}`,
     noteChars: (count) => `note ${count} chars`,
     descriptionOverCap: (field, given, cap) => `${field}: ${given} characters · maximum ${cap}`,
-    descriptionChars: (field, count) => `${field === "user" ? "user context" : "fictional agent role"} · ${count} chars`,
     charCount: (count) => `${count} chars`,
     descriptionFull: (field, value) => `${field === "user" ? "user context" : field === "agent" ? "fictional agent role" : "persona note"}: ${value}`,
   },
@@ -1586,7 +1584,6 @@ const koMessages: Messages = {
     genderLabel: (gender) => `성별 ${gender}`,
     noteChars: (count) => `노트 ${count}자`,
     descriptionOverCap: (field, given, cap) => `${field}: ${given}자 · 최대 ${cap}자`,
-    descriptionChars: (field, count) => `${field === "user" ? "사용자 배경" : "가상 에이전트 역할"} · ${count}자`,
     charCount: (count) => `${count}자`,
     descriptionFull: (field, value) => `${field === "user" ? "사용자 배경" : field === "agent" ? "가상 에이전트 역할" : "추가 말투·역할"}: ${value}`,
   },

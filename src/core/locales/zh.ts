@@ -185,7 +185,6 @@ const messages: Messages = {
     genderLabel: (gender) => `性别 ${gender}`,
     noteChars: (count) => `备注 ${count} 字符`,
     descriptionOverCap: (field, given, cap) => `${field}：${given} 字符 · 上限 ${cap}`,
-    descriptionChars: (field, count) => `${field === "user" ? "用户背景" : "虚构代理角色"} · ${count} 字符`,
     charCount: (count) => `${count} 字符`,
     descriptionFull: (field, value) => `${field === "user" ? "用户背景" : field === "agent" ? "虚构代理角色" : "补充语气与角色"}：${value}`,
   },

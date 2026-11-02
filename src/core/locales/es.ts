@@ -185,7 +185,6 @@ const messages: Messages = {
     genderLabel: (gender) => `género ${gender}`,
     noteChars: (count) => `nota de ${count} caracteres`,
     descriptionOverCap: (field, given, cap) => `${field}: ${given} caracteres · máximo ${cap}`,
-    descriptionChars: (field, count) => `${field === "user" ? "contexto del usuario" : "rol ficticio del agente"} · ${count} caracteres`,
     charCount: (count) => `${count} caracteres`,
     descriptionFull: (field, value) => `${field === "user" ? "contexto del usuario" : field === "agent" ? "rol ficticio del agente" : "nota de personalidad"}: ${value}`,
   },

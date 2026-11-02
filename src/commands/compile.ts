@@ -8,7 +8,6 @@ import { toCompileInput } from "../core/resolve.ts";
 import { contextArtifactTargets, GUIDE_MD } from "../core/seeds.ts";
 import { claudeContextCap, humanText, nextStep, num } from "../ui/format.ts";
 import { wrap } from "../ui/width.ts";
-import { confirm } from "../ui/prompt.ts";
 import { captureRawEntry, gate, planChange, rawReadChange, type Change } from "../wiring/apply.ts";
 
 type ArtifactChange = Change & { contextCompanions?: Change[] };
@@ -50,7 +49,6 @@ export async function applyPlanned(
   changes: Change[],
   finalChanges: Change[] = [],
   review = false,
-  reviewLines: string[] = [],
 ): Promise<Awaited<ReturnType<typeof gate>>> {
   const artifact = changes.find((change) => (change as ArtifactChange).contextCompanions !== undefined) as ArtifactChange | undefined;
   const synchronized = [...changes];
@@ -68,15 +66,8 @@ export async function applyPlanned(
     t: ctx.t,
     auto: !review || ctx.flags.auto,
     verbose: review && ctx.flags.verbose,
-    ...(review && !ctx.asJson && reviewLines.length ? { ask: async (question: string) => {
-      process.stdout.write(`\n${reviewLines.join("\n")}\n`);
-      return confirm(question);
-    } } : {}),
     ui: ctx.ui,
   });
-  if (review && !ctx.asJson && (ctx.flags.auto || ctx.flags.dryRun) && reviewLines.length) {
-    result.lines.push("", ...reviewLines);
-  }
   return result;
 }
 

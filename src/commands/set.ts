@@ -418,7 +418,6 @@ async function runDial(ctx: Ctx): Promise<CommandResult> {
 export async function runReset(ctx: Ctx, args: string[]): Promise<CommandResult> {
   const { change: configChange, config } = planConfig(ctx);
   const [axis] = args;
-  const before = axis !== undefined && isAxis(axis) ? config.axes[axis] : null;
   const previous = { ...config.axes };
   const previousPreset = config.preset === null ? null : humanText(config.preset);
 
@@ -448,7 +447,7 @@ export async function runReset(ctx: Ctx, args: string[]): Promise<CommandResult>
     lines: [
       `  ${ctx.ui.bold(finalConfig.before === finalConfig.after ? ctx.t.axis.settingsUnchanged : ctx.ui.success(ctx.t.axis.settingsSaved))}`,
       ...movementLines(moves, ctx, config.axes),
-      ...(axis && before === AXIS_DEFAULT[axis] ? [`  ${ctx.ui.dim(ctx.t.axis.reset(axis, AXIS_DEFAULT[axis]))}`] : []),
+      ...(axis && isAxis(axis) && previous[axis] === AXIS_DEFAULT[axis] ? [`  ${ctx.ui.dim(ctx.t.axis.reset(axis, AXIS_DEFAULT[axis]))}`] : []),
       ...(axis ? [] : wrap(ctx.t.axis.resetAll(previousPreset), ctx.ui.width - 2).map((line) => `  ${ctx.ui.dim(line)}`)),
       `  ${ctx.ui.success(toneChange.before === toneChange.after ? ctx.t.artifact.current : ctx.t.artifact.generated)}`,
       ...(ctx.flags.verbose ? [`  ${ctx.ui.dim(artifactSize(size, ctx.t))}`] : []),

@@ -85,14 +85,16 @@ export async function runTest(ctx: Ctx, args: string[]): Promise<CommandResult> 
 
   const installed = PROVIDERS.map((provider) => ({ provider, program: onPath(provider, ctx.env) }))
     .filter((entry): entry is { provider: Provider; program: string } => entry.program !== null);
+  // The same launch, as a command a person can rerun.
+  const rerun = (name: Provider) => `tonedial test ${name}${preview ? ` --preset ${preview.slug}` : ""}` +
+    `${ctx.flags.project === null ? "" : ` --project "${shellQuote(target)}"`}`;
   let selected = requested === undefined ? undefined : installed.find((entry) => entry.provider === requested);
   if (requested !== undefined && selected === undefined) {
     // A copied recipe can name the provider that is missing; offer the installed one instead.
     const other = installed[0];
     throw new ConfigError(copy.providerUnavailable(LABELS[requested as Provider], other === undefined ? null : {
       label: LABELS[other.provider],
-      command: `tonedial test ${other.provider}${ctx.flags.preset == null ? "" : ` --preset ${humanText(ctx.flags.preset)}`}` +
-        `${ctx.flags.project === null ? "" : ` --project "${shellQuote(target)}"`}`,
+      command: rerun(other.provider),
     }));
   }
   if (installed.length === 0) throw new ConfigError(copy.noProvider);
@@ -171,8 +173,7 @@ export async function runTest(ctx: Ctx, args: string[]): Promise<CommandResult> 
     .map((line) => `  ${ctx.ui.risk(line)}`)));
   // A plan ends with the command that would open it.
   if (planOnly) {
-    lines.push(...nextStep(`tonedial test ${provider}${preview ? ` --preset ${preview.slug}` : ""}` +
-      `${ctx.flags.project === null ? "" : ` --project "${shellQuote(target)}"`}`, ctx.ui));
+    lines.push(...nextStep(rerun(provider), ctx.ui));
   }
 
   return {
@@ -195,7 +196,8 @@ export async function runTest(ctx: Ctx, args: string[]): Promise<CommandResult> 
         const follow = result.status !== 0 ? null
           : preview && (preview.slug !== config.preset || config.unsaved) ? [copy.afterPreset, `tonedial use ${preview.slug}`]
             // `--project` names the conversation folder here, not a connection scope.
-            : connected(config) ? null : [copy.afterConnect, "tonedial wire --global"];
+            // Paused delivery reaches nothing even once connected, as every other step says.
+            : !config.enabled || connected(config) ? null : [copy.afterConnect, "tonedial wire --global"];
         if (follow) {
           process.stdout.write(`${["", ...wrap(follow[0]!, ctx.ui.width - 2).map((line) => `  ${ctx.ui.dim(line)}`),
             ...nextStep(follow[1]!, ctx.ui).slice(1)].join("\n")}\n`);
