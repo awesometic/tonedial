@@ -79,6 +79,56 @@ Regenerate affected assets when the renderer changes; retain each locale's input
 Use terminal cells at column boundaries, keep prose runs together and never stretch glyph outlines to fill cells.
 Run generation/tests with disposable state; layout evidence does not prove native activation or adherence.
 
+### Refresh dial input hashes
+
+Each `dial-example.json` records the SHA-256 of every renderer and catalogue source in `inputs`.
+Editing `src/core/i18n.ts` or `src/core/locales/*.ts` therefore fails `test/dial-example.test.ts`
+even when the dial frame itself is unchanged.
+Refresh the record in this order:
+
+1. Regenerate each locale's frame with `node scripts/dial-frame.ts <language> <columns>`
+   in the environment the test uses: repository root, empty disposable `HOME`, `XDG_CONFIG_HOME`,
+   `TONEDIAL_HOME` and `TONEDIAL_AGENT_HOME`, empty `PATH` and `LANG=en_US.UTF-8`.
+2. Compare the frame's SHA-256 with `frameSha256`.
+3. If it still matches, refresh only the `inputs` hashes.
+   If it differs, the image is stale: regenerate non-English SVGs with the recorded `svgRecipe`,
+   rasterize the English PNG from `node scripts/dial-svg.ts en 80` as its `renderer` field records,
+   inspect each image, and record its new `frameSha256` and `imageSha256` before refreshing `inputs`.
+
+This script performs steps 1–3 for every locale and rewrites only records whose frame still matches:
+
+```bash
+node --input-type=module - <<'JS'
+import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
+const sha256 = bytes => createHash("sha256").update(bytes).digest("hex");
+const scratch = mkdtempSync(join(tmpdir(), "tonedial-dial-refresh-"));
+const [home, state, agents] = ["home", "state", "agents"].map(name => join(scratch, name));
+for (const path of [home, state, agents]) mkdirSync(path);
+const env = { HOME: home, XDG_CONFIG_HOME: home, TONEDIAL_HOME: state, TONEDIAL_AGENT_HOME: agents, PATH: "", LANG: "en_US.UTF-8" };
+for (const language of ["en", "ko", "ja", "zh", "es"]) {
+  const file = `docs/media/readme/${language}/dial-example.json`;
+  const metadata = JSON.parse(readFileSync(file, "utf8"));
+  const frame = spawnSync(process.execPath, ["scripts/dial-frame.ts", language, String(metadata.columns)], { env, encoding: "utf8" });
+  if (frame.status !== 0 || sha256(frame.stdout) !== metadata.frameSha256) {
+    console.log(`${language}: frame changed; regenerate the image first`);
+    continue;
+  }
+  for (const path of Object.keys(metadata.inputs)) metadata.inputs[path] = sha256(readFileSync(path));
+  writeFileSync(file, `${JSON.stringify(metadata, null, 2)}\n`);
+  console.log(`${language}: frame unchanged; inputs refreshed`);
+}
+rmSync(scratch, { recursive: true, force: true });
+JS
+```
+
+Rerun `node --test test/dial-example.test.ts` and review the JSON diff.
+Unless an image was regenerated, only `inputs` values change.
+
 ## Recorded conversations
 
 The seven bundled-character samples came from the actual `tonedial test` handoff

@@ -72,7 +72,8 @@ body:
     attributes:
       label: Versions and environment
       description: >
-        Include `tonedial --version`, `node --version`, and OS/version.
+        Include `tonedial --version --verbose`, which prints the ToneDial and Node versions
+        (use `node --version` if ToneDial cannot run), and OS/version.
         If a coding host is involved, name its CLI, desktop, or IDE surface and version.
         For terminal UI issues, include terminal name/version and columns × rows.
       placeholder: |

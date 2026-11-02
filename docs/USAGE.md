@@ -34,19 +34,20 @@ Every bundled profile includes axes, address, persona, register and safeword def
 `use` restores the complete profile; language and wiring stay global.
 
 ```bash
-tonedial list                       # active and custom profiles; --verbose adds axes
+tonedial list                       # bundled and saved profiles; --verbose adds axes
 tonedial show ego-sword             # preview the saved profile
 tonedial show                        # inspect the current settings
 tonedial use ego-sword               # replace current tone settings with this profile
 ```
 
-Bare `show` flags tone settings that have not been saved to a profile and offers a copyable `save` command.
+`show` without a slug flags tone settings that have not been saved to a profile and offers a copyable `save` command.
 Your settings and `TONE.md` are already persisted; the notice concerns the profile library.
 Selecting the same profile again discards those unsaved profile changes.
 
 Built-in address and role defaults use the interface language at selection or preview time.
 Changing the interface alone does not rewrite current role text; custom profiles always retain literal text.
-Fresh `init` selects the first complete profile.
+Interactive `init` asks you to choose a profile, then the user and self address and an optional safeword.
+Unattended `init` selects the first bundled profile, `caring-brother`.
 
 ### Create or save a profile
 
@@ -65,7 +66,7 @@ Invalid fields retry without discarding earlier answers.
 After the dial, review the file changes, profile name, addresses and descriptions, then approve once to save and apply.
 Esc in the dial or declining approval leaves settings and the library unchanged.
 `create` takes a single display-name argument followed by optional `key=value` assignments, and refuses an existing slug.
-`save` joins positional words as the display name and updates custom profiles; bare `save` or `save --slug <slug>` updates an existing custom profile, while a bundled or unset selection needs a new display name.
+`save` joins positional words as the display name and updates custom profiles; `save` with no arguments or `save --slug <slug>` updates an existing custom profile, while a bundled or unset selection needs a new display name.
 Use `--slug` to choose an identifier separately from the name, including for Korean names.
 
 For scripted creation:
@@ -82,7 +83,7 @@ JSON and dry-run never ask questions: provide the name and desired assignments.
 ### Set address, roles and language
 
 ```bash
-tonedial address "guide" "friend"    # self / user; bare address asks for both
+tonedial address "guide" "friend"    # self / user; no args asks for both
 tonedial persona                   # guided agent role, then user role/background
 tonedial persona "A fictional SRE specialist" "A developer maintaining services"
 tonedial set persona.user="I maintain services and prefer direct trade-offs"
@@ -260,13 +261,14 @@ tonedial off                       # pause delivery; keep the saved tone
 tonedial on                        # resume delivery
 ```
 
-`reset` preserves persona, safeword and other settings.
+`reset` preserves persona, safeword and other settings, and its receipt lists each moved axis like `set`.
 It neither disables delivery nor unloads context.
 `off` adds a delivery marker while retaining the complete compiled tone;
 the current managed reader emits no ToneDial context until `on` removes it.
 The switch is shared by every connection using that state root and is not part of a profile.
 It cannot remove context already delivered to an open conversation, so use a fresh conversation
 for a clean comparison with the model's ordinary manner.
+While delivery is off, `set`, `use`, `reset`, `show` and `doctor` say that new conversations get no tone and suggest `tonedial on`.
 After updating an older installation, refresh its existing tools and scope through the normal
 previewed `init` flow before using `off`; an older installed reader does not recognize the marker.
 The safeword requests one plain answer without persona, flattery or jokes, then the saved tone resumes.
@@ -338,7 +340,7 @@ Mutation receipts show generated/current status; `--verbose` adds the numeric si
 
 ## The inline dial
 
-Bare `tonedial set` opens the inline preview with pending changes and selected-axis hints.
+`tonedial set` with no arguments opens the inline preview with pending changes and selected-axis hints.
 
 | Key | Action |
 |---|---|
@@ -387,6 +389,9 @@ tonedial doctor --here
 
 The plan writes nothing and launches no provider.
 Review proposed file changes before approving; `--verbose` includes the diff and `--auto` supplies approval without hiding the plan.
+The preview names each path with its direction, such as `new file`, `modified`, `removed`, `new skill link` or `skill link removed`,
+and collapses three or more new files in one directory into a single block.
+The receipt then groups each agent's status, hook file and its own enablement step.
 Local setup does not configure remote/cloud runtimes.
 
 | Scope | Selection |
@@ -410,6 +415,7 @@ tonedial set "safeword=plain answer please" --json
 tonedial show --json
 ```
 
+With delivery on and no agent connected, `init`, `use` and `create` end with `tonedial test` for an installed Claude Code or Codex, otherwise with `tonedial wire`.
 Unattended setup needs explicit tools; ordinary unattended connection writes also need explicit scope, including state-only init and `doctor --fix`.
 Read-only doctor, dry runs and operation-ID rollback retain their scope exceptions.
 `--auto` never chooses tools by detection; JSON never prompts.
@@ -431,13 +437,15 @@ Hooks written by earlier versions keep that preview until `doctor --fix` or `ini
 Codex keys hook trust to the definition, so review a rewritten hook again in `/hooks`.
 Tone changes regenerate the artifact without rewriting the guide.
 Setup merges owned entries and preserves unrelated handlers; no home instruction-file import is added.
+Codex and Claude Code share the skill link `.agents/skills/tonedial` in the project or home directory; Claude Code also gets `.claude/skills/tonedial`.
 Antigravity's skill link is `.agents/skills/tonedial` in a project or `~/.gemini/config/skills/tonedial` globally.
 Its `~/.gemini/antigravity-ide/` and `~/.gemini/antigravity/` app-data directories are not hook locations.
 `init --commands` adds Claude's optional `/tone` command and requires Claude in the selection; `init --migrate-legacy` imports legacy tone state.
 When `codex` is connected interactively and installed on `PATH`, `init` offers to open Codex after the receipt so you can review `/hooks`.
 When `claude` is connected to a project interactively and installed on `PATH`, `init` offers to open Claude Code there so you can answer its workspace trust prompt.
 When both are connected, the first installed of Codex and Claude Code is offered.
-`wire` accepts a positional tool name or `--tools <list>` (or prompts interactively when neither is given).
+`wire` accepts a positional tool name or `--tools <list>`.
+With neither, it shows `init`'s numbered agent picker in a terminal; without a terminal it stops and shows an example command.
 
 ### Review host enablement
 
@@ -458,11 +466,12 @@ Use [actual-host trials](./TESTING.md#actual-host-and-one-day-trial) for deliver
 <summary>Doctor connection and enablement details</summary>
 
 Human diagnosis always shows the selected scope/directory, without needing `--verbose`.
+When delivery is paused it suggests `tonedial on`; when no agent is connected it ends with `tonedial wire` for that scope.
 Other registered connections are grouped by scope/directory and shared file status.
 Missing files mean some or all recorded files were absent, not that no connection was registered.
 These are presence checks; `--fix` leaves other scopes alone.
 Use the displayed read-only `doctor` command to inspect them, or `eject` if no longer needed.
-Eject disconnects every agent in that displayed scope, including those with present files; use scoped `unwire <tool>` for one (or bare `unwire` in a scope to disconnect all tools there).
+Eject disconnects every agent in that displayed scope, including those with present files; use scoped `unwire <tool>` for one (`unwire` without a tool disconnects all tools in that scope).
 Unimplemented targets do not appear as connections or hook observations.
 
 JSON `hookSettings` records each tool's `state` (`enabled`, `disabled`, `unknown`), `basis` and inspected `path`.
@@ -559,6 +568,7 @@ Moving an installed curl root breaks command/PATH references and is not repair.
 ### Recovery
 
 Use the installed command and the same state root as native delivery.
+`tonedial doctor --help` lists the recovery options below; the full help only points to it.
 Diagnose, preview, then approve:
 
 ```bash
@@ -635,32 +645,38 @@ See [candidate checks](./TESTING.md#isolated-candidate) for installation recover
 
 ## Command reference and JSON
 
-Bare `tonedial` shows first-use help without initializing state.
-Use `--help`, `<command> --help` or `--verbose` (`-v`) for details.
+`tonedial` with no arguments shows the short help without creating state: the first steps `init`, `test`, `set` and `wire`, then the commands by group.
+`tonedial --help` describes each command, most used first, and `<command> --help` adds its options and examples.
+`--verbose` (`-v`) adds detail to any command.
+Recovery options for `doctor --fix` appear only in `tonedial doctor --help`.
 Top-level help includes a link to the GitHub issue forms.
 Successful tone mutations recompile in the same action.
 
+An unknown command, option or extra argument exits with status 2 and names the help command to read.
+`tonedial help` and `tonedial version` point to `--help` and `--version` instead.
+A reader that closes early, as in `tonedial show | head`, does not crash the command; it still finishes its work.
+
 | Command | Purpose |
 |---|---|
-| `on` / `off` | Resume/pause hook delivery; keep settings, profiles and full `TONE.md` |
-| `set <key>=<value> …` | Change axes/settings; bare opens the dial |
-| `get [key]` | Read one/all current editable values; key adds meaning and choices |
-| `address [self user]` | Set address; bare asks for both |
-| `persona [agent user]` | Set both role descriptions; bare asks for each |
-| `reset [axis]` | Restore one/all axes; keep other settings |
-| `show [slug]` | Inspect current/saved tone; `--explain` adds settings/risks |
-| `use <slug>` | Apply a profile; `--project <dir>` also exports the artifact |
-| `save [display name] [--slug <slug>]` | Save current profile; bare or `--slug` updates a custom profile |
-| `create [display name] [key=value …]` | Create/apply after approval; accepts `--slug`, `--auto`, `--dry-run` |
-| `list` | List profiles; `--verbose` adds axis values |
+| `set <key>=<value> …` | Change axes, roles or settings; no args opens the dial |
+| `show [slug]` | Show current settings or preview a saved profile; `--explain` adds settings and risks |
+| `get [key]` | Show one or all current editable values; a key adds meaning and choices |
+| `reset [axis]` | Reset one axis, or all twelve with no args; keep other settings |
+| `address [self user]` | Set the agent's and your address; no args asks for both |
+| `persona [agent user]` | Set both role descriptions; no args asks for each |
+| `test [claude\|codex]` | Preview your tone or a profile in a new conversation; accepts `--preset`, `--project`, `--accept-usage`, `--dry-run` |
+| `off` / `on` | Pause/resume tone delivery; keep settings, profiles and full `TONE.md` |
+| `list` | List bundled and saved profiles; `--verbose` adds axis values |
+| `use <slug>` | Apply a profile; `--project <dir>` also exports `TONE.md` to `<dir>/.tonedial/` |
+| `create [display name] [key=value …]` | Create and apply after approval; no args guides setup; accepts `--slug`, `--auto`, `--dry-run` |
+| `save [display name] [--slug <slug>]` | Save the current tone as a profile; no name or `--slug` updates a custom profile |
 | `export <slug>` / `import <file-or-https-url>` | Transfer complete profiles |
 | `edit [preset <slug>]` | Open config/custom profile in the editor; `--dry-run` previews |
-| `init` | Initialize/rebuild app files; accepts scope flags, `--tools`, `--lang`, `--commands`, `--migrate-legacy`, `--auto`, `--dry-run` |
-| `wire [tool \| --tools <list>]` / `unwire [tool]` | Connect/disconnect in the selected scope (`--auto`, `--dry-run`) |
-| `doctor` | Diagnose; `--fix` rebuilds (`--tools`, `--from-preset`, `--from-operation [--restore-preset]`, `--quarantine-operation`, `--rollback`) |
-| `eject` | Disconnect a scope; retain shared state (`--auto`, `--dry-run`) |
-| `compile` | Repair missing/stale `TONE.md`; `--check` inspects without writes |
-| `test [claude\|codex]` | Fresh preview; accepts `--preset`, `--project`, `--accept-usage`, `--dry-run` |
+| `init` | Set up and refresh bundled files; accepts scope flags, `--tools`, `--lang`, `--commands`, `--migrate-legacy`, `--auto`, `--dry-run` |
+| `wire [tool \| --tools <list>]` / `unwire [tool]` | Connect/disconnect in the selected scope (`--auto`, `--dry-run`); `wire` without a tool prompts, `unwire` without one disconnects all |
+| `doctor` | Diagnose; `--fix` repairs (`--tools`, `--from-preset`, `--from-operation [--restore-preset]`, `--quarantine-operation`, `--rollback`) |
+| `eject` | Disconnect every agent in a scope; retain shared state and profiles (`--auto`, `--dry-run`) |
+| `compile` | Rebuild missing/stale `TONE.md`; `--check` reports without writing |
 | `update` | Update the running npm or curl installation (`--global`, `--auto`, `--dry-run`) |
 
 Ordinary changes compile automatically; `compile --check --json` also supplies reload paths.
@@ -685,7 +701,10 @@ and any remaining staging copy is retained at its reported temp path
 Deleting the staging file is refused when it would change ownership; with empty ownership,
 the deletion is committed to the live config as a raw edit before an error is reported.
 Concurrent on-disk changes also abort before writing and retain the staging copy when present.
-Once `config.json` ownership is verified—or during `edit preset <slug>`—validation failures (invalid settings, malformed preset JSON, or changing a preset's internal `"slug"` field) and staging-file deletion in `edit preset <slug>` still record the operation and commit the raw edit to the target path before reporting the error, so you can re-run `edit` or recover with `doctor --fix`.
+Once `config.json` ownership is verified, or during `edit preset <slug>`, validation failures still record the operation
+and commit the raw edit to the target path before reporting the error.
+These failures are invalid settings, malformed preset JSON, a changed internal `"slug"` field and, for `edit preset <slug>`, a deleted staging file.
+The error says the edit was saved as written and names the next step: `tonedial doctor` for `config.json`, or the `edit preset` command that reopens a profile.
 
 ## Try a fresh conversation
 
@@ -709,6 +728,11 @@ Enter `y` to accept; Enter or `n` cancels.
 | Schema-1 profile | Its axes with current separate settings |
 | Provider | One installed client can be selected; two prompt interactively; ambiguous plans need an explicit name |
 | Folder | Current directory or existing `--project` directory |
+
+If the named client is missing, the error offers the installed one; with neither installed, `test` stops before planning.
+`--dry-run` shows the plan and ends with the command that launches it.
+After a clean exit, a `--preset` preview suggests `tonedial use <slug>` unless that profile is already active without unsaved changes.
+Otherwise, with delivery on and no agent connected, it suggests `tonedial wire --global`.
 
 The README includes a [recorded Codex-default vs complete `vibe-coder` comparison](../README.md#same-model-a-tighter-plan)
 with [verbatim replies and provenance](./media/readme/verbosity-comparison.json).

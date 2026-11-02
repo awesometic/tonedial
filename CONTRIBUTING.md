@@ -49,6 +49,7 @@ npm test
 | Compiler/anchor changes | `npm run packs`, then `npm run fixtures`; inspect the generated diff |
 | Documentation | Resolve links, exercise changed examples and run their consumer tests |
 | CLI output/dial | Review [goldens and PTY checks](./docs/TESTING.md#output-and-terminal-regression-tests); retain state/stream assertions |
+| CLI catalogues | Golden checks, then [refresh the dial input hashes](./docs/media/readme/README.md#refresh-dial-input-hashes) |
 | Issue forms | Parse YAML and check GitHub's schema or preview |
 
 `npm test` runs **typecheck → build → fixture drift → pack drift → node:test**.
@@ -85,11 +86,14 @@ Authoring agents, models, plugins and skills are your choice; the project contra
 
 Preserve these boundaries:
 
-- **Pure compilation:** identical inputs produce identical bytes; no LLM or external state. All twelve axes use the single English anchor set at levels 1–5.
+- **Pure compilation:** identical inputs produce identical bytes; no LLM or external state.
+  All twelve axes use the single English anchor set at levels 1–5.
 - **Manner only:** risk notices are advisory; tone never changes permissions or approval requirements.
-- **Complete profiles:** axes, persona, address, register and safeword travel together. Legacy axis-only profiles preserve separate settings; language/wiring remain global.
+- **Complete profiles:** axes, persona, address, register and safeword travel together.
+  Legacy axis-only profiles preserve separate settings; language/wiring remain global.
 - **Shared state:** tone changes recompile immediately; project scope selects connections, not a separate library.
-- **Owned writes:** preserve user data and foreign settings/handlers. Generated markers do not authorize unrelated overwrites.
+- **Owned writes:** preserve user data and foreign settings/handlers.
+  Generated markers do not authorize unrelated overwrites.
 - **Evidence:** generated config, host activation, delivered context and model adherence are distinct claims.
 - **Skill parity:** audit generated skill guidance and seed provenance whenever its exposed CLI contract changes; see [AGENTS.md](./AGENTS.md).
 
@@ -98,11 +102,18 @@ Preserve these boundaries:
 Verify the actual host contract before adding an adapter.
 Use the [connection reference](./docs/USAGE.md#connecting-an-agent) alongside this checklist.
 
-1. **Paths:** confirm global/project hook names, events, matchers, handler shape and skill discovery. Update `AGENT_TOOLS`/`AGENT_LAYOUT` in `src/core/paths.ts`; explicitly check `hookFile` and `skills` defaults.
-2. **Delivery:** add labels and lifecycle matchers in `src/wiring/targets.ts` with the right argv or quoted-shell handler. Deliver guide before artifact, without editing project instructions. A reserved name alone is not support.
-3. **Reader:** implement the output envelope and provider name/repair hint in `src/core/reader.ts`, plus doctor self-test expectations. Codex/Claude consume plain stdout; Antigravity consumes JSON `injectSteps[].ephemeralMessage`.
-4. **Preservation:** cover trust/enablement, discovery, both scopes, foreign hooks, removal and recovery in disposable paths. Run applicable `extension-points`, `native-routes` and `wiring` tests, including modified/foreign negative cases.
-5. **Actual host:** use an [explicitly approved trial](./docs/TESTING.md#actual-host-and-one-day-trial). Record host/version, CLI/IDE/Desktop surface, scope, event, trust and fresh/resumed/compacted-session observations in the PR and integration status. Without a real session, report the activation gap.
+1. **Paths:** confirm global/project hook names, events, matchers, handler shape and skill discovery.
+   Update `AGENT_TOOLS`/`AGENT_LAYOUT` in `src/core/paths.ts`; explicitly check `hookFile` and `skills` defaults.
+2. **Delivery:** add labels and lifecycle matchers in `src/wiring/targets.ts` with the right argv or quoted-shell handler.
+   Deliver guide before artifact, without editing project instructions.
+   A reserved name alone is not support.
+3. **Reader:** implement the output envelope and provider name/repair hint in `src/core/reader.ts`, plus doctor self-test expectations.
+   Codex/Claude consume plain stdout; Antigravity consumes JSON `injectSteps[].ephemeralMessage`.
+4. **Preservation:** cover trust/enablement, discovery, both scopes, foreign hooks, removal and recovery in disposable paths.
+   Run applicable `extension-points`, `native-routes` and `wiring` tests, including modified/foreign negative cases.
+5. **Actual host:** use an [explicitly approved trial](./docs/TESTING.md#actual-host-and-one-day-trial).
+   Record host/version, CLI/IDE/Desktop surface, scope, event, trust and fresh/resumed/compacted-session observations in the PR and integration status.
+   Without a real session, report the activation gap.
 
 Actual-host sessions and personal/global config changes require explicit authorization; see [TESTING.md](./docs/TESTING.md#actual-host-and-one-day-trial) for trial, credential and isolation rules.
 
@@ -116,6 +127,7 @@ The first profile is the unattended default, so ordering changes behavior.
 When changing bundled profiles, update together:
 
 - `src/core/presets.ts` and all five CLI catalogues: `src/core/i18n.ts` plus `src/core/locales/{ja,zh,es}.ts`.
+  Catalogue edits also need [refreshed dial input hashes](./docs/media/readme/README.md#refresh-dial-input-hashes).
 - Packs/fixtures, extension-point/count checks and maintained product lists.
 - Applicable [model measurements](./docs/TESTING.md#model-measurements) when anchors change; keep each axis independently observable.
 
@@ -135,10 +147,13 @@ Navigation-only link repairs must leave evidence unchanged.
 
 Before opening the PR:
 
-- Explain the problem and resulting behavior; list passed, failed, unrun/unavailable checks and remaining limits.
+- Explain the problem and resulting behavior.
+  List passed, failed and unrun/unavailable checks with the Node version you ran, plus remaining limits.
 - Use the PR template's evidence boundaries; mark unrelated claims not applicable.
 - Add tests for realistic uncovered regressions, not test counts; never weaken a gate to pass.
-- Review the complete diff. AI assistance is welcome and disclosure optional; the submitting human owns correctness/verification. Measurement metadata remains required.
+- Review the complete diff.
+  AI assistance is welcome and disclosure optional; the submitting human owns correctness/verification.
+  Measurement metadata remains required.
 - Preserve contributor authorship and PR references when integrating; commit messages explain what changed and why.
 
 Use synthetic/redacted reports.
@@ -149,6 +164,7 @@ Publication requires maintainer authorization.
 ## Maintainer releases
 
 Keep the version in `package.json`, both root entries in `package-lock.json` and `src/cli.ts` aligned.
+A version change also changes the `npm-permission` goldens; [record them](./docs/TESTING.md#output-and-terminal-regression-tests) with `test/update.test.ts`.
 Prepare English release notes at `docs/releases/<version>.md`, including the pinned npm installation command and relevant changes.
 Commit the candidate to `main`, then run **Actions → Publish → Run workflow**.
 Pushing to `main` alone does not publish.

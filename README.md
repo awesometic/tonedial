@@ -2,7 +2,10 @@
 
 **Give your coding agent a character.**
 
-ToneDial is a local CLI for tuning and reusing a coding agent's voice across projects.
+ToneDial is a CLI that gives Claude Code, Codex and Antigravity a voice you choose and reuse across projects.
+Pick one of seven characters or tune twelve tone axes; ToneDial compiles them into a `TONE.md` file on your machine, deterministically and without a model call.
+Each agent's hooks deliver it to new conversations, and a ToneDial skill changes or reloads it mid-conversation.
+Tone changes manner only; permissions and approval prompts stay as your agent sets them.
 
 **7 characters · 12 tone axes · 5 CLI languages · Zero runtime dependencies**
 
@@ -39,10 +42,17 @@ Requires **Node 22+** and npm.
 ```bash
 npm install --global tonedial
 tonedial init --tools none --global --lang en
+tonedial test
 tonedial set
+tonedial wire
 ```
 
-Setup previews file changes for approval. This opens the dial without connecting an agent.
+1. `init` asks for a character, how it addresses you and an optional safeword, then shows the files it will write for approval.
+   `--tools none` connects no agent yet.
+2. `test` opens one fresh Claude Code or Codex conversation with that tone, after asking to use your provider account.
+   Without either client, skip to `wire`.
+3. `set` opens the dial; Enter applies your changes.
+4. `wire` asks which agent to connect, previews the change and ends with that agent's enablement step.
 
 [Connect your agent](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#connecting-an-agent) · [Try with disposable settings](https://github.com/awesometic/tonedial/blob/main/docs/TESTING.md#isolated-candidate)
 
@@ -195,13 +205,16 @@ The choice is saved with the profile. [Address settings](https://github.com/awes
 
 **↑↓** choose an axis · **←→ / 1–5** set its level · **Enter** apply · **Esc** discard
 
-ToneDial compiles your settings into `TONE.md` locally and deterministically. Your agent supplies the model.
+Enter applies and recompiles `TONE.md` at once. Your agent supplies the model.
 
 ## Bring your agent
 
 **Claude Code · Codex · Antigravity IDE/Desktop** — [connection guide](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#connecting-an-agent)
 
-Try a fresh conversation through an installed Codex or Claude Code client:
+`tonedial wire codex`, `claude` or `antigravity` connects one agent.
+Enable its hook where the receipt says; new conversations then receive the tone.
+
+Preview a saved profile in a fresh conversation through an installed Codex or Claude Code client:
 
 ```bash
 tonedial test codex --preset my-sword

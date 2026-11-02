@@ -2,7 +2,10 @@
 
 **给编程代理一个角色。**
 
-ToneDial 是本地 CLI，用于调整编程代理的语气并在不同项目中复用。
+ToneDial 是一个 CLI，为 Claude Code、Codex 和 Antigravity 赋予你选定的语气，并可在不同项目中复用。
+从七个角色中选一个，或调节十二个语气轴；ToneDial 会在你的电脑上将其编译为 `TONE.md` 文件，结果确定，且不调用模型。
+各代理的钩子会把语气送入新对话，ToneDial 技能可在对话中途更改或重新加载语气。
+语气只改变表达方式；权限和批准提示仍按代理自身的设置。
 
 **7 个角色 · 12 个语气轴 · 5 种 CLI 语言 · 零运行时依赖**
 
@@ -39,10 +42,17 @@ ToneDial 是本地 CLI，用于调整编程代理的语气并在不同项目中�
 ```bash
 npm install --global tonedial
 tonedial init --tools none --global --lang zh
+tonedial test
 tonedial set
+tonedial wire
 ```
 
-设置时会先展示文件变更并请求批准。无需连接代理即可先打开面板试用。
+1. `init` 会询问角色、对你的称呼和可选的安全词，然后列出将写入的文件并请求批准。
+   `--tools none` 暂不连接任何代理。
+2. `test` 会先征得使用你服务商账号的同意，再以该语气打开一个全新的 Claude Code 或 Codex 对话。
+   两个客户端都没有时，直接跳到 `wire`。
+3. `set` 打开面板；按 Enter 应用更改。
+4. `wire` 会询问要连接哪个代理，预览更改，最后给出该代理的启用步骤。
 
 [连接代理](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#connecting-an-agent) · [使用临时设置试用](https://github.com/awesometic/tonedial/blob/main/docs/TESTING.md#isolated-candidate)
 
@@ -200,13 +210,17 @@ tonedial save "My Sword"
 
 **↑↓** 选择语气轴 · **←→ / 1–5** 调整级别 · **Enter** 应用 · **Esc** 放弃
 
-ToneDial 在本地将设置编译为 `TONE.md`，相同设置生成相同结果。模型由你使用的代理提供。
+按 Enter 即应用更改，并立即重新编译 `TONE.md`。
+模型由你使用的代理提供。
 
 ## 接入你的代理
 
 **Claude Code · Codex · Antigravity IDE/Desktop** — [连接指南](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#connecting-an-agent)
 
-通过已安装的 Codex 或 Claude Code 客户端试用一次新对话：
+`tonedial wire codex`、`claude` 或 `antigravity` 可连接一个代理。
+按完成提示所示位置启用其钩子，此后新对话就会收到该语气。
+
+通过已安装的 Codex 或 Claude Code 客户端，在全新对话中预览已保存的配置：
 
 ```bash
 tonedial test codex --preset my-sword

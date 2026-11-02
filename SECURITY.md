@@ -1,7 +1,7 @@
 # Report a security issue
 
 **Use a private channel.** Check the repository's [Security page](https://github.com/awesometic/tonedial/security) for **Report a vulnerability**.
-Private reporting is the intended route, but its availability is unconfirmed for this unpublished project; enabling it remains a release operator task.
+Private reporting is the intended route, but it is not enabled for this repository yet; enabling it remains a maintainer task.
 
 If that action is unavailable, a public issue may request a private channel **without vulnerability details**.
 No alternative private contact is designated here.

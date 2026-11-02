@@ -2,7 +2,10 @@
 
 **コーディングエージェントにキャラクターを。**
 
-ToneDialは、コーディングエージェントの口調を調整し、複数のプロジェクトで再利用するローカルCLIです。
+ToneDialは、Claude Code、Codex、Antigravityに自分で選んだ口調を与え、複数のプロジェクトで再利用できるCLIです。
+7つのキャラクターから1つを選ぶか12の口調軸を調整すると、ToneDialが手元のマシンでモデルを呼び出さずに、決定的に `TONE.md` ファイルへコンパイルします。
+各エージェントのフックが新しい会話にこの口調を届け、ToneDialのスキルが会話の途中で口調を変更・再読み込みします。
+口調が変えるのは話し方だけで、権限や承認の確認はエージェントの設定のままです。
 
 **7キャラクター · 12の口調軸 · CLIは5言語 · 実行時の依存パッケージなし**
 
@@ -39,10 +42,17 @@ ToneDialは、コーディングエージェントの口調を調整し、複数
 ```bash
 npm install --global tonedial
 tonedial init --tools none --global --lang ja
+tonedial test
 tonedial set
+tonedial wire
 ```
 
-設定時にファイル変更を表示し、承認を求めます。エージェントに接続せず、まずダイヤルを試せます。
+1. `init` はキャラクター、あなたの呼び方、任意の合言葉を尋ね、書き込むファイルを表示して承認を求めます。
+   `--tools none` では、まだエージェントに接続しません。
+2. `test` はプロバイダーアカウントの利用について確認したうえで、その口調でClaude CodeかCodexの新しい会話を1つ開きます。
+   どちらのクライアントもない場合は `wire` に進んでください。
+3. `set` でダイヤルを開き、Enterで変更を適用します。
+4. `wire` は接続するエージェントを尋ね、変更をプレビューし、最後にそのエージェントでの有効化手順を示します。
 
 [エージェントを接続する](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#connecting-an-agent) · [一時設定で試す](https://github.com/awesometic/tonedial/blob/main/docs/TESTING.md#isolated-candidate)
 
@@ -201,13 +211,17 @@ tonedial save "My Sword"
 
 **↑↓** 軸を選択 · **←→ / 1–5** 値を変更 · **Enter** 適用 · **Esc** 破棄
 
-ToneDialは設定をローカルで `TONE.md` にコンパイルします。同じ設定からは同じ結果を生成し、モデルは利用中のエージェントが提供します。
+Enterで適用すると、`TONE.md` をすぐに再コンパイルします。
+モデルは利用中のエージェントが提供します。
 
 ## エージェントと使う
 
 **Claude Code · Codex · Antigravity IDE/Desktop** — [接続ガイド](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#connecting-an-agent)
 
-インストール済みのCodexかClaude Codeで、新しい会話を試せます。
+`tonedial wire codex`、`claude`、`antigravity` のいずれかで、エージェントを1つ接続します。
+完了時の案内が示す場所でフックを有効にすると、新しい会話にこの口調が届きます。
+
+インストール済みのCodexかClaude Codeで、保存したプロファイルを新しい会話でプレビューできます。
 
 ```bash
 tonedial test codex --preset my-sword

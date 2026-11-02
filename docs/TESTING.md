@@ -9,6 +9,7 @@ Use Node 22.18+, npm and a POSIX shell from the repository root.
 | README / media | `node --test test/dial-example.test.ts test/voice-examples.test.ts test/verbosity-comparison.test.ts` |
 | Runtime / build | [Automated checks](#automated-checks) |
 | CLI text / dial | [Golden and PTY tests](#output-and-terminal-regression-tests) |
+| CLI catalogues (`src/core/i18n.ts`, `src/core/locales/*.ts`) | Golden tests, then [refresh the dial input hashes](./media/readme/README.md#refresh-dial-input-hashes) |
 | Installed package | [Isolated candidate](#isolated-candidate) |
 | Native delivery | [Actual host and one-day trial](#actual-host-and-one-day-trial) |
 | Tone behavior | [Model measurements](#model-measurements) |
@@ -28,14 +29,23 @@ npm pack --dry-run
 
 **Stop on failure.** `npm test` runs types → build → pack/fixture drift checks → `node:test`.
 During development use the affected file, for example `node --test test/compile.test.ts`.
-Build first when it consumes `dist`; installer/package tests need built output, while prepack is tested in a separate disposable source tree.
+Build first when it consumes `dist`.
+Installer/package tests need built output, while prepack is tested in a separate disposable source tree.
 For docs-only changes, use link/example/consumer checks and explain that scope in the PR.
-CI still runs the full suite and release gate on every push/PR.
+CI still runs the full suite and release gate on every push/PR, on Node 22 and 24, each with English and Korean goldens.
+Report the Node version you ran; a pass on one Node line does not cover the other.
 
 - Add coverage for a realistic uncovered regression; assert visible behavior or protected bytes, not implementation details.
 - Never weaken gates, regenerate unread snapshots or report skipped checks as passes.
 - Create disposable fixtures under `node:os`'s `tmpdir()`, not an OS-specific path.
-- For identity-replacement tests, allocate the foreign entry while original/prepared entries still exist, then rename it into place. Inode allocation after deletion is not a portable identity guarantee.
+- For identity-replacement tests, allocate the foreign entry while original/prepared entries still exist, then rename it into place.
+  Inode allocation after deletion is not a portable identity guarantee.
+- A test that replaces `process.stdout.write` or `process.stderr.write` for a whole test (for example from `beforeEach` to `afterEach`)
+  must capture only strings and pass every other chunk to the original writer, as `test/wiring.test.ts` does.
+  Node 22 runs each test file in an isolated child that reports results through the same stream as binary chunks.
+  Swallowing them silently drops that file's results, and the file still passes.
+  Watch the test count: after adding or changing such a capture, run the file on Node 22
+  and confirm the runner's `tests` total matches the number of tests in the file.
 
 ## Output and terminal regression tests
 
@@ -57,16 +67,25 @@ TONEDIAL_TEST_LANG=ko npm run test:pty
 | Build | `test:pty` builds first |
 | Baselines | Committed under `test/golden/`; inspect changed text and representative images before replacing |
 | Failure evidence | Expected/actual/diff; SVG HTML comparison; PTY transcript under ignored `artifacts/` |
-| CI | Separate en/ko jobs; uploads `visual-regression-en` / `visual-regression-ko`; never updates baselines |
+| Version-bearing goldens | `test/update.test.ts`, not `test:golden`, owns the en/ko `npm-permission` text and SVG goldens; it ignores `TONEDIAL_TEST_LANG` |
+| CI | One job per Node 22/24 × en/ko; uploads `visual-regression-node<version>-<language>`; never updates baselines |
 
-After inspecting an intentional change:
+After inspecting an intentional change, record the affected suites' baselines, then rerun them without update mode:
 
 ```bash
+npm run build
 TONEDIAL_GOLDEN_UPDATE=1 npm run test:golden
+TONEDIAL_GOLDEN_UPDATE=1 npm run test:pty
+TONEDIAL_GOLDEN_UPDATE=1 node --test test/update.test.ts
 npm run test:golden
+npm run test:pty
+node --test test/update.test.ts
 ```
 
-Update mode is forbidden in CI.
+Run the `test/update.test.ts` lines after a version bump or a change to `update` output; the test copies `dist`, so build first.
+Omit `TONEDIAL_TEST_LANG` so both locales are recorded.
+Update mode rewrites every golden its run reaches, so review `git diff test/golden` before committing.
+`TONEDIAL_GOLDEN_UPDATE` accepts only `1` and is forbidden in CI.
 
 ## Isolated candidate
 
@@ -152,7 +171,8 @@ check_state() {
 check_state npm "$npm_cli" && check_state curl "$curl_cli"
 ```
 
-Stop on any failure. Inspect files/modes as well as receipts:
+Stop on any failure.
+Inspect files/modes as well as receipts:
 
 - Exported `warmth=4`, listed custom `trial-preset`, fresh tone, no native connection.
 - `off` retains the full artifact and settings while the reader emits no context; `on` restores
@@ -178,7 +198,8 @@ Fake clients/config checks do not prove actual host loading.
 
 Existing tests cover integrity/archive refusal, package/shim replacement, rollback after verification failure, killed-owner retry, concurrent installers and foreign-path preservation.
 Retain recovery staging, archives and operation IDs on failure; a live owner, ambiguous lock, invalid journal or replaced target is not permission to delete it.
-Package repair and application repair are separate results. Use the fresh executable at the same root to retry state recovery.
+Package repair and application repair are separate results.
+Use the fresh executable at the same root to retry state recovery.
 This trial does not establish network availability, publishing permissions, every OS/filesystem behavior or complete recovery from all interruptions.
 
 </details>
@@ -191,33 +212,45 @@ Do not copy credentials, auto-grant trust, disable a real setup to make a contro
 Before launching:
 
 - Put the selected candidate's bin on the actual host process's PATH and use the approved delivery's `TONEDIAL_HOME`.
-- Inside that host, prove bare `tonedial` resolves to the selected path/bytes (`command -v tonedial` where available) and state root. Version alone is insufficient; stop on mismatch or missing evidence before invoking the skill.
+- Inside that host, prove bare `tonedial` resolves to the selected path/bytes (`command -v tonedial` where available) and state root.
+  Version alone is insufficient; stop on mismatch or missing evidence before invoking the skill.
 - `TONEDIAL_AGENT_HOME` redirects wiring only; it does not select/isolate the host profile.
 
 ### Run the trial
 
 1. Select the exact installed candidate above and a dedicated host profile/project, or deliberately choose normal settings after reviewing the [usage and privacy limits](./USAGE.md).
    Record version/archive fingerprint, OS, host/surface/version, scope, model and effort.
-2. Preview only that host and scope, then approve it. For a project use `init --tools codex --project <existing-directory> --dry-run`, then the same command without `--dry-run`; substitute the actual host and a real chosen directory before execution.
-   Ensure the selected host actually reads that project/profile. Review the current hook definition in the host, including `/hooks` where applicable; for Antigravity IDE use the agent panel `… → Customizations → Hooks`, and for Antigravity Desktop use `Settings → Customizations → Hooks`. Do not use trust bypasses.
+2. Preview only that host and scope, then approve it.
+   For a project use `init --tools codex --project <existing-directory> --dry-run`, then the same command without `--dry-run`;
+   substitute the actual host and a real chosen directory before execution.
+   Ensure the selected host actually reads that project/profile.
+   Review the current hook definition in the host, including `/hooks` where applicable;
+   for Antigravity IDE use the agent panel `… → Customizations → Hooks`, and for Antigravity Desktop use `Settings → Customizations → Hooks`.
+   Do not use trust bypasses.
 3. Start a fresh session and observe delivery of the complete guide before the exact current artifact.
-   Test resume, clear, compaction and fork only where that surface has those events. Shared global/project layers must not duplicate context.
+   Test resume, clear, compaction and fork only where that surface has those events.
+   Shared global/project layers must not duplicate context.
 4. Ask the discovered skill to change one setting and separately to reload unchanged settings.
-   Require CLI success, `compile --check --json`, then complete `agentsPath` and `path` reads. A settings query alone is not reload evidence.
+   Require CLI success, `compile --check --json`, then complete `agentsPath` and `path` reads.
+   A settings query alone is not reload evidence.
    Turn delivery off and verify every connected lifecycle route emits an empty provider-valid response,
-   then turn it on and verify the same saved pair returns. Use a fresh session to check the no-tone control;
+   then turn it on and verify the same saved pair returns.
+   Use a fresh session to check the no-tone control;
    an open session may retain context delivered before `off`.
 5. Exercise failed changed-setting and unchanged-setting reloads in the disposable environment.
    For the changed case, first confirm save success, then interrupt before reading and move a context file aside; otherwise a mutation may recreate/refuse it and test the wrong path.
-   Require separate save/no-change and failed-read reports, never a claim that guidance became active. Restore the original file before continuing.
+   Require separate save/no-change and failed-read reports, never a claim that guidance became active.
+   Restore the original file before continuing.
 6. Refuse a host trust/enablement request once and verify existing configuration is preserved.
    Through the day, record changed/unchanged reload, restart, ordinary usage, failures and risky-level behavior as passed, failed or not run.
 7. Inspect the same scope with doctor, preview disconnect, then approve `eject` or one-tool `unwire` only if chosen.
-   Verify user presets, unrelated settings and other scopes survive. Keeping the candidate is also a choice; no trial cleanup deletes shared state or unknown recovery files.
+   Verify user presets, unrelated settings and other scopes survive.
+   Keeping the candidate is also a choice; no trial cleanup deletes shared state or unknown recovery files.
 
 Screenshots/transcripts should show the actual host event and exact request, with private values removed.
 Record configuration, reader runtime, trust, activation, delivered context and model behavior separately.
-Codex, Claude and Antigravity observations remain separate across surfaces; an IDE result does not qualify Desktop (or the reverse) or a remote runtime. Unavailable authenticated or trusted trials remain pending.
+Codex, Claude and Antigravity observations remain separate across surfaces; an IDE result does not qualify Desktop (or the reverse) or a remote runtime.
+Unavailable authenticated or trusted trials remain pending.
 
 ### Preview acceptance
 
@@ -233,7 +266,8 @@ Use the isolated candidate in a real interactive terminal, not a piped/fake stre
 At 60×24, 80×24 and a wider window, check all twelve gauges, selected hints and pending edits; apply a visible change and confirm it saved, then discard another and confirm state stayed unchanged.
 Open help and shrink below the minimum: hidden or incomplete previews must refuse editing/apply.
 Check resize, normal exit, Esc/q/Ctrl+C, controlled error/handled-signal exits, and suspend/resume; the cursor, raw-input state and shell must remain usable afterwards (compare `stty -g` before/after where available).
-Repeat with colors disabled and check Unicode cell alignment. Previous resize rows may remain in scrollback; erasing user shell history is not a pass condition.
+Repeat with colors disabled and check Unicode cell alignment.
+Previous resize rows may remain in scrollback; erasing user shell history is not a pass condition.
 Record failures and unavailable platform/terminal checks separately; automated dial tests do not establish this manual usability result.
 
 ## Model measurements
@@ -267,13 +301,15 @@ excluded preflight and evidence limits.
 | C | Exact artifact as system context in an API/web conversation with a fresh user turn | That context route only; credentials belong to the contributor, not ToneDial |
 | D | ToneDial's approved installed integration, without also pasting the artifact | Product delivery after separate observed activation |
 
-Keep routes distinct. For every `X-none` control verify no ToneDial guide/artifact, hook context, discovered/invoked skill, `/tone` or preview prompt enters the session.
+Keep routes distinct.
+For every `X-none` control verify no ToneDial guide/artifact, hook context, discovered/invoked skill, `/tone` or preview prompt enters the session.
 An empty project is insufficient when the host injects global context; use a dedicated user-provided clean environment, match ordinary instructions/tools/model/effort/request/code, and retain absence evidence.
 Stop if delivery or the clean control cannot be established; do not manufacture them with someone's real profiles or authentication files.
 
 ### Committed pack
 
-Lock the prediction before running. Copy the complete fenced artifact and fixed scenario request/code verbatim; add no measurement or tone coaching to the request.
+Lock the prediction before running.
+Copy the complete fenced artifact and fixed scenario request/code verbatim; add no measurement or tone coaching to the request.
 For Route D set the pack's complete input: preset identity, all axes, persona, register and exact safeword.
 Fresh unattended init needs explicit scope/tools and loads the first profile's role/register defaults with safeword unset.
 An axis-only probe must explicitly clear persona/address and restore auto register and `address_frequency=auto`; `reset` preserves these settings.
@@ -287,9 +323,11 @@ Prepare fresh temporary state/project and retain the same absolute installed can
 Use explicit-scope state-only init, then `reset`; clear persona/address/safeword through the CLI and restore auto register and `address_frequency=auto` before changing only the selected axis to its 1–5 level.
 Do not save it as a preset or hand-edit a managed artifact.
 Require `preset: null`, empty persona/address, `speech_level: auto`, `address_frequency: auto`, no safeword, other style axes at 3 and other permission axes (`profanity`, `flattery`, `refusal`, `bravado`) at 1.
-Name the arm `A-<axis><level>` in the result, not the artifact. Retain complete `show --json`, immutable artifact bytes/SHA-256, compiler revision and guide fingerprint.
+Name the arm `A-<axis><level>` in the result, not the artifact.
+Retain complete `show --json`, immutable artifact bytes/SHA-256, compiler revision and guide fingerprint.
 Before a native run, approve a host in that disposable scope, recheck unchanged input, and observe that exact fingerprint delivered.
-Repeat adjacent levels from fresh defaults with matched no-tone controls. Use `S1-fn-ko` and `S7-fn-polite-ko` for contextual auto forms and the formality contrast.
+Repeat adjacent levels from fresh defaults with matched no-tone controls.
+Use `S1-fn-ko` and `S7-fn-polite-ko` for contextual auto forms and the formality contrast.
 Also compare familiar polite and formal plain with nonzero profanity and independent warmth; score forms separately from distance, feeling and coarseness.
 Treat changed prompt bytes as new measurement inputs and run fresh measurements for them.
 A persona/safeword variant needs its own pre-registered name; unavailable native activation remains pending.
@@ -297,9 +335,11 @@ A persona/safeword variant needs its own pre-registered name; unavailable native
 ### Review the session
 
 Give an independent judge verbatim outputs, scenario request boundaries and the rubric, withholding the prediction until after scoring.
-Score axis compliance and language naturalness separately. Compare observed information quality and permission behavior against controls; tone prose does not enforce permissions.
+Score axis compliance and language naturalness separately.
+Compare observed information quality and permission behavior against controls; tone prose does not enforce permissions.
 Report held, failed or inconclusive with a reason, including all failed runs rather than selecting favorable replies.
-Target mid/frontier tiers; accept entry results without treating them as current supported-tier qualification. Record the exact provider model identifier, not a moving family label.
+Target mid/frontier tiers; accept entry results without treating them as current supported-tier qualification.
+Record the exact provider model identifier, not a moving family label.
 
 Keep request boundaries and verbatim outputs beside scores.
 A host that did not deliver the selected artifact makes the run inconclusive.

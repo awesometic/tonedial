@@ -18,7 +18,7 @@
 
 ### Passed
 
-<!-- Include the command and the state or commit it checked. Write "None" when empty. -->
+<!-- Include the command, the Node version and the state or commit it checked. Write "None" when empty. -->
 
 - _Replace this line with commands and outcomes._
 
@@ -37,13 +37,14 @@
 ### Evidence boundaries
 
 <!-- Keep these claims separate; "not observed" and "not applicable" are valid entries.
-     Do not paste personal
-     configuration, credentials, provider history, or unredacted host output. -->
+     Do not paste personal configuration, credentials, provider history,
+     or unredacted host output. -->
 
 - Generated configuration or artifact:
 - Host trust or activation:
 - Delivered context:
 - Model adherence:
+- Remaining limits:
 
 ## Review checklist
 

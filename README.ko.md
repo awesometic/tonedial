@@ -2,7 +2,11 @@
 
 **코딩 에이전트에 캐릭터를 더하세요.**
 
-ToneDial은 코딩 에이전트의 말투를 조절해 여러 프로젝트에서 다시 쓰는 로컬 CLI입니다.
+ToneDial은 Claude Code, Codex, Antigravity에 직접 고른 말투를 입혀 여러 프로젝트에서 다시 쓰게 해 주는 CLI입니다.
+캐릭터 7개 중 하나를 고르거나 말투 축 12개를 조절하면, ToneDial이 모델 호출 없이 로컬에서 `TONE.md` 파일로 컴파일합니다.
+같은 설정이면 결과도 항상 같습니다.
+각 에이전트의 훅이 새 대화에 말투를 전달하고, 대화 중에는 ToneDial 스킬로 말투를 바꾸거나 다시 불러올 수 있습니다.
+말투는 말하는 방식만 바꾸며, 권한과 승인 절차는 에이전트에 설정된 그대로 유지됩니다.
 
 **캐릭터 7개 · 말투 축 12개 · CLI 언어 5개 · 런타임 의존성 없음**
 
@@ -39,10 +43,17 @@ ToneDial은 코딩 에이전트의 말투를 조절해 여러 프로젝트에서
 ```bash
 npm install --global tonedial
 tonedial init --tools none --global --lang ko
+tonedial test
 tonedial set
+tonedial wire
 ```
 
-설정 과정에서 파일 변경 내용을 보여주고 승인을 받습니다. 에이전트 연결 없이 다이얼부터 열어 봅니다.
+1. `init`은 캐릭터, 사용자를 부를 호칭, 선택 사항인 세이프워드를 물은 뒤 작성할 파일을 보여 주고 승인을 받습니다.
+   `--tools none`이므로 아직 에이전트는 연결하지 않습니다.
+2. `test`는 프로바이더 계정을 사용해도 되는지 물은 뒤, 그 말투로 Claude Code나 Codex 새 대화를 하나 엽니다.
+   두 클라이언트가 모두 없다면 `wire`로 건너뛰세요.
+3. `set`은 다이얼을 열고, Enter를 누르면 변경 내용을 적용합니다.
+4. `wire`는 연결할 에이전트를 묻고 변경 내용을 미리 보여 준 뒤, 마지막으로 그 에이전트에서 활성화하는 방법을 안내합니다.
 
 [에이전트 연결하기](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#connecting-an-agent) · [임시 설정으로 시험하기](https://github.com/awesometic/tonedial/blob/main/docs/TESTING.md#isolated-candidate)
 
@@ -163,7 +174,7 @@ tonedial create '거친 게 좋아' --slug rough-but-reliable --auto \
 
 </details>
 
-Codex가 대화를 열면 위 질문을 입력하면 됩니다.
+Codex가 대화를 연 뒤 위 질문을 입력하세요.
 모델과 추론 강도는 ToneDial 프로필과 별도로 Codex에서 정하는 설정입니다.
 
 ## 캐릭터 고르기
@@ -184,7 +195,8 @@ tonedial set verbosity=1 warmth=3 address_frequency=rarely
 tonedial save "My Sword"
 ```
 
-`tonedial create`로 직접 만들 수도 있습니다. 말투, 역할, 호칭, 말씨, 세이프워드를 프로필 하나에 저장합니다.
+`tonedial create`로 직접 만들 수도 있습니다.
+말투, 역할, 호칭, 말씨, 세이프워드를 프로필 하나에 함께 저장합니다.
 
 `address_frequency`로 사용자 이름·호칭을 얼마나 자주 쓸지 정합니다.
 `none`은 생략하고 `auto`(기본값)는 문맥에 맞게 선택합니다.
@@ -201,20 +213,24 @@ tonedial save "My Sword"
 
 **↑↓** 축 선택 · **←→ / 1–5** 값 조절 · **Enter** 적용 · **Esc** 취소
 
-ToneDial은 로컬에서 설정을 `TONE.md`로 일정하게 컴파일합니다. 모델은 연결한 에이전트가 제공합니다.
+Enter를 누르면 바로 적용되고 `TONE.md`도 다시 컴파일됩니다.
+모델은 연결한 에이전트가 제공합니다.
 
 ## 에이전트 연결하기
 
 **Claude Code · Codex · Antigravity IDE/Desktop** — [연결 가이드](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#connecting-an-agent)
 
-설치된 Codex나 Claude Code 클라이언트에서 새 대화를 열어 시험해 보세요.
+`tonedial wire codex`(또는 `claude`, `antigravity`)로 에이전트 하나를 연결합니다.
+실행 결과에 안내된 위치에서 훅을 켜면, 이후 새 대화부터 말투가 전달됩니다.
+
+설치된 Codex나 Claude Code 클라이언트로 새 대화를 열어 저장한 프로필을 미리 볼 수 있습니다.
 
 ```bash
 tonedial test codex --preset my-sword
 ```
 
 - 미리보기는 사용 중인 프로바이더 계정을 쓰며, 일반 사용량·요금·대화 기록 기준을 그대로 따릅니다.
-- 미리보기는 말투를 처음에 한 번만 보냅니다. 처음 몇 개 답변으로 판단하세요. 대화가 길어지면 말투가 흐려질 수 있습니다.
+- 미리보기는 말투를 처음에 한 번만 보냅니다. 처음 몇 차례 답변을 보고 판단하세요. 대화가 길어지면 말투가 흐려질 수 있습니다.
 - 말투만 바뀌며, 호스트의 권한과 승인 절차는 그대로 유지됩니다.
 - 모델마다 반응이 다릅니다. 재미로 쓰는 도구이며 실무 환경에는 권장하지 않습니다.
 

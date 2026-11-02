@@ -145,7 +145,8 @@ Se conserva la primera respuesta completada de cada preajuste e idioma, sin puli
 
 Grabadas el 2026-10-16 abriendo el cliente nativo e interactivo de Codex mediante la invocación real de `tonedial test codex --preset <slug> --accept-usage`.
 Tras completarse la respuesta inicial, los tonos intensos se aprobaron explícitamente cuando correspondía y la pregunta fija se introdujo en un turno separado.
-Son ejemplos de diálogo, no mediciones de activación de hooks ni de cumplimiento repetido. Las imágenes presentan un diálogo de terminal a partir de la transcripción; no son capturas de la interfaz nativa.
+Son ejemplos de diálogo, no mediciones de activación de hooks ni de cumplimiento repetido.
+Las imágenes presentan un diálogo de terminal a partir de la transcripción; no son capturas de la interfaz nativa.
 
 [Entradas, respuestas y hashes completos](./media/readme/es/voice-examples.json)
 

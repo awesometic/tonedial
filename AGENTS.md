@@ -25,7 +25,8 @@ Keep changes within the requested boundary and preserve unrelated edits.
   Risk metadata and combination notices are advisory: they never clamp values or change host permissions.
   Intense tone (strong profanity, harsh mocking, violent figurative language, theatrical noncredible menace) is available only after the user's explicit approval in the current session.
   Profiles record the requested settings, never that approval; using, importing, creating or saving a profile, `--auto`, a safeword or a prior session does not supply it.
-  Before any intense element requested by axes, persona or later instructions, answer the current request without it and ask once for explicit approval naming it; approval lasts only while that request remains unchanged, and an increase or change requires it again.
+  Before any intense element requested by axes, persona or later instructions, answer the current request without it and ask once for explicit approval naming it;
+  approval lasts only while that request remains unchanged, and an increase or change requires it again.
   Ordinary role idioms need no approval.
   Approval grants tone intensity only; it never covers hate speech against protected traits or realistic or credible threats, and it authorizes no work.
   The compiler requests this conversation behavior; it stores no approval state and cannot prove that approval occurred or that a model followed it.
@@ -33,7 +34,8 @@ Keep changes within the requested boundary and preserve unrelated edits.
 - Bundled and custom profiles save axes, persona, address, register and safeword together.
   Applying a profile restores its full tone settings; legacy axis-only presets preserve the current separate settings.
   Role idioms and slang are not filtered; playfulness grades their frequency and theatrical intensity.
-  Profanity grades swearing without inventing insults or criticism, while preserving those selected by critique or persona; bravado grades claims about effort without replacing the persona.
+  Profanity grades swearing without inventing insults or criticism, while preserving those selected by critique or persona;
+  bravado grades claims about effort without replacing the persona.
   Interface language and wiring remain outside profiles.
   State belongs to the shared state root; project scope chooses wiring, not a separate tone library.
   Tone-changing mutations recompile in the same action.
@@ -60,11 +62,12 @@ Draft revised shipped copy in English, translate it into Korean, then polish the
 Use an available Korean polishing skill when helpful; authoring tools are optional and do not lower the copy standard.
 This pipeline applies to revised user-facing sentences, not short labels or agent responses.
 The CLI catalogues carry interface copy, never a second anchor set.
+A catalogue edit changes the recorded dial inputs; [refresh their hashes](./docs/media/readme/README.md#refresh-dial-input-hashes) in the same change.
 Write repository prose in English, except localized README/media in their declared locale, and break revised prose at sentence or clause boundaries.
 README.md remains the English default; [README media conventions](./docs/media/readme/README.md) owns locale paths and translation parity.
 
 Follow [TESTING.md](./docs/TESTING.md): inspect existing coverage, test realistic observable failures, keep checks proportional and never weaken a gate to obtain a pass.
-Report passed, failed and unrun checks distinctly, with remaining limits.
+Report passed, failed and unrun checks distinctly, with the Node version and remaining limits.
 For changed compiler artifacts, regenerate packs and fixtures, inspect the diff, and keep any measurement evidence tied to its exact inputs, artifact bytes, outputs and scores.
 Anchor and risk changes also update the applicable measurement scenarios and rubric; generated or layout checks cannot prove model behavior.
 

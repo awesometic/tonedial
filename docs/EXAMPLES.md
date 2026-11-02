@@ -134,12 +134,13 @@ Self **I** · user address **Boss**
 | Date             | 2026-10-16             |
 | Product revision | `25b1fc5`              |
 
-Real Codex replies using all seven current presets.
+Real Codex replies from all seven current presets.
 Each preset/language uses its first completed response, without polishing or selecting a preferred rerun.
 
 Recorded on 2026-10-16 by opening the native interactive Codex client through the actual `tonedial test codex --preset <slug> --accept-usage` handoff.
 The opening response completed first; when the selected tone required it, explicit intensity approval followed, then the fixed question was entered as a separate turn.
-These are dialogue-preview examples, not hook-activation or repeated-adherence measurements. Images render terminal-style transcripts and are not native UI screenshots.
+These are dialogue-preview examples, not hook-activation or repeated-adherence measurements.
+Images render terminal-style transcripts and are not native UI screenshots.
 
 [Complete input, reply and hash records](./media/readme/en/voice-examples.json)
 
