@@ -27,8 +27,11 @@ beforeEach(() => {
   errors = "";
   const stdout = process.stdout.write;
   const stderr = process.stderr.write;
-  process.stdout.write = ((text: string) => (output += text, true)) as typeof stdout;
-  process.stderr.write = ((text: string) => (errors += text, true)) as typeof stderr;
+  const passOut = stdout.bind(process.stdout);
+  const passErr = stderr.bind(process.stderr);
+  // Only CLI strings: Node 22's test child reports through this stream as binary chunks.
+  process.stdout.write = ((text: string | Uint8Array) => typeof text === "string" ? (output += text, true) : passOut(text)) as typeof stdout;
+  process.stderr.write = ((text: string | Uint8Array) => typeof text === "string" ? (errors += text, true) : passErr(text)) as typeof stderr;
   restore = [
     () => { process.stdout.write = stdout; },
     () => { process.stderr.write = stderr; },
