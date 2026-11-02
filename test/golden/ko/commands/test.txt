@@ -1,8 +1,8 @@
 status: 0
---- stdout --- [bytes=969; endsWithNewline=true]
+--- stdout --- [bytes=963; endsWithNewline=true]
 ToneDial · test
 
-  Codex에서 새 대화를 시작할 계획입니다.
+  Codex에서 새 대화를 열 예정입니다.
   말투: 현재 설정 · Caring Brother
   대화 폴더:
   <ROOT>/project

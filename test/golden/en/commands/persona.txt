@@ -1,8 +1,8 @@
 status: 0
---- stdout --- [bytes=136; endsWithNewline=true]
+--- stdout --- [bytes=138; endsWithNewline=true]
 ToneDial · persona
 
-  Settings saved
+  Settings updated
   persona.agent  151 chars → 18 chars
   persona.user   57 chars → 9 chars
   TONE.md generated

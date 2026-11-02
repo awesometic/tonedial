@@ -144,6 +144,8 @@ export type Messages = {
   };
   preset: {
     activeUnknown: string;
+    /** `list` with no config yet: nothing is active and nothing needs repair. */
+    notSetUp: string;
     unavailable: (slug: string, reason: string) => string;
     conflict: (slug: string, recoveredSlug: string) => string;
     activeConflict: (slug: string) => string;
@@ -691,7 +693,7 @@ const enMessages: Messages = {
     reset: (axis, level) => `${axis} already at default ${level}`,
     resetAll: (deselected) => deselected ? `${deselected} deselected · persona and other settings kept` : "Persona and other settings kept",
     nothingChanged: "no changes",
-    settingsSaved: "Settings saved",
+    settingsSaved: "Settings updated",
     settingsUnchanged: "Settings unchanged",
     needsPair: (given) => `${given}: expected <key>=<value>, for example warmth=4`,
     needsArgument: "set needs at least one <key>=<value>, for example: tonedial set warmth=4. In a terminal, tonedial set alone opens the dial.",
@@ -699,6 +701,7 @@ const enMessages: Messages = {
   },
   preset: {
     activeUnknown: "Active preset is unknown until the saved settings are repaired.",
+    notSetUp: "ToneDial is not set up yet, so no preset is active. Set it up with:\ntonedial init --tools none --global",
     unavailable: (slug, reason) => `${slug}: unavailable (${reason}); file kept as is`,
     conflict: (slug, recoveredSlug) => `${slug}: different custom and legacy definitions. Run tonedial doctor --fix to preserve the legacy values as ${recoveredSlug}.`,
     activeConflict: (slug) => `${slug}: the active definition is ambiguous; saved axes were kept. Choose the definition during tonedial doctor --fix.`,
@@ -919,8 +922,8 @@ const enMessages: Messages = {
     alreadyDisconnected: (tools) => `${tools}: already disconnected · no changes`,
     dryRun: "--dry-run · nothing written",
     declined: "cancelled · nothing written",
-    disconnected: (tools) => `${tools} disconnected`,
-    noArtifact: "no tone.md to connect. Run tonedial compile first",
+    disconnected: (tools) => `${tools}: disconnected`,
+    noArtifact: "TONE.md is missing. Run tonedial compile first.",
     unknownTool: (given, tools) => `${given}: unsupported tool. Available: ${tools.join(", ")}`,
     noneInstalled: (tools, root) =>
       `Search root: ${root}\nNo ${tools.join(", ")} install found. Name a tool to connect it anyway.`,
@@ -1014,7 +1017,7 @@ const enMessages: Messages = {
     skillNotLinked: "not linked",
     skillNotSeeded: "skill bundle missing",
     imported: "import connected",
-    hookPresent: (event) => `${event} hook · configured to read tone.md each session`,
+    hookPresent: (event) => `${event} hook · configured to read TONE.md each session`,
     nativeConfigured: (event) => `${event} hook · configured to read AGENTS.md, then TONE.md`,
     nativeConfiguredCompact: (event) => `${event} · AGENTS.md → TONE.md`,
     hookSettingState: {
@@ -1122,7 +1125,7 @@ const enMessages: Messages = {
   help: {
     commandHelp: "Command help: tonedial <command> --help",
     fullReference: "Full reference: tonedial --help",
-    feedback: "If you run into a problem or have ideas or feedback, feel free to share them :)\nhttps://github.com/awesometic/tonedial/issues/new/choose",
+    feedback: "Found a problem or have an idea? Open an issue :)\nhttps://github.com/awesometic/tonedial/issues/new/choose",
     tagline: "set a coding agent's manner once and keep using it",
     footer: "Connection commands use the global scope unless you pass --here (current project) or --project DIR. Unattended writes need the scope stated explicitly.",
     recoveryOptions: "Recovery options for doctor --fix: tonedial doctor --help",
@@ -1133,30 +1136,30 @@ const enMessages: Messages = {
       on: "resume saved tone delivery",
       off: "pause tone delivery · keep settings and TONE.md",
       init: "set up and refresh bundled files",
-      set: "change axes, role or settings · bare opens dial",
+      set: "change axes, role or settings · no args opens the dial",
       get: "show current values · a key adds meaning and choices",
-      address: "set names for each party · bare prompts · frequency: set address_frequency=rarely",
-      persona: "set agent and user roles · bare prompts",
-      reset: "reset an axis · bare resets all axes",
-      show: "current settings · slug previews a saved profile",
+      address: "set the agent's and your names · no args prompts · frequency: set address_frequency=rarely",
+      persona: "set the agent's role and yours · no args prompts",
+      reset: "reset one axis · no args resets all twelve",
+      show: "show settings · a slug previews a saved profile",
       test: "preview your tone or a preset in a new conversation",
       save: "save the current tone as a profile",
-      create: "create and apply a preset · bare guides setup",
-      list: "bundled and user presets",
+      create: "create and apply a preset · no args guides setup",
+      list: "list bundled and saved presets",
       edit: "open settings or a preset in $EDITOR",
-      use: "apply a preset and compile",
+      use: "apply a preset",
       compile: "rebuild TONE.md · tone changes already do this",
       export: "back up a profile, including address and role, as JSON",
       import: "import a profile from JSON · use applies it",
-      wire: "connect an agent in the selected scope · bare prompts",
-      unwire: "remove a managed connection",
+      wire: "connect an agent in the chosen scope · no args prompts",
+      unwire: "disconnect one agent in the selected scope",
       doctor: "check connections · repair with --fix",
       update: "update this install",
       eject: "disconnect agents in the selected scope · keep presets",
     },
     flags: {
       verbose: "command details, diagnostics, and diffs",
-      global: "global scope (default) · passing it counts as explicit",
+      global: "global scope (default) · state it for --auto writes",
       here: "current project scope",
       project: "another project directory · use: export TONE.md there",
       migrateLegacy: "init: approve validated older state",
@@ -1307,7 +1310,7 @@ const enMessages: Messages = {
     futureSchema: (found, known) =>
       `config.json: schema ${found} · supported schema ${known}. Upgrade ToneDial instead of guessing`,
     unreadable: (reason) => `config.json: cannot read: ${reason}`,
-    safewordQuote: "a safeword cannot contain a double quote; it would end the tone.md sentence early",
+    safewordQuote: "a safeword cannot contain a double quote; it would end the TONE.md sentence early",
     safewordBlank: "safeword is blank. Use null when unset",
     wiringLost:
       "Connection records changed or could not be verified. " +
@@ -1352,13 +1355,13 @@ const en: Catalogue = {
     risk: enMessages.notice.riskIntro,
   },
   presets: {
-    "caring-brother": "An attentive older brother who helps his younger sibling.",
+    "caring-brother": "An attentive older brother who looks out for you, his younger sibling.",
     "bratty-kid": "A cheeky kid who talks back and jokes with you.",
-    "eager-sycophant": "An overexcited fan applauding a favorite creator.",
-    "royal-advisor": "You are the monarch; a loyal subject reports and offers courtly counsel.",
-    "ego-sword": "A sentient sword nags its novice wielder to keep them both alive.",
+    "eager-sycophant": "An overexcited fan who cheers your every choice as their favorite creator.",
+    "royal-advisor": "A loyal subject who reports to you, the monarch, with courtly counsel.",
+    "ego-sword": "A sentient sword that nags you, its novice wielder, so you both survive.",
     "heavenly-demon": "A stern martial master trains you, the apprentice.",
-    "right-hand": "You are the boss; a trusted right hand reports with underworld idioms.",
+    "right-hand": "A trusted right hand who reports to you, the boss, in underworld idioms.",
   },
   axisHints: {
     formality: { owns: "wording and social distance", low: "familiar wording with slang", high: "ceremonial, deferential wording" },
@@ -1412,7 +1415,7 @@ const koMessages: Messages = {
     terminalRequired: "시험 대화는 터미널에서 실행해 주세요. --dry-run이나 --json으로 실행 계획만 확인할 수도 있습니다.",
     chooseProvider: "사용할 에이전트: 1 Claude Code, 2 Codex [1]: ",
     starting: (provider) => `${provider}에서 새 대화를 시작합니다.`,
-    planned: (provider) => `${provider}에서 새 대화를 시작할 계획입니다.`,
+    planned: (provider) => `${provider}에서 새 대화를 열 예정입니다.`,
     savedTone: (name) => `말투: 현재 설정 · ${name}`,
     folder: "대화 폴더:",
     previewTone: (name) => `미리보기 프리셋: ${name} · 저장된 설정 유지`,
@@ -1447,7 +1450,7 @@ const koMessages: Messages = {
     reset: (axis, level) => `${axis}: 이미 기본값(${level})입니다`,
     resetAll: (deselected) => deselected ? `${deselected} 선택 해제 · 페르소나와 다른 설정은 유지` : "페르소나와 다른 설정은 유지",
     nothingChanged: "변경 없음",
-    settingsSaved: "설정 저장됨",
+    settingsSaved: "설정 변경됨",
     settingsUnchanged: "설정 변경 없음",
     needsPair: (given) => `${given}: <키>=<값> 형식으로 입력해 주세요(예: warmth=4)`,
     needsArgument: "set에는 <키>=<값>이 하나 이상 필요합니다. 예: tonedial set warmth=4. 터미널에서는 tonedial set만 입력해도 다이얼이 열립니다.",
@@ -1455,6 +1458,7 @@ const koMessages: Messages = {
   },
   preset: {
     activeUnknown: "저장된 설정을 복구하기 전에는 현재 프리셋을 알 수 없습니다.",
+    notSetUp: "아직 초기 설정 전이라 적용된 프리셋이 없습니다. 초기 설정하려면:\ntonedial init --tools none --global",
     unavailable: (slug, reason) => `${slug}: 읽을 수 없음 (${reason}) · 파일은 그대로 둠`,
     conflict: (slug, recoveredSlug) => `${slug}: 사용자 파일과 이전 파일의 값이 다릅니다. tonedial doctor --fix로 이전 값을 ${recoveredSlug}에 보존하세요.`,
     activeConflict: (slug) => `${slug}: 어떤 파일을 적용했는지 알 수 없어 저장된 축 값은 유지했습니다. tonedial doctor --fix에서 사용할 파일을 선택하세요.`,
@@ -1489,7 +1493,7 @@ const koMessages: Messages = {
     saveAsNew: "현재 말투는 새 이름으로 저장하세요:\ntonedial save \"내 말투\" --slug my-tone",
     needsSlugArg: "프리셋 슬러그가 필요합니다. 목록: tonedial list",
     invalidSlugFor: (name) => `"${name}": 올바른 슬러그를 만들 수 없습니다`,
-    noSlug: (path) => `${path}: 올바른 슬러그가 없습니다. 소문자·숫자·붙임표만 쓸 수 있습니다`,
+    noSlug: (path) => `${path}: 올바른 슬러그가 없습니다. 영문 소문자·숫자·하이픈(-)만 쓸 수 있습니다`,
     schemaMismatch: (slug, given, knows) => `프리셋 ${slug}: 스키마 ${given} · 지원 스키마 ${knows}`,
     badLevel: (slug, axis, given) => `프리셋 ${slug}: ${axis}=${String(given)} · 1~5만 쓸 수 있습니다`,
     skipped: (reason) => `presets/ 파일 건너뜀: ${reason}`,
@@ -1502,7 +1506,7 @@ const koMessages: Messages = {
   create: {
     introduction: "프로필 이름·슬러그·호칭·역할을 입력한 뒤 열두 축을 조절합니다. Enter를 누르면 표시된 값을 유지하며, '\"\"'를 입력하면 선택 항목을 지웁니다. 마지막 확인에서 전체 프로필을 저장하고 적용합니다.",
     name: "표시 이름",
-    slug: "슬러그(영문 소문자·숫자·붙임표)",
+    slug: "슬러그(영문 소문자·숫자·하이픈(-))",
     user: "사용자 역할·배경(최대 200자)",
     agent: "에이전트 역할(최대 200자)",
     register: "말씨(auto, polite, plain, rough)",
@@ -1569,8 +1573,8 @@ const koMessages: Messages = {
     rolesNeedsPair: 'persona에는 두 역할 설명이 필요합니다: tonedial persona <에이전트 역할> <사용자 역할>. 지울 항목에는 ""를 넣으세요. 터미널에서는 인자 없이 실행해 입력할 수도 있습니다.',
     rolesIntroduction: '에이전트와 사용자의 역할·배경을 설정합니다. Enter를 누르면 현재 값을 유지하고, ""를 입력하면 해당 역할을 지웁니다. 두 항목을 입력한 뒤 한 번에 적용합니다.',
     askUser: "에이전트가 사용자를 뭐라고 부를까요?",
-    addressKept: (current) => `현재 ${current} · 엔터를 누르면 유지`,
-    addressNone: "현재 설정 없음 · 엔터를 누르면 유지",
+    addressKept: (current) => `현재 ${current} · Enter: 유지`,
+    addressNone: "현재 설정 없음 · Enter: 그대로 두기",
     age: (given, bands) => `persona.age=${given} · 사용 가능: ${bands.join(", ")}`,
     gender: (options) => `persona.gender · 사용 가능: ${options.join(", ")}`,
     // Labels rather than clauses, for the same reason as `autoChose` above: an address is
@@ -1677,8 +1681,8 @@ const koMessages: Messages = {
     alreadyDisconnected: (tools) => `${tools}: 이미 연결 해제됨 · 변경 없음`,
     dryRun: "--dry-run · 기록하지 않음",
     declined: "취소됨 · 기록하지 않음",
-    disconnected: (tools) => `${tools} 연결을 해제했습니다`,
-    noArtifact: "연결할 tone.md가 없습니다. tonedial compile을 먼저 실행해 주세요",
+    disconnected: (tools) => `${tools}: 연결 해제됨`,
+    noArtifact: "연결할 TONE.md가 없습니다. tonedial compile을 먼저 실행해 주세요.",
     unknownTool: (given, tools) => `${given}: 지원하는 도구가 아닙니다. 사용 가능: ${tools.join(", ")}`,
     noneInstalled: (tools, root) =>
       `검색 위치: ${root}\n${tools.join(", ")} 설치를 찾지 못했습니다. 그래도 연결하려면 도구 이름을 직접 지정해 주세요`,
@@ -1772,7 +1776,7 @@ const koMessages: Messages = {
     skillNotLinked: "연결되지 않음",
     skillNotSeeded: "스킬 기본 파일 없음",
     imported: "import 연결됨",
-    hookPresent: (event) => `${event} 훅 · 매 세션 tone.md를 읽도록 설정됨`,
+    hookPresent: (event) => `${event} 훅 · 매 세션 TONE.md를 읽도록 설정됨`,
     nativeConfigured: (event) => `${event} 훅 · AGENTS.md 다음 TONE.md를 읽도록 설정됨`,
     nativeConfiguredCompact: (event) => `${event} · AGENTS.md → TONE.md`,
     hookSettingState: {
@@ -1821,10 +1825,10 @@ const koMessages: Messages = {
     installShape: (shape, update) => `${shape} · 업데이트: ${update}`,
     commandOnPath: (path) => `찾음 · ${path}`,
     commandNotOnPath:
-      "PATH에서 tonedial을 찾지 못해 스킬과 TONE.md의 대체 안내 줄에서 실행할 수 없습니다. " +
+      "PATH에서 tonedial을 찾지 못해 스킬과 TONE.md의 대체 안내 줄이 이 명령을 실행할 수 없습니다. " +
       "새 셸을 연 뒤에도 찾지 못하면 아래 복구 명령을 실행하세요.",
     commandNotOnPathNpm:
-      "PATH에서 tonedial을 찾지 못해 스킬과 TONE.md의 대체 안내 줄에서 실행할 수 없습니다.\n" +
+      "PATH에서 tonedial을 찾지 못해 스킬과 TONE.md의 대체 안내 줄이 이 명령을 실행할 수 없습니다.\n" +
       "전역 경로 확인:\nnpm prefix -g\n그 경로의 bin 폴더를 PATH에 추가하세요(macOS/Linux).",
   },
   notice: {
@@ -1880,7 +1884,7 @@ const koMessages: Messages = {
   help: {
     commandHelp: "명령별 도움말: tonedial <command> --help",
     fullReference: "전체 도움말: tonedial --help",
-    feedback: "문제가 발생했거나 아이디어, 피드백이 있으시면 자유롭게 작성해 주세요 :)\nhttps://github.com/awesometic/tonedial/issues/new/choose",
+    feedback: "문제를 찾았거나 아이디어가 있으면 이슈로 알려 주세요 :)\nhttps://github.com/awesometic/tonedial/issues/new/choose",
     tagline: "코딩 에이전트의 말투를 한 번 정하고 계속 씁니다",
     footer: "연결 명령은 기본적으로 전역 범위를 씁니다. 현재 프로젝트는 --here, 다른 디렉터리는 --project DIR로 선택하세요. 질문 없이 파일을 바꾸려면 범위를 직접 지정해 주세요.",
     recoveryOptions: "doctor --fix 복구 옵션: tonedial doctor --help",
@@ -1889,32 +1893,32 @@ const koMessages: Messages = {
     examples: "사용 예",
     commands: {
       on: "저장한 말투 전달 재개",
-      off: "말투 전달 일시정지 · 설정·TONE.md 유지",
+      off: "말투 전달 일시 중지 · 설정·TONE.md 유지",
       init: "초기 설정과 기본 파일 갱신",
       set: "축·역할·설정 변경 · 인자 없으면 다이얼",
-      get: "현재 설정값 조회 · 키를 주면 의미와 선택지도 표시",
-      address: "서로 부르는 말 · 인자 없으면 질문 · 빈도: set address_frequency=rarely",
+      get: "현재 설정값 조회 · 키를 지정하면 의미와 선택지도 표시",
+      address: "에이전트 자칭과 사용자 호칭 · 인자 없으면 질문 · 빈도: set address_frequency=rarely",
       persona: "에이전트·사용자 역할 · 인자 없으면 질문",
-      reset: "축을 기본값으로 · 축을 안 주면 전부",
-      show: "현재 설정 · 슬러그를 주면 저장한 프로필",
+      reset: "축 하나를 기본값으로 · 인자 없으면 전체 축",
+      show: "현재 설정 표시 · 슬러그 지정 시 프로필 미리 보기",
       test: "새 대화에서 현재 말투나 프리셋 미리 보기",
       save: "현재 말투를 프로필로 저장",
       create: "프리셋 생성·적용 · 인자 없으면 안내",
-      list: "기본 제공·사용자 프리셋",
+      list: "기본 제공·사용자 프리셋 목록",
       edit: "설정이나 프리셋을 $EDITOR로 열기",
-      use: "프리셋 적용 후 컴파일",
+      use: "프리셋 적용",
       compile: "TONE.md 재생성 · 말투를 바꾸면 자동 처리",
       export: "호칭·역할을 포함한 프로필을 JSON으로 백업",
       import: "JSON에서 프로필 가져오기 · use로 적용",
       wire: "선택한 범위에 에이전트 연결 · 인자 없으면 질문",
-      unwire: "관리 중인 연결 해제",
+      unwire: "선택한 범위에서 에이전트 하나 연결 해제",
       doctor: "연결 점검 · 복구는 --fix",
       update: "현재 설치 업데이트",
       eject: "선택한 범위의 모든 에이전트 연결 해제 · 프리셋 유지",
     },
     flags: {
       verbose: "자세한 설명·진단·diff",
-      global: "전역 범위(기본값) · 지정하면 범위를 명시한 것으로 처리",
+      global: "전역 범위(기본값) · --auto 실행 시 범위 명시용",
       here: "현재 프로젝트 범위",
       project: "다른 프로젝트 디렉터리 · use: 그곳에 TONE.md 내보내기",
       migrateLegacy: "init: 검증된 이전 상태를 옮기도록 승인",
@@ -1930,7 +1934,7 @@ const koMessages: Messages = {
       fromPreset: "doctor --fix: 없는 설정에 사용할 프리셋",
       restorePreset: "doctor --fix: 없거나 손상된 사용자 프리셋 하나 복원",
       preset: "test: 저장한 프로필 미리보기 · 현재 상태 유지",
-      slug: "create/save: 프리셋 슬러그(영문 소문자, 숫자, 대시)",
+      slug: "create/save: 프리셋 슬러그(소문자·숫자·하이픈(-))",
       acceptUsage: "test: 이번 실행의 계정 사용량·비용 부담에 동의",
       explain: "show: 축·설정·주의할 레벨 설명",
       check: "compile: 크기만 확인 · 기록하지 않음",
@@ -2066,7 +2070,7 @@ const koMessages: Messages = {
     futureSchema: (found, known) =>
       `config.json: 스키마 ${found} · 지원 스키마 ${known}. 추측해서 읽지 말고 ToneDial을 업그레이드해 주세요`,
     unreadable: (reason) => `config.json을 읽을 수 없습니다: ${reason}`,
-    safewordQuote: "세이프워드에는 큰따옴표를 쓸 수 없습니다. tone.md의 문장이 중간에서 끝납니다",
+    safewordQuote: "세이프워드에는 큰따옴표를 쓸 수 없습니다. TONE.md의 문장이 중간에서 끝납니다",
     safewordBlank: "세이프워드가 비어 있습니다. 설정하지 않으려면 null을 쓰세요",
     wiringLost:
       "연결 기록이 달라졌거나 확인할 수 없습니다. " +
@@ -2114,11 +2118,11 @@ const ko: Catalogue = {
     risk: koMessages.notice.riskIntro,
   },
   presets: {
-    "caring-brother": "동생의 고민을 다정하게 챙기는 든든한 형입니다.",
+    "caring-brother": "사용자는 동생, 에이전트는 고민을 다정하게 챙겨 주는 든든한 형입니다.",
     "bratty-kid": "말대꾸와 농담을 섞는 잘난 척하는 꼬마입니다.",
-    "eager-sycophant": "창작자의 작은 선택에도 환호하는 과몰입한 팬입니다.",
+    "eager-sycophant": "사용자는 창작자, 에이전트는 작은 선택에도 환호하는 과몰입한 팬입니다.",
     "royal-advisor": "사용자는 왕, 에이전트는 예를 갖춰 보고하고 간언하는 신하입니다.",
-    "ego-sword": "초보 주인을 얕보면서도 함께 살아남으려 잔소리하는 검입니다.",
+    "ego-sword": "사용자는 초보 주인, 에이전트는 얕보면서도 함께 살아남으려 잔소리하는 검입니다.",
     "heavenly-demon": "사용자는 제자, 에이전트는 매섭게 가르치는 천마입니다.",
     "right-hand": "사용자는 보스, 에이전트는 조직의 은어로 보고하는 충직한 오른팔입니다.",
   },

@@ -67,6 +67,9 @@ test("missing or damaged config leaves old and new custom presets listable and e
       assert.equal(listed.status, 0, listed.stderr);
       assert.equal(listed.payload.activeKnown, false);
       assert.equal(listed.payload.active, null);
+      // A missing config is a fresh root; only an unreadable one calls for repair.
+      const preset = EN.preset;
+      assert.ok(listed.payload.warnings.includes(configBody === null ? preset.notSetUp : preset.activeUnknown), JSON.stringify(listed.payload.warnings));
       assert.equal(listed.payload.presets.find((p: { slug: string }) => p.slug === "damaged").available, false);
       assert.ok(listed.payload.presets.some((p: { slug: string; available: boolean }) => p.slug === "old-profile" && p.available));
       assert.ok(listed.payload.presets.some((p: { slug: string; available: boolean }) => p.slug === "new-profile" && p.available));

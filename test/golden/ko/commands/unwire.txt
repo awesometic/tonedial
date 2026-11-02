@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=597; endsWithNewline=true]
+--- stdout --- [bytes=586; endsWithNewline=true]
 ToneDial · unwire
 
   연결 범위: 프로젝트
@@ -27,6 +27,6 @@ ToneDial · unwire
 
   전체 변경 내용: --verbose
 
-  Codex CLI 연결을 해제했습니다
+  Codex CLI: 연결 해제됨
 --- stderr --- [bytes=0; endsWithNewline=false]
 

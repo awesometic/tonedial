@@ -1,5 +1,7 @@
 // The bundled and user presets, with the active one marked.
 
+import { existsSync } from "node:fs";
+
 import type { CommandResult, Ctx } from "../cli.ts";
 import { AXIS_DEFAULT, riskyAxes } from "../core/anchors.ts";
 import { parseConfig, type Config } from "../core/config.ts";
@@ -12,11 +14,15 @@ import { captureRawEntry, rawReadChange } from "../wiring/apply.ts";
 
 export function runList(ctx: Ctx): CommandResult {
   let config: Config | null = null;
+  // No config yet is a fresh machine, not damaged settings.
+  let notSetUp = false;
   try {
     const capture = captureRawEntry(ctx.paths.config, ctx.t, { within: ctx.paths.root, allowLink: false });
     const read = rawReadChange(capture, ctx.t);
     if (read.before !== null) config = parseConfig(read.before, ctx.t);
+    else notSetUp = true;
   } catch {
+    notSetUp = !existsSync(ctx.paths.root);
     // The library remains usable; unknown active state is never a manufactured default.
   }
   const library = inspectPresetLibrary(ctx.paths.presets, ctx.t);
@@ -76,7 +82,7 @@ export function runList(ctx: Ctx): CommandResult {
       })),
     },
     warnings: [
-      ...(config === null ? [ctx.t.preset.activeUnknown] : []),
+      ...(config === null ? [notSetUp ? ctx.t.preset.notSetUp : ctx.t.preset.activeUnknown] : []),
       ...(ambiguous ? [ctx.t.preset.activeConflict(config!.preset!)] : []),
       ...conflicts.map((conflict) =>
         ctx.t.preset.conflict(conflict.slug, conflict.recovery.preset.slug)),

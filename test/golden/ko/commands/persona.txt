@@ -2,7 +2,7 @@ status: 0
 --- stdout --- [bytes=125; endsWithNewline=true]
 ToneDial · persona
 
-  설정 저장됨
+  설정 변경됨
   persona.agent  64자 → 18자
   persona.user   22자 → 9자
   TONE.md 생성됨

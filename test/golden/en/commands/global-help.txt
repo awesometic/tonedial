@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=3545; endsWithNewline=true]
+--- stdout --- [bytes=3555; endsWithNewline=true]
 tonedial — set a coding agent's manner once and keep using it
 
 tonedial <command> [options]
@@ -11,21 +11,21 @@ To get started, set up, preview and adjust your tone, then connect an agent:
   tonedial wire
 
 Tone
-  set <key>=<value>...  change axes, role or settings · bare opens dial
-  show [slug]           current settings · slug previews a saved profile
+  set <key>=<value>...  change axes, role or settings · no args opens the dial
+  show [slug]           show settings · a slug previews a saved profile
   get [key]             show current values · a key adds meaning and choices
-  reset [axis]          reset an axis · bare resets all axes
-  address [self user]   set names for each party · bare prompts · frequency:
-                        set address_frequency=rarely
-  persona [agent user]  set agent and user roles · bare prompts
+  reset [axis]          reset one axis · no args resets all twelve
+  address [self user]   set the agent's and your names · no args prompts ·
+                        frequency: set address_frequency=rarely
+  persona [agent user]  set the agent's role and yours · no args prompts
   test [claude|codex]   preview your tone or a preset in a new conversation
   off                   pause tone delivery · keep settings and TONE.md
   on                    resume saved tone delivery
 
 Preset library
-  list                  bundled and user presets
-  use <slug>            apply a preset and compile
-  create [name] ...     create and apply a preset · bare guides setup
+  list                  list bundled and saved presets
+  use <slug>            apply a preset
+  create [name] ...     create and apply a preset · no args guides setup
   save [display name]   save the current tone as a profile
   export <slug>         back up a profile, including address and role, as JSON
   import <file>         import a profile from JSON · use applies it
@@ -33,8 +33,8 @@ Preset library
 
 Connections
   init                  set up and refresh bundled files
-  wire [tool]           connect an agent in the selected scope · bare prompts
-  unwire [tool]         remove a managed connection
+  wire [tool]           connect an agent in the chosen scope · no args prompts
+  unwire [tool]         disconnect one agent in the selected scope
   doctor                check connections · repair with --fix
   eject                 disconnect agents in the selected scope · keep presets
 
@@ -43,7 +43,7 @@ Maintenance
   update                update this install
 
 Options
-  --global              global scope (default) · passing it counts as explicit
+  --global              global scope (default) · state it for --auto writes
   --here                current project scope
   --project=DIR         another project directory · use: export TONE.md there
   --migrate-legacy      init: approve validated older state
@@ -69,7 +69,7 @@ Connection commands use the global scope unless you pass --here (current
 project) or --project DIR. Unattended writes need the scope stated explicitly.
 Command help: tonedial <command> --help
 
-If you run into a problem or have ideas or feedback, feel free to share them :)
+Found a problem or have an idea? Open an issue :)
 https://github.com/awesometic/tonedial/issues/new/choose
 --- stderr --- [bytes=0; endsWithNewline=false]
 

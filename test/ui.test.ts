@@ -440,9 +440,9 @@ test("eject and unwire receipts name only the connected agents that were disconn
   out = [];
   assert.equal(await cli("eject", "--here", "--auto"), 0, err.join(""));
   const receipt = out.join("");
-  assert.match(receipt, /Codex CLI disconnected/);
-  assert.doesNotMatch(receipt, /Claude Code.* disconnected/);
-  assert.doesNotMatch(receipt, /Antigravity.* disconnected/);
+  assert.match(receipt, /Codex CLI: disconnected/);
+  assert.doesNotMatch(receipt, /Claude Code.*: disconnected/);
+  assert.doesNotMatch(receipt, /Antigravity.*: disconnected/);
 });
 
 test("empty disconnect reports already disconnected when only config formatting changes", async () => {
@@ -467,7 +467,7 @@ test("empty disconnect reports already disconnected when only config formatting 
       } else {
         const receipt = out.join("").replace(/\s+/g, " ");
         assert.match(receipt, /nothing to disconnect/);
-        assert.doesNotMatch(receipt, /(?:Codex CLI|Claude Code|Antigravity IDE\/Desktop) disconnected/);
+        assert.doesNotMatch(receipt, /(?:Codex CLI|Claude Code|Antigravity IDE\/Desktop): disconnected/);
       }
     }
   }

@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=565; endsWithNewline=true]
+--- stdout --- [bytes=566; endsWithNewline=true]
 ToneDial · unwire
 
   Connection scope: project
@@ -27,6 +27,6 @@ ToneDial · unwire
 
   Full diff: --verbose
 
-  Codex CLI disconnected
+  Codex CLI: disconnected
 --- stderr --- [bytes=0; endsWithNewline=false]
 

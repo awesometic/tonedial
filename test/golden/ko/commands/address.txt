@@ -2,7 +2,7 @@ status: 0
 --- stdout --- [bytes=129; endsWithNewline=true]
 ToneDial · address
 
-  설정 저장됨
+  설정 변경됨
   persona.self_ref  형 → self
   persona.user_ref  동생 → user
   TONE.md 생성됨

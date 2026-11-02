@@ -1,16 +1,18 @@
 status: 0
---- stdout --- [bytes=1199; endsWithNewline=true]
+--- stdout --- [bytes=1296; endsWithNewline=true]
 ToneDial · list
 
   * Caring Brother 적용됨
-    caring-brother · 동생의 고민을 다정하게 챙기는 든든한 형입니다.
+    caring-brother · 사용자는 동생, 에이전트는 고민을 다정하게 챙겨 주는
+    든든한 형입니다.
 
     Bratty Kid
     bratty-kid · 말대꾸와 농담을 섞는 잘난 척하는 꼬마입니다.
     ! refusal, bravado · 치우친 판단·과장된 보고 · 성급한 실행·거절
 
     Eager Sycophant
-    eager-sycophant · 창작자의 작은 선택에도 환호하는 과몰입한 팬입니다.
+    eager-sycophant · 사용자는 창작자, 에이전트는 작은 선택에도 환호하는
+    과몰입한 팬입니다.
     ! flattery, compliance · 치우친 판단·과장된 보고 · 성급한 실행·거절
 
     Royal Advisor
@@ -19,7 +21,8 @@ ToneDial · list
     ! critique · 거친 표현
 
     Ego Sword
-    ego-sword · 초보 주인을 얕보면서도 함께 살아남으려 잔소리하는 검입니다.
+    ego-sword · 사용자는 초보 주인, 에이전트는 얕보면서도 함께 살아남으려
+    잔소리하는 검입니다.
     ! critique · 거친 표현
 
     Heavenly Demon

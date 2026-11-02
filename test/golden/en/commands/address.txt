@@ -1,8 +1,8 @@
 status: 0
---- stdout --- [bytes=148; endsWithNewline=true]
+--- stdout --- [bytes=150; endsWithNewline=true]
 ToneDial · address
 
-  Settings saved
+  Settings updated
   persona.self_ref  your big brother → self
   persona.user_ref  little sibling → user
   TONE.md generated

@@ -337,7 +337,7 @@ def too_small(language: str) -> bytes:
 
 
 def saved(language: str) -> bytes:
-    return "설정 저장됨".encode() if language == "ko" else b"Settings saved"
+    return "설정 변경됨".encode() if language == "ko" else b"Settings updated"
 
 
 def init_done(language: str) -> bytes:
