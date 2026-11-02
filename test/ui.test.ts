@@ -527,13 +527,14 @@ for (const language of LANGUAGES) {
     const agent = "A TypeScript specialist with ten years of experience who speaks plainly.";
     await cli("set", `persona.user=${user}`, `persona.agent=${agent}`);
     const env = { HOME: home, TONEDIAL_HOME: join(home, "state"), PATH: "", COLUMNS: "60" };
-    const copy = catalogue(language).cli;
     const visible = (text: string) => text.replace(/\s+/g, " ");
 
     out = [];
     assert.equal(await run(["show"], env, join(home, "project"), false), 0);
     const shown = out.join("");
-    assert.ok(visible(shown).includes(copy.persona.descriptionCounts([...user].length, [...agent].length, 200)));
+    // Each count stays with the description it measures.
+    assert.ok(visible(shown).includes(`${agent} (${[...agent].length}/200)`));
+    assert.ok(visible(shown).includes(`${user} (${[...user].length}/200)`));
     assert.ok(visible(shown).includes(user));
     assert.ok(visible(shown).includes(agent));
     for (const line of shown.trimEnd().split("\n")) assert.ok(maxCells(line) <= 59 || isUnbreakable(line), line);

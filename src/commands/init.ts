@@ -222,12 +222,15 @@ export async function runInit(entry: Ctx, _args: string[]): Promise<CommandResul
   if (applied) {
     for (const notice of riskWarnings(config.axes, ctx.t)) addReceipt(notice, ctx.ui.risk);
   }
+  // State alone reaches no conversation; say so where the user reads the result.
+  const unconnected = applied && tools.length === 0;
+  if (unconnected) addReceipt(copy.init.noConnections, ctx.ui.warn);
   lines.push("");
   // Skills and controls invoke bare tonedial, so command reachability needs its own hint.
   if (onPath("tonedial", ctx.env) === null) {
     addReceipt(copy.init.installHint);
   } else if (applied) {
-    lines.push(`  ${ctx.ui.accent("tonedial show")}`);
+    lines.push(`  ${ctx.ui.accent(humanText(unconnected ? `tonedial wire ${connectionScopeFlag(ctx.agent)}` : "tonedial show"))}`);
   }
 
   // Spread rather than assigned: `exactOptionalPropertyTypes` draws a line between "no handoff"

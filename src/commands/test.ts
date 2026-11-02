@@ -12,11 +12,11 @@ import { withPreset, inspectPresetLibrary, readDisplayName, resolvePreset, type 
 import { compile } from "../core/compile.ts";
 import { riskyAxes } from "../core/anchors.ts";
 import { ConfigError } from "../core/config.ts";
-import { onPath } from "../core/paths.ts";
+import { onPath, shellQuote } from "../core/paths.ts";
 import { toCompileInput } from "../core/resolve.ts";
 import { confirm, guardTerminal } from "../ui/prompt.ts";
 import { wrap } from "../ui/width.ts";
-import { humanText, riskWarnings } from "../ui/format.ts";
+import { humanText, nextStep, riskWarnings } from "../ui/format.ts";
 import { planConfig } from "./compile.ts";
 
 const PROVIDERS = ["claude", "codex"] as const;
@@ -126,16 +126,23 @@ export async function runTest(ctx: Ctx, args: string[]): Promise<CommandResult> 
   ];
   const lines = [
     ...wrap(planOnly ? copy.planned(label) : copy.starting(label), ctx.ui.width - 2).map((line) => `  ${line}`),
+    `  ${copy.folder}`,
     `  ${displayTarget}`,
     ...(planOnly ? usageLines : []),
   ];
-  const toneName = humanText(preview?.displayName ?? (config.preset
-    ? `${readDisplayName(config.preset, ctx.t.preset.unsaved)}${config.unsaved ? ` (${ctx.t.preset.unsaved})` : ""}`
+  const activeName = config.preset ? resolvePreset(ctx.paths.presets, config.preset, ctx.t)?.preset.displayName ?? config.preset : null;
+  const toneName = humanText(preview?.displayName ?? (activeName
+    ? `${readDisplayName(activeName, ctx.t.preset.unsaved)}${config.unsaved ? ` (${ctx.t.preset.unsaved})` : ""}`
     : ctx.t.preset.unsaved));
   lines.splice(1, 0, ...wrap(preview ? copy.previewTone(toneName) : copy.savedTone(toneName), ctx.ui.width - 2)
     .map((line) => `  ${ctx.ui.bold(line)}`));
   lines.push(...riskWarnings(input.axes, ctx.t).flatMap((notice) => wrap(notice, ctx.ui.width - 2)
     .map((line) => `  ${ctx.ui.risk(line)}`)));
+  // A plan ends with the command that would open it.
+  if (planOnly) {
+    lines.push(...nextStep(`tonedial test ${provider}${preview ? ` --preset ${preview.slug}` : ""}` +
+      `${ctx.flags.project === null ? "" : ` --project "${shellQuote(target)}"`}`, ctx.ui));
+  }
 
   return {
     lines,

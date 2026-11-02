@@ -15,7 +15,7 @@ import { toCompileInput } from "../core/resolve.ts";
 import { LANGUAGES, catalogue, isLanguage, type Messages } from "../core/i18n.ts";
 import { presetSettings, resolvePreset } from "../core/presets.ts";
 import { dial } from "../ui/dial.ts";
-import { artifactSize, combination, humanText, riskWarnings } from "../ui/format.ts";
+import { artifactSize, combination, humanText, offNotice, riskWarnings } from "../ui/format.ts";
 import { guardTerminal, interactive } from "../ui/prompt.ts";
 import { createInterface } from "node:readline/promises";
 import { cells, padEnd, truncate, wrap } from "../ui/width.ts";
@@ -254,12 +254,15 @@ async function commit(
   const { change: toneChange, size } = planArtifact(ctx, config);
   const finalConfig = { ...configChange, after: serializeConfig(config, ctx.t) };
   await applyPlanned(ctx, [configChange, toneChange], [finalConfig]);
+  // The receipt confirming a language switch is the first screen in that language.
+  const t = applied.changed.includes("language") && isLanguage(config.language) ? catalogue(config.language).cli : ctx.t;
   return {
     lines: [
-      `  ${ctx.ui.bold(finalConfig.before === finalConfig.after ? ctx.t.axis.settingsUnchanged : ctx.ui.success(ctx.t.axis.settingsSaved))}`,
+      `  ${ctx.ui.bold(finalConfig.before === finalConfig.after ? t.axis.settingsUnchanged : ctx.ui.success(t.axis.settingsSaved))}`,
       ...movementLines(applied.moves, ctx, config.axes),
-      `  ${ctx.ui.success(toneChange.before === toneChange.after ? ctx.t.artifact.current : ctx.t.artifact.generated)}`,
-      ...(ctx.flags.verbose ? [`  ${ctx.ui.dim(artifactSize(size, ctx.t))}`] : []),
+      `  ${ctx.ui.success(toneChange.before === toneChange.after ? t.artifact.current : t.artifact.generated)}`,
+      ...(ctx.flags.verbose ? [`  ${ctx.ui.dim(artifactSize(size, t))}`] : []),
+      ...offNotice(config.enabled, t, ctx.ui),
     ],
     json: {
       changed: applied.changed,
@@ -415,6 +418,8 @@ export async function runReset(ctx: Ctx, args: string[]): Promise<CommandResult>
   const { change: configChange, config } = planConfig(ctx);
   const [axis] = args;
   const before = axis !== undefined && isAxis(axis) ? config.axes[axis] : null;
+  const previous = { ...config.axes };
+  const previousPreset = config.preset === null ? null : humanText(config.preset);
 
   if (axis === undefined) {
     // Axis values only. Persona and safeword are user-level settings rather than a
@@ -435,15 +440,18 @@ export async function runReset(ctx: Ctx, args: string[]): Promise<CommandResult>
   const { change: toneChange, size } = planArtifact(ctx, config);
   const finalConfig = { ...configChange, after: serializeConfig(config, ctx.t) };
   await applyPlanned(ctx, [configChange, toneChange], [finalConfig]);
+  // The same receipt as `set`: a header, each axis that moved, then the artifact.
+  const moves = AXIS_ORDER.filter((key) => previous[key] !== config.axes[key])
+    .map((key) => ({ key, from: String(previous[key]), to: String(config.axes[key]) }));
   return {
     lines: [
-      ...(axis
-        ? [before === AXIS_DEFAULT[axis]
-          ? `  ${ctx.t.axis.reset(axis, AXIS_DEFAULT[axis])}`
-          : `  ${ctx.ui.bold(axis)} ${ctx.ui.dim(String(before))} ${ctx.ui.dim("→")} ${ctx.ui.bold(ctx.ui.accent(String(AXIS_DEFAULT[axis])))}`]
-        : wrap(ctx.t.axis.resetAll, ctx.ui.width - 2).map(line => `  ${ctx.ui.bold(ctx.ui.success(line))}`)),
+      `  ${ctx.ui.bold(finalConfig.before === finalConfig.after ? ctx.t.axis.settingsUnchanged : ctx.ui.success(ctx.t.axis.settingsSaved))}`,
+      ...movementLines(moves, ctx, config.axes),
+      ...(axis && before === AXIS_DEFAULT[axis] ? [`  ${ctx.ui.dim(ctx.t.axis.reset(axis, AXIS_DEFAULT[axis]))}`] : []),
+      ...(axis ? [] : wrap(ctx.t.axis.resetAll(previousPreset), ctx.ui.width - 2).map((line) => `  ${ctx.ui.dim(line)}`)),
       `  ${ctx.ui.success(toneChange.before === toneChange.after ? ctx.t.artifact.current : ctx.t.artifact.generated)}`,
       ...(ctx.flags.verbose ? [`  ${ctx.ui.dim(artifactSize(size, ctx.t))}`] : []),
+      ...offNotice(config.enabled, ctx.t, ctx.ui),
     ],
     json: { reset: axis ?? "all", chars: size.chars },
     warnings: [...riskWarnings(config.axes, ctx.t), ...comboWarnings(config, ctx.t),

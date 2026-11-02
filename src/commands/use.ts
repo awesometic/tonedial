@@ -11,7 +11,7 @@ import { check as checkCombos } from "../core/combos.ts";
 import { withPreset, assertPresetSelection, inspectPresetLibrary, resolvePreset } from "../core/presets.ts";
 import { applyPlanned, contextCapWarnings, planArtifact, planConfig } from "./compile.ts";
 import { planChange, rawReadCheck } from "../wiring/apply.ts";
-import { artifactSize, combination, humanText, nextStep } from "../ui/format.ts";
+import { artifactSize, combination, humanText, nextStep, offNotice } from "../ui/format.ts";
 import { truncate, wrap } from "../ui/width.ts";
 
 /**
@@ -21,6 +21,7 @@ import { truncate, wrap } from "../ui/width.ts";
  */
 export async function runUse(ctx: Ctx, args: string[]): Promise<CommandResult> {
   const [slug] = args;
+  if (!slug) throw new ConfigError(ctx.t.preset.needsSlugArg);
   const library = inspectPresetLibrary(ctx.paths.presets, ctx.t);
   const known = library.entries.map((entry) => entry.preset.slug);
   const selected = slug ? resolvePreset(ctx.paths.presets, slug, ctx.t, library) : null;
@@ -89,7 +90,7 @@ export async function runUse(ctx: Ctx, args: string[]): Promise<CommandResult> {
     "",
     ...notices.flatMap((n) => wrap(humanText(n), ui.width - 2).map((folded) => `  ${n === notice.riskAxes ? ui.risk(folded) : folded}`)),
     ...project,
-    ...nextStep("tonedial show", ui),
+    ...(config.enabled ? nextStep("tonedial show", ui) : offNotice(false, ctx.t, ui)),
   ];
 
   return {

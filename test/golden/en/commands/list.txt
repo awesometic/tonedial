@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=1079; endsWithNewline=true]
+--- stdout --- [bytes=1075; endsWithNewline=true]
 ToneDial · list
 
   * Caring Brother active
@@ -34,6 +34,6 @@ ToneDial · list
     underworld idioms.
     ! critique · harsh language
 
-  tonedial show caring-brother
+  tonedial show bratty-kid
 --- stderr --- [bytes=0; endsWithNewline=false]
 

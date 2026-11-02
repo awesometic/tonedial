@@ -3,7 +3,7 @@
 import type { CommandResult, Ctx } from "../cli.ts";
 import { AXIS_DEFAULT, riskyAxes } from "../core/anchors.ts";
 import { parseConfig, type Config } from "../core/config.ts";
-import { applyPreset, inspectPresetLibrary } from "../core/presets.ts";
+import { applyPreset, inspectPresetLibrary, matchesPreset } from "../core/presets.ts";
 import { nonDefaultAxes } from "../core/combos.ts";
 import { catalogue, configLanguage, detectLanguage, isLanguage } from "../core/i18n.ts";
 import { truncate, wrap } from "../ui/width.ts";
@@ -41,10 +41,14 @@ export function runList(ctx: Ctx): CommandResult {
 
   const copy = catalogue(config && isLanguage(config.language) ? config.language : configLanguage(ctx.paths.config) ?? detectLanguage(ctx.env));
 
+  // Suggest a look at a profile other than the one already applied.
+  const preview = rows.find((row) => !row.active);
   return {
     lines: [
       ...rows.flatMap((r, index) => {
-        const name = r.active ? ctx.t.preset.active(r.displayName) : r.displayName;
+        // Same rule as `show`: the active row says when the current tone has drifted from it.
+        const drifted = r.active && (config!.unsaved || !matchesPreset(config!, library.entries[index]!.preset));
+        const name = r.active ? ctx.t.preset.active(r.displayName) + (drifted ? ` (${ctx.t.preset.unsaved})` : "") : r.displayName;
         const ownership = r.bundled ? "" : ` (${ctx.t.preset.yours})`;
         const summary = copy.presets[r.slug] ?? ctx.t.preset.nonDefault(r.nonDefaultAxes);
         const values = library.entries[index]!.preset.values;
@@ -60,7 +64,7 @@ export function runList(ctx: Ctx): CommandResult {
       }),
       ...library.unavailable.flatMap((entry) => wrap(ctx.t.preset.unavailable(entry.slug, entry.reason), ctx.ui.width - 2)
         .map((line) => `  ${ctx.ui.warn(line)}`)),
-      ...nextStep(rows[0] ? `tonedial show ${rows[0].slug}` : "tonedial doctor", ctx.ui),
+      ...nextStep(preview ? `tonedial show ${preview.slug}` : "tonedial doctor", ctx.ui),
     ],
     json: {
       presets: [...rows, ...library.unavailable.map((entry) => ({ ...entry, available: false, active: null }))],

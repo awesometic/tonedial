@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=1203; endsWithNewline=true]
+--- stdout --- [bytes=1199; endsWithNewline=true]
 ToneDial · list
 
   * Caring Brother 적용됨
@@ -31,6 +31,6 @@ ToneDial · list
     오른팔입니다.
     ! critique · 거친 표현
 
-  tonedial show caring-brother
+  tonedial show bratty-kid
 --- stderr --- [bytes=0; endsWithNewline=false]
 

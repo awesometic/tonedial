@@ -60,38 +60,41 @@ export function runShow(ctx: Ctx, args: string[]): CommandResult {
   // A display name has no length cap, so the title is the one row that can be pushed past the
   // budget by state alone. Truncating keeps the size at the right margin where it is read.
   const prefix = "ToneDial · show · ";
-  const nameBudget = ctx.ui.width - maxCells(sizeLabel) - maxCells(status) - maxCells(prefix) - 4;
+  const nameBudget = ctx.ui.width - maxCells(sizeLabel) - maxCells(status) - maxCells(prefix) - 2;
   if (nameBudget >= 2) {
     lines.push(titleRow(prefix + truncate(humanText(activeName), nameBudget) + status, sizeLabel, ctx));
   } else {
-    const title = prefix + truncate(humanText(activeName), Math.max(2, ui.width - maxCells(status) - maxCells(prefix) - 2)) + status;
-    for (const folded of wrap(title, ui.width - 2)) lines.push(`  ${ui.bold(folded)}`);
-    for (const folded of wrap(sizeLabel, ui.width - 2)) lines.push(`  ${ui.dim(folded)}`);
+    const title = prefix + truncate(humanText(activeName), Math.max(2, ui.width - maxCells(status) - maxCells(prefix))) + status;
+    for (const folded of wrap(title, ui.width)) lines.push(ui.bold(folded));
+    for (const folded of wrap(sizeLabel, ui.width)) lines.push(ui.dim(folded));
   }
+  // Paused delivery is the first thing to know about a tone that seems to have no effect.
+  const paused = preview === null && !config.enabled;
+  if (paused) lines.push(...wrap(ctx.t.delivery.offNotice, ui.width - 2).map((line) => `  ${ui.warn(line)}`));
 
   const { "persona.age": age, "persona.gender": gender, "persona.note": note,
     "persona.self_ref": selfRef, "persona.user_ref": userRef, "persona.user": user, "persona.agent": agent } = values;
   const personaSet = Boolean(age || gender || note || selfRef || userRef || user || agent);
-  const gauges = [gaugeHeader(ui, ctx.t), ...gaugeBlock(axes, ui)];
+  // A preview's values column holds the profile's levels, not the current tone's.
+  const headerCopy = preview ? { ...ctx.t, artifact: { ...ctx.t.artifact, currentLevel: ctx.t.artifact.previewLevel } } : ctx.t;
+  const gauges = [gaugeHeader(ui, headerCopy), ...gaugeBlock(axes, ui)];
   const gaugeWidth = Math.max(...gauges.map((line) => maxCells(stripVTControlCharacters(line))));
   const detailWidth = ui.terminal && ui.width >= 119 ? ui.width - gaugeWidth - 4 : ui.width - 2;
-  const details: string[] = [ui.bold(ctx.t.artifact.settingsHeading),
-    ...(config.enabled ? [] : [ctx.t.delivery.status(false)])];
+  const details: string[] = [ui.bold(ctx.t.artifact.settingsHeading)];
   if (personaSet) {
     const bits = [
-      age ? humanText(age) : null,
-      gender ? humanText(gender) : null,
+      age ? ctx.t.persona.ageLabel(humanText(age)) : null,
+      gender ? ctx.t.persona.genderLabel(humanText(gender)) : null,
       selfRef ? ctx.t.persona.callsItself(humanText(selfRef)) : null,
       userRef ? ctx.t.persona.callsYou(humanText(userRef)) : null,
       note ? ctx.t.persona.noteChars([...note].length) : null,
-      user && agent ? ctx.t.persona.descriptionCounts([...user].length, [...agent].length, PERSONA_DESCRIPTION_MAX) : null,
-      user && !agent ? ctx.t.persona.descriptionChars("user", [...user].length) : null,
-      agent && !user ? ctx.t.persona.descriptionChars("agent", [...agent].length) : null,
     ].filter(Boolean);
     if (bits.length) for (const folded of wrap(bits.join(" · "), detailWidth)) details.push(ui.dim(folded));
+    // Each count sits with the text it measures, the way `save` reviews a profile.
     for (const [field, value] of [["agent", agent], ["user", user]] as const) {
       if (value === null) continue;
-      for (const folded of wrap(ctx.t.persona.descriptionFull(field, humanText(value)), detailWidth)) {
+      const text = `${ctx.t.persona.descriptionFull(field, humanText(value))} (${[...value].length}/${PERSONA_DESCRIPTION_MAX})`;
+      for (const folded of wrap(text, detailWidth)) {
         details.push(ui.dim(folded));
       }
     }
@@ -156,7 +159,7 @@ export function runShow(ctx: Ctx, args: string[]): CommandResult {
     const legend = ctx.t.artifact.movedFromDefault + (needsSave ? ` · ${ctx.t.preset.changesNotSaved}` : "");
     const [first, ...rest] = wrap(legend, ui.width - 4);
     lines.push(`  ${ui.accent("*")} ${ui.dim(first!)}`, ...rest.map((line) => `    ${ui.dim(line)}`),
-      ...nextStep(preview ? `tonedial use ${preview.slug}` : needsSave ? saveCommand : "tonedial show --explain", ui).slice(1));
+      ...nextStep(preview ? `tonedial use ${preview.slug}` : needsSave ? saveCommand : paused ? "tonedial on" : "tonedial show --explain", ui).slice(1));
   }
 
   const combinations = checkCombos(axes);
@@ -203,9 +206,10 @@ function titleRow(name: string, sizeLabel: string, ctx: Ctx): string {
   // Measured pessimistically. A display name is user text and may hold ambiguous-width
   // characters, so a gap sized by the narrow measure is a gap that overflows on the terminals
   // this contract exists for.
-  const used = maxCells(name) + maxCells(sizeLabel) + 2;
-  const gap = used <= ctx.ui.width ? " ".repeat(ctx.ui.width - used) : " ";
-  return `  ${ctx.ui.bold(name)}${gap}${ctx.ui.dim(sizeLabel)}`;
+  // Flush left like every other command's banner.
+  const used = maxCells(name) + maxCells(sizeLabel);
+  const gap = used < ctx.ui.width ? " ".repeat(ctx.ui.width - used) : " ";
+  return `${ctx.ui.bold(name)}${gap}${ctx.ui.dim(sizeLabel)}`;
 }
 
 /**

@@ -1,9 +1,10 @@
 status: 0
---- stdout --- [bytes=703; endsWithNewline=true]
+--- stdout --- [bytes=763; endsWithNewline=true]
 ToneDial · test
 
   Would open a fresh Codex conversation.
-  Saved tone: caring-brother
+  Tone: current settings · Caring Brother
+  Conversation folder:
   <ROOT>/project
   Your account tokens and limits are used; charges may apply.
   - The model may spend extra tokens reasoning about the preview; usage and
@@ -15,5 +16,7 @@ ToneDial · test
     managed policy still applies, and this is not filesystem isolation.
   - The tone is sent once, at the start. Judge the preview by its first few
     replies; longer conversations can drift.
+
+  tonedial test codex
 --- stderr --- [bytes=0; endsWithNewline=false]
 

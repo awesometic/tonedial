@@ -41,6 +41,8 @@ export type Catalogue = {
     safewordSuggestion: (suggestion: string) => string;
     done: string;
     installHint: string;
+    /** After a state-only setup: nothing reaches an agent until a connection exists. */
+    noConnections: string;
     /** Explicit opt-in picker; unverified integrations are never pre-checked. */
     tools: string;
     /** What --auto decided, as a notice rather than a question. */
@@ -97,6 +99,7 @@ export type Messages = {
     starting: (provider: string) => string;
     planned: (provider: string) => string;
     savedTone: (name: string) => string;
+    folder: string;
     previewTone: (name: string) => string;
     usageConsent: string;
     usageDeclined: string;
@@ -116,6 +119,7 @@ export type Messages = {
     alreadyOn: string;
     alreadyOff: string;
     openConversation: string;
+    offNotice: string;
     status: (enabled: boolean) => string;
   };
   axis: {
@@ -124,7 +128,7 @@ export type Messages = {
     /** The `set` fall-through, where the key is neither an axis nor one of `SETTING_KEYS`. */
     notSettable: (name: string, nearest: string | null) => string;
     reset: (axis: string, level: number) => string;
-    resetAll: string;
+    resetAll: (deselected: string | null) => string;
     nothingChanged: string;
     settingsSaved: string;
     settingsUnchanged: string;
@@ -240,11 +244,12 @@ export type Messages = {
     gender: (options: readonly string[]) => string;
     callsYou: (term: string) => string;
     callsItself: (term: string) => string;
+    ageLabel: (band: string) => string;
+    genderLabel: (gender: string) => string;
     noteChars: (count: number) => string;
     /** Hard-bounded role descriptions are rejected before a config mutation. */
     descriptionOverCap: (field: string, given: number, cap: number) => string;
     descriptionChars: (field: "user" | "agent", count: number) => string;
-    descriptionCounts: (user: number, agent: number, cap: number) => string;
     descriptionFull: (field: "user" | "agent" | "note", value: string) => string;
   };
   settings: {
@@ -279,6 +284,8 @@ export type Messages = {
     currentLevel: string;
     defaultLevel: string;
     defaultLevelShort: string;
+    /** The values column when `show <slug>` previews a profile rather than the current tone. */
+    previewLevel: string;
     settingsHeading: string;
     displaySettings: (language: string) => string;
     connectionRecords: (records: string[]) => string;
@@ -616,7 +623,8 @@ const enMessages: Messages = {
     chooseProvider: "Choose a provider: 1 Claude Code, 2 Codex [1]: ",
     starting: (provider) => `Opening a fresh ${provider} conversation.`,
     planned: (provider) => `Would open a fresh ${provider} conversation.`,
-    savedTone: (name) => `Saved tone: ${name}`,
+    savedTone: (name) => `Tone: current settings · ${name}`,
+    folder: "Conversation folder:",
     previewTone: (name) => `Preview preset: ${name} · saved settings unchanged`,
     usageConsent: "Accept usage and charges, and start?",
     usageDeclined: "Cancelled · no conversation opened",
@@ -630,25 +638,26 @@ const enMessages: Messages = {
     selectionCancelled: "No provider selected.",
   },
   delivery: {
-    on: "ToneDial on · delivery marker cleared",
-    off: "ToneDial off · delivery marker saved · settings and TONE.md kept",
+    on: "ToneDial on · tone delivery resumed",
+    off: "ToneDial off · tone delivery paused · settings and TONE.md kept",
     alreadyOn: "ToneDial already on · no changes",
     alreadyOff: "ToneDial already off · no changes",
     openConversation: "Open conversations may retain an earlier tone. Use a new conversation for a clean no-ToneDial comparison.",
+    offNotice: "ToneDial is off, so new conversations get no tone until you turn it back on.",
     status: (enabled) => `ToneDial ${enabled ? "on" : "off"}`,
   },
   axis: {
     range: (axis, given) => `${axis}: expected 1–5 (got ${given})`,
-    unknown: (name, nearest) => `${name}: not an axis${nearest ? `. Did you mean ${nearest}?` : ""}`,
+    unknown: (name, nearest) => `${name}: not an axis.${nearest ? ` Did you mean ${nearest}?` : ""} Axes: tonedial get --help`,
     notSettable: (name, nearest) =>
       `${name}: not an axis or setting. ${nearest ? `Did you mean ${nearest}? ` : ""}` +
       "Full list: tonedial get --help",
-    reset: (axis, level) => `${axis}: default ${level}`,
-    resetAll: "All axes reset to defaults; persona and settings kept.",
+    reset: (axis, level) => `${axis} already at default ${level}`,
+    resetAll: (deselected) => deselected ? `${deselected} deselected · persona and other settings kept` : "Persona and other settings kept",
     nothingChanged: "no changes",
     settingsSaved: "Settings saved",
     settingsUnchanged: "Settings unchanged",
-    needsPair: (given) => `${given}: expected <key>=<value>`,
+    needsPair: (given) => `${given}: expected <key>=<value>, for example warmth=4`,
     needsArgument: "set needs at least one <key>=<value>. Run it without arguments in a terminal to open the dial",
     subagentUnsupported: "subagent axes are not supported yet. Set the user axes instead",
   },
@@ -769,10 +778,11 @@ const enMessages: Messages = {
     gender: (options) => `persona.gender · available: ${options.join(", ")}`,
     callsYou: (term) => `user name ${term}`,
     callsItself: (term) => `self name ${term}`,
+    ageLabel: (band) => `age ${band}`,
+    genderLabel: (gender) => `gender ${gender}`,
     noteChars: (count) => `note ${count} chars`,
     descriptionOverCap: (field, given, cap) => `${field}: ${given} characters · maximum ${cap}`,
     descriptionChars: (field, count) => `${field === "user" ? "user context" : "fictional agent role"} · ${count} chars`,
-    descriptionCounts: (user, agent, cap) => `roles · user ${user}/${cap} · agent ${agent}/${cap}`,
     descriptionFull: (field, value) => `${field === "user" ? "user context" : field === "agent" ? "fictional agent role" : "persona note"}: ${value}`,
   },
   settings: {
@@ -780,7 +790,7 @@ const enMessages: Messages = {
     fixedWidthRetired: "fixed_width is retired. Output now follows terminal width automatically. No settings were changed.",
     speechLevel: (options) => `speech_level · available: ${options.join(", ")}`,
     addressFrequency: (options) => `address_frequency · available: ${options.join(", ")}`,
-    addressUse: (frequency) => `address ${frequency}`,
+    addressUse: (frequency) => `address frequency ${frequency}`,
     safewordShort: (phrase) => `safeword ${phrase}: too short and may trigger by accident`,
     safewordSet: (phrase) =>
       `safeword ${phrase}`,
@@ -788,7 +798,7 @@ const enMessages: Messages = {
     register: (level) => `register ${level} (${({ auto: "contextual", polite: "honorific", plain: "non-honorific", rough: "curt, blunt non-honorific" })[level]})`,
   },
   artifact: {
-    size: (chars) => `TONE.md ${chars} characters`,
+    size: (chars) => `TONE.md ${chars} chars`,
     contextCap: (cap, total) => `Claude Code replaces hook context over ${cap} characters with a short preview, so the model sees only the start of this tone. The guide and tone total ${total} characters; shorten whichever of persona.note, persona.self_ref, persona.user_ref or safeword is long.`,
     wouldWrite: "would write",
     wrote: "written",
@@ -802,9 +812,10 @@ const enMessages: Messages = {
     dialActions: "Enter apply   Esc discard   ? help",
     currentLevel: "Current",
     defaultLevel: "ToneDial default",
-    defaultLevelShort: "Initial",
+    defaultLevelShort: "Default",
+    previewLevel: "Preview",
     settingsHeading: "Settings",
-    displaySettings: (language) => `Interface ${language}`,
+    displaySettings: (language) => `Interface language ${language}`,
     connectionRecords: (records) => `Connections: ${records.length ? records.join(", ") : "none"}`,
     dialTitle: "ToneDial · shape your agent's voice",
     dialPreview: (presetName, changed) => `${presetName} · ${changed ? "changes pending" : "current voice"}`,
@@ -815,7 +826,7 @@ const enMessages: Messages = {
       "Enter  apply changes", "Esc / q / Ctrl+C  discard changes", "Ctrl+Z  suspend; fg resumes", "?  show or hide help",
       "*  differs from ToneDial's default", "!  risky tone; levels remain selectable",
     ],
-    dialTooSmall: "Terminal too small. Resize to at least 60 × 24.",
+    dialTooSmall: "Terminal too small. Resize to at least 60×24 (columns×rows).",
     dialCancelKeys: "Esc/q/Ctrl+C discard",
     permissionAxes: (axes) =>
       `The four permission axes (${axes.join(", ")}) default to 1. "all 3" is not neutral; it turns all four on.`,
@@ -1264,7 +1275,8 @@ const en: Catalogue = {
     safewordSkip: "Enter: none · the skill can still request a plain answer.",
     done: "Setup complete",
     installHint:
-      "tonedial command not found. Install globally:\nnpm i -g tonedial",
+      "The tonedial command is not on PATH yet; skills and hooks call it by name. Install it globally:\nnpm i -g tonedial",
+    noConnections: "No agent is connected yet, so no conversation receives this tone.",
     tools: "Agent numbers: 1,2,3 · Enter: no connections",
     autoChose: (preset, tools) => tools === null
       ? `preset ${preset} · no agent connections`
@@ -1325,46 +1337,48 @@ const koMessages: Messages = {
     invalidConfig: "저장된 설정을 안전하게 읽을 수 없습니다. tonedial doctor --json으로 확인한 뒤 복구 방법을 골라 주세요.",
     unsupportedProvider: (provider) => `${provider}: 대화 미리보기는 claude 또는 codex로 실행해 주세요.`,
     noProvider: "PATH에서 Claude Code나 Codex를 찾지 못했습니다.",
-    providerRequired: "사용할 도구를 선택해 주세요: tonedial test claude 또는 tonedial test codex.",
+    providerRequired: "사용할 에이전트를 선택해 주세요: tonedial test claude 또는 tonedial test codex.",
     providerUnavailable: (provider) => `PATH에서 ${provider}를 찾지 못했습니다.`,
     targetUnavailable: (path) => `시험할 폴더를 찾지 못했거나 디렉터리가 아닙니다:\n${path}\n--project DIR로 이미 있는 폴더를 선택해 주세요.`,
     terminalRequired: "시험 대화는 터미널에서 실행해 주세요. --dry-run이나 --json으로 실행 계획만 확인할 수도 있습니다.",
-    chooseProvider: "사용할 도구: 1 Claude Code, 2 Codex [1]: ",
+    chooseProvider: "사용할 에이전트: 1 Claude Code, 2 Codex [1]: ",
     starting: (provider) => `${provider}에서 새 대화를 시작합니다.`,
     planned: (provider) => `${provider}에서 새 대화를 시작할 계획입니다.`,
-    savedTone: (name) => `저장된 말투: ${name}`,
+    savedTone: (name) => `말투: 현재 설정 · ${name}`,
+    folder: "대화 폴더:",
     previewTone: (name) => `미리보기 프리셋: ${name} · 저장된 설정 유지`,
     usageConsent: "사용량·비용 부담에 동의하고 시작할까요?",
     usageDeclined: "취소됨 · 대화를 열지 않았습니다",
     interpretationCaveat: "모델이 미리보기를 해석하느라 토큰을 더 쓸 수 있으며, 사용량과 요금은 본인 부담입니다.",
     protection: "대화만 하는 세션입니다. 시작 프롬프트에 파일 수정 금지를 넣고 도구 사용을 제한합니다.",
-    automationCaveat: "이번 세션에서는 기존 톤 훅과 자동 지침을 건너뛰도록 요청합니다. 관리 정책은 그대로 적용되며 파일시스템 차단은 아닙니다.",
-    driftCaveat: "톤은 대화를 시작할 때 한 번만 보냅니다. 미리보기는 처음 몇 개 답변으로 판단하세요. 대화가 길어지면 톤이 흐려질 수 있습니다.",
+    automationCaveat: "이번 세션에서는 기존 말투 훅과 자동 지침을 건너뛰도록 요청합니다. 관리 정책은 그대로 적용되며 파일시스템 격리는 아닙니다.",
+    driftCaveat: "말투는 대화를 시작할 때 한 번만 보냅니다. 미리보기는 처음 몇 개 답변으로 판단하세요. 대화가 길어지면 말투가 흐려질 수 있습니다.",
     cost: "본인 계정의 토큰·사용 한도를 쓰며 요금이 나올 수 있습니다.",
-    history: "도구가 자체 대화 기록을 남길 수 있습니다.",
+    history: "이 대화는 해당 서비스의 대화 기록에 남을 수 있습니다.",
     launchFailed: (provider) => `${provider}를 시작하지 못했습니다. 설치 상태를 확인하고 다시 시도해 주세요.`,
-    selectionCancelled: "도구를 선택하지 않았습니다.",
+    selectionCancelled: "에이전트를 선택하지 않았습니다.",
   },
   delivery: {
-    on: "ToneDial 켜짐 · 전달 중지 마커 제거",
-    off: "ToneDial 꺼짐 · 전달 중지 마커 저장 · 설정과 TONE.md 유지",
+    on: "ToneDial 켜짐 · 말투 전달 재개",
+    off: "ToneDial 꺼짐 · 말투 전달 일시 중지 · 설정과 TONE.md 유지",
     alreadyOn: "ToneDial이 이미 켜져 있음 · 변경 없음",
     alreadyOff: "ToneDial이 이미 꺼져 있음 · 변경 없음",
     openConversation: "열린 대화에는 이전 말투가 남을 수 있습니다. ToneDial이 없는 상태를 제대로 비교하려면 새 대화를 여세요.",
+    offNotice: "ToneDial이 꺼져 있어 다시 켜기 전까지 새 대화에는 말투가 전달되지 않습니다.",
     status: (enabled) => `ToneDial ${enabled ? "켜짐" : "꺼짐"}`,
   },
   axis: {
     range: (axis, given) => `${axis}: 1~5만 쓸 수 있습니다(입력: ${given})`,
-    unknown: (name, nearest) => `${name}: 축이 아닙니다${nearest ? `. ${nearest} 말씀이신가요?` : ""}`,
+    unknown: (name, nearest) => `${name}: 축이 아닙니다.${nearest ? ` ${nearest} 말씀이신가요?` : ""} 축 목록: tonedial get --help`,
     notSettable: (name, nearest) =>
       `${name}: 축도 설정도 아닙니다. ${nearest ? `${nearest} 말씀이신가요? ` : ""}` +
       "전체 목록: tonedial get --help",
-    reset: (axis, level) => `${axis}: 기본값 ${level}`,
-    resetAll: "모든 축을 기본값으로 되돌렸습니다. 페르소나와 설정은 유지했습니다.",
+    reset: (axis, level) => `${axis}: 이미 기본값(${level})입니다`,
+    resetAll: (deselected) => deselected ? `${deselected} 선택 해제 · 페르소나와 다른 설정은 유지` : "페르소나와 다른 설정은 유지",
     nothingChanged: "변경 없음",
     settingsSaved: "설정 저장됨",
     settingsUnchanged: "설정 변경 없음",
-    needsPair: (given) => `${given}: <키>=<값> 형식이 아닙니다`,
+    needsPair: (given) => `${given}: <키>=<값> 형식으로 입력해 주세요(예: warmth=4)`,
     needsArgument: "set에는 <키>=<값>이 하나 이상 필요합니다. 다이얼은 터미널에서 인자 없이 여세요",
     subagentUnsupported: "서브에이전트 축은 아직 지원하지 않습니다. 사용자 축을 설정해 주세요",
   },
@@ -1488,10 +1502,11 @@ const koMessages: Messages = {
     // produced — 전하 ends in a vowel and takes `라고`.
     callsYou: (term) => `사용자 호칭 ${term}`,
     callsItself: (term) => `자칭 ${term}`,
+    ageLabel: (band) => `나이대 ${band}`,
+    genderLabel: (gender) => `성별 ${gender}`,
     noteChars: (count) => `노트 ${count}자`,
     descriptionOverCap: (field, given, cap) => `${field}: ${given}자 · 최대 ${cap}자`,
     descriptionChars: (field, count) => `${field === "user" ? "사용자 배경" : "가상 에이전트 역할"} · ${count}자`,
-    descriptionCounts: (user, agent, cap) => `역할 · 사용자 ${user}/${cap} · 에이전트 ${agent}/${cap}`,
     descriptionFull: (field, value) => `${field === "user" ? "사용자 배경" : field === "agent" ? "가상 에이전트 역할" : "추가 말투·역할"}: ${value}`,
   },
   settings: {
@@ -1520,7 +1535,8 @@ const koMessages: Messages = {
     dialActions: "Enter 적용   Esc 취소   ? 도움말",
     currentLevel: "현재",
     defaultLevel: "ToneDial 기본값",
-    defaultLevelShort: "초기값",
+    defaultLevelShort: "기본값",
+    previewLevel: "미리보기",
     settingsHeading: "사용자 설정",
     displaySettings: (language) => `화면 언어 ${language}`,
     connectionRecords: (records) => `연결: ${records.length ? records.join(", ") : "없음"}`,
@@ -1533,10 +1549,10 @@ const koMessages: Messages = {
       "Enter  변경 적용", "Esc / q / Ctrl+C  변경 취소", "Ctrl+Z  일시 정지; fg로 복귀", "?  도움말 열기·닫기",
       "*  ToneDial 기본값과 다른 축", "!  위험 말투 · 레벨은 그대로 선택 가능",
     ],
-    dialTooSmall: "터미널이 너무 작습니다. 60 × 24 이상으로 늘려 주세요.",
+    dialTooSmall: "터미널이 너무 작습니다. 60×24(열×행) 이상으로 늘려 주세요.",
     dialCancelKeys: "Esc/q/Ctrl+C 취소",
     permissionAxes: (axes) =>
-      `허가 축 네 개(${axes.join(", ")})의 기본값은 1입니다. "전부 3"은 중립값이 아니며 네 축을 모두 켭니다`,
+      `허가 축 네 개(${axes.join(", ")})의 기본값은 1입니다. "전부 3"은 중립값이 아니며 네 축을 모두 켭니다.`,
     whatEachAxisObserves: "축별 관찰 대상과 양 끝:",
     generated: "TONE.md 생성됨",
     current: "TONE.md 최신",
@@ -1982,7 +1998,8 @@ const ko: Catalogue = {
     safewordSkip: "Enter: 없음 · 스킬로도 담백한 답을 요청할 수 있습니다.",
     done: "초기 설정 완료",
     installHint:
-      "tonedial 명령을 찾지 못했습니다. 전역 설치:\nnpm i -g tonedial",
+      "PATH에서 tonedial 명령을 찾지 못했습니다. 스킬과 훅이 이 명령을 이름으로 실행하므로 전역으로 설치해 주세요:\nnpm i -g tonedial",
+    noConnections: "아직 연결된 에이전트가 없어 어느 대화에도 이 말투가 전달되지 않습니다.",
     tools: "에이전트 번호: 1,2,3 · Enter: 연결 안 함",
     // No particle touches the preset slug or the tool list. `을/를` and `이라고/라고` agree with
     // the final consonant of the word before them, and these are arbitrary text — a slug, a

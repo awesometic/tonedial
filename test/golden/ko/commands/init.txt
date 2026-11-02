@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=1762; endsWithNewline=true]
+--- stdout --- [bytes=1957; endsWithNewline=true]
 ToneDial · init
 
   범위
@@ -67,8 +67,10 @@ ToneDial · init
   준비 완료
   초기 설정 완료
   TONE.md 생성됨
+  아직 연결된 에이전트가 없어 어느 대화에도 이 말투가 전달되지 않습니다.
 
-  tonedial 명령을 찾지 못했습니다. 전역 설치:
+  PATH에서 tonedial 명령을 찾지 못했습니다. 스킬과 훅이 이 명령을 이름으로
+  실행하므로 전역으로 설치해 주세요:
   npm i -g tonedial
 --- stderr --- [bytes=0; endsWithNewline=false]
 

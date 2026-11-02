@@ -1,4 +1,4 @@
-Terminal too small. Resize to at least 60 ×
-24.
+Terminal too small. Resize to at least
+60×24 (columns×rows).
 
 Esc/q/Ctrl+C discard

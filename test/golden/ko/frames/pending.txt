@@ -1,7 +1,7 @@
   ToneDial · 내 취향의 말투
   Caring Brother · 변경 미리보기
 
-                         현재      초기값 · ! 위험 말투
+                         현재      기본값 · ! 위험 말투
   form      formality    ▮▯▯▯▯  1   *3
             verbosity    ▮▮▮▮▯  4   *3
             profanity    ▮▮▯▯▯  2   *1

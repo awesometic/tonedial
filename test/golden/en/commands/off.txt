@@ -1,8 +1,8 @@
 status: 0
---- stdout --- [bytes=196; endsWithNewline=true]
+--- stdout --- [bytes=195; endsWithNewline=true]
 ToneDial · off
 
-  ToneDial off · delivery marker saved · settings and TONE.md kept
+  ToneDial off · tone delivery paused · settings and TONE.md kept
   Open conversations may retain an earlier tone. Use a new conversation for a
   clean no-ToneDial comparison.
 --- stderr --- [bytes=0; endsWithNewline=false]

@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=1702; endsWithNewline=true]
+--- stdout --- [bytes=1822; endsWithNewline=true]
 ToneDial · init
 
   Scope
@@ -67,8 +67,10 @@ ToneDial · init
   Ready
   Setup complete
   TONE.md generated
+  No agent is connected yet, so no conversation receives this tone.
 
-  tonedial command not found. Install globally:
+  The tonedial command is not on PATH yet; skills and hooks call it by name.
+  Install it globally:
   npm i -g tonedial
 --- stderr --- [bytes=0; endsWithNewline=false]
 

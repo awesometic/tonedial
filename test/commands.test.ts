@@ -1448,7 +1448,7 @@ test("large tone artifacts report only their current character count without siz
   out = [];
   err = [];
   assert.equal(await cli("show"), 0);
-  assert.match(stdout(), /TONE\.md [\d,]+ characters/);
+  assert.match(stdout(), /TONE\.md [\d,]+ chars/);
   assert.doesNotMatch(stderr(), /TONE\.md/);
 });
 
@@ -2093,4 +2093,31 @@ test("editing a preset's slug is refused rather than silently dropped", async ()
   // where `displayName` would have taken while `slug` was dropped.
   assert.match(readFileSync(join(customPresetDir(paths().presets), "mine.json"), "utf8"), /"slug": "renamed"/);
   assert.notEqual(readFileSync(join(customPresetDir(paths().presets), "mine.json"), "utf8"), original);
+});
+
+test("tone changes while delivery is paused say so and point to tonedial on", async () => {
+  await initializeState();
+  assert.equal(await cli("off"), 0);
+  // `show` follows a clean `use`, so no pending save takes the next-step slot.
+  for (const args of [["set", "warmth=2"], ["reset", "warmth"], ["use", "ego-sword"], ["show"]]) {
+    out = [];
+    assert.equal(await cli(...args), 0, err.join(""));
+    const text = stdout().replace(/\s+/g, " ");
+    assert.ok(text.includes(EN.delivery.offNotice), `${args[0]} hid the paused state`);
+    assert.match(stdout(), /^ {2}tonedial on$/m, `${args[0]} did not offer the resume command`);
+  }
+  assert.equal(await cli("on"), 0);
+  out = [];
+  assert.equal(await cli("set", "warmth=3"), 0);
+  assert.ok(!stdout().includes(EN.delivery.offNotice), "an enabled tone reported a pause");
+});
+
+test("a language switch confirms itself in the newly selected language", async () => {
+  await initializeState();
+  out = [];
+  assert.equal(await cli("set", "language=ko"), 0, err.join(""));
+  assert.ok(stdout().includes(catalogue("ko").cli.axis.settingsSaved), "the receipt kept the previous language");
+  out = [];
+  assert.equal(await cli("set", "language=en"), 0, err.join(""));
+  assert.ok(stdout().includes(EN.axis.settingsSaved));
 });

@@ -1,6 +1,6 @@
 status: 0
---- stdout --- [bytes=1244; endsWithNewline=true]
-  ToneDial · show · Caring Brother (저장하지 않은 변경)       TONE.md 4,365자
+--- stdout --- [bytes=1209; endsWithNewline=true]
+ToneDial · show · Caring Brother (저장하지 않은 변경)         TONE.md 4,365자
 
                          현재      ToneDial 기본값 · ! 위험 말투
   form      formality    ▮▯▯▯▯  1   *3
@@ -17,10 +17,10 @@ status: 0
             bravado      ▮▯▯▯▯  1    1
 
   사용자 설정
-  자칭 형 · 사용자 호칭 동생 · 역할 · 사용자 45/200 · 에이전트 58/200
+  자칭 형 · 사용자 호칭 동생
   가상 에이전트 역할: Fictional database specialist with ten years of
-  experience
-  사용자 배경: Developer who likes concise technical answers
+  experience (58/200)
+  사용자 배경: Developer who likes concise technical answers (45/200)
   세이프워드 없음 · 말씨 plain (일반 반말) · 호칭 빈도 auto
   화면 언어 ko
   연결: 없음

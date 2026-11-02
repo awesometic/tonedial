@@ -16,6 +16,13 @@ export function nextStep(command: string, ui: Palette): string[] {
   return ["", `  ${ui.accent(humanText(command))}`];
 }
 
+/** While delivery is paused, a tone change is saved but reaches no new conversation. */
+export function offNotice(enabled: boolean, t: Messages, ui: Palette): string[] {
+  if (enabled) return [];
+  return ["", ...wrap(t.delivery.offNotice, ui.width - 2).map((line) => `  ${ui.warn(line)}`),
+    ...nextStep("tonedial on", ui).slice(1)];
+}
+
 /** Claude Code replaces hook context above this many characters with a short preview. */
 const CLAUDE_CONTEXT_CAP = 10_000;
 
