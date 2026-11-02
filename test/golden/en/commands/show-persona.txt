@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=1179; endsWithNewline=true]
+--- stdout --- [bytes=1188; endsWithNewline=true]
 ToneDial · show · Caring Brother (unsaved changes)        TONE.md 4,392 chars
 
                          Current   ToneDial default · ! risky tone
@@ -17,7 +17,7 @@ ToneDial · show · Caring Brother (unsaved changes)        TONE.md 4,392 chars
             bravado      ▮▯▯▯▯  1    1
 
   Settings
-  self name your big brother · user name little sibling
+  agent calls itself your big brother · calls you little sibling
   fictional agent role: Fictional database specialist with ten years of
   experience (58/200)
   user context: Developer who likes concise technical answers (45/200)

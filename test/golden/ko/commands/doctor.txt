@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=446; endsWithNewline=true]
+--- stdout --- [bytes=465; endsWithNewline=true]
 ToneDial · doctor
 
   검사 범위: 프로젝트
@@ -11,10 +11,12 @@ ToneDial · doctor
   · 에이전트 훅
     연결 안 됨: Claude Code, Antigravity IDE/Desktop, Codex CLI
 
-  ! tonedial on PATH
-    PATH에서 tonedial을 찾지 못했습니다. 스킬과 폴백 줄도 실행할 수 없습니다.
-    전역 경로 확인: npm prefix -g
-    그 경로의 bin 폴더(macOS/Linux)를 PATH에 추가하세요.
+  ! PATH의 tonedial
+    PATH에서 tonedial을 찾지 못해 스킬과 TONE.md의 대체 안내 줄에서 실행할 수
+    없습니다.
+    전역 경로 확인:
+    npm prefix -g
+    그 경로의 bin 폴더를 PATH에 추가하세요(macOS/Linux).
 
   점검 필요 1건
 --- stderr --- [bytes=0; endsWithNewline=false]

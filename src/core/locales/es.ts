@@ -57,7 +57,7 @@ const messages: Messages = {
   },
   preset: {
     activeUnknown: "El preajuste activo es desconocido hasta reparar los ajustes guardados.",
-    unavailable: (slug, reason) => `${slug}: no disponible (${reason}); se conservó el archivo original`,
+    unavailable: (slug, reason) => `${slug}: no disponible (${reason}); el archivo se dejó tal cual`,
     conflict: (slug, recoveredSlug) => `${slug}: las definiciones personalizada y antigua difieren. Ejecuta tonedial doctor --fix para conservar los valores antiguos como ${recoveredSlug}.`,
     activeConflict: (slug) => `${slug}: la definición activa es ambigua; se conservaron los ejes. Elige la definición con tonedial doctor --fix.`,
     active: (name) => `${name} activo`,
@@ -76,7 +76,7 @@ const messages: Messages = {
     slugNotEditable: (was, tried) =>
       `No se puede editar el identificador. El preajuste activo y la conexión apuntan a ${was}. ` +
       `Ejecuta tonedial use ${was} y guárdalo como ${tried}.`,
-    noLatin: (name) => `«${name}»: no contiene letras latinas ni dígitos para el identificador`,
+    noLatin: (name) => `«${name}»: no contiene letras latinas ni dígitos para el identificador. Elige uno con --slug, por ejemplo --slug mi-tono`,
     nameTooLong: (given, cap) => `Nombre visible: ${given} caracteres · máximo ${cap}`,
     replaced: (slug) => `${slug}: se reemplazó el preajuste existente`,
     imported: (slug, replaced) => `${slug}: ${replaced ? "reemplazado" : "importado"}`,
@@ -87,6 +87,8 @@ const messages: Messages = {
     notAPreset: (name) => `${name}: no es un objeto de preajuste`,
     slugTooLong: (given, cap) => `Identificador: ${given} caracteres · máximo ${cap}`,
     needsDisplayName: "save necesita un nombre visible. Usa --slug si el nombre no tiene letras latinas ni dígitos.",
+    saveSlugUnknown: (slug) => `${slug}: no hay nada guardado con este identificador. Para crearlo, añade un nombre visible:\ntonedial save "Nombre visible" --slug ${slug}`,
+    saveAsNew: "Guarda el tono actual con un nombre nuevo:\ntonedial save \"Mi tono\" --slug mi-tono",
     needsSlugArg: "Se necesita el identificador del preajuste. Lista: tonedial list",
     invalidSlugFor: (name) => `«${name}»: no se puede crear un identificador válido`,
     noSlug: (path) => `${path}: identificador no válido. Usa letras minúsculas, dígitos y guiones`,
@@ -94,7 +96,7 @@ const messages: Messages = {
     badLevel: (slug, axis, given) => `Preajuste ${slug}: ${axis}=${String(given)} · se esperaba 1–5`,
     skipped: (reason) => `Archivo de presets/ omitido: ${reason}`,
     yours: "preajuste del usuario",
-    nonDefault: (count) => `${count} ejes distintos del valor predeterminado`,
+    nonDefault: (count) => `${count} ${count === 1 ? "eje distinto" : "ejes distintos"} del valor predeterminado`,
     preview: "vista previa",
     unsaved: "cambios sin guardar",
     changesNotSaved: "No se ha guardado en un perfil.",
@@ -130,7 +132,7 @@ const messages: Messages = {
     rebuilt: "Aplicación restaurada",
     unchanged: "Archivos de la aplicación al día",
     nativePending: "Las conexiones nativas necesitan atención aparte; los ajustes y preajustes siguen disponibles.",
-    rollback: (id) => `Restaura los archivos anteriores:\ntonedial doctor --fix --rollback ${id}`,
+    rollback: (id) => `Para restaurar los archivos anteriores:\ntonedial doctor --fix --rollback ${id}`,
     rollbackOrder: "Restaura primero las conexiones y después los archivos de la aplicación:",
     noSnapshot: (id) => `${id}: no hay una instantánea válida para este directorio de estado`,
     quarantineCandidate: (id) => `ID de operación:\n${id}\nPara reconstruir, primero debes poner este registro en cuarentena; los bytes originales quedarán en el historial de reversión.`,
@@ -139,13 +141,15 @@ const messages: Messages = {
     quarantineUnavailable: (id) => `${id}: no hay un registro de operación ilegible que se pueda poner en cuarentena. No se cambió ningún archivo.`,
     quarantine: (id) => `Pon en cuarentena la operación ilegible ${id}; conserva sus bytes originales en el historial de reversión.`,
     quarantineComplete: (id) => `La operación ilegible ${id} quedó en cuarentena.`,
-    quarantineRemaining: (count) => `${count === 1 ? "Queda 1 registro de operación ilegible" : `Quedan ${count} registros de operación ilegibles`}. Pon el siguiente en cuarentena antes de continuar la recuperación.`,
+    quarantineRemaining: (count) => count === 1
+      ? "Queda 1 registro de operación ilegible. Ponlo en cuarentena antes de reparar la aplicación; los bytes originales quedarán en el historial de reversión."
+      : `Quedan ${count} registros de operación ilegibles. Pon el siguiente en cuarentena antes de continuar la recuperación.`,
     retire: (id) => `Archiva la operación detenida ${id} antes de reconstruir. Sus cambios externos no se certifican ni se deshacen.`,
     resumeOperation: (id) => `Operación detenida:\n${id}`,
     resumeQuestion: "Para continuar, escribe el ID completo de arriba; Enter cancela:",
     cancelled: "Recuperación cancelada. No se cambió ningún archivo.",
     operationMismatch: "El ID de operación no coincide. No se cambió ningún archivo.",
-    failure: (id, phase, path, code) => `La recuperación falló durante la ${({ prepare: "preparación", write: "escritura de archivos", verify: "verificación", finalize: "finalización" })[phase]} (${code}).${path ? `\n${path}` : ""}\nEs posible que algunos cambios ya estén aplicados. Conserva el registro de la operación ${id}.`,
+    failure: (id, phase, path, code) => `La recuperación falló durante la ${({ prepare: "preparación", write: "escritura de archivos", verify: "verificación", finalize: "finalización" })[phase]} (${code}).${path ? `\n${path}` : ""}\nEs posible que algunos cambios ya estén aplicados. Conserva el registro de esta operación:\n${id}`,
   },
   persona: {
     defaults: role("yo", "tú", "La persona que solicita ayuda con una tarea.", "Un asistente general que ayuda con la tarea solicitada."),
@@ -171,13 +175,14 @@ const messages: Messages = {
     addressNone: "Sin definir · Enter lo mantiene así",
     age: (given, bands) => `persona.age=${given} · disponibles: ${bands.join(", ")}`,
     gender: (options) => `persona.gender · disponibles: ${options.join(", ")}`,
-    callsYou: (term) => `nombre del usuario ${term}`,
-    callsItself: (term) => `nombre propio ${term}`,
+    callsYou: (term) => `te llama ${term}`,
+    callsItself: (term) => `se nombra ${term}`,
     ageLabel: (band) => `edad ${band}`,
     genderLabel: (gender) => `género ${gender}`,
     noteChars: (count) => `nota de ${count} caracteres`,
     descriptionOverCap: (field, given, cap) => `${field}: ${given} caracteres · máximo ${cap}`,
     descriptionChars: (field, count) => `${field === "user" ? "contexto del usuario" : "rol ficticio del agente"} · ${count} caracteres`,
+    charCount: (count) => `${count} caracteres`,
     descriptionFull: (field, value) => `${field === "user" ? "contexto del usuario" : field === "agent" ? "rol ficticio del agente" : "nota de personalidad"}: ${value}`,
   },
   settings: {
@@ -252,29 +257,34 @@ const messages: Messages = {
     stateRoot: "Estado compartido de ToneDial:",
     planHeading: "Revisar cambios",
     nativeHeading: "Conectar agentes",
-    actionLabel: { file: "Archivo", "entry-rebuild": "Reconstruir", skill: "Habilidad", "case-rename": "Renombrar" },
-    codexTrust: (global) => `${global ? "" : "Confía primero en este proyecto en Codex.\n"}Codex: /hooks → SessionStart → ToneDial. Revisa el comando y activa el hook.`,
+    actionLabel: { file: "archivo", "entry-rebuild": "entrada reconstruida", skill: "enlace de habilidad", "case-rename": "entrada renombrada" },
+    actionState: { created: (label) => `(nuevo: ${label})`, removed: (label) => `(eliminado: ${label})`, updated: (label) => `(actualizado: ${label})`, plain: (label) => `(${label})` },
+    newFiles: (count) => `(${count} archivos nuevos)`,
+    codexTrust: (global) => global
+      ? "En Codex, abre /hooks → SessionStart → ToneDial, revisa el comando y activa el hook."
+      : "Confía en este proyecto en Codex y luego abre /hooks → SessionStart → ToneDial, revisa el comando y activa el hook.",
     codexOpen: "¿Abrir Codex ahora?",
     codexOpenSteps:
       "Codex se abre en este terminal. Activa el hook siguiendo los pasos anteriores y sal para volver.",
-    claudeTrust: (global) => `${global ? "" : "Confía primero en este proyecto en Claude Code.\n"}Claude Code: las sesiones interactivas solo ejecutan hooks en carpetas de confianza. /hooks → SessionStart muestra el comando de ToneDial.`,
+    claudeTrust: (global) => global
+      ? "Las sesiones interactivas de Claude Code solo ejecutan hooks en carpetas de confianza. /hooks → SessionStart muestra el comando de ToneDial."
+      : "Confía en este proyecto en Claude Code; las sesiones interactivas solo ejecutan hooks en carpetas de confianza. /hooks → SessionStart muestra el comando de ToneDial.",
     claudeOpen: "¿Abrir Claude Code en este proyecto ahora?",
     claudeOpenSteps: "Claude Code se abre en este terminal. Si te pregunta si confías en esta carpeta, responde allí y sal para volver.",
     scopeHere: "Ámbito de conexión: proyecto",
-    alreadyMatch: (tools) => `${tools}: ya coinciden · sin cambios`,
+    alreadyMatch: (tools) => `${tools}: ya están al día · sin cambios`,
     alreadyDisconnected: (tools) => `${tools}: ya desconectados · sin cambios`,
     dryRun: "--dry-run · no se escribió nada",
     declined: "cancelado · no se escribió nada",
-    wroteInto: (tools) => `Conexiones de ${tools} configuradas`,
     disconnected: (tools) => `Conexiones de ${tools} desconectadas`,
     noArtifact: "No hay tone.md para conectar. Ejecuta primero tonedial compile",
     unknownTool: (given, tools) => `${given}: herramienta no admitida. Disponibles: ${tools.join(", ")}`,
     noneInstalled: (tools, root) =>
       `Raíz de búsqueda: ${root}\nNo se encontró ${tools.join(", ")}. Indica la herramienta para conectarla de todos modos.`,
     removed: "desconectado",
-    stateKept: (root) => `Preajustes y ajustes conservados.\n${root}`,
+    stateKept: (root) => `Los preajustes y ajustes siguen en:\n${root}`,
     deleteYourself: "Para eliminar también el estado, borra este directorio manualmente",
-    nothingWired: "sin conexiones · nada que desconectar",
+    nothingWired: "No hay conexiones en este ámbito · nada que desconectar",
     damaged: (path, reason) => `${path}: ${reason}. Elimina el marcador suelto y vuelve a ejecutar eject.`,
     needsApproval:
       "Los cambios de archivos requieren aprobación. Ejecuta en un terminal o revisa con --dry-run antes de repetir con --auto.",
@@ -308,17 +318,19 @@ const messages: Messages = {
     toneNotWritten: "sin escribir",
     toneDisagrees: "difiere de config.json · edición directa o escritura interrumpida",
     seedsHeading: "Archivos incluidos",
+    checkHeading: { context: "Archivos de contexto", reader: "Lector", pathLine: "Línea PATH del shell", onPath: "tonedial en PATH", install: "Instalación", claudeContext: "Contexto de Claude Code", skills: "Habilidades", skill: (label) => `Habilidad de ${label}` },
+    fullDetails: "Detalles completos:",
     seedsOk: (version) => `versión ${version}`,
     seedsNotRun: "sin archivos incluidos · aquí no se ha ejecutado init",
     seedsAttention: "los archivos incluidos requieren atención",
     recoveryPending: "Hay una operación en curso o que necesita recuperación. Esta ejecución no cambió archivos.",
     invalidRecoveryPending: "Un historial de operaciones ilegible está bloqueando la recuperación. Esta ejecución no cambió archivos.",
-    resumeOperation: "Continuar la reparación de la aplicación:",
+    resumeOperation: "Para continuar la reparación de la aplicación:",
     contextCurrent: "La estructura de AGENTS.md y TONE.md está al día.",
     contextRepair: "Los archivos de contexto gestionados necesitan reparación. Revisa el diagnóstico de la guía y del tono.",
     contextSize: (guide, total) => total === null
-      ? `guía de ${guide} caracteres · contenido completo no disponible`
-      : `guía de ${guide} caracteres · contenido ordenado ${total}`,
+      ? `guía de ${guide.toLocaleString("en")} caracteres · tamaño combinado no disponible`
+      : `guía de ${guide.toLocaleString("en")} caracteres · guía + TONE.md: ${total.toLocaleString("en")} caracteres`,
     guideFormat: {
       missing: "falta la guía · revisa la configuración antes de crearla",
       unsupported: "Formato de guía no admitido. Conserva el archivo y revisa el diagnóstico de archivos incluidos.",
@@ -367,7 +379,7 @@ const messages: Messages = {
       disabled: "Hook desactivado en el archivo de ajustes registrado",
       unknown: "Activación del hook desconocida en el archivo registrado",
     },
-    hookSettingScope: "Lee solo el archivo de ajustes inspeccionado; no se verifican las anulaciones del cliente ni la entrega a la sesión.",
+    hookSettingScope: "Los estados de hooks anteriores provienen solo de los archivos de ajustes inspeccionados; no se verifican las anulaciones del cliente ni la entrega a la sesión.",
     hookGroupHeading: "Hooks de agentes",
     hookGroupUnknown: (tools) => `Sin conectar: ${tools.join(", ")}.`,
     hookNotConnected: "No hay un hook gestionado que inspeccionar. Para conectar, ejecuta init en el mismo ámbito y elige este agente.",
@@ -408,11 +420,11 @@ const messages: Messages = {
     installShape: (shape, update) => `${shape} · actualizar: ${update}`,
     commandOnPath: (path) => `encontrado · ${path}`,
     commandNotOnPath:
-      "tonedial no está en PATH. La habilidad y la línea alternativa no pueden ejecutarlo. " +
-      "Abre otro shell; si sigue sin aparecer, ejecuta tonedial doctor --fix.",
+      "tonedial no está en PATH, así que la habilidad y la línea alternativa de TONE.md no pueden ejecutarlo. " +
+      "Abre otro shell; si sigue sin aparecer, ejecuta la reparación de abajo.",
     commandNotOnPathNpm:
-      "tonedial no está en PATH. La habilidad y la línea alternativa no pueden ejecutarlo. " +
-      "Busca el prefijo global: npm prefix -g\nAñade su directorio bin (macOS/Linux) a PATH.",
+      "tonedial no está en PATH, así que la habilidad y la línea alternativa de TONE.md no pueden ejecutarlo.\n" +
+      "Busca el prefijo global:\nnpm prefix -g\nLuego añade su directorio bin a PATH (macOS/Linux).",
   },
   notice: {
     riskIntro:
@@ -596,7 +608,9 @@ const messages: Messages = {
     toolsPrompt: "Agentes que conectar (separados por comas): ",
     ownershipConflict: (path) => `Propiedad desconocida, o contenido gestionado o tipo de archivo cambiado:\n${path}\nSe conservó el archivo. Revísalo antes de cambiar la conexión.`,
     rollbackNeedsFix: "Usa --rollback con doctor --fix y un ID de operación indicado por doctor.",
-    editNotApplied: (path, reason) => `Edición no aplicada: ${reason}\nCopia editada conservada en:\n${path}`,
+    editNotApplied: (path, reason) => `${reason}\nNo se aplicó nada. Copia editada conservada en:\n${path}`,
+    editSavedInvalid: "La edición se guardó tal cual; ToneDial no podrá cargar estos ajustes hasta que se corrija el archivo. Diagnostica y repara:\ntonedial doctor",
+    editSavedInvalidPreset: (slug) => `La edición se guardó tal cual; este preajuste no estará disponible hasta corregirlo:\ntonedial edit preset ${slug}`,
     stateOverlap: (path) => `La exportación se solapa con el estado compartido:\n${path}\nNo se escribió nada. Elige otro directorio de estado o proyecto.`,
     stateInstructionOverlap: (path) => `El estado se solapa con la raíz de instrucciones del agente:\n${path}\nNo se escribió nada. Elige un directorio exclusivo antes de init.`,
     legacyConsumers: (destinations) => `Otras conexiones, o conexiones sin registrar, siguen leyendo tone.md:\n${destinations.join("\n")}\nNo se escribió nada. Desconecta cada ámbito antes de repetir init y reconecta tras la transición.`,
@@ -642,7 +656,7 @@ const messages: Messages = {
     safewordQuote: "La palabra clave no puede contener comillas dobles: cerrarían antes de tiempo la frase de tone.md",
     safewordBlank: "La palabra clave está en blanco. Usa null para dejarla sin definir",
     wiringLost:
-      "Las conexiones cambiaron o no se pudieron verificar; no se aplicó la edición. Se conservaron los ajustes activos. " +
+      "Las conexiones cambiaron o no se pudieron verificar. " +
       "Usa unwire/eject con ámbito para quitar conexiones, o init/doctor --fix para migrar y recuperar.",
     importNeedsPath: "import necesita una ruta JSON de preajuste o una URL https",
     remoteSource: "origen remoto",

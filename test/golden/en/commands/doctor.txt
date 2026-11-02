@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=396; endsWithNewline=true]
+--- stdout --- [bytes=427; endsWithNewline=true]
 ToneDial · doctor
 
   Inspection scope: project
@@ -12,9 +12,11 @@ ToneDial · doctor
     Not connected: Claude Code, Antigravity IDE/Desktop, Codex CLI.
 
   ! tonedial on PATH
-    tonedial is not on PATH. The skill and fallback line cannot run it. Find
-    the global prefix: npm prefix -g
-    Add its bin directory (macOS/Linux) to PATH.
+    tonedial is not on PATH, so the skill and the fallback line in TONE.md
+    cannot run it.
+    Find the global prefix:
+    npm prefix -g
+    Then add its bin directory to PATH (macOS/Linux).
 
   1 check needs attention
 --- stderr --- [bytes=0; endsWithNewline=false]

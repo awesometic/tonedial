@@ -1,12 +1,12 @@
 status: 0
---- stdout --- [bytes=243; endsWithNewline=true]
+--- stdout --- [bytes=249; endsWithNewline=true]
 ToneDial · update
 
   tonedial <VERSION>
 
   패키지 업데이트:
     npm update -g tonedial
-  --dry-run · 변경 없음
+  --dry-run · 기록하지 않음
 
   갱신할 기본 파일: 5개
 

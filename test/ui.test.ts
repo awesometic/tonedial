@@ -256,13 +256,13 @@ for (const language of LANGUAGES) {
     assert.equal(await cli("wire", "--here", "codex", "--auto"), 0, err.join(""));
     const inherited = out.join("");
     const localized = catalogue(language).cli;
-    const [inheritedBefore, inheritedAfter] = localized.wiring.hookInherited("codex", "__path__").split("__path__");
+    const [inheritedBefore, inheritedAfter] = localized.wiring.hookInherited("Codex CLI", "__path__").split("__path__");
     const flattened = inherited.replace(/\s+/g, " ");
     assert.ok(flattened.includes(inheritedBefore!.trim()));
     assert.ok(flattened.includes(inheritedAfter!.trim()));
     assert.match(flattened, /\/hooks → SessionStart → ToneDial/);
     assert.doesNotMatch(flattened, /App activation is unverified|앱 활성화는 확인하지 않았습니다/);
-    const receipt = inherited.slice(inherited.indexOf("  codex:"));
+    const receipt = inherited.slice(inherited.indexOf("  Codex CLI:"));
     for (const line of receipt.split("\n")) assert.ok(cells(line) <= UNKNOWN_WIDTH || isUnbreakable(line), line);
     out = [];
     assert.equal(await cli("wire", "--here", "codex", "--auto", "--json"), 0, err.join(""));
@@ -300,8 +300,10 @@ for (const language of LANGUAGES) {
   test(`Claude receipts name workspace trust per scope in ${language}`, async () => {
     mkdirSync(join(home, "project"));
     const localized = catalogue(language).cli;
-    const [projectTrust, sharedTrust] = localized.wiring.claudeTrust(false).split("\n");
-    const flat = (text: string) => text.replace(/\s+/g, " ");
+    const projectTrust = localized.wiring.claudeTrust(false);
+    const sharedTrust = localized.wiring.claudeTrust(true);
+    // Folding may break CJK prose without a space, so compare with whitespace removed.
+    const flat = (text: string) => text.replace(/\s+/g, "");
     assert.equal(await cli("init", "--global", "--tools", "claude", "--lang", language, "--auto"), 0, err.join(""));
     assert.ok(flat(out.join("")).includes(flat(sharedTrust!)), `${language}: global receipt lost the trust rule`);
     assert.ok(!flat(out.join("")).includes(flat(projectTrust!)), `${language}: global receipt named one project`);
@@ -438,9 +440,9 @@ test("eject and unwire receipts name only the connected agents that were disconn
   out = [];
   assert.equal(await cli("eject", "--here", "--auto"), 0, err.join(""));
   const receipt = out.join("");
-  assert.match(receipt, /Codex CLI connections disconnected/);
-  assert.doesNotMatch(receipt, /Claude Code.*connections disconnected/);
-  assert.doesNotMatch(receipt, /Antigravity.*connections disconnected/);
+  assert.match(receipt, /Codex CLI disconnected/);
+  assert.doesNotMatch(receipt, /Claude Code.* disconnected/);
+  assert.doesNotMatch(receipt, /Antigravity.* disconnected/);
 });
 
 test("empty disconnect reports already disconnected when only config formatting changes", async () => {
@@ -464,8 +466,8 @@ test("empty disconnect reports already disconnected when only config formatting 
         assert.deepEqual(result.diff.map((change: { path: string }) => change.path), [path]);
       } else {
         const receipt = out.join("").replace(/\s+/g, " ");
-        assert.match(receipt, /already disconnected/);
-        assert.doesNotMatch(receipt, /connections disconnected/);
+        assert.match(receipt, /nothing to disconnect/);
+        assert.doesNotMatch(receipt, /(?:Codex CLI|Claude Code|Antigravity IDE\/Desktop) disconnected/);
       }
     }
   }

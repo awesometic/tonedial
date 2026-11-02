@@ -282,11 +282,15 @@ async function wireSelected(ctx: Ctx, tools: AgentTool[], rebuilding?: NativeReb
     duplicates: plans[index]!.duplicates,
   }));
 
+  // Each host's group leads with its own status, so a written connection needs no separate
+  // headline. Doctor's repair report repeats per-host review steps, so its receipt omits them.
+  const setup = configured ? nativeSetupLines(ctx, nativeSetup(ctx.t, routes, ctx.agent.live, !rebuilding || rebuilding.preview),
+    result.reason === "written") : [];
+  const headline = tools.length ? summary(ctx, result.reason, tools) :
+    configured && shellChange ? [`  ${ctx.t.doctor.pathLineAt(humanText(shellChange.path))}`] : [];
   return {
-    lines: [...result.lines, ...(result.lines.length ? [""] : []), ...(tools.length ? summary(ctx, result.reason, tools) :
-      configured && shellChange ? [`  ${ctx.t.doctor.pathLineAt(humanText(shellChange.path))}`] : []),
-      ...(configured ? nativeSetup(ctx.t, routes, ctx.agent.live).flatMap((line) =>
-        receiptLines(line, ctx.ui.width - 2).map((folded) => `  ${folded}`)) : [])],
+    lines: [...result.lines, ...(result.lines.length ? [""] : []), ...headline,
+      ...(headline.length && setup.length ? [""] : []), ...setup],
     json: {
       root: ctx.agent.root,
       live: ctx.agent.live,
@@ -429,8 +433,13 @@ export async function runUnwire(ctx: Ctx, args: string[]): Promise<CommandResult
     ui: ctx.ui,
   });
 
+  const reason = result.reason === "written" && !disconnected.length ? "nothing" : result.reason;
+  // A bare unwire with nothing registered here names no tools rather than every supported one.
+  const nothingWired = reason === "nothing" && args[0] === undefined && !disconnected.length;
   return {
-    lines: [...result.lines, ...(result.lines.length ? [""] : []), ...summary(ctx, result.reason === "written" && !disconnected.length ? "nothing" : result.reason, disconnected.length ? disconnected : tools, "disconnect")],
+    lines: [...result.lines, ...(result.lines.length ? [""] : []), ...(nothingWired
+      ? receiptLines(ctx.t.wiring.nothingWired, ctx.ui.width - 2).map((line) => `  ${ctx.ui.bold(line)}`)
+      : summary(ctx, reason, disconnected.length ? disconnected : tools, "disconnect"))],
     json: {
       unlinked: result.applied ? unlinked : [],
       root: ctx.agent.root,
@@ -459,8 +468,23 @@ function summary(ctx: Ctx, reason: string, tools: AgentTool[], action: "connect"
     .map((line) => `  ${ctx.ui.bold(line)}`);
   if (reason === "dry-run") return [`  ${ctx.ui.dim(ctx.t.wiring.dryRun)}`];
   if (reason === "declined") return [`  ${ctx.t.wiring.declined}`];
-  return [
-    ...receiptLines(action === "disconnect" ? ctx.t.wiring.disconnected(named) : ctx.t.wiring.wroteInto(named), ctx.ui.width - 2)
-      .map((line) => `  ${ctx.ui.success(ctx.ui.bold(line))}`),
-  ];
+  if (action === "connect") return [];
+  return receiptLines(ctx.t.wiring.disconnected(named), ctx.ui.width - 2)
+    .map((line) => `  ${ctx.ui.success(ctx.ui.bold(line))}`);
+}
+
+/** Fold host groups for the receipt; each group's status line carries the result. */
+function nativeSetupLines(ctx: Ctx, messages: string[], written: boolean): string[] {
+  let groupStart = true;
+  return messages.flatMap((message) => {
+    if (message === "") {
+      groupStart = true;
+      return [""];
+    }
+    return receiptLines(message, ctx.ui.width - 2).map((line) => {
+      const painted = groupStart && written ? ctx.ui.success(ctx.ui.bold(line)) : line;
+      groupStart = false;
+      return `  ${painted}`;
+    });
+  });
 }

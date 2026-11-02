@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=482; endsWithNewline=true]
+--- stdout --- [bytes=509; endsWithNewline=true]
 ToneDial · doctor
 
   검사 범위: 전역
@@ -12,9 +12,10 @@ ToneDial · doctor
   앱 복구를 이어가려면:
   tonedial doctor --fix --from-operation ffffffffffffffffffffffffffffffff --global
 
-  이전 파일로 돌아가기:
+  이전 파일로 되돌리려면:
   tonedial doctor --fix --rollback ffffffffffffffffffffffffffffffff
 
+  전체 내용 확인:
   tonedial doctor --global --json
 --- stderr --- [bytes=0; endsWithNewline=false]
 

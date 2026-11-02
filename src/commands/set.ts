@@ -187,7 +187,8 @@ function readKey(config: Config, key: string, t: Messages): string | undefined {
   if (value === null) return UNSET;
   if (typeof value === "string") {
     if (key === "persona.note") return t.persona.noteChars([...value].length);
-    if (key === "persona.user" || key === "persona.agent") return t.persona.descriptionChars(key.slice("persona.".length) as "user" | "agent", [...value].length);
+    // The key column already names the field, so the value is only its length.
+    if (key === "persona.user" || key === "persona.agent") return t.persona.charCount([...value].length);
   }
   return String(value);
 }

@@ -57,7 +57,7 @@ const messages: Messages = {
   },
   preset: {
     activeUnknown: "保存済み設定を修復するまで、適用中のプリセットは不明です。",
-    unavailable: (slug, reason) => `${slug}: 利用不可（${reason}）。元のファイルは保持しました`,
+    unavailable: (slug, reason) => `${slug}: 利用不可（${reason}）。ファイルはそのまま残しています`,
     conflict: (slug, recoveredSlug) => `${slug}: カスタム版と旧版の定義が異なります。tonedial doctor --fix で旧版の値を ${recoveredSlug} として保持してください。`,
     activeConflict: (slug) => `${slug}: 適用中の定義が曖昧です。保存済みの軸は保持しました。tonedial doctor --fix で定義を選んでください。`,
     active: (name) => `${name} を適用中`,
@@ -76,7 +76,7 @@ const messages: Messages = {
     slugNotEditable: (was, tried) =>
       `スラッグは編集できません。適用中のプリセットと接続記録は ${was} を参照しています。` +
       `tonedial use ${was} を実行し、${tried} として保存してください。`,
-    noLatin: (name) => `「${name}」: スラッグに使える英字か数字がありません`,
+    noLatin: (name) => `「${name}」: スラッグに使える英字か数字がありません。--slug で指定してください（例: --slug my-tone）。`,
     nameTooLong: (given, cap) => `表示名：${given}文字 · 上限 ${cap}`,
     replaced: (slug) => `${slug}: 既存プリセットを置き換えました`,
     imported: (slug, replaced) => `${slug}: ${replaced ? "置き換えました" : "読み込みました"}`,
@@ -87,6 +87,8 @@ const messages: Messages = {
     notAPreset: (name) => `${name}: プリセットオブジェクトではありません`,
     slugTooLong: (given, cap) => `スラッグ：${given}文字 · 上限 ${cap}`,
     needsDisplayName: "save には表示名が必要です。英字や数字のない名前には --slug を指定してください。",
+    saveSlugUnknown: (slug) => `${slug}: このスラッグでは何も保存されていません。作成するには表示名も指定してください：\ntonedial save "表示名" --slug ${slug}`,
+    saveAsNew: "現在の口調は新しい名前で保存してください：\ntonedial save \"My Tone\" --slug my-tone",
     needsSlugArg: "プリセットのスラッグが必要です。一覧：tonedial list",
     invalidSlugFor: (name) => `「${name}」: 有効なスラッグを生成できません`,
     noSlug: (path) => `${path}: 有効なスラッグがありません。英小文字・数字・ハイフンを使ってください`,
@@ -130,7 +132,7 @@ const messages: Messages = {
     rebuilt: "アプリケーションを復旧しました",
     unchanged: "アプリケーションのファイルは最新です",
     nativePending: "ネイティブ接続は別途確認が必要です。設定とプリセットは利用できます。",
-    rollback: (id) => `以前のファイルに戻す：\ntonedial doctor --fix --rollback ${id}`,
+    rollback: (id) => `以前のファイルに戻すには：\ntonedial doctor --fix --rollback ${id}`,
     rollbackOrder: "先に接続を復元し、その後アプリケーションのファイルを復元してください：",
     noSnapshot: (id) => `${id}: この状態ルート用の有効な設定スナップショットがありません`,
     quarantineCandidate: (id) => `操作ID：\n${id}\n再構築するには、先にこの記録を隔離する必要があります。元のバイト列はロールバック履歴に保持されます。`,
@@ -139,13 +141,15 @@ const messages: Messages = {
     quarantineUnavailable: (id) => `${id}: 隔離できる読み取り不能な操作記録が見つかりません。ファイルは変更していません。`,
     quarantine: (id) => `読み取れない操作 ${id} を隔離し、元のバイト列をロールバック履歴に保持します。`,
     quarantineComplete: (id) => `読み取れない操作 ${id} を隔離しました。`,
-    quarantineRemaining: (count) => `読み取れない操作記録が ${count} 件残っています。次の記録を隔離してから復旧を続けてください。`,
+    quarantineRemaining: (count) => count === 1
+      ? "読み取れない操作記録が 1 件残っています。アプリを復旧するには先にこの記録を隔離してください。元のバイト列はロールバック履歴に保持されます。"
+      : `読み取れない操作記録が ${count} 件残っています。次の記録を隔離してから復旧を続けてください。`,
     retire: (id) => `停止した操作 ${id} を履歴に移してから再構築してください。外部への変更は検証も取り消しもされません。`,
     resumeOperation: (id) => `停止した操作:\n${id}`,
     resumeQuestion: "続行するには上の操作ID全体を入力してください。Enterで中止:",
     cancelled: "復旧を中止しました。ファイルは変更していません。",
     operationMismatch: "操作IDが一致しません。ファイルは変更していません。",
-    failure: (id, phase, path, code) => `アプリ復旧の${({ prepare: "準備", write: "ファイル書き込み", verify: "結果の検証", finalize: "完了処理" })[phase]}で失敗しました (${code})。${path ? `\n${path}` : ""}\n一部のファイル変更が適用済みの場合があります。操作 ${id} の記録を保持してください。`,
+    failure: (id, phase, path, code) => `アプリ復旧の${({ prepare: "準備", write: "ファイル書き込み", verify: "結果の検証", finalize: "完了処理" })[phase]}で失敗しました (${code})。${path ? `\n${path}` : ""}\n一部のファイル変更が適用済みの場合があります。次の操作記録を保持してください：\n${id}`,
   },
   persona: {
     defaults: role("私", "あなた", "作業の支援を求めている利用者。", "依頼された作業を手伝う汎用アシスタント。"),
@@ -172,12 +176,13 @@ const messages: Messages = {
     age: (given, bands) => `persona.age=${given} · 選択肢：${bands.join(", ")}`,
     gender: (options) => `persona.gender · 選択肢：${options.join(", ")}`,
     callsYou: (term) => `ユーザー呼称 ${term}`,
-    callsItself: (term) => `自称 ${term}`,
+    callsItself: (term) => `一人称 ${term}`,
     ageLabel: (band) => `年代 ${band}`,
     genderLabel: (gender) => `性別 ${gender}`,
     noteChars: (count) => `メモ ${count}文字`,
     descriptionOverCap: (field, given, cap) => `${field}: ${given}文字 · 上限 ${cap}`,
     descriptionChars: (field, count) => `${field === "user" ? "ユーザー背景" : "架空の役割"} · ${count}文字`,
+    charCount: (count) => `${count}文字`,
     descriptionFull: (field, value) => `${field === "user" ? "ユーザー背景" : field === "agent" ? "架空の役割" : "追加の話し方・役割"}: ${value}`,
   },
   settings: {
@@ -252,29 +257,34 @@ const messages: Messages = {
     stateRoot: "共有ToneDial状態：",
     planHeading: "変更を確認",
     nativeHeading: "エージェントを接続",
-    actionLabel: { file: "ファイル", "entry-rebuild": "再構築", skill: "スキル", "case-rename": "名前変更" },
-    codexTrust: (global) => `${global ? "" : "先にCodexでこのプロジェクトを信頼してください。\n"}Codex: /hooks → SessionStart → ToneDial。コマンドを確認し、フックを有効にしてください。`,
+    actionLabel: { file: "ファイル", "entry-rebuild": "再構築した項目", skill: "スキルリンク", "case-rename": "名前を変更した項目" },
+    actionState: { created: (label) => `（新規${label}）`, removed: (label) => `（${label}を削除）`, updated: (label) => `（${label}を更新）`, plain: (label) => `（${label}）` },
+    newFiles: (count) => `（新規ファイル ${count}件）`,
+    codexTrust: (global) => global
+      ? "Codexの /hooks → SessionStart → ToneDialでコマンドを確認し、フックを有効にしてください。"
+      : "Codexでこのプロジェクトを信頼してから、/hooks → SessionStart → ToneDialでコマンドを確認し、フックを有効にしてください。",
     codexOpen: "今すぐCodexを開きますか？",
     codexOpenSteps:
       "このターミナルでCodexが開きます。上の手順でフックを有効にし、終了するとここに戻ります。",
-    claudeTrust: (global) => `${global ? "" : "先にClaude Codeでこのプロジェクトを信頼してください。\n"}Claude Code: 対話セッションは信頼したフォルダーでのみフックを実行します。/hooks → SessionStartでToneDialのコマンドを確認してください。`,
+    claudeTrust: (global) => global
+      ? "Claude Codeの対話セッションは信頼したフォルダーでのみフックを実行します。/hooks → SessionStartでToneDialのコマンドを確認できます。"
+      : "Claude Codeでこのプロジェクトを信頼してください。対話セッションは信頼したフォルダーでのみフックを実行します。/hooks → SessionStartでToneDialのコマンドを確認できます。",
     claudeOpen: "今すぐこのプロジェクトでClaude Codeを開きますか？",
     claudeOpenSteps: "このターミナルでClaude Codeが開きます。このフォルダーを信頼するか聞かれたらそこで答え、終了するとここに戻ります。",
     scopeHere: "接続範囲：プロジェクト",
-    alreadyMatch: (tools) => `${tools}: 既に一致、変更なし`,
+    alreadyMatch: (tools) => `${tools}: 既に最新、変更なし`,
     alreadyDisconnected: (tools) => `${tools}: 接続解除済み、変更なし`,
     dryRun: "--dry-run · 書き込みなし",
     declined: "キャンセル · 書き込みなし",
-    wroteInto: (tools) => `${tools} の接続を設定しました`,
     disconnected: (tools) => `${tools} の接続を解除しました`,
     noArtifact: "接続する tone.md がありません。先に tonedial compile を実行してください",
     unknownTool: (given, tools) => `${given}: 未対応のツールです。選択肢：${tools.join(", ")}`,
     noneInstalled: (tools, root) =>
       `検索ルート：${root}\n${tools.join(", ")} が見つかりません。名前を指定すると接続できます。`,
     removed: "接続解除済み",
-    stateKept: (root) => `プリセットと設定を保持しました。\n${root}`,
+    stateKept: (root) => `プリセットと設定はここに残ります：\n${root}`,
     deleteYourself: "状態も削除する場合は、このディレクトリを手動で削除してください",
-    nothingWired: "接続なし · 解除するものはありません",
+    nothingWired: "この範囲に接続なし · 解除するものはありません",
     damaged: (path, reason) => `${path}: ${reason}。余分なマーカーを削除して eject を再実行してください。`,
     needsApproval:
       "ファイル変更には承認が必要です。ターミナルで実行するか、--dry-run で確認してから --auto で再実行してください。",
@@ -308,6 +318,8 @@ const messages: Messages = {
     toneNotWritten: "未書き込み",
     toneDisagrees: "config.json と不一致 · 直接編集か書き込み中断",
     seedsHeading: "同梱ファイル",
+    checkHeading: { context: "コンテキストファイル", reader: "リーダー", pathLine: "シェルのPATH行", onPath: "PATH上の tonedial", install: "インストール", claudeContext: "Claude Code のコンテキスト", skills: "スキル", skill: (label) => `${label} スキル` },
+    fullDetails: "詳細を確認：",
     seedsOk: (version) => `バージョン ${version}`,
     seedsNotRun: "同梱ファイルなし · ここでは init 未実行",
     seedsAttention: "同梱ファイルの確認が必要",
@@ -317,8 +329,8 @@ const messages: Messages = {
     contextCurrent: "AGENTS.md と TONE.md の構成は最新です。",
     contextRepair: "管理対象のコンテキストファイルに修復が必要です。ガイドと口調ファイルの診断を確認してください。",
     contextSize: (guide, total) => total === null
-      ? `ガイド ${guide}文字 · 全体の内容は取得できません`
-      : `ガイド ${guide}文字 · 順序付きの全体 ${total}`,
+      ? `ガイド ${guide.toLocaleString("en")}文字 · 合計サイズは取得できません`
+      : `ガイド ${guide.toLocaleString("en")}文字 · ガイド + TONE.md ${total.toLocaleString("en")}文字`,
     guideFormat: {
       missing: "ガイドなし · 作成前に設定を確認",
       unsupported: "未対応のガイド形式です。ファイルを保持し、同梱ファイルの診断を確認してください。",
@@ -367,7 +379,7 @@ const messages: Messages = {
       disabled: "登録済み設定ファイルでフックが無効です",
       unknown: "登録済み設定ファイルでフックの有効状態は不明です",
     },
-    hookSettingScope: "確認対象の設定ファイルのみの結果であり、ホスト側の上書きとセッションへの配信は未検証です。",
+    hookSettingScope: "上記のフック状態は確認した設定ファイルのみに基づきます。ホスト側の上書きとセッションへの配信は未検証です。",
     hookGroupHeading: "エージェントのフック",
     hookGroupUnknown: (tools) => `未接続：${tools.join(", ")}`,
     hookNotConnected: "確認する管理対象フックがありません。接続するには同じ範囲でこのエージェントを選んで init を実行してください。",
@@ -408,11 +420,11 @@ const messages: Messages = {
     installShape: (shape, update) => `${shape} · 更新：${update}`,
     commandOnPath: (path) => `検出 · ${path}`,
     commandNotOnPath:
-      "PATHに tonedial がありません。スキルと代替行から実行できません。" +
-      "新しいシェルを開き、まだ見つからない場合は tonedial doctor --fix を実行してください。",
+      "PATHに tonedial がないため、スキルと TONE.md の代替行から実行できません。" +
+      "新しいシェルを開いても見つからない場合は、下の修復コマンドを実行してください。",
     commandNotOnPathNpm:
-      "PATHに tonedial がありません。スキルと代替行から実行できません。" +
-      "npm prefix -g でグローバルパスを確認し、\nその bin ディレクトリ（macOS/Linux）をPATHに追加してください。",
+      "PATHに tonedial がないため、スキルと TONE.md の代替行から実行できません。\n" +
+      "グローバルパスを確認：\nnpm prefix -g\nその bin ディレクトリをPATHに追加してください（macOS/Linux）。",
   },
   notice: {
     riskIntro:
@@ -596,7 +608,9 @@ const messages: Messages = {
     toolsPrompt: "接続するエージェント（カンマ区切り）： ",
     ownershipConflict: (path) => `所有権が不明か、管理対象の内容または種類が変わっています：\n${path}\nファイルは保持しました。接続を変更する前に確認してください。`,
     rollbackNeedsFix: "--rollback は doctor --fix と doctor が示した操作IDとともに指定してください。",
-    editNotApplied: (path, reason) => `編集は未適用：${reason}\n編集済みコピーを保持しました：\n${path}`,
+    editNotApplied: (path, reason) => `${reason}\n何も適用していません。編集済みコピーを保持しました：\n${path}`,
+    editSavedInvalid: "編集内容はそのまま保存されました。ファイルを修正するまで ToneDial はこの設定を読み込めません。確認と修復：\ntonedial doctor",
+    editSavedInvalidPreset: (slug) => `編集内容はそのまま保存されました。修正するまでこのプリセットは使えません：\ntonedial edit preset ${slug}`,
     stateOverlap: (path) => `書き出し先が共有ToneDial状態と重なっています：\n${path}\n書き込みはしていません。別の状態ディレクトリかプロジェクトを選んでください。`,
     stateInstructionOverlap: (path) => `ToneDial状態がエージェントの指示ルートと重なっています：\n${path}\n書き込みはしていません。init の前に専用ディレクトリを選んでください。`,
     legacyConsumers: (destinations) => `他の接続か未記録の接続がまだ tone.md を読みます：\n${destinations.join("\n")}\n書き込みはしていません。各範囲で解除して init を再試行し、移行後に再接続してください。`,
@@ -642,7 +656,7 @@ const messages: Messages = {
     safewordQuote: "合言葉に二重引用符は使えません。tone.md の文を途中で閉じてしまいます",
     safewordBlank: "合言葉が空白です。未設定には null を使ってください",
     wiringLost:
-      "接続記録が変わったか検証できないため、編集は未適用です。稼働中の設定は保持しました。" +
+      "接続記録が変わったか検証できません。" +
       "接続の解除は範囲を指定した unwire/eject、移行と復旧は init/doctor --fix を使ってください。",
     importNeedsPath: "import にはプリセットJSONのパスか https URL が必要です",
     remoteSource: "リモート取得元",

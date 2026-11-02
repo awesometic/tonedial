@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=608; endsWithNewline=true]
+--- stdout --- [bytes=611; endsWithNewline=true]
 ToneDial · eject
 
   Connection scope: project
@@ -9,14 +9,14 @@ ToneDial · eject
   Changes: 3
 
   <ROOT>/project/.codex/hooks.json
-  (modified)  +0 -41
+  (removed)  41 lines
   - {
   -   "description": "ToneDial: load saved response tone",
   -   "hooks": {
   -     "SessionStart": [
 
-  - Skill
-    <ROOT>/project/.agents/skills/tonedial
+  <ROOT>/project/.agents/skills/tonedial
+  (skill link removed)
 
   <ROOT>/state/config.json
   (modified)  +2 -106
@@ -27,8 +27,8 @@ ToneDial · eject
 
   Full diff: --verbose
 
-  Codex CLI connections disconnected
-  Presets and settings kept.
+  Codex CLI disconnected
+  Presets and settings stay in:
   <ROOT>/state
 --- stderr --- [bytes=0; endsWithNewline=false]
 

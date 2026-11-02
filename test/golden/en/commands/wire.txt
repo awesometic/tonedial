@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=1159; endsWithNewline=true]
+--- stdout --- [bytes=1130; endsWithNewline=true]
 ToneDial · wire
 
   Connection scope: project
@@ -28,8 +28,8 @@ ToneDial · wire
   +   "description": "ToneDial: load saved response tone",
   +   "hooks": {
 
-  - Skill
-    <ROOT>/project/.agents/skills/tonedial
+  <ROOT>/project/.agents/skills/tonedial
+  (new skill link)
 
   <ROOT>/state/config.json
   (modified)  +173 -51
@@ -40,11 +40,9 @@ ToneDial · wire
 
   Full diff: --verbose
 
-  Codex CLI connections configured
-  codex: hook configured
+  Codex CLI: hook configured
   <ROOT>/project/.codex/hooks.json
-  Trust this project in Codex first.
-  Codex: /hooks → SessionStart → ToneDial. Review the command and enable the
-  hook.
+  Trust this project in Codex, then open /hooks → SessionStart → ToneDial,
+  review the command and enable the hook.
 --- stderr --- [bytes=0; endsWithNewline=false]
 
