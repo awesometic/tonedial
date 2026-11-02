@@ -6,7 +6,7 @@
 
 import { test, beforeEach, afterEach } from "node:test";
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { mkdtempSync, rmSync, existsSync, readFileSync, readdirSync, writeFileSync, mkdirSync, symlinkSync, lstatSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, join, dirname } from "node:path";
@@ -322,7 +322,7 @@ test("argument-parser failures honor JSON intent before command dispatch", async
     err = [];
     assert.equal(await cli(...args), 2);
     assert.deepEqual(JSON.parse(stdout()), {
-      schema: 3, ok: false, error: EN.errors.notAnOption("--typo"), warnings: [],
+      schema: 3, ok: false, error: EN.errors.notAnOption("--typo", "show"), warnings: [],
     });
     assert.equal(stderr(), "", "a machine refusal must not emit a second human diagnostic");
     assert.equal(existsSync(paths().root), false, "a parser refusal created state");
@@ -339,7 +339,7 @@ test("JSON intent ignores literal arguments and string-option values", async () 
     err = [];
     assert.equal(await cli(...args), 2, args.join(" "));
     assert.equal(stdout(), "", args.join(" "));
-    assert.ok(collapsed(stderr()).includes(collapsed(EN.errors.notAnOption("--typo"))));
+    assert.ok(collapsed(stderr()).includes(collapsed(EN.errors.notAnOption("--typo", "show"))));
     assert.equal(existsSync(paths().root), false);
   }
 });
@@ -1553,6 +1553,31 @@ test("edit reserves JSON stdout without changing the human editor handoff", asyn
   assert.doesNotMatch(human.stderr, /editor display output/);
   assert.equal(readFileSync(paths().config, "utf8"), beforeConfig);
   assert.equal(tone(), beforeTone);
+});
+
+test("a reader that closes stdout early neither crashes the CLI nor cuts its work short", async () => {
+  // `tonedial show | head` closes the pipe before the CLI is done writing. Node reports that as
+  // an EPIPE error event, which used to escape as an unhandled stack trace.
+  const closedReader = (args: string[]) => new Promise<{ status: number | null; stderr: string }>((resolve) => {
+    const child = spawn(process.execPath, [join(dirname(fileURLToPath(import.meta.url)), "..", "src", "bin.ts"), ...args], {
+      cwd: join(home, "project"),
+      env: commandEnv(),
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    child.stdout.destroy();
+    let stderr = "";
+    child.stderr.setEncoding("utf8").on("data", (chunk: string) => { stderr += chunk; });
+    child.on("close", (status) => resolve({ status, stderr }));
+  });
+  const help = await closedReader(["--help"]);
+  assert.equal(help.status, 0, help.stderr);
+  assert.doesNotMatch(help.stderr, /EPIPE/);
+  // A mutation keeps going after its banner could not be written.
+  const setup = await closedReader(["init", "--tools", "none", "--global", "--auto"]);
+  assert.equal(setup.status, 0, setup.stderr);
+  assert.doesNotMatch(setup.stderr, /EPIPE/);
+  assert.ok(existsSync(paths().config), "init stopped when stdout closed");
+  assert.ok(existsSync(paths().tone), "init stopped when stdout closed");
 });
 
 test("an edit to the settings reaches tone.md without a second command", async () => {

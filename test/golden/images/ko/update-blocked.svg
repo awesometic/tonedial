@@ -11,7 +11,7 @@
   ToneDial 공통 상태 디렉터리:
   &lt;ROOT&gt;/state
 
-  문제가 있는 앱 파일을 검사하려면:
+  표시된 기본 파일을 확인하려면:
     tonedial doctor
   ⚠ ToneDial 관리 파일 아님 · 보존됨
     presets/builtin/caring-brother.json
@@ -25,7 +25,7 @@
 <text x="60" y="216" fill="#edf3f6" font-weight="400" opacity="1">--dry-run · 변경 없음</text>
 <text x="60" y="272" fill="#edf3f6" font-weight="400" opacity="1">ToneDial 공통 상태 디렉터리:</text>
 <text x="60" y="300" fill="#edf3f6" font-weight="400" opacity="1">&lt;ROOT&gt;/state</text>
-<text x="60" y="356" fill="#edf3f6" font-weight="400" opacity="1">문제가 있는 앱 파일을 검사하려면:</text>
+<text x="60" y="356" fill="#edf3f6" font-weight="400" opacity="1">표시된 기본 파일을 확인하려면:</text>
 <text x="88" y="384" fill="#edf3f6" font-weight="400" opacity="1">tonedial doctor</text>
 <text x="60" y="412" fill="#edf3f6" font-weight="400" opacity="1">⚠ ToneDial 관리 파일 아님 · 보존됨</text>
 <text x="88" y="440" fill="#edf3f6" font-weight="400" opacity="1">presets/builtin/caring-brother.json</text>

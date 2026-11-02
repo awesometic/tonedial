@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=250; endsWithNewline=true]
+--- stdout --- [bytes=246; endsWithNewline=true]
 ToneDial · update
 
   tonedial <VERSION>
@@ -11,7 +11,7 @@ ToneDial · update
   ToneDial 공통 상태 디렉터리:
   <ROOT>/state
 
-  문제가 있는 앱 파일을 검사하려면:
+  표시된 기본 파일을 확인하려면:
     tonedial doctor
 --- stderr --- [bytes=125; endsWithNewline=true]
   ⚠ ToneDial 관리 파일 아님 · 보존됨

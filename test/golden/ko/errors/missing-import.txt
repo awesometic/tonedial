@@ -2,6 +2,6 @@ status: 1
 --- stdout --- [bytes=20; endsWithNewline=true]
 ToneDial · import
 
---- stderr --- [bytes=79; endsWithNewline=true]
+--- stderr --- [bytes=114; endsWithNewline=true]
 <ROOT>/missing.json
-읽을 수 없습니다: ENOENT: no such file or directory
+파일을 찾지 못했습니다. 경로를 확인하거나 https URL을 지정해 주세요.

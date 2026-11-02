@@ -79,6 +79,7 @@ const messages: Messages = {
     replaced: (slug) => `${slug}：已替换现有预设`,
     imported: (slug, replaced) => `${slug}：${replaced ? "已替换" : "已导入"}`,
     unreadable: (path, reason) => `${path}\n无法读取：${reason}`,
+    fileNotFound: (path) => `${path}\n找不到文件。请检查路径，或改用 https URL。`,
     notJson: (path, reason) => `${path}：JSON 无效：${reason}`,
     notJsonRemote: (url) => `${url}：响应不是有效的 JSON`,
     notAPreset: (name) => `${name}：不是预设对象`,
@@ -192,6 +193,8 @@ const messages: Messages = {
     size: (chars) => `TONE.md ${chars} 字符`,
     contextCap: (cap, total) => `Claude Code 会把超过 ${cap} 字符的钩子内容替换为简短预览，因此模型只能看到语气的开头部分。指南和语气合计 ${total} 字符；请缩短 persona.note、persona.self_ref、persona.user_ref、safeword 中较长的值。`,
     wouldWrite: "将写入",
+    compiledSize: (chars) => `按已保存设置生成的大小：${chars} 字符`,
+    checkOnly: "--check · 未写入任何内容",
     wrote: "已写入",
     notWritten: "缺少 TONE.md，请运行 tonedial compile",
     notSetUp: "尚未初始化，请运行 tonedial init",
@@ -417,10 +420,10 @@ const messages: Messages = {
   update: {
     running: (version) => `tonedial ${version}`,
     toUpdate: "更新软件包：",
-    thenRefresh: "更新应用文件：",
+    thenRefresh: "更新内置文件并修复状态：",
     setupNeeded: "初始化 ToneDial：",
-    refreshFiles: (count) => `可更新的内置文件：${count} 个`,
-    reviewState: "检查有问题的应用文件：",
+    refreshFiles: (count) => `需更新的内置文件：${count} 个`,
+    reviewState: "检查标出的内置文件：",
     npmQuestion: "  使用 npm 更新吗？",
     npmComplete: (version) => `npm 更新完成 · 已安装 ${version}`,
     npmMissing: "PATH 中未找到 npm。请使用安装此 ToneDial 的 Node/npm 环境。",
@@ -446,7 +449,7 @@ const messages: Messages = {
     noTar: "更新需要 tar，但 PATH 中未找到",
     notAPackage: "下载内容不是 ToneDial 包",
     linkInPackage: "发行包包含符号链接，但发布文件不应依赖链接",
-    needsApproval: "更新需要批准，尚未执行。请运行 tonedial update --auto 批准更新。",
+    needsApproval: "更新需要批准，尚未执行。要批准，请重新运行：\n  tonedial update --auto",
     integrityMismatch: "下载哈希与仓库记录不一致",
     notOurs: (dir) => `${dir}：不是由 ToneDial 创建，请自行移除`,
     swapFailed: (reason) => `安装已停止：${reason}。重试前请检查恢复详情。`,
@@ -454,18 +457,21 @@ const messages: Messages = {
       `安装替换失败，且无法恢复旧版。请将 ${previous} 重命名为 lib。`,
   },
   help: {
-    more: "命令帮助：tonedial <command> --help\n完整参考：tonedial --help\n\n如果遇到问题，或者有想法或反馈，欢迎随时分享 :)\nhttps://github.com/awesometic/tonedial/issues/new/choose",
+    commandHelp: "命令帮助：tonedial <command> --help",
+    fullReference: "完整参考：tonedial --help",
+    feedback: "如果遇到问题，或者有想法或反馈，欢迎随时分享 :)\nhttps://github.com/awesometic/tonedial/issues/new/choose",
     tagline: "一次设置，持续使用代理语气",
-    footer: "默认连接范围为全局。当前目录使用 --here，其他目录使用 --project PATH。无人值守写入必须明确范围。",
+    footer: "连接命令默认使用全局范围；当前项目用 --here，其他目录用 --project DIR。无人值守写入必须明确指定范围。",
+    recoveryOptions: "doctor --fix 的恢复选项：tonedial doctor --help",
     groups: { tone: "语气", presets: "预设库", agents: "连接", upkeep: "维护", flags: "选项" },
-    firstSteps: "设置语气后检查：",
+    firstSteps: "开始使用：先初始化，再调整语气，然后连接代理：",
     examples: "示例",
     commands: {
       on: "恢复投递已保存的语气",
       off: "暂停语气投递 · 保留设置和 TONE.md",
       init: "初始化并刷新内置文件",
       set: "修改语气轴、角色或设置 · 无参数打开面板",
-      get: "读取当前设置值 · 指定键可查看含义和选项",
+      get: "显示当前值 · 指定键可查看含义和选项",
       address: "设置双方称呼 · 无参数则交互输入 · 频率: set address_frequency=rarely",
       persona: "设置代理和用户角色 · 无参数则交互输入",
       reset: "重置语气轴 · 无参数重置全部",
@@ -476,20 +482,20 @@ const messages: Messages = {
       list: "内置及用户预设",
       edit: "使用 $EDITOR 打开设置或预设",
       use: "应用预设并编译",
-      compile: "为修复重建 TONE.md · 语气变更时自动执行",
+      compile: "重建 TONE.md · 更改语气时会自动执行",
       export: "将含称呼和角色的配置备份为 JSON",
       import: "从 JSON 导入配置 · use 应用",
-      wire: "在此连接代理 · 无参数则交互选择",
+      wire: "在所选范围连接代理 · 无参数则交互选择",
       unwire: "移除受管理连接",
       doctor: "检查连接 · --fix 修复",
       update: "更新此安装",
-      eject: "断开全部连接 · 保留预设",
+      eject: "断开所选范围内的全部代理 · 保留预设",
     },
     flags: {
       verbose: "命令详情、诊断和差异",
-      global: "全局连接（默认）· 明确范围",
-      here: "连接当前项目",
-      project: "连接目录 · use：导出语气文件",
+      global: "全局范围（默认）· 指定后即视为明确范围",
+      here: "当前项目范围",
+      project: "其他项目的目录 · use：在那里导出 TONE.md",
       migrateLegacy: "init：批准迁移已验证的旧状态",
       auto: "跳过批准提示 · 始终显示差异",
       dryRun: "显示变更 · 不写入",
@@ -503,7 +509,7 @@ const messages: Messages = {
       fromPreset: "doctor --fix：为不可用设置选择预设",
       restorePreset: "doctor --fix：恢复一个缺失或损坏的用户预设",
       preset: "test：预览保存配置 · 保留当前状态",
-      slug: "create/save：指定预设标识名",
+      slug: "create/save：指定预设标识名（小写字母、数字、连字符）",
       acceptUsage: "test：接受本次启动的账号用量及费用",
       explain: "show：解释语气轴、设置和风险级别",
       check: "compile：报告大小 · 不写入",
@@ -512,6 +518,11 @@ const messages: Messages = {
       version: "版本 · --verbose 同时显示 Node 和结构版本",
       help: "此帮助文本",
     },
+    commandFlags: {
+      test: { dryRun: "只显示启动计划 · 不启动任何内容", project: "运行对话的文件夹" },
+      use: { project: "同时把 TONE.md 导出到 DIR/.tonedial/" },
+      update: { auto: "不经询问直接更新" },
+    },
   },
   combos: {
     contradiction: (rule) => `${rule} 自相矛盾。`,
@@ -519,17 +530,19 @@ const messages: Messages = {
     nothingBlocked: "没有阻止任何设置。",
   },
   errors: {
-    notACommand: (name, known, nearest) =>
-      `${name} 不是命令。${nearest ? `是否想输入 ${nearest}？` : ""} ` +
-      `可用命令：${known.join(", ")}`,
+    notACommand: (name, nearest) =>
+      `${name} 不是命令。${nearest ? `是否想输入 tonedial ${nearest}？` : ""}\n命令列表：tonedial --help`,
+    isAFlag: (name) => `${name} 是选项，不是命令：\n  tonedial --${name}`,
     stoppingHelp:
-      "要在不删除设置的情况下暂停语气投递，请运行 tonedial off；运行 tonedial on 可恢复投递。" +
-      "tonedial reset 恢复语气轴默认值。tonedial eject --global 或 --project <path> 会断开该范围的连接。" +
-      "断开所有连接后，可用 npm uninstall -g tonedial 删除命令。",
-    notAnOption: (flag) => `${flag}：不是选项。列表：tonedial --help`,
-    flagNotAccepted: (command, flag) => `${command}：不接受 --${flag}`,
+      "要暂停语气投递并保留设置（tonedial on 可恢复）：\n  tonedial off\n" +
+      "要恢复语气轴默认值：\n  tonedial reset\n" +
+      "要断开代理连接（每个范围运行一次，也可用 --here、--project PATH）：\n  tonedial eject --global\n" +
+      "断开所有范围的连接后，要删除命令：\n  npm uninstall -g tonedial",
+    notAnOption: (flag, command) =>
+      `${flag}：${command ? `${command} ` : ""}没有此选项。\n选项列表：tonedial ${command ? `${command} ` : ""}--help`,
+    flagNotAccepted: (command, flag) => `${command} 不接受 --${flag}。\n选项列表：tonedial ${command} --help`,
     tooManyArguments: (command, max, got) =>
-      `${command}：最多 ${max} 个参数，收到 ${got} 个`,
+      `${max === 0 ? `${command} 不接受参数` : `${command} 最多接受 ${max} 个参数`}（收到 ${got} 个）。\n用法：tonedial ${command} --help`,
     colourMode: (given) => `--color=${given}：应为 auto、always 或 never`,
     twoDestinations: "只能选择一个范围：--global、--here 或 --project PATH。",
     projectPathRequired: "--project 需要非空目录路径。当前项目请使用 --here。",
@@ -559,7 +572,7 @@ const messages: Messages = {
       "请使用以下方式之一安装，再运行 tonedial：\n  npm i -g tonedial\n" +
       "  curl -fsSL https://raw.githubusercontent.com/awesometic/tonedial/main/install.sh | sh",
     languageUnsupported: (given, languages) =>
-      `--lang ${given}：不支持的界面语言。可选：${languages.join(", ")}`,
+      `${given}：不支持的界面语言。可选：${languages.join(", ")}`,
     notUtf8:
       "文件不是有效 UTF-8。重写会更改 ToneDial 区块外的字节。" +
       "请先转换为 UTF-8。",
@@ -584,7 +597,7 @@ const messages: Messages = {
     stateInstructionOverlap: (path) => `ToneDial 状态与代理指令根目录重叠：\n${path}\n未写入任何内容。运行 init 前请选择专用状态目录。`,
     legacyConsumers: (destinations) => `其他或未记录连接仍读取 tone.md：\n${destinations.join("\n")}\n未写入任何内容。请在每个范围断开后重试 init，迁移后再重新连接。`,
     contextLayout: (kind, path, doctorCommand = "tonedial doctor --json") => kind === "fresh"
-      ? `ToneDial 尚未初始化：\n${path}\n更改设置前请运行 tonedial init --tools none。`
+      ? `ToneDial 尚未设置：\n${path}\n请先准备状态，然后重新运行此命令：\n  tonedial init --tools none`
       : `此 ${kind} 布局需要应用恢复：\n${path}\n未写入任何内容。检查同一范围：\n${doctorCommand}\n请保留此根目录，运行 tonedial doctor --fix 保留设置并重建生成文件。`,
     unreadableConfigFile: (path) => `无法读取有效设置：\n${path}\n请保留原文件，运行 tonedial doctor --fix 选择已保存来源或明确列出的默认值。`,
     fixUnreadableConfig: (path) => `设置需要恢复来源：\n${path}\n未写入任何内容。请交互运行 tonedial doctor --fix，或选择 --from-operation ID 或 --from-preset SLUG。`,

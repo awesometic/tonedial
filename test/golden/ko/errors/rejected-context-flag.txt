@@ -1,5 +1,6 @@
 status: 2
 --- stdout --- [bytes=0; endsWithNewline=false]
 
---- stderr --- [bytes=49; endsWithNewline=true]
-compile: --project 옵션을 받지 않습니다
+--- stderr --- [bytes=102; endsWithNewline=true]
+compile 명령에는 --project 옵션을 쓸 수 없습니다.
+옵션 목록: tonedial compile --help
