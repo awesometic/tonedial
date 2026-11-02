@@ -11,7 +11,7 @@
   ffffffffffffffffffffffffffffffff  invalid record
 
   2 unreadable operation records remain. Quarantine the
-  next record before rebuilding.
+  next record before repairing the application.
   tonedial doctor --fix --quarantine-operation eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee --global
 </desc>
 <rect width="100%" height="100%" rx="16" fill="#171b20"/>
@@ -25,6 +25,6 @@
 <text x="60" y="272" fill="#edf3f6" font-weight="400" opacity="1">ffffffffffffffffffffffffffffffff</text>
 <text x="536" y="272" fill="#edf3f6" font-weight="400" opacity="1">invalid record</text>
 <text x="60" y="328" fill="#edf3f6" font-weight="400" opacity="1">2 unreadable operation records remain. Quarantine the</text>
-<text x="60" y="356" fill="#edf3f6" font-weight="400" opacity="1">next record before rebuilding.</text>
+<text x="60" y="356" fill="#edf3f6" font-weight="400" opacity="1">next record before repairing the application.</text>
 <text x="60" y="384" fill="#edf3f6" font-weight="400" opacity="1">tonedial doctor --fix --quarantine-operation eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee --global</text></g>
 </svg>

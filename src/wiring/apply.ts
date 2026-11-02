@@ -53,6 +53,7 @@ import {
 import { confirm, interactive } from "../ui/prompt.ts";
 import { palette as paletteFor, type Palette } from "../ui/style.ts";
 import { humanText, section } from "../ui/format.ts";
+import { wrap } from "../ui/width.ts";
 import { probeSkillAction, rollbackSkillAction, validateSkillAction } from "./skill.ts";
 
 export type Change = {
@@ -486,7 +487,7 @@ function renderDiff(change: Change, ui: Palette, t: Messages, context = 2, audie
     lines.push(`  ${t.wiring.newFile}  ${ui.dim(t.wiring.newFileLines(after.length))}`);
     return lines;
   }
-  if (change.after === null) lines.push(`  ${ui.warn(t.wiring.removedFile)}`);
+  if (change.after === null || (audience === "human" && !writesRegular(change))) lines.push(`  ${ui.warn(t.wiring.removedFile)}`);
 
   const from = Math.max(0, head - context);
   for (let i = from; i < head; i++) lines.push(`  ${ui.dim(`  ${display(before[i]!)}`)}`);
@@ -506,7 +507,8 @@ function renderSummary(change: Change, ui: Palette, t: Messages): string[] {
 
   if (change.before === null) {
     lines.push(`  ${t.wiring.newFile}  ${ui.dim(t.wiring.newFileLines(after.length))}`);
-  } else if (change.after === null) {
+  } else if (!writesRegular(change)) {
+    // An owned file emptied by this change is deleted, not left as a zero-line file.
     lines.push(`  ${ui.warn(t.wiring.removedFile)}  ${ui.dim(t.wiring.newFileLines(before.length))}`);
   } else if (removed.length === 0 && added.length === 0) {
     const detail = finalNewline === "added"
@@ -535,6 +537,36 @@ function renderSummary(change: Change, ui: Palette, t: Messages): string[] {
   for (const line of removed.slice(0, removedCount)) lines.push(`  ${ui.error(`- ${humanText(line)}`)}`);
   for (const line of representativeAdded.slice(0, addedCount)) lines.push(`  ${ui.accent(`+ ${humanText(line)}`)}`);
   return lines;
+}
+
+/** A created regular file at its own path; only these can share a collapsed summary row. */
+function plainNewFile(change: Change): boolean {
+  return change.before === null && writesRegular(change) && change.realPath === change.path;
+}
+
+/** Split changes into single rows and runs of three or more new files in one directory. */
+function newFileRuns(changes: Change[]): Change[][] {
+  const groups: Change[][] = [];
+  for (const change of changes) {
+    const last = groups.at(-1);
+    if (last && plainNewFile(change) && plainNewFile(last[0]!) && dirname(last[0]!.path) === dirname(change.path)) {
+      last.push(change);
+    } else {
+      groups.push([change]);
+    }
+  }
+  return groups.flatMap((group) => group.length >= 3 ? [group] : group.map((change) => [change]));
+}
+
+/** One directory, its count, and every file name, instead of one sample block per file. */
+function renderNewFileRun(group: Change[], ui: Palette, t: Messages): string[] {
+  const directory = dirname(group[0]!.path);
+  const names = group.map((change) => humanText(basename(change.path))).join(", ");
+  return [
+    `  ${ui.bold(humanText(directory.endsWith(sep) ? directory : `${directory}${sep}`))}`,
+    `  ${t.wiring.newFiles(group.length)}`,
+    ...wrap(names, ui.width - 2).map((line) => `  ${ui.dim(line)}`),
+  ];
 }
 
 /** Complete human diff, including created-file bodies and final-newline changes. */
@@ -2403,16 +2435,46 @@ export function applyRollback(paths: OperationPaths, operationId: string, t: Mes
   }
 }
 
-function renderAction(action: Pick<OperationAction, "kind" | "path" | "realPath">, ui: Palette, t?: Messages): string[] {
-  // The kind leads and the path follows on its own line: a path folded to fit stops being
-  // something a reader can copy, and a preview exists to be acted on.
-  const display = t === undefined ? (value: string) => value : humanText;
-  const label = t === undefined ? `[${action.kind}]` : Object.hasOwn(t.wiring.actionLabel, action.kind)
+type ActionDirection = "created" | "removed" | "updated";
+
+/** Whether a recorded snapshot describes an absent entry (skill and file snapshots differ). */
+function snapshotAbsent(value: JsonValue | undefined): boolean {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) return false;
+  return value.kind === "missing" || value.exists === false;
+}
+
+function actionDirection(action: Pick<OperationAction, "before" | "after">): ActionDirection {
+  return snapshotAbsent(action.before) ? "created" : snapshotAbsent(action.after) ? "removed" : "updated";
+}
+
+/** A text change shown in action form keeps the same direction as its file row would. */
+function changeDirection(change: Change): ActionDirection {
+  return change.before === null ? "created" : writesRegular(change) ? "updated" : "removed";
+}
+
+function renderAction(
+  action: Pick<OperationAction, "kind" | "path" | "realPath"> & Partial<Pick<OperationAction, "before" | "after">>,
+  ui: Palette,
+  t?: Messages,
+  direction?: ActionDirection,
+): string[] {
+  // Machine previews keep their stable `[kind]` and path lines.
+  if (t === undefined) {
+    const lines = [`  ${ui.bold(`[${action.kind}]`)}`, `  ${action.path}`];
+    if (action.realPath !== action.path) lines.push(`  ${ui.warn(`→ ${action.realPath}`)}`);
+    return lines;
+  }
+  // The path leads like a file row, then the change direction. A bare `-` bullet read as a
+  // removal beside diff lines even when the action created the entry.
+  const state = direction ?? ("before" in action && "after" in action ? actionDirection(action as Pick<OperationAction, "before" | "after">) : "updated");
+  const label = Object.hasOwn(t.wiring.actionLabel, action.kind)
     ? t.wiring.actionLabel[action.kind as keyof typeof t.wiring.actionLabel] : humanText(action.kind);
-  const lines = t === undefined
-    ? [`  ${ui.bold(label)}`, `  ${display(action.path)}`]
-    : [`  - ${ui.bold(label)}`, `    ${display(action.path)}`];
-  if (action.realPath !== action.path) lines.push(`  ${ui.warn(`→ ${display(action.realPath)}`)}`);
+  const detail = action.kind === "file"
+    ? state === "created" ? t.wiring.newFile : state === "removed" ? t.wiring.removedFile : t.wiring.modifiedFile
+    : action.kind === "skill" ? t.wiring.actionState[state](label) : t.wiring.actionState.plain(label);
+  const lines = [`  ${ui.bold(humanText(action.path))}`];
+  if (action.realPath !== action.path) lines.push(`  ${ui.warn(`→ ${humanText(action.realPath)}`)}`);
+  lines.push(`  ${state === "removed" ? ui.warn(detail) : detail}`);
   return lines;
 }
 
@@ -2501,15 +2563,22 @@ export async function gate(changes: Change[], opts: GateOptions): Promise<GateRe
   if (opts.heading === undefined) lines.push(...section(opts.t.wiring.planHeading, opts.ui));
   lines.push(`  ${opts.t.wiring.changeCount(real.length + operationActions.length + finalReal.length)}`);
   if (typeof opts.recoveryPresentation === "object") lines.push(...(opts.recoveryPresentation.lines ?? []));
-  for (const change of real) {
-    lines.push("", ...(opts.recoveryPresentation ? renderAction({ kind: "file", path: change.path, realPath: change.realPath }, opts.ui, opts.t) : renderHuman(change, opts.ui, opts.t)));
-  }
+  const renderChanges = (list: Change[]) => {
+    if (opts.recoveryPresentation) {
+      for (const change of list) {
+        lines.push("", ...renderAction({ kind: "file", path: change.path, realPath: change.realPath }, opts.ui, opts.t, changeDirection(change)));
+      }
+      return;
+    }
+    for (const group of opts.verbose === true ? list.map((change) => [change]) : newFileRuns(list)) {
+      lines.push("", ...(group.length === 1 ? renderHuman(group[0]!, opts.ui, opts.t) : renderNewFileRun(group, opts.ui, opts.t)));
+    }
+  };
+  renderChanges(real);
   for (const action of operationActions) {
     lines.push("", ...renderAction(action.action, opts.ui, opts.t));
   }
-  for (const change of finalReal) {
-    lines.push("", ...(opts.recoveryPresentation ? renderAction({ kind: "file", path: change.path, realPath: change.realPath }, opts.ui, opts.t) : renderHuman(change, opts.ui, opts.t)));
-  }
+  renderChanges(finalReal);
 
   if (!opts.recoveryPresentation && !opts.verbose && real.length + finalReal.length > 0) {
     lines.push("", `  ${opts.ui.dim(opts.t.wiring.previewMore)}`);

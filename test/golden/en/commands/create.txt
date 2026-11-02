@@ -1,7 +1,16 @@
 status: 0
---- stdout --- [bytes=1154; endsWithNewline=true]
+--- stdout --- [bytes=1183; endsWithNewline=true]
 ToneDial · create
 
+  Profile to save · Example (example)
+  agent calls itself your big brother · calls you little sibling
+  user context: A younger sibling sharing problems with an older brother.
+  (57/200 characters)
+  fictional agent role: A caring older brother who helps his sibling through
+  problems. Familiar expressions include 'hey, little sibling' and 'your big
+  brother has your back'. (151/200 characters)
+  no safeword · register plain (non-honorific) · address auto
+  7 non-default axes
 
   Review changes
   Changes: 3
@@ -26,15 +35,6 @@ ToneDial · create
   +   "unsaved": false,
 
   Full diff: --verbose
-
-  Profile to save · Example (example)
-  self name your big brother · user name little sibling
-  user context: A younger sibling sharing problems with an older brother.
-  (57/200 characters)
-  fictional agent role: A caring older brother who helps his sibling through
-  problems. Familiar expressions include 'hey, little sibling' and 'your big
-  brother has your back'. (151/200 characters)
-  no safeword · register plain (non-honorific) · address auto
 
   Saved preset: example
   Example  7 non-default axes

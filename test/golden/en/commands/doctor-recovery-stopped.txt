@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=435; endsWithNewline=true]
+--- stdout --- [bytes=461; endsWithNewline=true]
 ToneDial · doctor
 
   Inspection scope: global
@@ -9,12 +9,13 @@ ToneDial · doctor
   command.
   ffffffffffffffffffffffffffffffff  pending
 
-  Continue application repair:
+  To continue the application repair:
   tonedial doctor --fix --from-operation ffffffffffffffffffffffffffffffff --global
 
-  Restore the previous files:
+  To restore the previous files:
   tonedial doctor --fix --rollback ffffffffffffffffffffffffffffffff
 
+  Full details:
   tonedial doctor --global --json
 --- stderr --- [bytes=0; endsWithNewline=false]
 

@@ -1,7 +1,7 @@
 // Save the current axis values, including unsaved changes, as a preset.
 
 import type { CommandResult, Ctx } from "../cli.ts";
-import { AXIS_DEFAULT, AXIS_ORDER, type Axes, type Level } from "../core/anchors.ts";
+import { AXIS_DEFAULT, AXIS_ORDER, riskyAxes, type Axes, type Level } from "../core/anchors.ts";
 import { ConfigError, serializeConfig } from "../core/config.ts";
 import { BUNDLED, PRESET_SCHEMA, SLUG_PATTERN, preparePresetWrite, presetSettings, resolvePreset, slugify, type Preset, type PresetEntry } from "../core/presets.ts";
 import { artifactSize, humanText, nextStep } from "../ui/format.ts";
@@ -24,6 +24,11 @@ export async function runSave(ctx: Ctx, args: string[]): Promise<CommandResult> 
   const state = planConfig(ctx);
   const selected = ctx.flags.slug ?? state.config.preset;
   const existing = !displayName && selected ? resolvePreset(ctx.paths.presets, selected, ctx.t) : null;
+  // `--slug` alone updates what is saved there; naming nothing saved needs a name to create it.
+  if (!displayName && ctx.flags.slug && existing === null && SLUG_PATTERN.test(ctx.flags.slug) &&
+      !BUNDLED.some((p) => p.slug === ctx.flags.slug)) {
+    throw new ConfigError(ctx.t.preset.saveSlugUnknown(ctx.flags.slug));
+  }
   return savePreset(ctx, displayName || existing?.preset.displayName || "", state,
     existing ? { slug: existing.preset.slug, existing } : {});
 }
@@ -40,7 +45,7 @@ export async function savePreset(
   const slug = options.slug ?? ctx.flags.slug ?? slugify(displayName, ctx.t);
   if (!SLUG_PATTERN.test(slug)) throw new ConfigError(ctx.t.preset.noSlug(slug));
   if (BUNDLED.some((p) => p.slug === slug)) {
-    throw new ConfigError(ctx.t.preset.bundledSlug(slug));
+    throw new ConfigError(`${ctx.t.preset.bundledSlug(slug)}\n${ctx.t.preset.saveAsNew}`);
   }
 
   const { change: configChange, config } = state;
@@ -74,8 +79,13 @@ export async function savePreset(
       `${config.safeword ? ctx.t.settings.safewordSet(humanText(config.safeword)) : ctx.t.settings.noSafeword} · ${ctx.t.settings.register(config.speech_level)} · ${ctx.t.settings.addressUse(config.address_frequency)}`,
     ];
     for (const detail of details.filter(Boolean)) review.push(...wrap(detail, ctx.ui.width - 2).map((line) => `  ${line}`));
+    // Risky levels are visible before approval, not only in the notice after the write.
+    const risks = riskyAxes(config.axes);
+    review.push(`  ${ctx.t.preset.nonDefault(Object.keys(values).length)}${risks.length ? ` · ${ctx.ui.risk(`! ${risks.join(", ")}`)}` : ""}`);
+    // What is being saved leads; the file changes that carry it follow, then the approval.
+    process.stdout.write(`${review.join("\n")}\n`);
   }
-  const result = await applyPlanned(ctx, [...selectionReads, presetChange, toneChange], [finalConfig], options.create === true, review);
+  const result = await applyPlanned(ctx, [...selectionReads, presetChange, toneChange], [finalConfig], options.create === true);
 
   if (options.create && !result.applied) return {
     lines: [...result.lines, ...(result.lines.length ? [""] : []), `  ${ctx.t.create.notCreated}`],

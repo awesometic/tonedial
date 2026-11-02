@@ -9,14 +9,14 @@ ToneDial · unwire
   Changes: 3
 
   <ROOT>/project/.codex/hooks.json
-  (modified)  +0 -41
+  (removed)  41 lines
   - {
   -   "description": "ToneDial: load saved response tone",
   -   "hooks": {
   -     "SessionStart": [
 
-  - Skill
-    <ROOT>/project/.agents/skills/tonedial
+  <ROOT>/project/.agents/skills/tonedial
+  (skill link removed)
 
   <ROOT>/state/config.json
   (modified)  +2 -106
@@ -27,6 +27,6 @@ ToneDial · unwire
 
   Full diff: --verbose
 
-  Codex CLI connections disconnected
+  Codex CLI disconnected
 --- stderr --- [bytes=0; endsWithNewline=false]
 

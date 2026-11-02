@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=1215; endsWithNewline=true]
+--- stdout --- [bytes=1171; endsWithNewline=true]
 ToneDial · wire
 
   연결 범위: 프로젝트
@@ -28,8 +28,8 @@ ToneDial · wire
   +   "description": "ToneDial: load saved response tone",
   +   "hooks": {
 
-  - 스킬
-    <ROOT>/project/.agents/skills/tonedial
+  <ROOT>/project/.agents/skills/tonedial
+  (새 스킬 링크)
 
   <ROOT>/state/config.json
   (수정)  +173 -51
@@ -40,10 +40,9 @@ ToneDial · wire
 
   전체 변경 내용: --verbose
 
-  Codex CLI 연결을 설정했습니다
-  codex: 훅 설정됨
+  Codex CLI: 훅 설정됨
   <ROOT>/project/.codex/hooks.json
-  먼저 Codex에서 이 프로젝트를 신뢰해 주세요.
-  Codex: /hooks → SessionStart → ToneDial. 실행 명령을 확인하고 훅을 켜세요.
+  Codex에서 이 프로젝트를 신뢰한 뒤 /hooks → SessionStart → ToneDial에서 실행
+  명령을 확인하고 훅을 켜세요.
 --- stderr --- [bytes=0; endsWithNewline=false]
 

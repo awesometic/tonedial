@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1296" height="428" viewBox="0 0 1296 428" role="img" aria-labelledby="title description">
+<svg xmlns="http://www.w3.org/2000/svg" width="1296" height="400" viewBox="0 0 1296 400" role="img" aria-labelledby="title description">
 <title id="title">ToneDial screen (en · doctor-recovery-invalid)</title>
 <desc id="description">ToneDial · doctor
 
@@ -7,11 +7,10 @@
 
   Unreadable operation history is blocking recovery. No files were changed by
   this command.
+  ffffffffffffffffffffffffffffffff  invalid record
 
-  Operation ID:
-  ffffffffffffffffffffffffffffffff
-  Quarantine it before rebuilding; the original bytes remain available through
-  rollback.
+  1 unreadable operation record remains. Quarantine it before repairing the
+  application; its original bytes stay available for rollback.
   tonedial doctor --fix --quarantine-operation ffffffffffffffffffffffffffffffff --global
 </desc>
 <rect width="100%" height="100%" rx="16" fill="#171b20"/>
@@ -20,9 +19,9 @@
 <text x="60" y="132" fill="#edf3f6" font-weight="400" opacity="1">&lt;ROOT&gt;</text>
 <text x="60" y="188" fill="#edf3f6" font-weight="400" opacity="1">Unreadable operation history is blocking recovery. No files were changed by</text>
 <text x="60" y="216" fill="#edf3f6" font-weight="400" opacity="1">this command.</text>
-<text x="60" y="272" fill="#edf3f6" font-weight="400" opacity="1">Operation ID:</text>
-<text x="60" y="300" fill="#edf3f6" font-weight="400" opacity="1">ffffffffffffffffffffffffffffffff</text>
-<text x="60" y="328" fill="#edf3f6" font-weight="400" opacity="1">Quarantine it before rebuilding; the original bytes remain available through</text>
-<text x="60" y="356" fill="#edf3f6" font-weight="400" opacity="1">rollback.</text>
-<text x="60" y="384" fill="#edf3f6" font-weight="400" opacity="1">tonedial doctor --fix --quarantine-operation ffffffffffffffffffffffffffffffff --global</text></g>
+<text x="60" y="244" fill="#edf3f6" font-weight="400" opacity="1">ffffffffffffffffffffffffffffffff</text>
+<text x="536" y="244" fill="#edf3f6" font-weight="400" opacity="1">invalid record</text>
+<text x="60" y="300" fill="#edf3f6" font-weight="400" opacity="1">1 unreadable operation record remains. Quarantine it before repairing the</text>
+<text x="60" y="328" fill="#edf3f6" font-weight="400" opacity="1">application; its original bytes stay available for rollback.</text>
+<text x="60" y="356" fill="#edf3f6" font-weight="400" opacity="1">tonedial doctor --fix --quarantine-operation ffffffffffffffffffffffffffffffff --global</text></g>
 </svg>

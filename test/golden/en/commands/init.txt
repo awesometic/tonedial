@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=1702; endsWithNewline=true]
+--- stdout --- [bytes=1032; endsWithNewline=true]
 ToneDial · init
 
   Scope
@@ -22,40 +22,10 @@ ToneDial · init
   + ToneDial changes manner only; it never expands task scope or permissions.
   + Use the ToneDial CLI for configuration changes.
 
-  <ROOT>/state/presets/builtin/caring-brother.json
-  (new file)  31 lines
-  +   "schema": 2,
-  +   "slug": "caring-brother",
-
-  <ROOT>/state/presets/builtin/bratty-kid.json
-  (new file)  31 lines
-  +   "schema": 2,
-  +   "slug": "bratty-kid",
-
-  <ROOT>/state/presets/builtin/eager-sycophant.json
-  (new file)  30 lines
-  +   "schema": 2,
-  +   "slug": "eager-sycophant",
-
-  <ROOT>/state/presets/builtin/royal-advisor.json
-  (new file)  30 lines
-  +   "schema": 2,
-  +   "slug": "royal-advisor",
-
-  <ROOT>/state/presets/builtin/ego-sword.json
-  (new file)  31 lines
-  +   "schema": 2,
-  +   "slug": "ego-sword",
-
-  <ROOT>/state/presets/builtin/heavenly-demon.json
-  (new file)  31 lines
-  +   "schema": 2,
-  +   "slug": "heavenly-demon",
-
-  <ROOT>/state/presets/builtin/right-hand.json
-  (new file)  31 lines
-  +   "schema": 2,
-  +   "slug": "right-hand",
+  <ROOT>/state/presets/builtin/
+  (7 new files)
+  caring-brother.json, bratty-kid.json, eager-sycophant.json,
+  royal-advisor.json, ego-sword.json, heavenly-demon.json, right-hand.json
 
   <ROOT>/state/config.json
   (new file)  89 lines

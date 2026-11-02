@@ -55,7 +55,7 @@ const messages: Messages = {
   },
   preset: {
     activeUnknown: "修复已保存的设置前，无法确定当前预设。",
-    unavailable: (slug, reason) => `${slug}：不可用（${reason}）；已保留原文件`,
+    unavailable: (slug, reason) => `${slug}：不可用（${reason}）；文件保持原样`,
     conflict: (slug, recoveredSlug) => `${slug}：自定义版本与旧版本定义不同。请运行 tonedial doctor --fix，将旧值保留为 ${recoveredSlug}。`,
     activeConflict: (slug) => `${slug}：当前定义不明确，已保留保存的语气轴。请运行 tonedial doctor --fix 选择定义。`,
     active: (name) => `${name} 已启用`,
@@ -74,7 +74,7 @@ const messages: Messages = {
     slugNotEditable: (was, tried) =>
       `不能编辑标识名；当前预设和连接记录指向 ${was}。` +
       `请运行 tonedial use ${was}，然后另存为 ${tried}。`,
-    noLatin: (name) => `“${name}”：没有可用于标识名的拉丁字母或数字`,
+    noLatin: (name) => `“${name}”：没有可用于标识名的拉丁字母或数字。请用 --slug 指定，例如 --slug my-tone`,
     nameTooLong: (given, cap) => `显示名称：${given} 字符 · 上限 ${cap}`,
     replaced: (slug) => `${slug}：已替换现有预设`,
     imported: (slug, replaced) => `${slug}：${replaced ? "已替换" : "已导入"}`,
@@ -84,6 +84,8 @@ const messages: Messages = {
     notAPreset: (name) => `${name}：不是预设对象`,
     slugTooLong: (given, cap) => `标识名：${given} 字符 · 上限 ${cap}`,
     needsDisplayName: "save 需要显示名称。名称不含拉丁字母或数字时，请指定 --slug。",
+    saveSlugUnknown: (slug) => `${slug}：此标识名下没有已保存的内容。要创建，请同时指定显示名称：\ntonedial save "显示名称" --slug ${slug}`,
+    saveAsNew: "请用新名称保存当前语气：\ntonedial save \"My Tone\" --slug my-tone",
     needsSlugArg: "需要预设标识名。列表：tonedial list",
     invalidSlugFor: (name) => `“${name}”：无法生成有效标识名`,
     noSlug: (path) => `${path}：没有有效标识名，请使用小写拉丁字母、数字和连字符`,
@@ -127,7 +129,7 @@ const messages: Messages = {
     rebuilt: "应用已恢复",
     unchanged: "应用文件已是最新",
     nativePending: "原生连接需要单独处理；应用设置和预设仍可使用。",
-    rollback: (id) => `恢复之前的文件：\ntonedial doctor --fix --rollback ${id}`,
+    rollback: (id) => `要恢复之前的文件：\ntonedial doctor --fix --rollback ${id}`,
     rollbackOrder: "请先恢复连接，再恢复应用文件：",
     noSnapshot: (id) => `${id}：没有此状态根目录的有效设置快照`,
     quarantineCandidate: (id) => `操作 ID：\n${id}\n要重建应用，必须先隔离这条记录；原始字节仍保存在回滚历史中。`,
@@ -136,13 +138,15 @@ const messages: Messages = {
     quarantineUnavailable: (id) => `${id}：找不到可隔离的无法读取操作记录。未更改文件。`,
     quarantine: (id) => `隔离无法读取的操作 ${id}；原始字节保留在回滚历史中。`,
     quarantineComplete: (id) => `已隔离无法读取的操作 ${id}。`,
-    quarantineRemaining: (count) => `仍有 ${count} 条无法读取的操作记录。请隔离下一条记录后继续恢复。`,
+    quarantineRemaining: (count) => count === 1
+      ? "仍有 1 条无法读取的操作记录。请先隔离这条记录再恢复应用；原始字节仍保存在回滚历史中。"
+      : `仍有 ${count} 条无法读取的操作记录。请隔离下一条记录后继续恢复。`,
     retire: (id) => `重建应用前，请将已停止的操作 ${id} 归档为历史。其外部变更不会被认证或撤销。`,
     resumeOperation: (id) => `已停止的操作：\n${id}`,
     resumeQuestion: "要继续，请输入上方完整的操作 ID；按 Enter 取消：",
     cancelled: "已取消恢复，未更改文件。",
     operationMismatch: "操作 ID 不匹配，未更改文件。",
-    failure: (id, phase, path, code) => `应用恢复在${({ prepare: "准备", write: "写入文件", verify: "验证结果", finalize: "完成处理" })[phase]}阶段失败 (${code})。${path ? `\n${path}` : ""}\n部分文件更改可能已应用。请保留操作 ${id} 的记录。`,
+    failure: (id, phase, path, code) => `应用恢复在${({ prepare: "准备", write: "写入文件", verify: "验证结果", finalize: "完成处理" })[phase]}阶段失败 (${code})。${path ? `\n${path}` : ""}\n部分文件更改可能已应用。请保留以下操作记录：\n${id}`,
   },
   persona: {
     defaults: role("我", "你", "请求任务协助的用户。", "协助完成所请求任务的通用助手。"),
@@ -173,6 +177,7 @@ const messages: Messages = {
     noteChars: (count) => `备注 ${count} 字符`,
     descriptionOverCap: (field, given, cap) => `${field}：${given} 字符 · 上限 ${cap}`,
     descriptionChars: (field, count) => `${field === "user" ? "用户背景" : "虚构代理角色"} · ${count} 字符`,
+    charCount: (count) => `${count} 字符`,
     descriptionCounts: (user, agent, cap) => `角色 · 用户 ${user}/${cap} · 代理 ${agent}/${cap}`,
     descriptionFull: (field, value) => `${field === "user" ? "用户背景" : field === "agent" ? "虚构代理角色" : "补充语气与角色"}：${value}`,
   },
@@ -245,29 +250,34 @@ const messages: Messages = {
     stateRoot: "共享 ToneDial 状态：",
     planHeading: "检查变更",
     nativeHeading: "连接代理",
-    actionLabel: { file: "文件", "entry-rebuild": "重建", skill: "技能", "case-rename": "重命名" },
-    codexTrust: (global) => `${global ? "" : "请先在 Codex 中信任此项目。\n"}Codex：/hooks → SessionStart → ToneDial。检查命令并启用钩子。`,
+    actionLabel: { file: "文件", "entry-rebuild": "重建条目", skill: "技能链接", "case-rename": "重命名条目" },
+    actionState: { created: (label) => `（新${label}）`, removed: (label) => `（移除${label}）`, updated: (label) => `（更新${label}）`, plain: (label) => `（${label}）` },
+    newFiles: (count) => `（${count} 个新文件）`,
+    codexTrust: (global) => global
+      ? "在 Codex 的 /hooks → SessionStart → ToneDial 中检查命令并启用钩子。"
+      : "请先在 Codex 中信任此项目，然后在 /hooks → SessionStart → ToneDial 中检查命令并启用钩子。",
     codexOpen: "现在打开 Codex 吗？",
     codexOpenSteps:
       "Codex 将在此终端打开。按上述步骤启用钩子，退出后返回。",
-    claudeTrust: (global) => `${global ? "" : "请先在 Claude Code 中信任此项目。\n"}Claude Code：交互式会话只在受信任的文件夹中运行钩子。/hooks → SessionStart 可查看 ToneDial 命令。`,
+    claudeTrust: (global) => global
+      ? "Claude Code 交互式会话只在受信任的文件夹中运行钩子。/hooks → SessionStart 可查看 ToneDial 命令。"
+      : "请在 Claude Code 中信任此项目；交互式会话只在受信任的文件夹中运行钩子。/hooks → SessionStart 可查看 ToneDial 命令。",
     claudeOpen: "现在在这个项目中打开 Claude Code 吗？",
     claudeOpenSteps: "Claude Code 将在此终端打开。如果它询问是否信任此文件夹，请在那里回答，退出后即可返回。",
     scopeHere: "连接范围：项目",
-    alreadyMatch: (tools) => `${tools}：已匹配，无变更`,
+    alreadyMatch: (tools) => `${tools}：已是最新，无变更`,
     alreadyDisconnected: (tools) => `${tools}：已断开，无变更`,
     dryRun: "--dry-run · 未写入任何内容",
     declined: "已取消 · 未写入任何内容",
-    wroteInto: (tools) => `${tools} 连接已配置`,
     disconnected: (tools) => `${tools} 连接已断开`,
     noArtifact: "没有可连接的 tone.md，请先运行 tonedial compile",
     unknownTool: (given, tools) => `${given}：不支持的工具。可选：${tools.join(", ")}`,
     noneInstalled: (tools, root) =>
       `搜索根目录：${root}\n未找到 ${tools.join(", ")}。仍可指定工具名称进行连接。`,
     removed: "已断开",
-    stateKept: (root) => `已保留预设和设置。\n${root}`,
+    stateKept: (root) => `预设和设置仍保留在：\n${root}`,
     deleteYourself: "如需同时删除状态，请自行删除此目录",
-    nothingWired: "无连接 · 无需断开",
+    nothingWired: "此范围内无连接 · 无需断开",
     damaged: (path, reason) => `${path}：${reason}。请移除多余标记后重新运行 eject。`,
     needsApproval:
       "文件变更需要批准。请在终端运行，或先用 --dry-run 检查，再用 --auto 重新运行。",
@@ -301,17 +311,19 @@ const messages: Messages = {
     toneNotWritten: "未写入",
     toneDisagrees: "与 config.json 不同 · 可能被直接编辑或写入中断",
     seedsHeading: "内置文件",
+    checkHeading: { context: "上下文文件", reader: "读取器", pathLine: "Shell PATH 行", onPath: "PATH 中的 tonedial", install: "安装方式", claudeContext: "Claude Code 上下文", skills: "技能", skill: (label) => `${label} 技能` },
+    fullDetails: "查看完整详情：",
     seedsOk: (version) => `版本 ${version}`,
     seedsNotRun: "无内置文件 · 尚未在此运行 init",
     seedsAttention: "内置文件需要处理",
     recoveryPending: "有操作正在运行或需要恢复。本次执行未更改文件。",
     invalidRecoveryPending: "无法读取的操作历史阻止了恢复。本次执行未更改文件。",
-    resumeOperation: "继续应用恢复：",
+    resumeOperation: "要继续恢复应用：",
     contextCurrent: "AGENTS.md 与 TONE.md 布局已是最新。",
     contextRepair: "受管理的上下文文件需要修复，请检查指南和语气文件诊断。",
     contextSize: (guide, total) => total === null
-      ? `指南 ${guide} 字符 · 无法获取完整内容`
-      : `指南 ${guide} 字符 · 有序完整内容 ${total}`,
+      ? `指南 ${guide.toLocaleString("en")} 字符 · 无法获取合计大小`
+      : `指南 ${guide.toLocaleString("en")} 字符 · 指南 + TONE.md ${total.toLocaleString("en")} 字符`,
     guideFormat: {
       missing: "缺少指南 · 创建前请检查设置",
       unsupported: "不支持的指南格式。请保留文件并检查内置文件诊断。",
@@ -328,7 +340,7 @@ const messages: Messages = {
       changed: "检查时读取程序或设置发生变化，请等修改结束后重试。",
       probe: "受控探测失败。请检查 Node 和临时目录访问权限，再运行 doctor。",
     },
-    operationState: { pending: "待处理", complete: "已完成", "rolled-back": "已恢复", "retired-for-app-rebuild": "已归档以供重建", quarantined: "已隔离", invalid: "无效记录" },
+    operationState: { pending: "待处理", complete: "已完成", "rolled-back": "已回滚", "retired-for-app-rebuild": "已归档以供重建", quarantined: "已隔离", invalid: "无效记录" },
     rollbackStatus: {
       ready: "批准后将恢复所选操作。",
       busy: "操作仍在运行，请等待其所有者完成。",
@@ -360,7 +372,7 @@ const messages: Messages = {
       disabled: "已注册设置文件中的钩子已禁用",
       unknown: "已注册设置文件中的钩子启用状态未知",
     },
-    hookSettingScope: "仅读取所检查的设置文件；主机覆盖项和会话注入尚未验证。",
+    hookSettingScope: "以上钩子状态仅基于所检查的设置文件；主机覆盖项和会话注入尚未验证。",
     hookGroupHeading: "代理钩子",
     hookGroupUnknown: (tools) => `未连接：${tools.join(", ")}`,
     hookNotConnected: "没有可检查的受管理钩子。要连接，请在同一范围运行 init 并选择此代理。",
@@ -401,11 +413,11 @@ const messages: Messages = {
     installShape: (shape, update) => `${shape} · 更新：${update}`,
     commandOnPath: (path) => `已找到 · ${path}`,
     commandNotOnPath:
-      "PATH 中没有 tonedial，技能和后备指令均无法运行。" +
-      "请打开新 shell；若仍未找到，运行 tonedial doctor --fix。",
+      "PATH 中没有 tonedial，技能和 TONE.md 中的后备指令均无法运行它。" +
+      "请打开新 shell；若仍未找到，请运行下方的修复命令。",
     commandNotOnPathNpm:
-      "PATH 中没有 tonedial，技能和后备指令均无法运行。" +
-      "运行 npm prefix -g 查找全局前缀，\n再将其 bin 目录（macOS/Linux）加入 PATH。",
+      "PATH 中没有 tonedial，技能和 TONE.md 中的后备指令均无法运行它。\n" +
+      "查找全局前缀：\nnpm prefix -g\n再将其 bin 目录加入 PATH（macOS/Linux）。",
   },
   notice: {
     riskIntro:
@@ -579,7 +591,9 @@ const messages: Messages = {
     toolsPrompt: "要连接的代理（逗号分隔）： ",
     ownershipConflict: (path) => `所有权未知，或受管理内容、文件类型已变化：\n${path}\n已保留文件。更改连接前请先检查。`,
     rollbackNeedsFix: "请将 --rollback 与 doctor --fix 及 doctor 报告的操作 ID 一起使用。",
-    editNotApplied: (path, reason) => `编辑未应用：${reason}\n已保留编辑副本：\n${path}`,
+    editNotApplied: (path, reason) => `${reason}\n未应用任何更改。已保留编辑副本：\n${path}`,
+    editSavedInvalid: "编辑内容已按原样保存；修复文件之前，ToneDial 无法读取这些设置。检查与修复：\ntonedial doctor",
+    editSavedInvalidPreset: (slug) => `编辑内容已按原样保存；修复之前无法使用此预设：\ntonedial edit preset ${slug}`,
     stateOverlap: (path) => `项目导出与共享 ToneDial 状态重叠：\n${path}\n未写入任何内容。请选择独立状态目录或项目。`,
     stateInstructionOverlap: (path) => `ToneDial 状态与代理指令根目录重叠：\n${path}\n未写入任何内容。运行 init 前请选择专用状态目录。`,
     legacyConsumers: (destinations) => `其他或未记录连接仍读取 tone.md：\n${destinations.join("\n")}\n未写入任何内容。请在每个范围断开后重试 init，迁移后再重新连接。`,
@@ -625,7 +639,7 @@ const messages: Messages = {
     safewordQuote: "安全词不能含双引号，否则会提前结束 tone.md 中的句子",
     safewordBlank: "安全词为空白，未设置时请使用 null",
     wiringLost:
-      "连接记录已变化或无法验证，因此编辑未应用。已保留现有设置。" +
+      "连接记录已变化或无法验证。" +
       "移除连接请使用指定范围的 unwire/eject；迁移和恢复请使用 init/doctor --fix。",
     importNeedsPath: "import 需要预设 JSON 路径或 https URL",
     remoteSource: "远程来源",

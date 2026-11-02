@@ -259,7 +259,7 @@ test("disconnect receipts report removal and no-op separately while retaining sh
   assert.equal(existsSync(hook), true);
   out = [];
   assert.equal(await cli("unwire", "claude", "--here"), 0, err.join(""));
-  assert.match(collapsed(stdout()), /Claude Code connections disconnected/);
+  assert.match(collapsed(stdout()), /Claude Code disconnected/);
   assert.equal(existsSync(hook), false);
   const retained = readFileSync(join(home, "config.json"));
   out = [];
@@ -476,7 +476,7 @@ test("legacy eject keeps the state root, and says where it is", async () => {
   assert.equal(await cli("eject", "--here"), 0);
   assert.ok(existsSync(join(home, "config.json")), "presets and settings survive");
   assert.ok(existsSync(join(home, "tone.md")));
-  assert.match(stdout(), /Presets and settings kept\./);
+  assert.match(stdout(), /Presets and settings stay in:/);
   assert.ok(stdout().split("\n").includes(`  ${home}`), "the retained root stays complete and copyable");
 });
 

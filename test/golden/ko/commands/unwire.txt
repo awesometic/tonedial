@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=586; endsWithNewline=true]
+--- stdout --- [bytes=597; endsWithNewline=true]
 ToneDial · unwire
 
   연결 범위: 프로젝트
@@ -9,14 +9,14 @@ ToneDial · unwire
   변경 항목 3개
 
   <ROOT>/project/.codex/hooks.json
-  (수정)  +0 -41
+  (삭제)  41줄
   - {
   -   "description": "ToneDial: load saved response tone",
   -   "hooks": {
   -     "SessionStart": [
 
-  - 스킬
-    <ROOT>/project/.agents/skills/tonedial
+  <ROOT>/project/.agents/skills/tonedial
+  (스킬 링크 삭제)
 
   <ROOT>/state/config.json
   (수정)  +2 -106

@@ -43,6 +43,7 @@ export function recoveryRollbackLines(t: Messages, appId: unknown, nativeId: unk
 import type { AgentTool } from "../core/paths.ts";
 import { isAbsolute } from "node:path";
 import { wrap } from "./width.ts";
+import { TARGETS } from "../wiring/targets.ts";
 
 /** Display values cannot add terminal commands or rows; storage and JSON retain the original. */
 export function humanText(value: string): string {
@@ -68,7 +69,13 @@ export function receiptLines(text: string, width: number): string[] {
     isCopyableLine(line) ? [line] : wrap(line, width));
 }
 
-/** Configuration receipts never claim that a host has activated the installed hook. */
+/**
+ * Configuration receipts never claim that a host has activated the installed hook.
+ *
+ * One group per host: its status and file, any duplicate it doubles, then that host's own
+ * review step. Groups are separated by an empty message, which callers print as a blank line.
+ * `guidance: false` leaves the review steps to a report that follows with its own per-host copy.
+ */
 export function nativeSetup(
   t: Messages,
   routes: readonly {
@@ -78,21 +85,24 @@ export function nativeSetup(
     duplicates?: readonly { destination: string; state: "duplicate" | "stale-duplicate" }[];
   }[],
   global: boolean,
+  guidance = true,
 ): string[] {
-  if (!routes.length) return [];
-  const lines = routes.map(({ tool, path, inherited }) => inherited
-    ? t.wiring.hookInherited(tool, humanText(path)) : t.wiring.hookConfigured(tool, humanText(path)));
-  // A project wired earlier keeps delivering after this one. Reported next to the route it
-  // doubles, with the scope that owns it, because clearing it is that scope's decision.
-  for (const { tool, duplicates } of routes) {
+  const groups = routes.map(({ tool, path, inherited, duplicates }) => {
+    const label = TARGETS[tool].label;
+    const lines = [inherited ? t.wiring.hookInherited(label, humanText(path)) : t.wiring.hookConfigured(label, humanText(path))];
+    // A project wired earlier keeps delivering after this one. Reported next to the route it
+    // doubles, with the scope that owns it, because clearing it is that scope's decision.
     for (const { destination, state } of duplicates ?? []) {
       lines.push(t.wiring.hookDuplicate(tool, humanText(destination), state === "stale-duplicate"));
     }
-  }
-  const codex = routes.find(({ tool }) => tool === "codex");
-  if (codex) lines.push(t.wiring.codexTrust(global || codex.inherited));
-  if (routes.some(({ tool }) => tool === "claude")) lines.push(t.wiring.claudeTrust(global));
-  return lines;
+    if (guidance) {
+      if (tool === "codex") lines.push(t.wiring.codexTrust(global || inherited));
+      else if (tool === "claude") lines.push(t.wiring.claudeTrust(global));
+      else lines.push(t.doctor.hookGuidance[tool]);
+    }
+    return lines;
+  });
+  return groups.flatMap((lines, index) => index === 0 ? lines : ["", ...lines]);
 }
 
 /**

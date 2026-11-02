@@ -639,15 +639,14 @@ export async function runDoctor(ctx: Ctx, _args: string[]): Promise<CommandResul
   };
   const native = await runRebuildNative(ctx, app.legacy);
   const rollbackLines = recoveryRollbackLines(ctx.t, app.json.operationId, native.json.operationId);
-  const codexSetup = Array.isArray(native.json.tools) && native.json.tools.some(route =>
-    typeof route === "object" && route !== null && route.tool === "codex" && route.configuration === "configured");
-  const report = await doctorReport(ctx, rollbackLines.length === 0, !codexSetup);
+  const report = await doctorReport(ctx, rollbackLines.length === 0);
   return {
     lines: [
       ...app.lines,
       ...native.lines,
       ...((app.lines.length || native.lines.length) && report.lines.length ? [""] : []),
       ...report.lines,
+      ...(report.lines.length && rollbackLines.length ? [""] : []),
       ...rollbackLines,
     ],
     json: {
@@ -674,13 +673,11 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true, showCodexActi
     const blocking = inspected.journals.filter(({ state }) => state === "pending" || state === "invalid");
     const invalid = blocking.filter(({ state }) => state === "invalid");
     const quarantineable = inspected.lock.state === "none" && blocking.length === invalid.length && invalid.length > 0;
-    const singleQuarantine = quarantineable && invalid.length === 1;
     const shown = ctx.flags.verbose ? inspected.journals : inspected.journals.filter(({ operationId, state }) =>
       state === "pending" || state === "invalid" || operationId === owner?.operationId);
     const lines = [
       ...wrap(quarantineable ? ctx.t.doctor.invalidRecoveryPending : ctx.t.doctor.recoveryPending, ctx.ui.width - 2).map(line => `  ${ctx.ui.warn(line)}`),
-      ...shown.filter(({ operationId }) => !singleQuarantine || operationId !== invalid[0]!.operationId)
-        .map(({ operationId, state }) => `  ${operationId}  ${ctx.t.doctor.operationState[state]}`),
+      ...shown.map(({ operationId, state }) => `  ${operationId}  ${ctx.t.doctor.operationState[state]}`),
     ];
     if (owner !== null && !shown.some(({ operationId }) => operationId === owner.operationId)) lines.push(`  ${owner.operationId}`);
     if (inspected.lock.state === "live" || inspected.lock.state === "unknown" || inspected.lock.state === "invalid") {
@@ -700,12 +697,10 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true, showCodexActi
       }
     }
     if (quarantineable) {
-      lines.push("", ...(singleQuarantine
-        ? wrap(ctx.t.recovery.quarantineCandidate(invalid[0]!.operationId), ctx.ui.width - 2)
-        : wrap(ctx.t.recovery.quarantineRemaining(invalid.length), ctx.ui.width - 2)).map(line => `  ${line}`),
+      lines.push("", ...wrap(ctx.t.recovery.quarantineRemaining(invalid.length), ctx.ui.width - 2).map(line => `  ${line}`),
         ...nextStep(repairCommand(ctx, `doctor --fix --quarantine-operation ${invalid[0]!.operationId}`), ctx.ui).slice(1));
     } else {
-      lines.push(...nextStep(`${repairCommand(ctx, "doctor")} --json`, ctx.ui));
+      lines.push("", `  ${ctx.t.doctor.fullDetails}`, ...nextStep(`${repairCommand(ctx, "doctor")} --json`, ctx.ui).slice(1));
     }
     return {
       lines,
@@ -820,8 +815,9 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true, showCodexActi
         ? ctx.t.doctor.hookNeedsInspection
       : setting.tool === "codex" && !showCodexAction ? ""
       : ctx.t.doctor.hookGuidance[setting.tool];
-    check.humanDetail = [ctx.t.doctor.hookSettingState[setting.state],
-      ...(check.humanDetail ?? [check.detail]),
+    const detail = check.humanDetail ?? [check.detail];
+    const state = ctx.t.doctor.hookSettingState[setting.state];
+    check.humanDetail = [...(check.state === "problem" ? [...detail, state] : [state, ...detail]),
       ...(guidance === "" ? [] : [guidance])];
   }
 
@@ -892,10 +888,10 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true, showCodexActi
       ...section(ctx.t.doctor.connectionsHeading, ctx.ui),
       ...wrap(ctx.t.doctor.connectionHealth(nativeAttention), ctx.ui.width - 2).map((line) =>
         `  ${nativeAttention ? ctx.ui.warn(line) : line}`),
-      ...wrap(ctx.t.doctor.hookSettingScope, ctx.ui.width - 2).map(line => `  ${line}`),
     ] : []),
     ...section(ctx.t.doctor.checksHeading, ctx.ui),
-    ...renderCheckBlocks(shownChecks, ctx.flags.verbose ? [] : hookSettings, integrations, ctx),
+    ...renderCheckBlocks(shownChecks, ctx.flags.verbose ? [] : hookSettings, integrations, ctx,
+      integrations.length || nativeAttention ? wrap(ctx.t.doctor.hookSettingScope, ctx.ui.width - 2).map(line => `  ${ctx.ui.dim(line)}`) : []),
     // A repair receipt presents its new IDs once in native→app order. Standalone diagnosis
     // still lists available historical rollback commands.
     ...(showRollbackCommands ? inspected.journals.flatMap(({ operationId, state, journal }) =>
@@ -1275,7 +1271,7 @@ function elsewhereReport(rows: Elsewhere[], ctx: Ctx): string[] {
 function report(check: Check, ctx: Ctx): string[] {
   const paint =
     check.state === "problem" ? ctx.ui.error : check.state === "ok" ? ctx.ui.success : ctx.ui.dim;
-  const head = `  ${paint(MARK[check.state])} ${ctx.ui.bold(humanText(check.name === "seeds" ? ctx.t.doctor.seedsHeading : check.name))}`;
+  const head = `  ${paint(MARK[check.state])} ${ctx.ui.bold(humanText(checkHeading(check.name, ctx)))}`;
   // Keep the marker and check name together, then give every detail a stable four-cell hanging
   // indent. A fixed name column made a narrow doctor report spend most of its width on padding.
   const body = (check.files?.length ? [] : check.humanDetail ?? [check.detail]).flatMap(detail => detail.split("\n"))
@@ -1292,8 +1288,56 @@ function report(check: Check, ctx: Ctx): string[] {
       }
     }
   }
-  if (check.repair) lines.push(...nextStep(check.repair, ctx.ui));
+  // Inside the block it repairs, not at the section margin where it read as a separate step.
+  if (check.repair) lines.push(`    ${ctx.ui.accent(humanText(check.repair))}`);
   return lines;
+}
+
+const SKILL_SUFFIX = " skill";
+
+function skillTool(name: string): AgentTool | undefined {
+  return name.endsWith(SKILL_SUFFIX) ? AGENT_TOOLS.find((tool) => `${TARGETS[tool].label}${SKILL_SUFFIX}` === name) : undefined;
+}
+
+function checkHeading(name: string, ctx: Ctx): string {
+  const heading = ctx.t.doctor.checkHeading;
+  const skill = skillTool(name);
+  if (skill !== undefined) return heading.skill(TARGETS[skill].label);
+  switch (name) {
+    case "seeds": return ctx.t.doctor.seedsHeading;
+    case "context": return heading.context;
+    case "reader": return heading.reader;
+    case "PATH line": return heading.pathLine;
+    case "tonedial on PATH": return heading.onPath;
+    case "install": return heading.install;
+    case "Claude Code context": return heading.claudeContext;
+    default: return name;
+  }
+}
+
+/** Consecutive skill checks with one state and detail read as one row listing their hosts. */
+function groupSkillChecks(checks: readonly Check[], ctx: Ctx): Check[] {
+  const out: Check[] = [];
+  let run: Check[] = [];
+  const flush = () => {
+    if (run.length > 1) {
+      out.push({ name: "skills", state: run[0]!.state,
+        detail: `${run[0]!.detail} · ${run.map((check) => TARGETS[skillTool(check.name)!].label).join(", ")}` });
+    } else out.push(...run);
+    run = [];
+  };
+  for (const check of checks) {
+    const groupable = skillTool(check.name) !== undefined && check.repair === undefined && !check.files?.length && check.humanDetail === undefined;
+    if (groupable && run.length && run[0]!.state === check.state && run[0]!.detail === check.detail) {
+      run.push(check);
+      continue;
+    }
+    flush();
+    if (groupable) run.push(check);
+    else out.push(check);
+  }
+  flush();
+  return out.map((check) => check.name === "skills" ? { ...check, name: ctx.t.doctor.checkHeading.skills } : check);
 }
 
 /** Render the human report without changing the individual machine checks. */
@@ -1302,6 +1346,7 @@ function renderCheckBlocks(
   settings: readonly HookSetting[],
   integrations: readonly NativeIntegration[],
   ctx: Ctx,
+  hookCaveat: string[] = [],
 ): string[] {
   const unconnected = settings.filter((setting) => {
     const check = checks.find(({ name }) => name === TARGETS[setting.tool].label);
@@ -1310,17 +1355,23 @@ function renderCheckBlocks(
       (check.state === "absent" || check.detail === ctx.t.doctor.hookNotConnected) && check.repair === undefined;
   });
   const unconnectedNames = new Set(unconnected.map(({ tool }) => TARGETS[tool].label));
-  const lastAgentIndex = checks.findLastIndex((check) => settings.some(({ tool }) => TARGETS[tool].label === check.name));
+  const grouped = groupSkillChecks(checks, ctx);
+  const lastAgentIndex = grouped.findLastIndex((check) => settings.some(({ tool }) => TARGETS[tool].label === check.name));
+  const lastHostIndex = grouped.findLastIndex((check) => AGENT_TOOLS.some((tool) =>
+    TARGETS[tool].label === check.name && integrations.some((integration) => integration.tool === tool)));
   const blocks: string[][] = [];
-  for (let index = 0; index < checks.length; index++) {
-    const check = checks[index]!;
+  for (let index = 0; index < grouped.length; index++) {
+    const check = grouped[index]!;
     if (!unconnectedNames.has(check.name)) {
       blocks.push(report(check, ctx));
     }
+    if (index === lastHostIndex && hookCaveat.length) blocks.push(hookCaveat);
     if (index === lastAgentIndex && unconnected.length) {
       blocks.push(unconnectedReport(unconnected, ctx));
     }
   }
+  // No connected host block to sit under: keep the caveat with the connection status.
+  if (lastHostIndex < 0 && hookCaveat.length) blocks.unshift(hookCaveat);
   return blocks.flatMap((block, index) => index === 0 ? block : ["", ...block]);
 }
 

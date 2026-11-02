@@ -1,10 +1,10 @@
 status: 0
---- stdout --- [bytes=211; endsWithNewline=true]
+--- stdout --- [bytes=136; endsWithNewline=true]
 ToneDial · persona
 
   Settings saved
-  persona.agent  fictional agent role · 151… → fictional agent role · 18 …
-  persona.user   user context · 57 chars → user context · 9 chars
+  persona.agent  151 chars → 18 chars
+  persona.user   57 chars → 9 chars
   TONE.md generated
 --- stderr --- [bytes=0; endsWithNewline=false]
 

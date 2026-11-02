@@ -124,11 +124,13 @@ export async function runEdit(ctx: Ctx, args: string[]): Promise<CommandResult> 
         config = parseConfig(after, ctx.t);
       } catch (cause) {
         await commitRaw(after);
-        throw cause;
+        throw ctx.asJson ? cause : savedInvalid(cause, ctx.t.errors.editSavedInvalid);
       }
       const { change: toneChange, size } = planArtifact(ctx, config);
       await commit([toneChange], [{ ...baseline, after }]);
-      lines.push(`  ${ctx.ui.dim(artifactSize(size, ctx.t))}`);
+      // The same receipt as `set`: the result first, the size only on request.
+      lines.push(`  ${ctx.ui.success(ctx.ui.bold(ctx.t.axis.settingsSaved))}`, `  ${ctx.t.artifact.generated}`,
+        ...(ctx.flags.verbose ? [`  ${ctx.ui.dim(artifactSize(size, ctx.t))}`] : []));
       return {
         lines,
         json: { path: target.path, editor: editor[0], opened: true, changed: true, chars: size.chars },
@@ -148,7 +150,7 @@ export async function runEdit(ctx: Ctx, args: string[]): Promise<CommandResult> 
       preset = parsePreset(after, slug!, ctx.t);
     } catch (cause) {
       await commitRaw(after);
-      throw cause;
+      throw ctx.asJson ? cause : savedInvalid(cause, ctx.t.errors.editSavedInvalidPreset(slug!));
     }
     const edited = (JSON.parse(after) as Record<string, unknown>).slug;
     if (typeof edited === "string" && edited !== slug) {
@@ -227,6 +229,11 @@ export async function runEdit(ctx: Ctx, args: string[]): Promise<CommandResult> 
   }
 }
 
+/** A refused edit that was still saved says so, and how to reopen or diagnose it. */
+function savedInvalid(cause: unknown, notice: string): unknown {
+  return cause instanceof ConfigError ? new ConfigError(`${cause.message}\n${notice}`, { cause }) : cause;
+}
+
 /** The notices every other state-changing command emits, through the same owners they use. */
 function stateWarnings(ctx: Ctx, config: Config, chars: number): string[] {
   return [
@@ -257,6 +264,14 @@ function checkWiringEdit(before: string | null, after: string | null, ctx: Ctx):
     return Object.keys(config.wiring).length === 0 ? emptyWiring() : { schema: config.schema, wiring: config.wiring };
   };
   let unchanged: boolean;
+  try {
+    // Parsed apart from the ownership read: a typo in the edited copy is the user's to fix and
+    // not a connection-record change. Its refusal still keeps the live file untouched.
+    if (after !== null) JSON.parse(after);
+  } catch (cause) {
+    if (!(cause instanceof SyntaxError)) throw cause;
+    throw new ConfigError(ctx.t.preset.notJson(basename(ctx.paths.config), cause.message), { cause });
+  }
   try {
     unchanged = isDeepStrictEqual(read(before), read(after));
   } catch (cause) {

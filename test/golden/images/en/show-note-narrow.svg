@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="876" height="1072" viewBox="0 0 876 1072" role="img" aria-labelledby="title description">
+<svg xmlns="http://www.w3.org/2000/svg" width="876" height="1100" viewBox="0 0 876 1100" role="img" aria-labelledby="title description">
 <title id="title">ToneDial screen (en · show-note-narrow)</title>
 <desc id="description">  ToneDial · show · Caring Brother (unsaved changes)
   TONE.md 4,723 characters
@@ -18,8 +18,9 @@
             bravado      ▮▯▯▯▯  1    1
 
   Settings
-  self name your big brother · user name little sibling ·
-  note 81 chars · roles · user 57/200 · agent 151/200
+  agent calls itself your big brother · calls you little
+  sibling · note 81 chars · roles · user 57/200 · agent
+  151/200
   fictional agent role: A caring older brother who helps
   his sibling through problems. Familiar expressions
   include 'hey, little sibling' and 'your big brother has
@@ -93,21 +94,22 @@
 <text x="480" y="468" fill="#edf3f6" font-weight="400" opacity="1">1</text>
 <text x="550" y="468" fill="#edf3f6" font-weight="400" opacity="1">1</text>
 <text x="60" y="524" fill="#edf3f6" font-weight="400" opacity="1">Settings</text>
-<text x="60" y="552" fill="#edf3f6" font-weight="400" opacity="1">self name your big brother · user name little sibling ·</text>
-<text x="60" y="580" fill="#edf3f6" font-weight="400" opacity="1">note 81 chars · roles · user 57/200 · agent 151/200</text>
-<text x="60" y="608" fill="#edf3f6" font-weight="400" opacity="1">fictional agent role: A caring older brother who helps</text>
-<text x="60" y="636" fill="#edf3f6" font-weight="400" opacity="1">his sibling through problems. Familiar expressions</text>
-<text x="60" y="664" fill="#edf3f6" font-weight="400" opacity="1">include 'hey, little sibling' and 'your big brother has</text>
-<text x="60" y="692" fill="#edf3f6" font-weight="400" opacity="1">your back'.</text>
-<text x="60" y="720" fill="#edf3f6" font-weight="400" opacity="1">user context: A younger sibling sharing problems with an</text>
-<text x="60" y="748" fill="#edf3f6" font-weight="400" opacity="1">older brother.</text>
-<text x="60" y="776" fill="#edf3f6" font-weight="400" opacity="1">persona note: Prefer direct explanations. Preserve</text>
-<text x="60" y="804" fill="#edf3f6" font-weight="400" opacity="1">uncertainty and mention concrete next steps.</text>
-<text x="60" y="832" fill="#edf3f6" font-weight="400" opacity="1">no safeword · register plain (non-honorific) · address</text>
-<text x="60" y="860" fill="#edf3f6" font-weight="400" opacity="1">auto</text>
-<text x="60" y="888" fill="#edf3f6" font-weight="400" opacity="1">Interface en</text>
-<text x="60" y="916" fill="#edf3f6" font-weight="400" opacity="1">Connections: none</text>
-<text x="60" y="972" fill="#edf3f6" font-weight="400" opacity="1">* differs from ToneDial's default · Not saved to a</text>
-<text x="88" y="1000" fill="#edf3f6" font-weight="400" opacity="1">profile.</text>
-<text x="60" y="1028" fill="#edf3f6" font-weight="400" opacity="1">tonedial save "My Tone"</text></g>
+<text x="60" y="552" fill="#edf3f6" font-weight="400" opacity="1">agent calls itself your big brother · calls you little</text>
+<text x="60" y="580" fill="#edf3f6" font-weight="400" opacity="1">sibling · note 81 chars · roles · user 57/200 · agent</text>
+<text x="60" y="608" fill="#edf3f6" font-weight="400" opacity="1">151/200</text>
+<text x="60" y="636" fill="#edf3f6" font-weight="400" opacity="1">fictional agent role: A caring older brother who helps</text>
+<text x="60" y="664" fill="#edf3f6" font-weight="400" opacity="1">his sibling through problems. Familiar expressions</text>
+<text x="60" y="692" fill="#edf3f6" font-weight="400" opacity="1">include 'hey, little sibling' and 'your big brother has</text>
+<text x="60" y="720" fill="#edf3f6" font-weight="400" opacity="1">your back'.</text>
+<text x="60" y="748" fill="#edf3f6" font-weight="400" opacity="1">user context: A younger sibling sharing problems with an</text>
+<text x="60" y="776" fill="#edf3f6" font-weight="400" opacity="1">older brother.</text>
+<text x="60" y="804" fill="#edf3f6" font-weight="400" opacity="1">persona note: Prefer direct explanations. Preserve</text>
+<text x="60" y="832" fill="#edf3f6" font-weight="400" opacity="1">uncertainty and mention concrete next steps.</text>
+<text x="60" y="860" fill="#edf3f6" font-weight="400" opacity="1">no safeword · register plain (non-honorific) · address</text>
+<text x="60" y="888" fill="#edf3f6" font-weight="400" opacity="1">auto</text>
+<text x="60" y="916" fill="#edf3f6" font-weight="400" opacity="1">Interface en</text>
+<text x="60" y="944" fill="#edf3f6" font-weight="400" opacity="1">Connections: none</text>
+<text x="60" y="1000" fill="#edf3f6" font-weight="400" opacity="1">* differs from ToneDial's default · Not saved to a</text>
+<text x="88" y="1028" fill="#edf3f6" font-weight="400" opacity="1">profile.</text>
+<text x="60" y="1056" fill="#edf3f6" font-weight="400" opacity="1">tonedial save "My Tone"</text></g>
 </svg>

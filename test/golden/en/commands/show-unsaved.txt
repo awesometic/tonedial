@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=1282; endsWithNewline=true]
+--- stdout --- [bytes=1291; endsWithNewline=true]
   ToneDial · show · Example (unsaved changes)        TONE.md 4,351 characters
 
                          Current   ToneDial default · ! risky tone
@@ -17,8 +17,8 @@ status: 0
             bravado      ▮▯▯▯▯  1    1
 
   Settings
-  self name your big brother · user name little sibling · roles · user
-  57/200 · agent 151/200
+  agent calls itself your big brother · calls you little sibling · roles ·
+  user 57/200 · agent 151/200
   fictional agent role: A caring older brother who helps his sibling through
   problems. Familiar expressions include 'hey, little sibling' and 'your big
   brother has your back'.

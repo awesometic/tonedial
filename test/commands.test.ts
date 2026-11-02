@@ -893,7 +893,7 @@ test("saving a valid custom preset does not warn about its number of changed axe
 test("slugs are lowercase Latin letters, digits, and dashes", async () => {
   assert.equal(slugify("Tough Love", EN), "tough-love");
   assert.equal(slugify("  My   Operator!  ", EN), "my-operator");
-  assert.throws(() => slugify("한국어만", EN), /no Latin letters or digits/);
+  assert.throws(() => slugify("한국어만", EN), /needs Latin letters or digits/);
 });
 
 test("export and import round-trip full profiles without activating them", async () => {

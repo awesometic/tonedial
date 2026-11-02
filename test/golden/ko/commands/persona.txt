@@ -1,10 +1,10 @@
 status: 0
---- stdout --- [bytes=225; endsWithNewline=true]
+--- stdout --- [bytes=125; endsWithNewline=true]
 ToneDial · persona
 
   설정 저장됨
-  persona.agent  가상 에이전트 역할 · 64자 → 가상 에이전트 역할 · 18자
-  persona.user   사용자 배경 · 22자 → 사용자 배경 · 9자
+  persona.agent  64자 → 18자
+  persona.user   22자 → 9자
   TONE.md 생성됨
 --- stderr --- [bytes=0; endsWithNewline=false]
 

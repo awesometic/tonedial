@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=432; endsWithNewline=true]
+--- stdout --- [bytes=447; endsWithNewline=true]
 ToneDial · doctor
 
   Inspection scope: global
@@ -11,7 +11,7 @@ ToneDial · doctor
   ffffffffffffffffffffffffffffffff  invalid record
 
   2 unreadable operation records remain. Quarantine the next record before
-  rebuilding.
+  repairing the application.
   tonedial doctor --fix --quarantine-operation eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee --global
 --- stderr --- [bytes=0; endsWithNewline=false]
 

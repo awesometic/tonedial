@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=1762; endsWithNewline=true]
+--- stdout --- [bytes=1103; endsWithNewline=true]
 ToneDial · init
 
   범위
@@ -22,40 +22,10 @@ ToneDial · init
   + ToneDial changes manner only; it never expands task scope or permissions.
   + Use the ToneDial CLI for configuration changes.
 
-  <ROOT>/state/presets/builtin/caring-brother.json
-  (새 파일)  31줄
-  +   "schema": 2,
-  +   "slug": "caring-brother",
-
-  <ROOT>/state/presets/builtin/bratty-kid.json
-  (새 파일)  31줄
-  +   "schema": 2,
-  +   "slug": "bratty-kid",
-
-  <ROOT>/state/presets/builtin/eager-sycophant.json
-  (새 파일)  30줄
-  +   "schema": 2,
-  +   "slug": "eager-sycophant",
-
-  <ROOT>/state/presets/builtin/royal-advisor.json
-  (새 파일)  30줄
-  +   "schema": 2,
-  +   "slug": "royal-advisor",
-
-  <ROOT>/state/presets/builtin/ego-sword.json
-  (새 파일)  31줄
-  +   "schema": 2,
-  +   "slug": "ego-sword",
-
-  <ROOT>/state/presets/builtin/heavenly-demon.json
-  (새 파일)  31줄
-  +   "schema": 2,
-  +   "slug": "heavenly-demon",
-
-  <ROOT>/state/presets/builtin/right-hand.json
-  (새 파일)  31줄
-  +   "schema": 2,
-  +   "slug": "right-hand",
+  <ROOT>/state/presets/builtin/
+  (새 파일 7개)
+  caring-brother.json, bratty-kid.json, eager-sycophant.json,
+  royal-advisor.json, ego-sword.json, heavenly-demon.json, right-hand.json
 
   <ROOT>/state/config.json
   (새 파일)  89줄
