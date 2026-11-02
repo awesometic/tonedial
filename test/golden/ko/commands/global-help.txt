@@ -1,6 +1,6 @@
 status: 0
---- stdout --- [bytes=4033; endsWithNewline=true]
-tonedial — 코딩 에이전트의 말투를 한 번 정하고 계속 씁니다
+--- stdout --- [bytes=4053; endsWithNewline=true]
+tonedial — 코딩 에이전트에 캐릭터를 더하고 모든 프로젝트에서 유지합니다
 
 tonedial <command> [options]
 

@@ -481,7 +481,7 @@ const messages: Messages = {
     commandHelp: "命令帮助：tonedial <command> --help",
     fullReference: "完整参考：tonedial --help",
     feedback: "发现问题或有想法？欢迎提交 issue :)\nhttps://github.com/awesometic/tonedial/issues/new/choose",
-    tagline: "一次设置，持续使用代理语气",
+    tagline: "为编程代理赋予角色，并在每个项目中保持",
     footer: "连接命令默认使用全局范围；当前项目用 --here，其他目录用 --project DIR。无人值守写入必须明确指定范围。",
     recoveryOptions: "doctor --fix 的恢复选项：tonedial doctor --help",
     groups: { tone: "语气", presets: "预设库", agents: "连接", upkeep: "维护", flags: "选项" },
@@ -682,7 +682,7 @@ const messages: Messages = {
 export const zh: Catalogue = {
   init: {
     safewordSuggestion: (suggestion) => `预设建议 · ${suggestion}`,
-    welcome: "ToneDial 设置编程代理的语气，并在不同项目间保持一致。",
+    welcome: "ToneDial 为编程代理赋予角色，并在不同项目间保持其语气。",
     scopeHeading: "范围",
     toneHeading: "语气",
     connectionsHeading: "代理",

@@ -481,7 +481,7 @@ const messages: Messages = {
     commandHelp: "コマンド別ヘルプ：tonedial <command> --help",
     fullReference: "全体のリファレンス：tonedial --help",
     feedback: "問題やアイデアがあれば、Issue でお知らせください :)\nhttps://github.com/awesometic/tonedial/issues/new/choose",
-    tagline: "エージェントの口調を一度設定し、使い続ける",
+    tagline: "コーディングエージェントにキャラクターを与え、全プロジェクトで保つ",
     footer: "接続コマンドは、--here（現在のプロジェクト）か --project DIR を指定しない限りグローバル範囲を使います。無人書き込みでは範囲を明示してください。",
     recoveryOptions: "doctor --fix の復旧オプション：tonedial doctor --help",
     groups: { tone: "口調", presets: "プリセットライブラリ", agents: "接続", upkeep: "保守", flags: "オプション" },
@@ -682,7 +682,7 @@ const messages: Messages = {
 export const ja: Catalogue = {
   init: {
     safewordSuggestion: (suggestion) => `プリセットの推奨 · ${suggestion}`,
-    welcome: "ToneDialはエージェントの口調を設定し、プロジェクトをまたいで維持します。",
+    welcome: "ToneDialはコーディングエージェントにキャラクターを与え、その口調をプロジェクトをまたいで維持します。",
     scopeHeading: "範囲",
     toneHeading: "口調",
     connectionsHeading: "エージェント",

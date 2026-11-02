@@ -1126,7 +1126,7 @@ const enMessages: Messages = {
     commandHelp: "Command help: tonedial <command> --help",
     fullReference: "Full reference: tonedial --help",
     feedback: "Found a problem or have an idea? Open an issue :)\nhttps://github.com/awesometic/tonedial/issues/new/choose",
-    tagline: "set a coding agent's manner once and keep using it",
+    tagline: "give your coding agent a character and keep it in every project",
     footer: "Connection commands use the global scope unless you pass --here (current project) or --project DIR. Unattended writes need the scope stated explicitly.",
     recoveryOptions: "Recovery options for doctor --fix: tonedial doctor --help",
     groups: { tone: "Tone", presets: "Preset library", agents: "Connections", upkeep: "Maintenance", flags: "Options" },
@@ -1332,7 +1332,7 @@ const enMessages: Messages = {
 const en: Catalogue = {
   init: {
     safewordSuggestion: (suggestion) => `Preset suggestion · ${suggestion}`,
-    welcome: "ToneDial sets a coding agent's manner and keeps it across projects.",
+    welcome: "ToneDial gives your coding agent a character and keeps its tone across projects.",
     scopeHeading: "Scope",
     toneHeading: "Tone",
     connectionsHeading: "Agents",
@@ -1885,7 +1885,7 @@ const koMessages: Messages = {
     commandHelp: "명령별 도움말: tonedial <command> --help",
     fullReference: "전체 도움말: tonedial --help",
     feedback: "문제를 찾았거나 아이디어가 있으면 이슈로 알려 주세요 :)\nhttps://github.com/awesometic/tonedial/issues/new/choose",
-    tagline: "코딩 에이전트의 말투를 한 번 정하고 계속 씁니다",
+    tagline: "코딩 에이전트에 캐릭터를 더하고 모든 프로젝트에서 유지합니다",
     footer: "연결 명령은 기본적으로 전역 범위를 씁니다. 현재 프로젝트는 --here, 다른 디렉터리는 --project DIR로 선택하세요. 질문 없이 파일을 바꾸려면 범위를 직접 지정해 주세요.",
     recoveryOptions: "doctor --fix 복구 옵션: tonedial doctor --help",
     groups: { tone: "말투", presets: "프리셋 보관함", agents: "연결", upkeep: "관리", flags: "옵션" },
@@ -2092,7 +2092,7 @@ const koMessages: Messages = {
 const ko: Catalogue = {
   init: {
     safewordSuggestion: (suggestion) => `프리셋 제안 · ${suggestion}`,
-    welcome: "ToneDial은 코딩 에이전트의 말투를 정하고 모든 프로젝트에서 유지합니다.",
+    welcome: "ToneDial은 코딩 에이전트에 캐릭터를 더하고, 그 말투를 여러 프로젝트에서 유지합니다.",
     scopeHeading: "범위",
     toneHeading: "말투",
     connectionsHeading: "에이전트",

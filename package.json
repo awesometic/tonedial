@@ -1,7 +1,7 @@
 {
   "name": "tonedial",
   "version": "0.1.10",
-  "description": "Set a coding agent's manner once and keep it across every project.",
+  "description": "Give your coding agent a character. Pick one of 7 profiles or tune 12 tone axes, then connect Claude Code, Codex or Antigravity.",
   "license": "MIT",
   "type": "module",
   "engines": {
@@ -32,13 +32,20 @@
   },
   "keywords": [
     "cli",
+    "claude-code",
     "claude",
     "codex",
+    "codex-cli",
     "antigravity",
-    "agent",
-    "prompt",
+    "coding-agent",
+    "ai-agent",
+    "agent-hooks",
+    "agent-skills",
+    "persona",
+    "character",
     "tone",
-    "personality"
+    "personality",
+    "prompt"
   ],
   "repository": {
     "type": "git",

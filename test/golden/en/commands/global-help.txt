@@ -1,6 +1,6 @@
 status: 0
---- stdout --- [bytes=3555; endsWithNewline=true]
-tonedial — set a coding agent's manner once and keep using it
+--- stdout --- [bytes=3568; endsWithNewline=true]
+tonedial — give your coding agent a character and keep it in every project
 
 tonedial <command> [options]
 

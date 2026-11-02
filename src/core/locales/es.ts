@@ -481,7 +481,7 @@ const messages: Messages = {
     commandHelp: "Ayuda del comando: tonedial <command> --help",
     fullReference: "Referencia completa: tonedial --help",
     feedback: "¿Encontraste un problema o tienes una idea? Abre un issue :)\nhttps://github.com/awesometic/tonedial/issues/new/choose",
-    tagline: "configura una vez el tono de tu agente y sigue usándolo",
+    tagline: "dale un personaje a tu agente y mantenlo en cada proyecto",
     footer: "Los comandos de conexión usan el ámbito global salvo que indiques --here (proyecto actual) o --project DIR. Las escrituras sin interacción requieren indicar el ámbito explícitamente.",
     recoveryOptions: "Opciones de recuperación de doctor --fix: tonedial doctor --help",
     groups: { tone: "Tono", presets: "Biblioteca de preajustes", agents: "Conexiones", upkeep: "Mantenimiento", flags: "Opciones" },
@@ -682,7 +682,7 @@ const messages: Messages = {
 export const es: Catalogue = {
   init: {
     safewordSuggestion: (suggestion) => `Sugerencia del preajuste · ${suggestion}`,
-    welcome: "ToneDial configura el tono de un agente de programación y lo mantiene entre proyectos.",
+    welcome: "ToneDial le da un personaje a tu agente de programación y mantiene su tono entre proyectos.",
     scopeHeading: "Ámbito",
     toneHeading: "Tono",
     connectionsHeading: "Agentes",
