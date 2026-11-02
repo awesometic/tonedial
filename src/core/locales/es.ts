@@ -506,7 +506,7 @@ const messages: Messages = {
       export: "respaldar el perfil con nombres y rol en JSON",
       import: "importar un perfil JSON · use lo aplica",
       wire: "conectar un agente en el ámbito elegido · sin argumentos pregunta",
-      unwire: "desconectar un agente en el ámbito elegido",
+      unwire: "desconectar un agente · sin argumentos, todos",
       doctor: "comprobar conexiones · reparar con --fix",
       update: "actualizar esta instalación",
       eject: "desconectar todos los agentes del ámbito elegido · conservar preajustes",

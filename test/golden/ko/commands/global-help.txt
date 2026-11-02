@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=4053; endsWithNewline=true]
+--- stdout --- [bytes=4057; endsWithNewline=true]
 tonedial — 코딩 에이전트에 캐릭터를 더하고 모든 프로젝트에서 유지합니다
 
 tonedial <command> [options]
@@ -34,7 +34,7 @@ tonedial <command> [options]
 연결
   init                  초기 설정과 기본 파일 갱신
   wire [tool]           선택한 범위에 에이전트 연결 · 인자 없으면 질문
-  unwire [tool]         선택한 범위에서 에이전트 하나 연결 해제
+  unwire [tool]         에이전트 하나 연결 해제 · 인자 없으면 전체
   doctor                연결 점검 · 복구는 --fix
   eject                 선택한 범위의 모든 에이전트 연결 해제 · 프리셋 유지
 

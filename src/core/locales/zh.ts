@@ -506,7 +506,7 @@ const messages: Messages = {
       export: "将含称呼和角色的配置备份为 JSON",
       import: "从 JSON 导入配置 · use 应用",
       wire: "在所选范围连接代理 · 无参数则交互选择",
-      unwire: "在所选范围断开一个代理",
+      unwire: "断开一个代理 · 无参数则全部断开",
       doctor: "检查连接 · --fix 修复",
       update: "更新此安装",
       eject: "断开所选范围内的全部代理 · 保留预设",
