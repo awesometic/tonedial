@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=119; endsWithNewline=true]
+--- stdout --- [bytes=125; endsWithNewline=true]
 ToneDial · use
 
   Ego Sword active
@@ -8,6 +8,6 @@ ToneDial · use
   no safeword
   ! critique · harsh language
 
-  tonedial show
+  tonedial test codex
 --- stderr --- [bytes=0; endsWithNewline=false]
 

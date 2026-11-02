@@ -695,3 +695,27 @@ test("schema-2 preview uses the selected profile's role without exposing it in J
   assert.ok(!prompt.includes(PRIVATE_AGENT));
   assert.deepEqual(snapshot(state), before);
 });
+
+test("a clean preview exit names the step that keeps what was heard", () => {
+  install("codex");
+  const saved = invoke(["codex", "--accept-usage", "--color=never"], true);
+  assert.equal(saved.status, 0, saved.stderr);
+  assert.ok(saved.stdout.endsWith(`native display output\n\n  ${EN.afterConnect}\n  tonedial wire --global\n`), saved.stdout);
+  const preview = invoke(["codex", "--preset", "ego-sword", "--accept-usage", "--color=never"], true);
+  assert.equal(preview.status, 0, preview.stderr);
+  assert.ok(preview.stdout.endsWith(`\n  ${EN.afterPreset}\n  tonedial use ego-sword\n`), preview.stdout);
+  const failed = invoke(["codex", "--accept-usage", "--color=never"], true, { TONEDIAL_TEST_STATUS: "3" });
+  assert.equal(failed.status, 3);
+  assert.ok(failed.stdout.endsWith("native display output\n"), "a failed session gets no follow-up step");
+});
+
+test("a missing provider points at the installed one with the same flags", () => {
+  install("claude");
+  const result = invoke(["codex", "--preset", "ego-sword", "--dry-run"]);
+  assert.equal(result.status, 1);
+  assert.ok(result.stderr.includes(EN.providerUnavailable("Codex", { label: "Claude Code", command: "tonedial test claude --preset ego-sword" })), result.stderr);
+  rmSync(join(bin, "claude"));
+  const none = invoke(["codex", "--dry-run"]);
+  assert.equal(none.status, 1);
+  assert.ok(none.stderr.includes(EN.providerUnavailable("Codex", null)), none.stderr);
+});

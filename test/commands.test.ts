@@ -978,6 +978,9 @@ test("show marks every axis that has moved off its default", async () => {
 
 test("show --explain says in words why all-3 is not neutral", async () => {
   // The legend left the gauge screen because it never changes; it did not stop existing.
+  // Set up first: a fresh root's everyday screen points to init instead.
+  assert.equal(await cli("init", "--here", "--tools", "none", "--auto"), 0, stderr());
+  out = [];
   assert.equal(await cli("show", "--explain"), 0);
   const permissionAxes = EN.artifact.permissionAxes(["profanity", "flattery", "refusal", "bravado"]);
   assert.ok(collapsed(stdout()).includes(collapsed(permissionAxes)));
@@ -1224,6 +1227,8 @@ test("show on a root with nothing in it names the command that works there", asy
   // it gave before is the one that does not.
   assert.equal(await cli("show"), 0, stderr());
   assert.ok(stdout().includes(EN.artifact.notSetUp));
+  assert.ok(stdout().startsWith(`ToneDial · show · (${EN.artifact.notSetUpTitle})`), "a fresh root claims no unsaved changes");
+  assert.equal(stdout().trimEnd().split("\n").at(-1)!.trim(), "tonedial init --tools none --global");
   assert.equal(stdout().includes(EN.artifact.notWritten), false);
   assert.deepEqual(snapshot(paths().root), [], "and reading the state created none of it");
   err = [];
@@ -2146,4 +2151,65 @@ test("a language switch confirms itself in the newly selected language", async (
   out = [];
   assert.equal(await cli("set", "language=en"), 0, err.join(""));
   assert.ok(stdout().includes(EN.axis.settingsSaved));
+});
+
+test("an applied tone with nothing connected leads to a preview, then a connection", async () => {
+  const bin = join(home, "bin");
+  mkdirSync(bin);
+  const withClaude = (...args: string[]) => run(args, { ...commandEnv(), PATH: bin }, join(home, "project"), false, false);
+  const lastLine = () => stdout().trimEnd().split("\n").at(-1)!.trim();
+  assert.equal(await cli("init", "--global", "--tools", "none", "--auto"), 0, stderr());
+  out = [];
+  assert.equal(await cli("use", "bratty-kid"), 0, stderr());
+  assert.equal(lastLine(), "tonedial wire --global", "no provider installed: connect an agent");
+  writeFileSync(join(bin, "claude"), "#!/bin/sh\nexit 0\n", { mode: 0o700 });
+  out = [];
+  assert.equal(await withClaude("use", "ego-sword"), 0, stderr());
+  assert.equal(lastLine(), "tonedial test claude", "an installed provider previews the tone first");
+  out = [];
+  assert.equal(await withClaude("create", "Mine", "--slug", "mine", "--auto"), 0, stderr());
+  assert.equal(lastLine(), "tonedial test claude", "create applies a tone too");
+  out = [];
+  assert.equal(await withClaude("save", "Other"), 0, stderr());
+  assert.equal(lastLine(), "tonedial list", "save changes no tone and keeps its step");
+  assert.equal(await cli("off"), 0, stderr());
+  out = [];
+  assert.equal(await withClaude("use", "bratty-kid"), 0, stderr());
+  assert.equal(lastLine(), "tonedial on", "paused delivery keeps its own step");
+  assert.equal(await cli("on"), 0, stderr());
+  assert.equal(await cli("wire", "codex", "--global", "--auto"), 0, stderr());
+  out = [];
+  assert.equal(await withClaude("use", "bratty-kid"), 0, stderr());
+  assert.equal(lastLine(), "tonedial show", "a connected tone keeps the current step");
+});
+
+test("doctor groups a fresh root's one cause and names pause and connection steps", async () => {
+  assert.equal(await cli("doctor", "--global"), 0, stderr());
+  assert.doesNotMatch(stdout(), /! (AGENTS|TONE)\.md/, "a missing guide and artifact restate the setup check");
+  assert.match(stdout(), /tonedial init --tools none --global/);
+  out = [];
+  assert.equal(await cli("doctor", "--global", "--json"), 0, stderr());
+  const names = JSON.parse(stdout()).checks.map((check: { name: string }) => check.name);
+  assert.ok(names.includes("AGENTS.md") && names.includes("TONE.md"), "JSON keeps every check");
+  assert.equal(await cli("init", "--global", "--tools", "none", "--auto"), 0, stderr());
+  out = [];
+  assert.equal(await cli("doctor", "--global"), 0, stderr());
+  assert.equal(stdout().trimEnd().split("\n").at(-1)!.trim(), "tonedial wire --global");
+  assert.equal(stdout().includes(EN.delivery.offNotice), false);
+  assert.equal(await cli("off"), 0, stderr());
+  out = [];
+  assert.equal(await cli("doctor", "--global"), 0, stderr());
+  assert.ok(collapsed(stdout()).includes(collapsed(EN.delivery.offNotice)), "a paused setup says so under its health");
+  assert.doesNotMatch(stdout(), /tonedial wire/, "the pause comes first");
+});
+
+test("wire without an agent outside a terminal gives a runnable example", async () => {
+  assert.equal(await cli("init", "--global", "--tools", "none", "--auto"), 0, stderr());
+  err = [];
+  assert.equal(await cli("wire"), 1);
+  assert.ok(stderr().includes(EN.errors.wireToolsRequired("tonedial wire codex --global", false)), stderr());
+  assert.doesNotMatch(stderr(), /--auto/, "the --auto rule appears only when --auto was passed");
+  err = [];
+  assert.equal(await cli("wire", "--global", "--auto"), 1);
+  assert.ok(stderr().includes(EN.errors.wireToolsRequired("tonedial wire codex --global", true)), stderr());
 });

@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=1193; endsWithNewline=true]
+--- stdout --- [bytes=1199; endsWithNewline=true]
 ToneDial · create
 
   Profile to save · Example (example)
@@ -40,6 +40,6 @@ ToneDial · create
   Example  7 non-default axes
   TONE.md generated
 
-  tonedial list
+  tonedial test codex
 --- stderr --- [bytes=0; endsWithNewline=false]
 

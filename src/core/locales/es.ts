@@ -6,12 +6,13 @@ const role = (self_ref: string, user_ref: string, user: string, agent: string): 
 
 const messages: Messages = {
   test: {
-    missingConfig: "No hay ajustes de ToneDial guardados. Ejecuta primero tonedial init --tools none.",
+    missingConfig: "ToneDial aún no está configurado. Configúralo y vuelve a ejecutar este comando:\n  tonedial init --tools none --global",
     invalidConfig: "No se pueden leer los ajustes guardados con seguridad. Ejecuta tonedial doctor --json antes de elegir cómo recuperarlos.",
     unsupportedProvider: (provider) => `${provider}: la vista previa de conversación admite claude o codex.`,
     noProvider: "No se encontró Claude Code ni Codex en PATH.",
     providerRequired: "Elige un proveedor: tonedial test claude o tonedial test codex.",
-    providerUnavailable: (provider) => `No se encontró ${provider} en PATH.`,
+    providerUnavailable: (provider, alternative) => `No se encontró ${provider} en PATH.` +
+      (alternative ? ` ${alternative.label} está disponible:\n  ${alternative.command}` : ""),
     targetUnavailable: (path) => `La carpeta de prueba no está disponible o no es un directorio:\n${path}\nElige una carpeta existente con --project DIR.`,
     terminalRequired: "La conversación de prueba necesita un terminal interactivo. Usa --dry-run o --json para revisar el plan de inicio.",
     chooseProvider: "Elige proveedor: 1 Claude Code, 2 Codex [1]: ",
@@ -30,6 +31,8 @@ const messages: Messages = {
     history: "El proveedor puede guardar esta conversación en su historial.",
     launchFailed: (provider) => `No se pudo iniciar ${provider}. Comprueba su instalación y vuelve a intentarlo.`,
     selectionCancelled: "No se eligió ningún proveedor.",
+    afterPreset: "Para aplicar este preajuste:",
+    afterConnect: "Para llevar este tono a conversaciones nuevas, conecta un agente:",
   },
   delivery: {
     on: "ToneDial activado · entrega del tono reanudada",
@@ -52,7 +55,7 @@ const messages: Messages = {
     settingsSaved: "Ajustes guardados",
     settingsUnchanged: "Ajustes sin cambios",
     needsPair: (given) => `${given}: se esperaba <key>=<value>, por ejemplo warmth=4`,
-    needsArgument: "set necesita al menos un <key>=<value>. Sin argumentos en un terminal, abre el dial",
+    needsArgument: "set necesita al menos un <key>=<value>, por ejemplo: tonedial set warmth=4. En un terminal, tonedial set sin más abre el dial.",
     subagentUnsupported: "Los ejes de subagentes aún no están disponibles. Ajusta los ejes del usuario",
   },
   preset: {
@@ -131,7 +134,7 @@ const messages: Messages = {
     activeChoice: (slug) => `${slug}: elige a qué definición deben apuntar los ejes guardados.`,
     rebuilt: "Aplicación restaurada",
     unchanged: "Archivos de la aplicación al día",
-    nativePending: "Las conexiones nativas necesitan atención aparte; los ajustes y preajustes siguen disponibles.",
+    nativePending: "Las conexiones de agentes necesitan atención aparte; los ajustes y preajustes siguen disponibles.",
     rollback: (id) => `Para restaurar los archivos anteriores:\ntonedial doctor --fix --rollback ${id}`,
     rollbackOrder: "Restaura primero las conexiones y después los archivos de la aplicación:",
     noSnapshot: (id) => `${id}: no hay una instantánea válida para este directorio de estado`,
@@ -205,7 +208,8 @@ const messages: Messages = {
     checkOnly: "--check · no se escribió nada",
     wrote: "escrito",
     notWritten: "Falta TONE.md. Ejecuta tonedial compile",
-    notSetUp: "Sin inicializar. Ejecuta tonedial init",
+    notSetUp: "Aún sin configurar · se muestran los valores predeterminados de ToneDial",
+    notSetUpTitle: "sin configurar",
     movedFromDefault: "difiere del valor predeterminado de ToneDial",
     defaultMarker: "marca un eje distinto del valor predeterminado de ToneDial, no del tono nativo del agente.",
     riskMarker: "! riesgo",
@@ -480,7 +484,7 @@ const messages: Messages = {
     footer: "Los comandos de conexión usan el ámbito global salvo que indiques --here (proyecto actual) o --project DIR. Las escrituras sin interacción requieren indicar el ámbito explícitamente.",
     recoveryOptions: "Opciones de recuperación de doctor --fix: tonedial doctor --help",
     groups: { tone: "Tono", presets: "Biblioteca de preajustes", agents: "Conexiones", upkeep: "Mantenimiento", flags: "Opciones" },
-    firstSteps: "Para empezar: configura, ajusta el tono y luego conecta un agente:",
+    firstSteps: "Para empezar, configura, prueba y ajusta tu tono, y luego conecta un agente:",
     examples: "Ejemplos",
     commands: {
       on: "reanudar la entrega del tono guardado",
@@ -492,7 +496,7 @@ const messages: Messages = {
       persona: "definir roles del agente y usuario · sin argumentos pregunta",
       reset: "restablecer un eje · sin argumentos restablece todos",
       show: "ajustes actuales · con identificador previsualiza un perfil guardado",
-      test: "probar los ajustes o un preajuste en una conversación nueva",
+      test: "probar tu tono o un preajuste en otra conversación",
       save: "guardar el tono actual como perfil",
       create: "crear y aplicar un preajuste · sin argumentos guía la configuración",
       list: "preajustes incluidos y del usuario",
@@ -606,6 +610,8 @@ const messages: Messages = {
     toolsAmbiguous: "Indica un agente posicional o --tools, no ambos.",
     commandsNeedClaude: "--commands requiere claude entre los agentes elegidos.",
     toolsPrompt: "Agentes que conectar (separados por comas): ",
+    wireToolsRequired: (example, auto) => `Elige un agente que conectar, por ejemplo:\n  ${example}\n` +
+      `Agentes: claude, codex, antigravity · varios: --tools codex,claude${auto ? "\n--auto solo aprueba tu selección; elige los agentes explícitamente." : ""}`,
     ownershipConflict: (path) => `Propiedad desconocida, o contenido gestionado o tipo de archivo cambiado:\n${path}\nSe conservó el archivo. Revísalo antes de cambiar la conexión.`,
     rollbackNeedsFix: "Usa --rollback con doctor --fix y un ID de operación indicado por doctor.",
     editNotApplied: (path, reason) => `${reason}\nNo se aplicó nada. Copia editada conservada en:\n${path}`,
@@ -615,7 +621,7 @@ const messages: Messages = {
     stateInstructionOverlap: (path) => `El estado se solapa con la raíz de instrucciones del agente:\n${path}\nNo se escribió nada. Elige un directorio exclusivo antes de init.`,
     legacyConsumers: (destinations) => `Otras conexiones, o conexiones sin registrar, siguen leyendo tone.md:\n${destinations.join("\n")}\nNo se escribió nada. Desconecta cada ámbito antes de repetir init y reconecta tras la transición.`,
     contextLayout: (kind, path, doctorCommand = "tonedial doctor --json") => kind === "fresh"
-      ? `ToneDial no está configurado:\n${path}\nPrepara primero el estado y vuelve a ejecutar este comando:\n  tonedial init --tools none`
+      ? `ToneDial aún no está configurado:\n${path}\nConfigúralo y vuelve a ejecutar este comando:\n  tonedial init --tools none --global`
       : `Esta estructura ${kind} necesita recuperar la aplicación:\n${path}\nNo se escribió nada. Inspecciona el mismo ámbito con:\n${doctorCommand}\nConserva esta raíz y ejecuta tonedial doctor --fix para mantener los ajustes y reconstruir los archivos generados.`,
     unreadableConfigFile: (path) => `No se pueden leer ajustes válidos de:\n${path}\nConserva el original y usa tonedial doctor --fix para elegir un origen guardado o valores predeterminados declarados.`,
     fixUnreadableConfig: (path) => `Los ajustes necesitan un origen de recuperación:\n${path}\nNo se escribió nada. Ejecuta tonedial doctor --fix de forma interactiva o elige --from-operation ID o --from-preset SLUG.`,
@@ -680,6 +686,7 @@ export const es: Catalogue = {
     toneHeading: "Tono",
     connectionsHeading: "Agentes",
     resultHeading: "Listo",
+    refreshHeading: "Actualización",
     preset: "Preajuste inicial (Enter: 1)",
     userRef: 'Tu nombre (Enter: valor del preajuste · cadena vacía: borrar)',
     selfRef: 'Nombre del agente (Enter: valor del preajuste · cadena vacía: borrar)',

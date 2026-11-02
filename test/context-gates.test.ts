@@ -41,7 +41,7 @@ test("fresh mutations require approved init without creating state", async () =>
   for (const args of mutations) {
     const result = await invoke(args);
     assert.equal(result.code, 1, args.join(" "));
-    assert.match(result.value.error, /has not been set up:\n[^\n]+\nSet up state first, then rerun this command:\n  tonedial init --tools none$/);
+    assert.match(result.value.error, /is not set up yet:\n[^\n]+\nSet it up, then rerun this command:\n  tonedial init --tools none --global$/);
     assert.deepEqual(readdirSync(scratch), []);
   }
 });

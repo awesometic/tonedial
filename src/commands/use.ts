@@ -10,6 +10,7 @@ import { exportAliasesState, projectTonePath } from "../core/paths.ts";
 import { check as checkCombos } from "../core/combos.ts";
 import { withPreset, assertPresetSelection, inspectPresetLibrary, resolvePreset } from "../core/presets.ts";
 import { applyPlanned, contextCapWarnings, planArtifact, planConfig } from "./compile.ts";
+import { activationStep } from "./test.ts";
 import { planChange, rawReadCheck } from "../wiring/apply.ts";
 import { artifactSize, combination, humanText, nextStep, offNotice } from "../ui/format.ts";
 import { truncate, wrap } from "../ui/width.ts";
@@ -90,7 +91,7 @@ export async function runUse(ctx: Ctx, args: string[]): Promise<CommandResult> {
     "",
     ...notices.flatMap((n) => wrap(humanText(n), ui.width - 2).map((folded) => `  ${n === notice.riskAxes ? ui.risk(folded) : folded}`)),
     ...project,
-    ...(config.enabled ? nextStep("tonedial show", ui) : offNotice(false, ctx.t, ui)),
+    ...(config.enabled ? nextStep(activationStep(ctx, config) ?? "tonedial show", ui) : offNotice(false, ctx.t, ui)),
   ];
 
   return {

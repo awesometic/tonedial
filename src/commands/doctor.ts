@@ -28,7 +28,7 @@ import {
   type SeedState,
 } from "../core/seeds.ts";
 import { toCompileInput } from "../core/resolve.ts";
-import { artifactSize, claudeContextCap, humanText, nextStep, receiptLines, recoveryRollbackLines, section } from "../ui/format.ts";
+import { artifactSize, claudeContextCap, humanText, nextStep, offNotice, receiptLines, recoveryRollbackLines, section } from "../ui/format.ts";
 import { wrap } from "../ui/width.ts";
 import { applyRollback, assertFresh, planChange, previewRollback, type Change } from "../wiring/apply.ts";
 import { confirm } from "../ui/prompt.ts";
@@ -876,14 +876,18 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true, showCodexActi
       integration.trust === "disabled") || hookSettings.some(setting => setting.state === "disabled");
   const elsewhere = wiredElsewhere(config, { scope, destination });
   const nativeCheckNames = new Set(hookSettings.map(({ tool }) => TARGETS[tool].label));
+  // Before setup, the missing guide and artifact restate the context check's single cause.
+  const derived = diagnosis.layout.kind === "fresh" ? new Set(["AGENTS.md", "TONE.md"]) : new Set<string>();
   const shownChecks = ctx.flags.verbose
     ? checks
-    : checks.filter((check) =>
-        check.state === "problem" || check.repair !== undefined || nativeCheckNames.has(check.name));
+    : checks.filter((check) => !derived.has(check.name) &&
+        (check.state === "problem" || check.repair !== undefined || nativeCheckNames.has(check.name)));
   const appHealthy = diagnosis.layout.kind === "current" && diagnosis.layout.cause === "none" && seeds.every(({ state }) => state === "current");
 
   const lines: string[] = [
     `  ${ctx.ui.bold((appHealthy ? ctx.ui.success : ctx.ui.warn)(ctx.t.doctor.applicationHealth(appHealthy)))}`,
+    // A healthy setup sends no tone while paused; that is the first thing to know.
+    ...offNotice(config.enabled, ctx.t, ctx.ui),
     ...(integrations.length || nativeAttention ? [
       ...section(ctx.t.doctor.connectionsHeading, ctx.ui),
       ...wrap(ctx.t.doctor.connectionHealth(nativeAttention), ctx.ui.width - 2).map((line) =>
@@ -901,8 +905,13 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true, showCodexActi
     ...elsewhereReport(elsewhere, ctx),
   ];
 
-  if (problems.length) {
-    lines.push("", `  ${ctx.ui.warn(ctx.t.doctor.toLookAt(problems.length))}`);
+  const shownProblems = problems.filter((check) => ctx.flags.verbose || !derived.has(check.name));
+  if (shownProblems.length) {
+    lines.push("", `  ${ctx.ui.warn(ctx.t.doctor.toLookAt(shownProblems.length))}`);
+  }
+  // Nothing connected anywhere: the one step that lets a conversation receive this tone.
+  if (config.enabled && diagnosis.layout.kind === "current" && integrations.length === 0 && !nativeAttention && elsewhere.length === 0) {
+    lines.push(...nextStep(`tonedial wire ${connectionScopeFlag(ctx.agent, ctx.flags.here === true)}`, ctx.ui));
   }
 
   return {

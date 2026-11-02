@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=427; endsWithNewline=true]
+--- stdout --- [bytes=451; endsWithNewline=true]
 ToneDial · doctor
 
   Inspection scope: project
@@ -19,5 +19,7 @@ ToneDial · doctor
     Then add its bin directory to PATH (macOS/Linux).
 
   1 check needs attention
+
+  tonedial wire --here
 --- stderr --- [bytes=0; endsWithNewline=false]
 

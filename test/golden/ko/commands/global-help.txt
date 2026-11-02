@@ -1,11 +1,12 @@
 status: 0
---- stdout --- [bytes=3965; endsWithNewline=true]
+--- stdout --- [bytes=4002; endsWithNewline=true]
 tonedial — 코딩 에이전트의 말투를 한 번 정하고 계속 씁니다
 
 tonedial <command> [options]
 
-시작하기: 초기 설정 후 말투를 조정하고 에이전트를 연결하세요:
+처음이라면 초기 설정, 미리 보기, 말투 조정, 에이전트 연결 순서로 진행하세요:
   tonedial init --tools none --global
+  tonedial test
   tonedial set
   tonedial wire
 
@@ -17,7 +18,7 @@ tonedial <command> [options]
   address [self user]   서로 부르는 말 · 인자 없으면 질문 · 빈도: set
                         address_frequency=rarely
   persona [agent user]  에이전트·사용자 역할 · 인자 없으면 질문
-  test [claude|codex]   저장된 설정이나 프리셋으로 새 대화 시작
+  test [claude|codex]   새 대화에서 현재 말투나 프리셋 미리 보기
   off                   말투 전달 일시정지 · 설정·TONE.md 유지
   on                    저장한 말투 전달 재개
 

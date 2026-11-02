@@ -32,7 +32,7 @@ import {
 import { confirm } from "../ui/prompt.ts";
 import { wrap } from "../ui/width.ts";
 import { parseToolSelection } from "../wiring/targets.ts";
-import { riskWarnings } from "../ui/format.ts";
+import { receiptLines, riskWarnings } from "../ui/format.ts";
 
 export type AppRebuildResult = CommandResult & ({
   quarantineOnly: true;
@@ -264,7 +264,8 @@ async function quarantineOneOperation(
   };
 }
 
-export async function runAppRebuild(ctx: Ctx): Promise<AppRebuildResult> {
+/** `heading` names the run: recovery for doctor --fix, a refresh when init runs again. */
+export async function runAppRebuild(ctx: Ctx, heading = ctx.t.recovery.heading): Promise<AppRebuildResult> {
   const t: Messages = ctx.t;
   const operations = inspectOperations(ctx.paths);
   const pending = operations.journals.filter(entry => entry.state === "pending");
@@ -486,14 +487,14 @@ export async function runAppRebuild(ctx: Ctx): Promise<AppRebuildResult> {
     ...(damagedFields.includes("guards") ? [`  ${t.recovery.obsoleteGuardsDiscarded}`] : []),
     ...(missingFields.length ? [`  ${t.recovery.missing(missingFields)}`] : []),
     ...(copies.length ? [`  ${t.recovery.copies(copies)}`] : []),
-    ...(nativeAttention ? [`  ${t.recovery.nativePending}`] : []),
+    ...(nativeAttention ? [`  ${t.recovery.nativePending}\ntonedial doctor ${connectionScopeFlag(ctx.agent, ctx.flags.here === true)}`] : []),
     ...(quarantined ? [`  ${t.recovery.quarantine(quarantined.operationId)}`] : []),
     ...(retirementId ? [`  ${t.recovery.retire(retirementId)}`] : []),
-  ].flatMap(line => wrap(line.trimStart(), ctx.ui.width - 2).map(part => `  ${part}`));
+  ].flatMap(line => receiptLines(line.trimStart(), ctx.ui.width - 2).map(part => `  ${part}`));
   const options = {
     paths: ctx.paths, operationActions, retention: { kind: "migration" as const, reason: "app-rebuild" as const },
     auto: ctx.flags.auto, dryRun: ctx.flags.dryRun, verbose: ctx.flags.verbose, ui: ctx.ui, t,
-    heading: t.recovery.heading,
+    heading,
     interactive: () => ctx.canPrompt, ...(ctx.canPrompt ? {} : { out: () => {} }),
     recoveryPresentation: { lines: presentation,
       failureMessage: (id: string, phase: RecoveryPhase, path: string | null, code: string) =>

@@ -11,8 +11,8 @@ import type { CommandResult, Ctx } from "../cli.ts";
 import { withPreset, inspectPresetLibrary, readDisplayName, resolvePreset, type Preset } from "../core/presets.ts";
 import { compile } from "../core/compile.ts";
 import { riskyAxes } from "../core/anchors.ts";
-import { ConfigError } from "../core/config.ts";
-import { onPath, shellQuote } from "../core/paths.ts";
+import { ConfigError, isConfigV2, type Config } from "../core/config.ts";
+import { AGENT_TOOLS, connectionScopeFlag, onPath, shellQuote } from "../core/paths.ts";
 import { toCompileInput } from "../core/resolve.ts";
 import { confirm, guardTerminal } from "../ui/prompt.ts";
 import { wrap } from "../ui/width.ts";
@@ -21,6 +21,29 @@ import { planConfig } from "./compile.ts";
 
 const PROVIDERS = ["claude", "codex"] as const;
 type Provider = (typeof PROVIDERS)[number];
+const LABELS: Record<Provider, string> = { claude: "Claude Code", codex: "Codex" };
+
+/** True when the config records a native connection in any scope. */
+function connected(config: Config): boolean {
+  return isConfigV2(config) && Object.values(config.wiring.registrations)
+    .some(({ target }) => (AGENT_TOOLS as readonly string[]).includes(target));
+}
+
+/** Connections default to global; only a scope the user named carries over. */
+function wireStep(ctx: Ctx): string {
+  return `tonedial wire ${ctx.scopeExplicit ? connectionScopeFlag(ctx.agent, ctx.flags.here === true) : "--global"}`;
+}
+
+/**
+ * With delivery on and no agent connected, a tone reaches no conversation yet: the next step is
+ * hearing it, by a preview when a provider is installed and otherwise by connecting an agent.
+ * Null keeps the caller's own step; a paused or connected tone has nothing to activate here.
+ */
+export function activationStep(ctx: Ctx, config: Config): string | null {
+  if (!config.enabled || !isConfigV2(config) || connected(config)) return null;
+  const provider = PROVIDERS.find((name) => onPath(name, ctx.env) !== null);
+  return provider ? `tonedial test ${provider}` : wireStep(ctx);
+}
 
 export async function runTest(ctx: Ctx, args: string[]): Promise<CommandResult> {
   const copy = ctx.t.test;
@@ -63,7 +86,15 @@ export async function runTest(ctx: Ctx, args: string[]): Promise<CommandResult> 
   const installed = PROVIDERS.map((provider) => ({ provider, program: onPath(provider, ctx.env) }))
     .filter((entry): entry is { provider: Provider; program: string } => entry.program !== null);
   let selected = requested === undefined ? undefined : installed.find((entry) => entry.provider === requested);
-  if (requested !== undefined && selected === undefined) throw new ConfigError(copy.providerUnavailable(requested));
+  if (requested !== undefined && selected === undefined) {
+    // A copied recipe can name the provider that is missing; offer the installed one instead.
+    const other = installed[0];
+    throw new ConfigError(copy.providerUnavailable(LABELS[requested as Provider], other === undefined ? null : {
+      label: LABELS[other.provider],
+      command: `tonedial test ${other.provider}${ctx.flags.preset == null ? "" : ` --preset ${humanText(ctx.flags.preset)}`}` +
+        `${ctx.flags.project === null ? "" : ` --project "${shellQuote(target)}"`}`,
+    }));
+  }
   if (installed.length === 0) throw new ConfigError(copy.noProvider);
   if (selected === undefined && installed.length > 1 && planOnly) throw new ConfigError(copy.providerRequired);
 
@@ -98,7 +129,7 @@ export async function runTest(ctx: Ctx, args: string[]): Promise<CommandResult> 
   }
 
   const { provider, program } = selected;
-  const label = provider === "claude" ? "Claude Code" : "Codex";
+  const label = LABELS[provider];
   const prompt = [
     "This is a fresh ToneDial test session for dialogue only.",
     "Do not create, modify, rename, move, or delete any file or directory anywhere inside the target working folder, including hidden files, settings, notes, generated files, and every subdirectory.",
@@ -160,6 +191,15 @@ export async function runTest(ctx: Ctx, args: string[]): Promise<CommandResult> 
           cwd: target, env: ctx.env, shell: false, stdio: "inherit",
         });
         if (result.error) throw new ConfigError(copy.launchFailed(provider), { cause: result.error });
+        // After a clean exit, name the step that keeps what was just heard.
+        const follow = result.status !== 0 ? null
+          : preview && (preview.slug !== config.preset || config.unsaved) ? [copy.afterPreset, `tonedial use ${preview.slug}`]
+            // `--project` names the conversation folder here, not a connection scope.
+            : connected(config) ? null : [copy.afterConnect, "tonedial wire --global"];
+        if (follow) {
+          process.stdout.write(`${["", ...wrap(follow[0]!, ctx.ui.width - 2).map((line) => `  ${ctx.ui.dim(line)}`),
+            ...nextStep(follow[1]!, ctx.ui).slice(1)].join("\n")}\n`);
+        }
         if (result.status !== null) return result.status;
         return result.signal === null ? 1 : 128 + (constants.signals[result.signal] ?? 0);
       },

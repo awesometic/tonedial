@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=1198; endsWithNewline=true]
+--- stdout --- [bytes=1204; endsWithNewline=true]
 ToneDial · create
 
   저장할 프로필 · Example (example)
@@ -38,6 +38,6 @@ ToneDial · create
   Example  기본값과 다른 축 7개
   TONE.md 생성됨
 
-  tonedial list
+  tonedial test codex
 --- stderr --- [bytes=0; endsWithNewline=false]
 

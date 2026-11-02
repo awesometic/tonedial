@@ -6,12 +6,13 @@ const role = (self_ref: string, user_ref: string, user: string, agent: string): 
 
 const messages: Messages = {
   test: {
-    missingConfig: "没有已保存的 ToneDial 设置。请先运行 tonedial init --tools none。",
+    missingConfig: "ToneDial 尚未初始化。请先完成初始化，然后重新运行此命令：\n  tonedial init --tools none --global",
     invalidConfig: "无法安全读取已保存的设置。选择恢复方式前，请运行 tonedial doctor --json。",
     unsupportedProvider: (provider) => `${provider}：对话预览支持 claude 或 codex。`,
     noProvider: "PATH 中未找到 Claude Code 或 Codex。",
     providerRequired: "请明确选择：tonedial test claude 或 tonedial test codex。",
-    providerUnavailable: (provider) => `PATH 中未找到 ${provider}。`,
+    providerUnavailable: (provider, alternative) => `PATH 中未找到 ${provider}。` +
+      (alternative ? `可改用 ${alternative.label}：\n  ${alternative.command}` : ""),
     targetUnavailable: (path) => `测试目录不可用，或该路径不是目录：\n${path}\n请用 --project DIR 选择现有目录。`,
     terminalRequired: "对话测试需要交互式终端。可用 --dry-run 或 --json 查看启动计划。",
     chooseProvider: "请选择：1 Claude Code，2 Codex [1]： ",
@@ -30,6 +31,8 @@ const messages: Messages = {
     history: "服务商可能将此对话保存在自己的历史记录中。",
     launchFailed: (provider) => `无法启动 ${provider}。请检查安装情况后重试。`,
     selectionCancelled: "未选择服务商。",
+    afterPreset: "要应用此预设：",
+    afterConnect: "要让新对话也使用此语气，请连接代理：",
   },
   delivery: {
     on: "ToneDial 已开启 · 已恢复语气投递",
@@ -52,7 +55,7 @@ const messages: Messages = {
     settingsSaved: "设置已保存",
     settingsUnchanged: "设置未变更",
     needsPair: (given) => `${given}：应使用 <key>=<value> 格式（例如 warmth=4）`,
-    needsArgument: "set 至少需要一个 <key>=<value>。在终端中不带参数运行可打开调节面板",
+    needsArgument: "set 至少需要一个 <key>=<value>，例如：tonedial set warmth=4。在终端中只输入 tonedial set 即可打开调节面板。",
     subagentUnsupported: "暂不支持子代理语气轴，请设置用户语气轴",
   },
   preset: {
@@ -131,7 +134,7 @@ const messages: Messages = {
     activeChoice: (slug) => `${slug}：请选择保存的语气轴所对应的定义。`,
     rebuilt: "应用已恢复",
     unchanged: "应用文件已是最新",
-    nativePending: "原生连接需要单独处理；应用设置和预设仍可使用。",
+    nativePending: "代理连接需要单独检查；设置和预设仍可使用。",
     rollback: (id) => `要恢复之前的文件：\ntonedial doctor --fix --rollback ${id}`,
     rollbackOrder: "请先恢复连接，再恢复应用文件：",
     noSnapshot: (id) => `${id}：没有此状态根目录的有效设置快照`,
@@ -205,7 +208,8 @@ const messages: Messages = {
     checkOnly: "--check · 未写入任何内容",
     wrote: "已写入",
     notWritten: "缺少 TONE.md，请运行 tonedial compile",
-    notSetUp: "尚未初始化，请运行 tonedial init",
+    notSetUp: "尚未初始化 · 显示 ToneDial 默认值",
+    notSetUpTitle: "未初始化",
     movedFromDefault: "与 ToneDial 默认值不同",
     defaultMarker: "标记与 ToneDial 默认值不同的语气轴，不代表与代理原生语气的差异。",
     riskMarker: "! 风险语气",
@@ -480,7 +484,7 @@ const messages: Messages = {
     footer: "连接命令默认使用全局范围；当前项目用 --here，其他目录用 --project DIR。无人值守写入必须明确指定范围。",
     recoveryOptions: "doctor --fix 的恢复选项：tonedial doctor --help",
     groups: { tone: "语气", presets: "预设库", agents: "连接", upkeep: "维护", flags: "选项" },
-    firstSteps: "开始使用：先初始化，再调整语气，然后连接代理：",
+    firstSteps: "开始使用时，先初始化并预览语气，再调整语气，最后连接代理：",
     examples: "示例",
     commands: {
       on: "恢复投递已保存的语气",
@@ -492,7 +496,7 @@ const messages: Messages = {
       persona: "设置代理和用户角色 · 无参数则交互输入",
       reset: "重置语气轴 · 无参数重置全部",
       show: "当前设置 · 指定标识名预览已保存的配置档案",
-      test: "在新对话中试用当前设置或预设",
+      test: "在新对话中预览当前语气或预设",
       save: "将当前语气保存为配置",
       create: "创建并应用预设 · 无参数则引导设置",
       list: "内置及用户预设",
@@ -606,6 +610,8 @@ const messages: Messages = {
     toolsAmbiguous: "请使用位置参数代理或 --tools，不要同时指定。",
     commandsNeedClaude: "--commands 要求所选代理包含 claude。",
     toolsPrompt: "要连接的代理（逗号分隔）： ",
+    wireToolsRequired: (example, auto) => `请指定要连接的代理，例如：\n  ${example}\n` +
+      `代理：claude, codex, antigravity · 多个：--tools codex,claude${auto ? "\n--auto 仅批准你的选择；请明确指定代理。" : ""}`,
     ownershipConflict: (path) => `所有权未知，或受管理内容、文件类型已变化：\n${path}\n已保留文件。更改连接前请先检查。`,
     rollbackNeedsFix: "请将 --rollback 与 doctor --fix 及 doctor 报告的操作 ID 一起使用。",
     editNotApplied: (path, reason) => `${reason}\n未应用任何更改。已保留编辑副本：\n${path}`,
@@ -615,7 +621,7 @@ const messages: Messages = {
     stateInstructionOverlap: (path) => `ToneDial 状态与代理指令根目录重叠：\n${path}\n未写入任何内容。运行 init 前请选择专用状态目录。`,
     legacyConsumers: (destinations) => `其他或未记录连接仍读取 tone.md：\n${destinations.join("\n")}\n未写入任何内容。请在每个范围断开后重试 init，迁移后再重新连接。`,
     contextLayout: (kind, path, doctorCommand = "tonedial doctor --json") => kind === "fresh"
-      ? `ToneDial 尚未设置：\n${path}\n请先准备状态，然后重新运行此命令：\n  tonedial init --tools none`
+      ? `ToneDial 尚未初始化：\n${path}\n请先完成初始化，然后重新运行此命令：\n  tonedial init --tools none --global`
       : `此 ${kind} 布局需要应用恢复：\n${path}\n未写入任何内容。检查同一范围：\n${doctorCommand}\n请保留此根目录，运行 tonedial doctor --fix 保留设置并重建生成文件。`,
     unreadableConfigFile: (path) => `无法读取有效设置：\n${path}\n请保留原文件，运行 tonedial doctor --fix 选择已保存来源或明确列出的默认值。`,
     fixUnreadableConfig: (path) => `设置需要恢复来源：\n${path}\n未写入任何内容。请交互运行 tonedial doctor --fix，或选择 --from-operation ID 或 --from-preset SLUG。`,
@@ -680,6 +686,7 @@ export const zh: Catalogue = {
     toneHeading: "语气",
     connectionsHeading: "代理",
     resultHeading: "就绪",
+    refreshHeading: "刷新",
     preset: "初始预设（Enter：1）",
     userRef: '你的称呼（Enter：预设默认值 · 空字符串：清空）',
     selfRef: '代理自称（Enter：预设默认值 · 空字符串：清空）',

@@ -1,11 +1,12 @@
 status: 0
---- stdout --- [bytes=3515; endsWithNewline=true]
+--- stdout --- [bytes=3545; endsWithNewline=true]
 tonedial — set a coding agent's manner once and keep using it
 
 tonedial <command> [options]
 
-Get started: set up, adjust your tone, then connect an agent:
+To get started, set up, preview and adjust your tone, then connect an agent:
   tonedial init --tools none --global
+  tonedial test
   tonedial set
   tonedial wire
 
@@ -17,7 +18,7 @@ Tone
   address [self user]   set names for each party · bare prompts · frequency:
                         set address_frequency=rarely
   persona [agent user]  set agent and user roles · bare prompts
-  test [claude|codex]   try saved settings or a preset in a new conversation
+  test [claude|codex]   preview your tone or a preset in a new conversation
   off                   pause tone delivery · keep settings and TONE.md
   on                    resume saved tone delivery
 

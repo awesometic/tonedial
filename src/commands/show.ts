@@ -41,10 +41,23 @@ export function runShow(ctx: Ctx, args: string[]): CommandResult {
   const artifact = compile(input);
   const size = measure(artifact);
   const artifactOnDisk = artifactExists(ctx);
+  // The config's presence cannot distinguish a prepared root from a legacy one. Use the same
+  // layout decision as the mutation gate so fresh, prepared, and legacy roots stay distinct.
+  let layout: ReturnType<typeof inspectContextLayout> | null = null;
+  if (!artifactOnDisk) {
+    const known = inspectContextConsumers(ctx.paths, ctx.agent, config, ctx.env, ctx.t);
+    layout = inspectContextLayout(ctx.paths, configChange, ctx.t, {
+      config: configChange.before === null ? null : config,
+      expectedArtifact: preview ? compile(toCompileInput(config)) : artifact,
+      ...known,
+      consumerInspectionFailed: known.error !== null,
+    });
+  }
+  const fresh = layout?.kind === "fresh";
 
   const activeName = preview
     ? preview.displayName
-    : config.preset
+    : fresh ? `(${ctx.t.artifact.notSetUpTitle})` : config.preset
       ? activeConflict ? config.preset : resolvePreset(ctx.paths.presets, config.preset, ctx.t, library)?.preset.displayName ?? config.preset
       : `(${ctx.t.preset.unsaved})`;
   const activePreset = config.preset && !activeConflict ? resolvePreset(ctx.paths.presets, config.preset, ctx.t, library)?.preset : null;
@@ -112,16 +125,7 @@ export function runShow(ctx: Ctx, args: string[]): CommandResult {
     stateRow(values, ctx.t), ctx.t.artifact.displaySettings(values.language),
     ctx.t.artifact.connectionRecords(records.map(humanText)),
   ]) for (const folded of wrap(text, detailWidth)) details.push(folded);
-  // The config's presence cannot distinguish a prepared root from a legacy one. Use the same
-  // layout decision as the mutation gate so fresh, prepared, and legacy roots stay distinct.
-  if (!artifactOnDisk) {
-    const known = inspectContextConsumers(ctx.paths, ctx.agent, config, ctx.env, ctx.t);
-    const layout = inspectContextLayout(ctx.paths, configChange, ctx.t, {
-      config: configChange.before === null ? null : config,
-      expectedArtifact: preview ? compile(toCompileInput(config)) : artifact,
-      ...known,
-      consumerInspectionFailed: known.error !== null,
-    });
+  if (layout !== null) {
     const advice = layout.kind === "fresh"
       ? ctx.t.artifact.notSetUp
       : layout.kind === "current"
@@ -159,7 +163,8 @@ export function runShow(ctx: Ctx, args: string[]): CommandResult {
     const legend = ctx.t.artifact.movedFromDefault + (needsSave ? ` · ${ctx.t.preset.changesNotSaved}` : "");
     const [first, ...rest] = wrap(legend, ui.width - 4);
     lines.push(`  ${ui.accent("*")} ${ui.dim(first!)}`, ...rest.map((line) => `    ${ui.dim(line)}`),
-      ...nextStep(preview ? `tonedial use ${preview.slug}` : needsSave ? saveCommand : paused ? "tonedial on" : "tonedial show --explain", ui).slice(1));
+      ...nextStep(preview ? `tonedial use ${preview.slug}` : fresh ? "tonedial init --tools none --global"
+        : needsSave ? saveCommand : paused ? "tonedial on" : "tonedial show --explain", ui).slice(1));
   }
 
   const combinations = checkCombos(axes);

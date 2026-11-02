@@ -200,9 +200,12 @@ export function resolveAgentPaths(
   };
 }
 
-/** A copyable command argument names the inspected destination, including an isolation root. */
-export function connectionScopeFlag(agent: AgentPaths): string {
-  return agent.live ? "--global" : `--project "${shellQuote(agent.root)}"`;
+/**
+ * A copyable command argument names the inspected destination, including an isolation root.
+ * `here` keeps the user's own `--here` when the command runs in the same folder.
+ */
+export function connectionScopeFlag(agent: AgentPaths, here = false): string {
+  return agent.live ? "--global" : here ? "--here" : `--project "${shellQuote(agent.root)}"`;
 }
 
 export type SkillDestination = {

@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=132; endsWithNewline=true]
+--- stdout --- [bytes=138; endsWithNewline=true]
 ToneDial · use
 
   Ego Sword 적용됨
@@ -8,6 +8,6 @@ ToneDial · use
   세이프워드 없음
   ! critique · 거친 표현
 
-  tonedial show
+  tonedial test codex
 --- stderr --- [bytes=0; endsWithNewline=false]
 

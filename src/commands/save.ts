@@ -8,6 +8,7 @@ import { artifactSize, humanText, nextStep } from "../ui/format.ts";
 import { cells, truncate, wrap } from "../ui/width.ts";
 import { PERSONA_DESCRIPTION_MAX } from "../core/combos.ts";
 import { applyPlanned, contextCapWarnings, planArtifact, planConfig } from "./compile.ts";
+import { activationStep } from "./test.ts";
 import { planChange, rawReadChange, rawReadCheck } from "../wiring/apply.ts";
 
 /** Only the axes that moved. Every axis is still emitted; sparsity is storage, not compilation. */
@@ -108,7 +109,8 @@ export async function savePreset(
       )}  ${ctx.ui.dim(countLabel)}`,
       `  ${ctx.t.artifact.generated}`,
       ...(ctx.flags.verbose ? [`  ${ctx.ui.dim(artifactSize(size, ctx.t))}`] : []),
-      ...nextStep("tonedial list", ctx.ui),
+      // Create applies the new tone; save only records the current one.
+      ...nextStep((options.create ? activationStep(ctx, config) : null) ?? "tonedial list", ctx.ui),
     ],
     json: { slug, displayName, values, settings: preset.settings, nonDefaultAxes: count, replaced, chars: size.chars,
       ...(options.create ? { created: true, diff: result.diff, operationId: result.operationId } : {}) },

@@ -1,6 +1,10 @@
 // Restore raw input on handled exits. Never prompt without a terminal.
 
-import { createInterface } from "node:readline/promises";
+import { createInterface, type Interface } from "node:readline/promises";
+
+import type { Messages } from "../core/i18n.ts";
+import { AGENT_TOOLS, type AgentTool } from "../core/paths.ts";
+import { parseToolSelection, TARGETS } from "../wiring/targets.ts";
 
 export type Answer = "yes" | "no";
 
@@ -131,4 +135,17 @@ export async function confirm(question: string): Promise<Answer> {
   } finally {
     try { rl?.close(); } finally { release(); }
   }
+}
+
+/**
+ * The numbered agent picker `init` and `wire` share. Rows name each host as people know it,
+ * and the answer takes numbers or ids; an empty answer is `none`, which only init accepts.
+ */
+export async function pickTools(rl: Interface, allowNone: boolean, t: Messages): Promise<AgentTool[]> {
+  for (const [i, tool] of AGENT_TOOLS.entries()) {
+    process.stdout.write(`    ${i + 1}. ${TARGETS[tool].label} (${tool})\n`);
+  }
+  const chosen = (await rl.question("  > ")).trim();
+  const names = chosen.split(",").map((name) => AGENT_TOOLS[Number(name.trim()) - 1] ?? name.trim()).join(",");
+  return parseToolSelection(chosen === "" ? "none" : names, allowNone, t);
 }

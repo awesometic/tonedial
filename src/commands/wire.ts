@@ -3,7 +3,7 @@ import { dirname, join, relative } from "node:path";
 import { createInterface } from "node:readline/promises";
 
 import type { CommandResult, Ctx } from "../cli.ts";
-import { AGENT_TOOLS, CONTEXT_ARTIFACT_FILENAME, LEGACY_CONTEXT_ARTIFACT_FILENAME, aliasesState, canonicalDestination, canonicalResourcePath, installShape, type AgentTool } from "../core/paths.ts";
+import { AGENT_TOOLS, CONTEXT_ARTIFACT_FILENAME, LEGACY_CONTEXT_ARTIFACT_FILENAME, aliasesState, canonicalDestination, canonicalResourcePath, connectionScopeFlag, installShape, type AgentTool } from "../core/paths.ts";
 import {
   ConfigError,
   isConfigV2,
@@ -26,6 +26,7 @@ import { hookCommand, ownedHook, withHook, withoutHook, type HookSpec } from "..
 import { assertRecordedTextAccess, assertRegisteredFileChange, contentHash, detachRegistration, recordFileChange, registrationKey } from "../wiring/ownership.ts";
 import { pathLineState, rcPath, withPathLine } from "../wiring/shell.ts";
 import { humanText, nativeSetup, receiptLines } from "../ui/format.ts";
+import { pickTools } from "../ui/prompt.ts";
 
 /** The positional form names one target; lists belong to --tools. */
 function selectTool(ctx: Ctx, named: string): AgentTool[] {
@@ -43,15 +44,20 @@ function artifact(ctx: Ctx): Change {
 
 export async function runWire(ctx: Ctx, args: string[]): Promise<CommandResult> {
   if (args[0] !== undefined && ctx.flags.tools !== null) throw new ConfigError(ctx.t.errors.toolsAmbiguous);
-  let selection = args[0] ?? ctx.flags.tools;
+  const selection = args[0] ?? ctx.flags.tools;
   if (selection === null) {
-    if (ctx.flags.auto || !ctx.canPrompt) throw new ConfigError(ctx.t.errors.toolsRequired);
+    if (ctx.flags.auto || !ctx.canPrompt) {
+      throw new ConfigError(ctx.t.errors.wireToolsRequired(`tonedial wire codex ${connectionScopeFlag(ctx.agent, ctx.flags.here === true)}`, ctx.flags.auto));
+    }
     const rl = createInterface({ input: process.stdin, output: process.stdout });
+    let picked: AgentTool[];
     try {
-      selection = await rl.question(ctx.t.errors.toolsPrompt);
+      process.stdout.write(`  ${ctx.t.errors.toolsPrompt.trimEnd()}\n`);
+      picked = await pickTools(rl, false, ctx.t);
     } finally {
       rl.close();
     }
+    return wireSelected(ctx, picked);
   }
   const tools = args[0] !== undefined ? selectTool(ctx, args[0]) : parseToolSelection(selection, false, ctx.t);
   return wireSelected(ctx, tools);

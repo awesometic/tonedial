@@ -7,11 +7,12 @@ import { lstatSync, readdirSync } from "node:fs";
 import type { CommandResult, Ctx } from "../cli.ts";
 import { runAppRebuild } from "./rebuild.ts";
 import { runRebuildNative } from "./wire.ts";
+import { activationStep } from "./test.ts";
 import { ConfigError, defaultConfig, requireConfigV2, safewordRejection, serializeConfig } from "../core/config.ts";
 import { compile, measure } from "../core/compile.ts";
 import { toCompileInput } from "../core/resolve.ts";
 import { catalogue, configLanguage, detectLanguage, isLanguage, LANGUAGES, type Language } from "../core/i18n.ts";
-import { AGENT_TOOLS, LEGACY_CONTEXT_ARTIFACT_FILENAME, canonicalDestination, connectionScopeFlag, exportAliasesState, installShape, onPath, projectTonePath, type AgentTool } from "../core/paths.ts";
+import { LEGACY_CONTEXT_ARTIFACT_FILENAME, canonicalDestination, connectionScopeFlag, exportAliasesState, installShape, onPath, projectTonePath, type AgentTool } from "../core/paths.ts";
 import { BUNDLED, localizedPreset, matchesPreset, withPreset } from "../core/presets.ts";
 import { SEED_VERSION, inspectContextLayout, planSeedChanges } from "../core/seeds.ts";
 import { inspectOperations } from "../core/operations.ts";
@@ -21,7 +22,7 @@ import { riskyAxes } from "../core/anchors.ts";
 import { padEnd, wrap } from "../ui/width.ts";
 import { gate, planChange } from "../wiring/apply.ts";
 import { spawnSync } from "node:child_process";
-import { confirm } from "../ui/prompt.ts";
+import { confirm, pickTools } from "../ui/prompt.ts";
 import { rcPath, withPathLine } from "../wiring/shell.ts";
 import { planSelectedSkills } from "../wiring/skill.ts";
 import { assertDistinctHookTargets, parseToolSelection, planOrderedDelivery } from "../wiring/targets.ts";
@@ -232,7 +233,7 @@ export async function runInit(entry: Ctx, _args: string[]): Promise<CommandResul
   if (onPath("tonedial", ctx.env) === null) {
     addReceipt(copy.init.installHint);
   } else if (applied) {
-    lines.push(`  ${ctx.ui.accent(humanText(unconnected ? `tonedial wire ${connectionScopeFlag(ctx.agent)}` : "tonedial show"))}`);
+    lines.push(`  ${ctx.ui.accent(humanText(activationStep(ctx, config) ?? "tonedial show"))}`);
   }
 
   // Spread rather than assigned: `exactOptionalPropertyTypes` draws a line between "no handoff"
@@ -299,7 +300,7 @@ async function rebuildExisting(entry: Ctx): Promise<CommandResult> {
   if (ctx.canPrompt) process.stdout.write(`${introduction.join("\n")}\n`);
   const resultHeading = ctx.canPrompt && !ctx.flags.auto && !ctx.flags.dryRun
     ? section(copy.init.resultHeading, ctx.ui) : [];
-  const app = await runAppRebuild(ctx);
+  const app = await runAppRebuild(ctx, copy.init.refreshHeading);
   if (app.quarantineOnly) {
     return { ...app, lines: [...(ctx.canPrompt ? [] : introduction), ...resultHeading, ...app.lines] };
   }
@@ -455,12 +456,7 @@ async function ask(ctx: Ctx, copy: ReturnType<typeof catalogue>, fresh: boolean,
     if (selection !== null) return answers;
 
     process.stdout.write(`${section(copy.init.connectionsHeading, ctx.ui).join("\n")}\n${questionText(copy.init.tools)}\n`);
-    for (const [i, tool] of AGENT_TOOLS.entries()) {
-      process.stdout.write(`    ${i + 1}. ${tool}\n`);
-    }
-    const chosen = (await rl.question("  > ")).trim();
-    const names = chosen.split(",").map((name) => AGENT_TOOLS[Number(name.trim()) - 1] ?? name.trim()).join(",");
-    answers.tools = parseToolSelection(chosen === "" ? "none" : names, true, ctx.t);
+    answers.tools = await pickTools(rl, true, ctx.t);
 
     return answers;
   } finally {

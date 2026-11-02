@@ -286,8 +286,8 @@ const RECOVERY_FLAGS: readonly (keyof Messages["help"]["flags"])[] =
   ["rollback", "quarantineOperation", "fromOperation", "fromPreset", "restorePreset"];
 const REFERENCE_FLAGS = FLAG_SYNTAX.filter(([key]) => !RECOVERY_FLAGS.includes(key));
 
-/** The first three commands after install: state, the dial, then an agent connection. */
-const FIRST_STEPS = ["  tonedial init --tools none --global", "  tonedial set", "  tonedial wire"];
+/** The first commands after install: state, a preview, the dial, then an agent connection. */
+const FIRST_STEPS = ["  tonedial init --tools none --global", "  tonedial test", "  tonedial set", "  tonedial wire"];
 
 function helpRows(pairs: [string, string][], width: number, ui: Palette): string[] {
   return pairs.flatMap(([syntax, description]) => {

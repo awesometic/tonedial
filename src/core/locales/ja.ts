@@ -6,12 +6,13 @@ const role = (self_ref: string, user_ref: string, user: string, agent: string): 
 
 const messages: Messages = {
   test: {
-    missingConfig: "保存済みのToneDial設定がありません。まず tonedial init --tools none を実行してください。",
+    missingConfig: "ToneDialはまだ初期設定されていません。初期設定してから、このコマンドを再実行してください：\n  tonedial init --tools none --global",
     invalidConfig: "保存済み設定を安全に読み取れません。復旧方法を選ぶ前に tonedial doctor --json を実行してください。",
     unsupportedProvider: (provider) => `${provider}: 会話プレビューは claude または codex に対応しています。`,
     noProvider: "PATHにClaude CodeもCodexも見つかりません。",
     providerRequired: "プロバイダーを明示的に選択してください：tonedial test claude または tonedial test codex。",
-    providerUnavailable: (provider) => `${provider} がPATHに見つかりません。`,
+    providerUnavailable: (provider, alternative) => `${provider} がPATHに見つかりません。` +
+      (alternative ? `${alternative.label} で試すには：\n  ${alternative.command}` : ""),
     targetUnavailable: (path) => `テスト用フォルダーが利用できないか、ディレクトリではありません：\n${path}\n--project DIR で既存のフォルダーを選んでください。`,
     terminalRequired: "会話テストには対話型ターミナルが必要です。--dry-run または --json で起動計画を確認できます。",
     chooseProvider: "選択：1 Claude Code、2 Codex [1]: ",
@@ -30,6 +31,8 @@ const messages: Messages = {
     history: "プロバイダー側の履歴に会話が保存される場合があります。",
     launchFailed: (provider) => `${provider} を起動できません。インストール状況を確認して再試行してください。`,
     selectionCancelled: "プロバイダーが選択されていません。",
+    afterPreset: "このプリセットを適用するには：",
+    afterConnect: "新しい会話にもこの口調を届けるには、エージェントを接続してください：",
   },
   delivery: {
     on: "ToneDialをオンにしました · 口調の配信を再開",
@@ -52,7 +55,7 @@ const messages: Messages = {
     settingsSaved: "設定を保存しました",
     settingsUnchanged: "設定の変更なし",
     needsPair: (given) => `${given}: <key>=<value> の形式で指定してください（例：warmth=4）`,
-    needsArgument: "set には <key>=<value> が1つ以上必要です。ターミナルで引数なしで実行するとダイヤルが開きます",
+    needsArgument: "set には <key>=<value> が1つ以上必要です。例：tonedial set warmth=4。ターミナルでは tonedial set だけでダイヤルが開きます。",
     subagentUnsupported: "サブエージェントの軸は未対応です。ユーザーの軸を設定してください",
   },
   preset: {
@@ -131,7 +134,7 @@ const messages: Messages = {
     activeChoice: (slug) => `${slug}: 保存済みの軸が参照する定義を選んでください。`,
     rebuilt: "アプリケーションを復旧しました",
     unchanged: "アプリケーションのファイルは最新です",
-    nativePending: "ネイティブ接続は別途確認が必要です。設定とプリセットは利用できます。",
+    nativePending: "エージェント接続は別途確認してください。設定とプリセットは引き続き使えます。",
     rollback: (id) => `以前のファイルに戻すには：\ntonedial doctor --fix --rollback ${id}`,
     rollbackOrder: "先に接続を復元し、その後アプリケーションのファイルを復元してください：",
     noSnapshot: (id) => `${id}: この状態ルート用の有効な設定スナップショットがありません`,
@@ -205,7 +208,8 @@ const messages: Messages = {
     checkOnly: "--check · 書き込みなし",
     wrote: "書き込み済み",
     notWritten: "TONE.md がありません。tonedial compile を実行してください",
-    notSetUp: "未初期化です。tonedial init を実行してください",
+    notSetUp: "まだ初期設定されていません · ToneDialの既定値を表示",
+    notSetUpTitle: "初期設定前",
     movedFromDefault: "ToneDialの既定値と異なります",
     defaultMarker: "ToneDialの既定値と異なる軸を示します。エージェント本来の口調との比較ではありません。",
     riskMarker: "! 要注意",
@@ -480,7 +484,7 @@ const messages: Messages = {
     footer: "接続コマンドは、--here（現在のプロジェクト）か --project DIR を指定しない限りグローバル範囲を使います。無人書き込みでは範囲を明示してください。",
     recoveryOptions: "doctor --fix の復旧オプション：tonedial doctor --help",
     groups: { tone: "口調", presets: "プリセットライブラリ", agents: "接続", upkeep: "保守", flags: "オプション" },
-    firstSteps: "はじめに：初期設定し、口調を調整してから、エージェントを接続します：",
+    firstSteps: "はじめに、初期設定して口調をプレビュー・調整し、エージェントを接続します：",
     examples: "使用例",
     commands: {
       on: "保存した口調の配信を再開",
@@ -492,7 +496,7 @@ const messages: Messages = {
       persona: "エージェントとユーザーの役割を設定 · 引数なしで質問",
       reset: "軸を初期化 · 引数なしで全軸",
       show: "現在の設定 · スラッグ指定で保存済みプロフィールをプレビュー",
-      test: "新しい会話で現在の設定かプリセットを試す",
+      test: "新しい会話で現在の口調かプリセットをプレビュー",
       save: "現在の口調をプロファイルに保存",
       create: "プリセットを作成・適用 · 引数なしで案内",
       list: "組み込みとユーザーのプリセット",
@@ -606,6 +610,8 @@ const messages: Messages = {
     toolsAmbiguous: "位置引数のエージェントか --tools の片方だけを指定してください。",
     commandsNeedClaude: "--commands には claude の選択が必要です。",
     toolsPrompt: "接続するエージェント（カンマ区切り）： ",
+    wireToolsRequired: (example, auto) => `接続するエージェントを指定してください。例：\n  ${example}\n` +
+      `エージェント：claude, codex, antigravity · 複数：--tools codex,claude${auto ? "\n--auto は選択の承認だけです。エージェントは明示的に選んでください。" : ""}`,
     ownershipConflict: (path) => `所有権が不明か、管理対象の内容または種類が変わっています：\n${path}\nファイルは保持しました。接続を変更する前に確認してください。`,
     rollbackNeedsFix: "--rollback は doctor --fix と doctor が示した操作IDとともに指定してください。",
     editNotApplied: (path, reason) => `${reason}\n何も適用していません。編集済みコピーを保持しました：\n${path}`,
@@ -615,7 +621,7 @@ const messages: Messages = {
     stateInstructionOverlap: (path) => `ToneDial状態がエージェントの指示ルートと重なっています：\n${path}\n書き込みはしていません。init の前に専用ディレクトリを選んでください。`,
     legacyConsumers: (destinations) => `他の接続か未記録の接続がまだ tone.md を読みます：\n${destinations.join("\n")}\n書き込みはしていません。各範囲で解除して init を再試行し、移行後に再接続してください。`,
     contextLayout: (kind, path, doctorCommand = "tonedial doctor --json") => kind === "fresh"
-      ? `ToneDialは未設定です：\n${path}\n先に状態を準備してから、このコマンドを再実行してください：\n  tonedial init --tools none`
+      ? `ToneDialはまだ初期設定されていません：\n${path}\n初期設定してから、このコマンドを再実行してください：\n  tonedial init --tools none --global`
       : `${kind} 構成のアプリ復旧が必要です：\n${path}\n書き込みはしていません。同じ範囲を確認：\n${doctorCommand}\nこのルートを保持し、tonedial doctor --fix で保存設定を保護して生成ファイルを再構築してください。`,
     unreadableConfigFile: (path) => `有効な設定を読み取れません：\n${path}\n原本を保持し、tonedial doctor --fix で保存元か明示された既定値を選んでください。`,
     fixUnreadableConfig: (path) => `設定には復旧元が必要です：\n${path}\n書き込みはしていません。tonedial doctor --fix を対話的に実行するか --from-operation ID または --from-preset SLUG を指定してください。`,
@@ -680,6 +686,7 @@ export const ja: Catalogue = {
     toneHeading: "口調",
     connectionsHeading: "エージェント",
     resultHeading: "準備完了",
+    refreshHeading: "更新",
     preset: "開始プリセット（Enter: 1）",
     userRef: 'あなたの呼称（Enter: 既定値 · 空文字列: 消去）',
     selfRef: 'エージェントの呼称（Enter: 既定値 · 空文字列: 消去）',

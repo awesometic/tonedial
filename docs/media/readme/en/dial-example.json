@@ -20,15 +20,15 @@
     "scripts/dial-frame.ts": "71ba709632f41d76e5d36bdcf7bdcdb864459b56b9e351622d6e54117dc1205a",
     "src/ui/dial.ts": "0201f9a30bc3b085e9e813e7bdd2306a2e2eb9ad6a8792ca264776800c360efd",
     "src/ui/gauge.ts": "7b4a8d69780103421c1ec691746be8defae8d1489768367e8b9e0f909f9eca1a",
-    "src/ui/prompt.ts": "9e7e02e17aea1158203b9e584d90aba5213902b0c246fe281d91f3290231b50d",
+    "src/ui/prompt.ts": "13bf5e9f3c9421e366c9f4ad7ef83add1d37661044a8fec2c1fac0cf8f6426ac",
     "src/ui/style.ts": "2dc560ebc69677d391ec8ab39817c3a89545d6b8b603c080a7f6d09a75450a8e",
     "src/ui/width.ts": "eb1013f8511ccfc8b9eca78e3d74433cfcf30096b7faf71ba118a5cd42163acd",
-    "src/core/i18n.ts": "5f50c79db1bdbba65826516859fdf5712a49350a51e0f8b1f06603c7eaa5da27",
+    "src/core/i18n.ts": "bc7e88dbb45a571ee46e22b83dc520ee6f96588ea59347c009ad46e31426e514",
     "src/core/anchors.ts": "04dfe16db4000c9d03148073008be84573bf6810f0015aeb6da96b22e3e9f028",
     "src/core/presets.ts": "fca9c7e372d2ad8ee8ef2cfe8254af0438f9b37f390205924bb53ee42ccb215d",
     "scripts/dial-svg.ts": "eb81cde392f472ea8df8b251150afccfcf02e5adf936221a174ab17d965e13a4",
-    "src/core/locales/ja.ts": "903d086b62389f3bd68e68da468f6c60b2b5638b98fe7d1d79cd88b18b383ec7",
-    "src/core/locales/zh.ts": "6165f4d59d9302ccc0966ac05bb5eb6264ffd4ef540fbb2cce25b3fd79f2c591",
-    "src/core/locales/es.ts": "153a752ee37781a689c7e84458fb5f3474d7a9ad82eebe3b0a32a9bacfbe8bbb"
+    "src/core/locales/ja.ts": "623f987b03cdd1158c02343ebea85bdb89c989d0de9809731954c643b2ff8d07",
+    "src/core/locales/zh.ts": "a41cc834a45296198869c77ccd70943038bc1c0da25f5f99c2526eed568e2b99",
+    "src/core/locales/es.ts": "1ba92d5de59f94a42ca0701b0fd23dde79c8eb82b04501f095b18a968c9767aa"
   }
 }
