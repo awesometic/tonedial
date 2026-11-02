@@ -188,11 +188,17 @@ let out: string[] = [];
 let err: string[] = [];
 let restore: (() => void)[] = [];
 
+/**
+ * Capture the CLI's text from `beforeEach` to `afterEach`, which spans the test runner's own
+ * writes. Node 22's isolated test child reports through the same `process.stdout` as binary
+ * chunks; swallowing them dropped this file's results while the file still passed. The CLI
+ * writes strings, so only strings are captured and every other chunk reaches the stream.
+ */
 function captureStreams() {
   const o = process.stdout.write.bind(process.stdout);
   const e = process.stderr.write.bind(process.stderr);
-  process.stdout.write = ((s: string) => (out.push(s), true)) as typeof process.stdout.write;
-  process.stderr.write = ((s: string) => (err.push(s), true)) as typeof process.stderr.write;
+  process.stdout.write = ((s: string | Uint8Array) => typeof s === "string" ? (out.push(s), true) : o(s)) as typeof process.stdout.write;
+  process.stderr.write = ((s: string | Uint8Array) => typeof s === "string" ? (err.push(s), true) : e(s)) as typeof process.stderr.write;
   restore = [() => { process.stdout.write = o; }, () => { process.stderr.write = e; }];
 }
 

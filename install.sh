@@ -147,10 +147,10 @@ main() {
   esac
   [ -n "${HOME:-}" ] || [ -n "${TONEDIAL_HOME:-}" ] || die "\$HOME is not set. Set TONEDIAL_HOME to choose where tonedial lives."
 
-  command -v node >/dev/null 2>&1 || die "tonedial needs Node 24 or newer, and node is not on your PATH."
+  command -v node >/dev/null 2>&1 || die "tonedial needs Node 22 or newer, and node is not on your PATH."
 
   major="$(node -p 'process.versions.node.split(".")[0]')"
-  [ "$major" -ge 24 ] || die "tonedial needs Node 24 or newer; this is $(node -v)."
+  [ "$major" -ge 22 ] || die "tonedial needs Node 22 or newer; this is $(node -v)."
 
   if [ "$#" -gt 0 ]; then
     validate_arguments "$@"

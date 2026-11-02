@@ -34,7 +34,7 @@ At `gpt-5.6-sol` / `high`, one fresh session used Codex defaults and one used th
 
 ## Try it
 
-Requires **Node 24+** and npm.
+Requires **Node 22+** and npm.
 
 ```bash
 npm install --global tonedial

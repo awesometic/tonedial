@@ -34,7 +34,7 @@ Con `gpt-5.6-sol` / `high`, una sesión nueva usó los valores predeterminados d
 
 ## Pruébalo
 
-Requiere **Node 24 o posterior** y npm.
+Requiere **Node 22 o posterior** y npm.
 
 ```bash
 npm install --global tonedial

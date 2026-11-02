@@ -20,7 +20,8 @@ Publication and native acceptance are separate checks; local passes do not estab
 
 ## Build and run from source
 
-Use **Node 24+ and npm** from a checkout:
+Use **Node 22.18+ and npm** from a checkout.
+Scripts and tests run TypeScript through Node's built-in type stripping:
 
 ```bash
 npm ci

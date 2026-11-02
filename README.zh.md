@@ -34,7 +34,7 @@ ToneDial 是本地 CLI，用于调整编程代理的语气并在不同项目中�
 
 ## 开始试用
 
-需要 **Node 24 或更高版本**和 npm。
+需要 **Node 22 或更高版本**和 npm。
 
 ```bash
 npm install --global tonedial

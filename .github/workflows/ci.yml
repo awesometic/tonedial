@@ -9,11 +9,13 @@ permissions:
 
 jobs:
   test:
-    name: Test (${{ matrix.language }})
+    name: Test (Node ${{ matrix.node }}, ${{ matrix.language }})
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
+        # 22 is the oldest supported release in package.json engines; 24 is the current LTS.
+        node: [22, 24]
         language: [en, ko]
     env:
       TONEDIAL_TEST_LANG: ${{ matrix.language }}
@@ -24,7 +26,7 @@ jobs:
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: 24
+          node-version: ${{ matrix.node }}
           cache: npm
 
       - run: python3 --version
@@ -39,7 +41,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: visual-regression-${{ matrix.language }}
+          name: visual-regression-node${{ matrix.node }}-${{ matrix.language }}
           path: artifacts/
           if-no-files-found: ignore
           retention-days: 7

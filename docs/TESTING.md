@@ -1,7 +1,7 @@
 # Testing ToneDial
 
 **Check the change you made. Report only what you observed.**
-Use Node 24+, npm and a POSIX shell from the repository root.
+Use Node 22.18+, npm and a POSIX shell from the repository root.
 
 | Change / claim | Verification |
 |---|---|

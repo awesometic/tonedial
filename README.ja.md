@@ -34,7 +34,7 @@ ToneDialは、コーディングエージェントの口調を調整し、複数
 
 ## 試してみる
 
-**Node 24以降**とnpmが必要です。
+**Node 22以降**とnpmが必要です。
 
 ```bash
 npm install --global tonedial

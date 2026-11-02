@@ -9,7 +9,7 @@ tonedial show
 tonedial save "My Sword"
 ```
 
-**Requires Node 24+.** [Install with npm](../README.md#try-it).
+**Requires Node 22+.** [Install with npm](../README.md#try-it).
 For a checkout, use [build and run from source](../CONTRIBUTING.md#build-and-run-from-source).
 Use the [candidate procedure](./TESTING.md#isolated-candidate) for disposable setup.
 

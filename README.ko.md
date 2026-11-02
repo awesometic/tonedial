@@ -34,7 +34,7 @@ ToneDial은 코딩 에이전트의 말투를 조절해 여러 프로젝트에서
 
 ## 바로 시작하기
 
-**Node 24 이상**과 npm이 필요합니다.
+**Node 22 이상**과 npm이 필요합니다.
 
 ```bash
 npm install --global tonedial
