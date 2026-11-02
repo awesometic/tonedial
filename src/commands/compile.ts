@@ -6,7 +6,7 @@ import { compile, measure, type SizeReport } from "../core/compile.ts";
 import { ConfigError, defaultConfig, isConfigV2, parseConfig, type Config } from "../core/config.ts";
 import { toCompileInput } from "../core/resolve.ts";
 import { contextArtifactTargets, GUIDE_MD } from "../core/seeds.ts";
-import { artifactSize, claudeContextCap, humanText, nextStep } from "../ui/format.ts";
+import { claudeContextCap, humanText, nextStep, num } from "../ui/format.ts";
 import { wrap } from "../ui/width.ts";
 import { confirm } from "../ui/prompt.ts";
 import { captureRawEntry, gate, planChange, rawReadChange, type Change } from "../wiring/apply.ts";
@@ -122,7 +122,10 @@ export async function runCompile(ctx: Ctx): Promise<CommandResult> {
     lines: [
       ...wrap(status, ctx.ui.width - 2).map(line => `  ${ctx.ui.bold((!check || current ? ctx.ui.success : ctx.ui.warn)(line))}`),
       `  ${humanText(ctx.paths.tone)}`,
-      `  ${ctx.ui.dim(artifactSize(size, ctx.t))}`,
+      // The status line already names TONE.md; under --check this is the size the saved settings
+      // compile to, which a stale file on disk does not share.
+      `  ${ctx.ui.dim(ctx.t.artifact.compiledSize(num(size.chars)))}`,
+      ...(check ? [`  ${ctx.ui.dim(ctx.t.artifact.checkOnly)}`] : []),
       ...nextStep(check && !current ? "tonedial compile" : "tonedial show", ctx.ui),
     ],
     json: { path: ctx.paths.tone, agentsPath: ctx.paths.agents, enabled: config.enabled, written: !check, ...size },

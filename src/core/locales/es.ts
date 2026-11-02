@@ -81,6 +81,7 @@ const messages: Messages = {
     replaced: (slug) => `${slug}: se reemplazó el preajuste existente`,
     imported: (slug, replaced) => `${slug}: ${replaced ? "reemplazado" : "importado"}`,
     unreadable: (path, reason) => `${path}\nNo se puede leer: ${reason}`,
+    fileNotFound: (path) => `${path}\nNo se encontró el archivo. Revisa la ruta o indica una URL https.`,
     notJson: (path, reason) => `${path}: JSON no válido: ${reason}`,
     notJsonRemote: (url) => `${url}: la respuesta no es JSON válido`,
     notAPreset: (name) => `${name}: no es un objeto de preajuste`,
@@ -195,6 +196,8 @@ const messages: Messages = {
     size: (chars) => `TONE.md ${chars} caracteres`,
     contextCap: (cap, total) => `Claude Code reemplaza el contexto de hooks de más de ${cap} caracteres por una vista previa breve, así que el modelo solo ve el inicio del tono. La guía y el tono suman ${total} caracteres; acorta el valor largo entre persona.note, persona.self_ref, persona.user_ref y safeword.`,
     wouldWrite: "se escribiría",
+    compiledSize: (chars) => `Tamaño según los ajustes guardados: ${chars} caracteres`,
+    checkOnly: "--check · no se escribió nada",
     wrote: "escrito",
     notWritten: "Falta TONE.md. Ejecuta tonedial compile",
     notSetUp: "Sin inicializar. Ejecuta tonedial init",
@@ -421,10 +424,10 @@ const messages: Messages = {
   update: {
     running: (version) => `tonedial ${version}`,
     toUpdate: "Actualización del paquete:",
-    thenRefresh: "Actualizar los archivos de la aplicación:",
+    thenRefresh: "Actualizar los archivos incluidos y reparar el estado:",
     setupNeeded: "Configurar ToneDial:",
-    refreshFiles: (count) => `Archivos incluidos con actualizaciones: ${count}`,
-    reviewState: "Inspeccionar los archivos afectados:",
+    refreshFiles: (count) => `Archivos incluidos por actualizar: ${count}`,
+    reviewState: "Revisar los archivos incluidos señalados:",
     npmQuestion: "  ¿Ejecutar esta actualización de npm?",
     npmComplete: (version) => `Actualización de npm completada · instalado ${version}`,
     npmMissing: "No se encontró npm en PATH. Usa la instalación de Node/npm que gestiona esta copia de ToneDial.",
@@ -450,7 +453,7 @@ const messages: Messages = {
     noTar: "La actualización necesita tar, pero no está en PATH",
     notAPackage: "La descarga no es un paquete de ToneDial",
     linkInPackage: "La publicación contiene un enlace simbólico, innecesario en los archivos publicados",
-    needsApproval: "La actualización requiere aprobación y no se ha ejecutado. Ejecuta tonedial update --auto para aprobarla.",
+    needsApproval: "La actualización requiere aprobación y no se ha ejecutado. Para aprobarla, vuelve a ejecutar:\n  tonedial update --auto",
     integrityMismatch: "El hash de la descarga no coincide con el del registro",
     notOurs: (dir) => `${dir}: no lo creó ToneDial; elimínalo manualmente`,
     swapFailed: (reason) => `Instalación detenida: ${reason}. Revisa la recuperación antes de reintentar.`,
@@ -458,18 +461,21 @@ const messages: Messages = {
       `Falló el reemplazo y no se pudo restaurar la instalación anterior. Renombra ${previous} como lib.`,
   },
   help: {
-    more: "Ayuda del comando: tonedial <command> --help\nReferencia completa: tonedial --help\n\nSi encuentras algún problema o tienes ideas o comentarios, no dudes en compartirlos :)\nhttps://github.com/awesometic/tonedial/issues/new/choose",
+    commandHelp: "Ayuda del comando: tonedial <command> --help",
+    fullReference: "Referencia completa: tonedial --help",
+    feedback: "Si encuentras algún problema o tienes ideas o comentarios, no dudes en compartirlos :)\nhttps://github.com/awesometic/tonedial/issues/new/choose",
     tagline: "configura una vez el tono de tu agente y sigue usándolo",
-    footer: "Las conexiones son globales por defecto. Usa --here para el directorio actual o --project PATH para otro. Las escrituras sin interacción requieren un ámbito explícito.",
+    footer: "Los comandos de conexión usan el ámbito global salvo que indiques --here (proyecto actual) o --project DIR. Las escrituras sin interacción requieren indicar el ámbito explícitamente.",
+    recoveryOptions: "Opciones de recuperación de doctor --fix: tonedial doctor --help",
     groups: { tone: "Tono", presets: "Biblioteca de preajustes", agents: "Conexiones", upkeep: "Mantenimiento", flags: "Opciones" },
-    firstSteps: "Configura el tono y revísalo:",
+    firstSteps: "Para empezar: configura, ajusta el tono y luego conecta un agente:",
     examples: "Ejemplos",
     commands: {
       on: "reanudar la entrega del tono guardado",
       off: "pausar la entrega · conservar ajustes y TONE.md",
       init: "configurar y actualizar archivos incluidos",
       set: "cambiar ejes, rol o ajustes · sin argumentos abre el dial",
-      get: "consultar valores actuales · una clave muestra su significado y opciones",
+      get: "valores actuales · con clave: significado y opciones",
       address: "definir los nombres de ambas partes · sin argumentos pregunta · frecuencia: set address_frequency=rarely",
       persona: "definir roles del agente y usuario · sin argumentos pregunta",
       reset: "restablecer un eje · sin argumentos restablece todos",
@@ -480,20 +486,20 @@ const messages: Messages = {
       list: "preajustes incluidos y del usuario",
       edit: "abrir ajustes o un preajuste en $EDITOR",
       use: "aplicar un preajuste y compilar",
-      compile: "reconstruir TONE.md para reparar · automático al cambiar el tono",
+      compile: "reconstruir TONE.md · los cambios de tono ya lo hacen",
       export: "respaldar el perfil con nombres y rol en JSON",
       import: "importar un perfil JSON · use lo aplica",
-      wire: "conectar aquí un agente · sin argumentos pregunta",
+      wire: "conectar un agente en el ámbito elegido · sin argumentos pregunta",
       unwire: "quitar una conexión gestionada",
       doctor: "comprobar conexiones · reparar con --fix",
       update: "actualizar esta instalación",
-      eject: "desconectar todo · conservar preajustes",
+      eject: "desconectar todos los agentes del ámbito elegido · conservar preajustes",
     },
     flags: {
       verbose: "detalles del comando, diagnósticos y diferencias",
-      global: "conexiones globales (predeterminado) · ámbito explícito",
-      here: "conectar el proyecto actual",
-      project: "directorio de conexión · use: exportar el tono",
+      global: "ámbito global (predeterminado) · indicarlo hace explícito el ámbito",
+      here: "ámbito del proyecto actual",
+      project: "directorio de otro proyecto · use: exportar TONE.md allí",
       migrateLegacy: "init: aprobar un estado antiguo verificado",
       auto: "omitir la pregunta de aprobación · mostrar siempre diferencias",
       dryRun: "mostrar cambios · no escribir",
@@ -507,7 +513,7 @@ const messages: Messages = {
       fromPreset: "doctor --fix: preajuste para ajustes no disponibles",
       restorePreset: "doctor --fix: restaurar un preajuste ausente o dañado",
       preset: "test: previsualizar un perfil guardado · conservar el estado",
-      slug: "create/save: elegir el identificador del preajuste",
+      slug: "create/save: elegir el identificador del preajuste (minúsculas, dígitos, guiones)",
       acceptUsage: "test: aceptar consumo y cargos de este inicio",
       explain: "show: explicar ejes, ajustes y niveles de riesgo",
       check: "compile: indicar tamaño · no escribir",
@@ -516,6 +522,11 @@ const messages: Messages = {
       version: "versión · --verbose añade Node y esquema",
       help: "este texto",
     },
+    commandFlags: {
+      test: { dryRun: "mostrar el plan de inicio · no iniciar nada", project: "carpeta donde se ejecuta la conversación" },
+      use: { project: "exportar también TONE.md a DIR/.tonedial/" },
+      update: { auto: "actualizar sin preguntar" },
+    },
   },
   combos: {
     contradiction: (rule) => `${rule} se contradice.`,
@@ -523,17 +534,19 @@ const messages: Messages = {
     nothingBlocked: "No se bloquea nada.",
   },
   errors: {
-    notACommand: (name, known, nearest) =>
-      `${name} no es un comando.${nearest ? ` ¿Querías decir ${nearest}?` : ""} ` +
-      `Disponibles: ${known.join(", ")}`,
+    notACommand: (name, nearest) =>
+      `${name} no es un comando.${nearest ? ` ¿Querías decir tonedial ${nearest}?` : ""}\nComandos: tonedial --help`,
+    isAFlag: (name) => `${name} es una opción, no un comando:\n  tonedial --${name}`,
     stoppingHelp:
-      "Usa tonedial off para pausar la entrega sin borrar los ajustes y tonedial on para reanudarla. " +
-      "tonedial reset restablece los ejes. tonedial eject --global o --project <path> desconecta ese ámbito. " +
-      "Tras quitar todas las conexiones, npm uninstall -g tonedial elimina el comando.",
-    notAnOption: (flag) => `${flag}: no es una opción. Lista: tonedial --help`,
-    flagNotAccepted: (command, flag) => `${command}: no admite --${flag}`,
+      "Para pausar la entrega del tono y conservar los ajustes (tonedial on la reanuda):\n  tonedial off\n" +
+      "Para restablecer los ejes:\n  tonedial reset\n" +
+      "Para desconectar agentes, una vez por ámbito (o --here, --project PATH):\n  tonedial eject --global\n" +
+      "Para eliminar el comando cuando ya no quede ningún ámbito conectado:\n  npm uninstall -g tonedial",
+    notAnOption: (flag, command) =>
+      `${flag}: no es una opción${command ? ` de ${command}` : ""}.\nOpciones: tonedial ${command ? `${command} ` : ""}--help`,
+    flagNotAccepted: (command, flag) => `${command} no admite --${flag}.\nOpciones: tonedial ${command} --help`,
     tooManyArguments: (command, max, got) =>
-      `${command}: máximo ${max} argumento${max === 1 ? "" : "s"}; se recibieron ${got}`,
+      `${max === 0 ? `${command} no admite argumentos` : `${command} admite como máximo ${max} argumento${max === 1 ? "" : "s"}`} (se recibieron ${got}).\nUso: tonedial ${command} --help`,
     colourMode: (given) => `--color=${given}: se esperaba auto, always o never`,
     twoDestinations: "Usa un solo ámbito: --global, --here o --project PATH.",
     projectPathRequired: "--project necesita una ruta de directorio no vacía. Usa --here para el proyecto actual.",
@@ -563,7 +576,7 @@ const messages: Messages = {
       "y la línea alternativa no funcionan. Instala con una de estas opciones y ejecuta tonedial:\n  npm i -g tonedial\n" +
       "  curl -fsSL https://raw.githubusercontent.com/awesometic/tonedial/main/install.sh | sh",
     languageUnsupported: (given, languages) =>
-      `--lang ${given}: idioma de interfaz no admitido. Disponibles: ${languages.join(", ")}`,
+      `${given}: idioma de interfaz no admitido. Disponibles: ${languages.join(", ")}`,
     notUtf8:
       "El archivo no es UTF-8 válido. Reescribirlo cambiaría bytes fuera del bloque de ToneDial. " +
       "Conviértelo primero a UTF-8.",
@@ -588,7 +601,7 @@ const messages: Messages = {
     stateInstructionOverlap: (path) => `El estado se solapa con la raíz de instrucciones del agente:\n${path}\nNo se escribió nada. Elige un directorio exclusivo antes de init.`,
     legacyConsumers: (destinations) => `Otras conexiones, o conexiones sin registrar, siguen leyendo tone.md:\n${destinations.join("\n")}\nNo se escribió nada. Desconecta cada ámbito antes de repetir init y reconecta tras la transición.`,
     contextLayout: (kind, path, doctorCommand = "tonedial doctor --json") => kind === "fresh"
-      ? `ToneDial no está inicializado:\n${path}\nEjecuta tonedial init --tools none antes de cambiar ajustes.`
+      ? `ToneDial no está configurado:\n${path}\nPrepara primero el estado y vuelve a ejecutar este comando:\n  tonedial init --tools none`
       : `Esta estructura ${kind} necesita recuperar la aplicación:\n${path}\nNo se escribió nada. Inspecciona el mismo ámbito con:\n${doctorCommand}\nConserva esta raíz y ejecuta tonedial doctor --fix para mantener los ajustes y reconstruir los archivos generados.`,
     unreadableConfigFile: (path) => `No se pueden leer ajustes válidos de:\n${path}\nConserva el original y usa tonedial doctor --fix para elegir un origen guardado o valores predeterminados declarados.`,
     fixUnreadableConfig: (path) => `Los ajustes necesitan un origen de recuperación:\n${path}\nNo se escribió nada. Ejecuta tonedial doctor --fix de forma interactiva o elige --from-operation ID o --from-preset SLUG.`,

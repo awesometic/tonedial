@@ -81,6 +81,7 @@ const messages: Messages = {
     replaced: (slug) => `${slug}: 既存プリセットを置き換えました`,
     imported: (slug, replaced) => `${slug}: ${replaced ? "置き換えました" : "読み込みました"}`,
     unreadable: (path, reason) => `${path}\n読み取れません：${reason}`,
+    fileNotFound: (path) => `${path}\nファイルが見つかりません。パスを確認するか、https URL を指定してください。`,
     notJson: (path, reason) => `${path}: 無効なJSON：${reason}`,
     notJsonRemote: (url) => `${url}: 応答が有効なJSONではありません`,
     notAPreset: (name) => `${name}: プリセットオブジェクトではありません`,
@@ -195,6 +196,8 @@ const messages: Messages = {
     size: (chars) => `TONE.md ${chars}文字`,
     contextCap: (cap, total) => `Claude Codeは${cap}文字を超えるフックの内容を短いプレビューに置き換えるため、モデルが見るのは口調の冒頭だけです。ガイドと口調の合計は${total}文字です。persona.note、persona.self_ref、persona.user_ref、safewordのうち長い値を短くしてください。`,
     wouldWrite: "書き込み予定",
+    compiledSize: (chars) => `保存設定から生成されるサイズ：${chars}文字`,
+    checkOnly: "--check · 書き込みなし",
     wrote: "書き込み済み",
     notWritten: "TONE.md がありません。tonedial compile を実行してください",
     notSetUp: "未初期化です。tonedial init を実行してください",
@@ -421,10 +424,10 @@ const messages: Messages = {
   update: {
     running: (version) => `tonedial ${version}`,
     toUpdate: "パッケージの更新：",
-    thenRefresh: "アプリのファイルを更新：",
+    thenRefresh: "同梱ファイルを更新し、状態を修復：",
     setupNeeded: "ToneDialの初期設定：",
-    refreshFiles: (count) => `更新可能な同梱ファイル：${count}件`,
-    reviewState: "問題のあるアプリファイルを確認：",
+    refreshFiles: (count) => `更新する同梱ファイル：${count}件`,
+    reviewState: "表示された同梱ファイルを確認：",
     npmQuestion: "  npmで更新しますか？",
     npmComplete: (version) => `npm更新完了 · インストール済み ${version}`,
     npmMissing: "PATHにnpmがありません。このToneDialをインストールしたNode/npm環境を使用してください。",
@@ -450,7 +453,7 @@ const messages: Messages = {
     noTar: "更新には tar が必要ですがPATHにありません",
     notAPackage: "ダウンロードしたものはToneDialパッケージではありません",
     linkInPackage: "リリースにシンボリックリンクがありますが、公開ファイルには不要です",
-    needsApproval: "更新の承認が必要です。更新は実行していません。承認するには tonedial update --auto を実行してください。",
+    needsApproval: "更新の承認が必要です。更新は実行していません。承認するには再実行してください：\n  tonedial update --auto",
     integrityMismatch: "ダウンロードのハッシュがレジストリと一致しません",
     notOurs: (dir) => `${dir}: ToneDialが作成したものではありません。手動で削除してください`,
     swapFailed: (reason) => `インストール停止：${reason}。再試行前に復旧の詳細を確認してください。`,
@@ -458,18 +461,21 @@ const messages: Messages = {
       `置換に失敗し、旧インストールも復元できません。${previous} を lib に名前変更してください。`,
   },
   help: {
-    more: "コマンド別ヘルプ：tonedial <command> --help\n全体のリファレンス：tonedial --help\n\n問題が起きたときや、アイデア・フィードバックがあるときは、お気軽にお寄せください :)\nhttps://github.com/awesometic/tonedial/issues/new/choose",
+    commandHelp: "コマンド別ヘルプ：tonedial <command> --help",
+    fullReference: "全体のリファレンス：tonedial --help",
+    feedback: "問題が起きたときや、アイデア・フィードバックがあるときは、お気軽にお寄せください :)\nhttps://github.com/awesometic/tonedial/issues/new/choose",
     tagline: "エージェントの口調を一度設定し、使い続ける",
-    footer: "接続は既定でグローバルです。現在の場所は --here、別の場所は --project PATH を使います。無人書き込みには範囲の明示が必要です。",
+    footer: "接続コマンドは、--here（現在のプロジェクト）か --project DIR を指定しない限りグローバル範囲を使います。無人書き込みでは範囲を明示してください。",
+    recoveryOptions: "doctor --fix の復旧オプション：tonedial doctor --help",
     groups: { tone: "口調", presets: "プリセットライブラリ", agents: "接続", upkeep: "保守", flags: "オプション" },
-    firstSteps: "口調を設定し、確認します：",
+    firstSteps: "はじめに：初期設定し、口調を調整してから、エージェントを接続します：",
     examples: "使用例",
     commands: {
       on: "保存した口調の配信を再開",
       off: "口調の配信を一時停止 · 設定とTONE.mdは保持",
       init: "初期設定と同梱ファイルの更新",
       set: "軸・役割・設定を変更 · 引数なしでダイヤル",
-      get: "現在の設定値を確認 · キー指定で意味と選択肢も表示",
+      get: "現在の値を表示 · キー指定で意味と選択肢も表示",
       address: "双方の呼称を設定 · 引数なしで質問 · 頻度: set address_frequency=rarely",
       persona: "エージェントとユーザーの役割を設定 · 引数なしで質問",
       reset: "軸を初期化 · 引数なしで全軸",
@@ -480,20 +486,20 @@ const messages: Messages = {
       list: "組み込みとユーザーのプリセット",
       edit: "設定かプリセットを $EDITOR で開く",
       use: "プリセットを適用してコンパイル",
-      compile: "修復用に TONE.md を再構築 · 口調変更時は自動",
+      compile: "TONE.md を再構築 · 口調を変えると自動で実行",
       export: "呼称と役割を含むプロファイルをJSONでバックアップ",
       import: "JSONから読み込み · use で適用",
-      wire: "この場所で接続 · 引数なしで案内",
+      wire: "選択した範囲でエージェントを接続 · 引数なしで案内",
       unwire: "管理対象の接続を解除",
       doctor: "接続を診断 · --fix で修復",
       update: "このインストールを更新",
-      eject: "全接続を解除 · プリセットは保持",
+      eject: "選択した範囲の接続をすべて解除 · プリセットは保持",
     },
     flags: {
       verbose: "コマンドの詳細・診断・差分",
-      global: "グローバル接続（既定）· 範囲を明示",
-      here: "現在のプロジェクトを接続",
-      project: "接続先ディレクトリ · use: 口調を書き出す",
+      global: "グローバル範囲（既定）· 指定で範囲を明示",
+      here: "現在のプロジェクト範囲",
+      project: "別プロジェクトのディレクトリ · use: そこへ TONE.md を出力",
       migrateLegacy: "init: 検証済みの旧状態の移行を承認",
       auto: "承認の質問を省略 · 差分は必ず表示",
       dryRun: "変更を表示 · 書き込まない",
@@ -507,7 +513,7 @@ const messages: Messages = {
       fromPreset: "doctor --fix: 不足した設定用のプリセット",
       restorePreset: "doctor --fix: 不足・破損したユーザープリセットを復元",
       preset: "test: 保存プロファイルをプレビュー · 現在の状態は保持",
-      slug: "create/save: プリセットのスラッグを指定",
+      slug: "create/save: スラッグを指定（英小文字・数字・ハイフン）",
       acceptUsage: "test: この起動のアカウント使用量と料金に同意",
       explain: "show: 軸・設定・注意レベルの説明",
       check: "compile: サイズを表示 · 書き込まない",
@@ -516,6 +522,11 @@ const messages: Messages = {
       version: "バージョン · --verbose でNodeとスキーマも表示",
       help: "このヘルプ",
     },
+    commandFlags: {
+      test: { dryRun: "起動計画を表示 · 何も起動しない", project: "会話を実行するフォルダー" },
+      use: { project: "DIR/.tonedial/ にも TONE.md を書き出す" },
+      update: { auto: "確認せずに更新を実行" },
+    },
   },
   combos: {
     contradiction: (rule) => `${rule} は自己矛盾しています。`,
@@ -523,17 +534,19 @@ const messages: Messages = {
     nothingBlocked: "ブロックはしていません。",
   },
   errors: {
-    notACommand: (name, known, nearest) =>
-      `${name} はコマンドではありません。${nearest ? `${nearest} のことですか？` : ""} ` +
-      `選択肢：${known.join(", ")}`,
+    notACommand: (name, nearest) =>
+      `${name} はコマンドではありません。${nearest ? `tonedial ${nearest} のことですか？` : ""}\nコマンド一覧：tonedial --help`,
+    isAFlag: (name) => `${name} はコマンドではなくオプションです：\n  tonedial --${name}`,
     stoppingHelp:
-      "設定を削除せずに口調の配信を止めるには tonedial off を実行し、再開するには tonedial on を実行してください。" +
-      "tonedial reset は軸の既定値を復元します。tonedial eject --global または --project <path> でその範囲を解除します。" +
-      "全接続を解除した後、npm uninstall -g tonedial でコマンドを削除できます。",
-    notAnOption: (flag) => `${flag}: オプションではありません。一覧：tonedial --help`,
-    flagNotAccepted: (command, flag) => `${command}: --${flag} は使えません`,
+      "設定を残して口調の配信を止めるには（再開は tonedial on）：\n  tonedial off\n" +
+      "軸を既定値に戻すには：\n  tonedial reset\n" +
+      "エージェントの接続を解除するには（範囲ごとに実行。--here、--project PATH も可）：\n  tonedial eject --global\n" +
+      "すべての範囲の接続を解除した後、コマンドを削除するには：\n  npm uninstall -g tonedial",
+    notAnOption: (flag, command) =>
+      `${flag}: ${command ? `${command} の` : ""}オプションではありません。\nオプション一覧：tonedial ${command ? `${command} ` : ""}--help`,
+    flagNotAccepted: (command, flag) => `${command} では --${flag} は使えません。\nオプション一覧：tonedial ${command} --help`,
     tooManyArguments: (command, max, got) =>
-      `${command}: 引数は最大 ${max}個、入力は ${got}個です`,
+      `${max === 0 ? `${command} は引数を取りません` : `${command} の引数は最大 ${max}個です`}（入力：${got}個）。\n使い方：tonedial ${command} --help`,
     colourMode: (given) => `--color=${given}: auto、always、never を指定してください`,
     twoDestinations: "範囲は --global、--here、--project PATH の1つだけ指定してください。",
     projectPathRequired: "--project には空でないディレクトリパスが必要です。現在の場所には --here を使ってください。",
@@ -563,7 +576,7 @@ const messages: Messages = {
       "次のいずれかでインストールし、tonedial を実行してください：\n  npm i -g tonedial\n" +
       "  curl -fsSL https://raw.githubusercontent.com/awesometic/tonedial/main/install.sh | sh",
     languageUnsupported: (given, languages) =>
-      `--lang ${given}: 未対応の表示言語です。選択肢：${languages.join(", ")}`,
+      `${given}: 未対応の表示言語です。選択肢：${languages.join(", ")}`,
     notUtf8:
       "有効なUTF-8ファイルではありません。書き換えるとToneDial領域外のバイトも変わります。" +
       "先にUTF-8へ変換してください。",
@@ -588,7 +601,7 @@ const messages: Messages = {
     stateInstructionOverlap: (path) => `ToneDial状態がエージェントの指示ルートと重なっています：\n${path}\n書き込みはしていません。init の前に専用ディレクトリを選んでください。`,
     legacyConsumers: (destinations) => `他の接続か未記録の接続がまだ tone.md を読みます：\n${destinations.join("\n")}\n書き込みはしていません。各範囲で解除して init を再試行し、移行後に再接続してください。`,
     contextLayout: (kind, path, doctorCommand = "tonedial doctor --json") => kind === "fresh"
-      ? `ToneDialは未初期化です：\n${path}\n設定変更の前に tonedial init --tools none を実行してください。`
+      ? `ToneDialは未設定です：\n${path}\n先に状態を準備してから、このコマンドを再実行してください：\n  tonedial init --tools none`
       : `${kind} 構成のアプリ復旧が必要です：\n${path}\n書き込みはしていません。同じ範囲を確認：\n${doctorCommand}\nこのルートを保持し、tonedial doctor --fix で保存設定を保護して生成ファイルを再構築してください。`,
     unreadableConfigFile: (path) => `有効な設定を読み取れません：\n${path}\n原本を保持し、tonedial doctor --fix で保存元か明示された既定値を選んでください。`,
     fixUnreadableConfig: (path) => `設定には復旧元が必要です：\n${path}\n書き込みはしていません。tonedial doctor --fix を対話的に実行するか --from-operation ID または --from-preset SLUG を指定してください。`,

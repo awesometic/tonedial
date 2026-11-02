@@ -1,85 +1,72 @@
 status: 0
---- stdout --- [bytes=4262; endsWithNewline=true]
+--- stdout --- [bytes=3515; endsWithNewline=true]
 tonedial — set a coding agent's manner once and keep using it
 
 tonedial <command> [options]
 
-Set up your tone, then inspect it:
-  tonedial init --tools none --global --auto
-  tonedial show
+Get started: set up, adjust your tone, then connect an agent:
+  tonedial init --tools none --global
+  tonedial set
+  tonedial wire
 
 Tone
-  on                         resume saved tone delivery
-  off                        pause tone delivery · keep settings and TONE.md
-  set <key>=<value> …       change axes, role or settings · bare opens dial
-  get [key]                  read current setting values · key adds its
-                             meaning and choices
-  address [self user]        set names for each party · bare prompts ·
-                             frequency: set address_frequency=rarely
-  persona [agent user]       set agent and user roles · bare prompts
-  reset [axis]               reset an axis · bare resets all axes
-  show [slug]                current settings · slug previews a saved profile
-  test [claude|codex]        try saved settings or a preset in a new
-                             conversation
+  set <key>=<value>...  change axes, role or settings · bare opens dial
+  show [slug]           current settings · slug previews a saved profile
+  get [key]             show current values · a key adds meaning and choices
+  reset [axis]          reset an axis · bare resets all axes
+  address [self user]   set names for each party · bare prompts · frequency:
+                        set address_frequency=rarely
+  persona [agent user]  set agent and user roles · bare prompts
+  test [claude|codex]   try saved settings or a preset in a new conversation
+  off                   pause tone delivery · keep settings and TONE.md
+  on                    resume saved tone delivery
 
 Preset library
-  create [name] …           create and apply a preset · bare guides setup
-  use <slug>                 apply a preset and compile
-  save [display name]        save the current tone as a profile
-  list                       bundled and user presets
-  export <slug>              back up a profile, including address and role, as
-                             JSON
-  import <file>              import a profile from JSON · use applies it
-  edit [preset <slug>]       open settings or a preset in $EDITOR
+  list                  bundled and user presets
+  use <slug>            apply a preset and compile
+  create [name] ...     create and apply a preset · bare guides setup
+  save [display name]   save the current tone as a profile
+  export <slug>         back up a profile, including address and role, as JSON
+  import <file>         import a profile from JSON · use applies it
+  edit [preset <slug>]  open settings or a preset in $EDITOR
 
 Connections
-  init                       set up and refresh bundled files
-  wire [tool]                connect an agent here · bare prompts
-  unwire [tool]              remove a managed connection
-  doctor                     check connections · repair with --fix
-  eject                      disconnect everything · keep presets
+  init                  set up and refresh bundled files
+  wire [tool]           connect an agent in the selected scope · bare prompts
+  unwire [tool]         remove a managed connection
+  doctor                check connections · repair with --fix
+  eject                 disconnect agents in the selected scope · keep presets
 
 Maintenance
-  compile                    rebuild TONE.md for repair · tone changes do this
-                             automatically
-  update                     update this install
+  compile               rebuild TONE.md · tone changes already do this
+  update                update this install
 
 Options
-  --global                   global connections (default) · explicit scope
-  --here                     connect the current project
-  --project=DIR              connection directory · use: export artifact
-  --migrate-legacy           init: approve validated older state
-  --auto                     skip approval prompt · always show diff
-  --dry-run                  show changes · write nothing
-  --lang=CODE                init: interface language (en, ko, ja, zh, es)
-  --commands                 init: also install /tone
-  --tools=LIST               agents to connect · init: none = state only
-  --fix                      doctor: repair fixable findings
-  --rollback=ID              doctor --fix: restore one operation
-  --quarantine-operation=ID  doctor --fix: quarantine one unreadable operation
-                             record
-  --from-operation=ID        doctor --fix: select saved settings from an
-                             operation
-  --from-preset=SLUG         doctor --fix: preset for unavailable settings
-  --restore-preset=SLUG      doctor --fix: restore one missing or damaged user
-                             preset
-  --preset=SLUG              test: preview a saved profile · current state
-                             kept
-  --slug=SLUG                create/save: choose a preset slug
-  --accept-usage             test: accept account usage and charges for this
-                             launch
-  --explain                  show: explain axes, settings, risky levels
-  --check                    compile: report size · write nothing
-  --json                     machine-readable output with schema
-  -v, --verbose              command details, diagnostics, and diffs
-  --color=MODE               auto (default), always, or never
-  --version                  version · --verbose adds Node and schema
-  --help                     this text
+  --global              global scope (default) · passing it counts as explicit
+  --here                current project scope
+  --project=DIR         another project directory · use: export TONE.md there
+  --migrate-legacy      init: approve validated older state
+  --auto                skip approval prompt · always show diff
+  --dry-run             show changes · write nothing
+  --lang=CODE           init: interface language (en, ko, ja, zh, es)
+  --commands            init: also install /tone
+  --tools=LIST          agents to connect · init: none = state only
+  --fix                 doctor: repair fixable findings
+  --preset=SLUG         test: preview a saved profile · current state kept
+  --slug=SLUG           create/save: preset slug (lowercase, digits, dashes)
+  --accept-usage        test: accept account usage and charges for this launch
+  --explain             show: explain axes, settings, risky levels
+  --check               compile: report size · write nothing
+  --json                machine-readable output with schema
+  -v, --verbose         command details, diagnostics, and diffs
+  --color=MODE          auto (default), always, or never
+  --version             version · --verbose adds Node and schema
+  --help                this text
+  Recovery options for doctor --fix: tonedial doctor --help
 
-Connections default to global. Use --here for cwd or --project PATH elsewhere.
-Unattended writes require an explicit scope.
+Connection commands use the global scope unless you pass --here (current
+project) or --project DIR. Unattended writes need the scope stated explicitly.
 Command help: tonedial <command> --help
-Full reference: tonedial --help
 
 If you run into a problem or have ideas or feedback, feel free to share them :)
 https://github.com/awesometic/tonedial/issues/new/choose

@@ -267,8 +267,7 @@ for (const language of selectedGoldenLanguages()) {
         assert.equal(capture.status, scenario.expected, `${language} ${scenario.name}: unexpected exit status`);
         assert.ok(capture.stdout.length > 0 || capture.stderr.length > 0, `${language} ${scenario.name}: empty capture cannot be a golden`);
         if (scenario.name === "unknown-command") {
-          const sentinel = catalogue(language).cli.errors.notACommand("not-a-command", ["__available__"], null)
-            .split("__available__")[0]!;
+          const sentinel = catalogue(language).cli.errors.notACommand("not-a-command", null);
           assert.ok(`${capture.stdout}${capture.stderr}`.includes(sentinel), `${language}: unknown-command ignored the configured locale`);
         }
         assertGolden(

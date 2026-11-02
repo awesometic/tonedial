@@ -417,7 +417,7 @@ export async function runAppRebuild(ctx: Ctx): Promise<AppRebuildResult> {
     for (const key of ["self_ref", "user_ref"]) if (!kept.has(`persona.address.${key}`)) defaulted.add(`persona.address.${key}`);
   }
   if (ctx.flags.lang !== null) {
-    if (!isLanguage(ctx.flags.lang)) throw new ConfigError(t.errors.languageUnsupported(ctx.flags.lang, LANGUAGES));
+    if (!isLanguage(ctx.flags.lang)) throw new ConfigError(t.errors.languageUnsupported(`--lang ${ctx.flags.lang}`, LANGUAGES));
     config.language = ctx.flags.lang;
   }
   await resolveActiveConflict(ctx, config, library);

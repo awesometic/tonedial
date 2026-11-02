@@ -386,7 +386,7 @@ function chooseLanguage(ctx: Ctx): Language {
   const requested = ctx.flags.lang;
   if (requested !== null) {
     if (!isLanguage(requested)) {
-      throw new ConfigError(ctx.t.errors.languageUnsupported(requested, LANGUAGES));
+      throw new ConfigError(ctx.t.errors.languageUnsupported(`--lang ${requested}`, LANGUAGES));
     }
     return requested;
   }

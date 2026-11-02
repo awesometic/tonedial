@@ -189,22 +189,24 @@ type CommandRow = [keyof Messages["help"]["commands"], string];
 
 /** Intent groups share one command inventory between compact and full help. */
 const COMMAND_GROUPS: [keyof Messages["help"]["groups"], CommandRow[]][] = [
+  // Most-used first. ASCII "..." because U+2026 is East Asian Ambiguous: padded as two cells,
+  // it drew one cell short of the column in a Latin terminal.
   ["tone", [
-    ["on", "on"],
-    ["off", "off"],
-    ["set", "set <key>=<value> …"],
+    ["set", "set <key>=<value>..."],
+    ["show", "show [slug]"],
     ["get", "get [key]"],
+    ["reset", "reset [axis]"],
     ["address", "address [self user]"],
     ["persona", "persona [agent user]"],
-    ["reset", "reset [axis]"],
-    ["show", "show [slug]"],
     ["test", "test [claude|codex]"],
+    ["off", "off"],
+    ["on", "on"],
   ]],
   ["presets", [
-    ["create", "create [name] …"],
-    ["use", "use <slug>"],
-    ["save", "save [display name]"],
     ["list", "list"],
+    ["use", "use <slug>"],
+    ["create", "create [name] ..."],
+    ["save", "save [display name]"],
     ["export", "export <slug>"],
     ["import", "import <file>"],
     ["edit", "edit [preset <slug>]"],
@@ -279,6 +281,14 @@ const FLAG_SYNTAX: [keyof Messages["help"]["flags"], string][] = [
   ["help", "--help"],
 ];
 
+/** Recovery-only flags: listed by `doctor --help`, summarized by one line in the full reference. */
+const RECOVERY_FLAGS: readonly (keyof Messages["help"]["flags"])[] =
+  ["rollback", "quarantineOperation", "fromOperation", "fromPreset", "restorePreset"];
+const REFERENCE_FLAGS = FLAG_SYNTAX.filter(([key]) => !RECOVERY_FLAGS.includes(key));
+
+/** The first three commands after install: state, the dial, then an agent connection. */
+const FIRST_STEPS = ["  tonedial init --tools none --global", "  tonedial set", "  tonedial wire"];
+
 function helpRows(pairs: [string, string][], width: number, ui: Palette): string[] {
   return pairs.flatMap(([syntax, description]) => {
     // Stack before compressing descriptions into an unreadable sliver.
@@ -302,7 +312,7 @@ function helpRows(pairs: [string, string][], width: number, ui: Palette): string
 function expandedUsage(t: Messages, ui: Palette): string {
   const width = Math.max(
     ...COMMAND_SYNTAX.map(([, syntax]) => maxCells(syntax)),
-    ...FLAG_SYNTAX.map(([, syntax]) => maxCells(syntax)),
+    ...REFERENCE_FLAGS.map(([, syntax]) => maxCells(syntax)),
   );
   return [
     ...wrap(`tonedial — ${t.help.tagline}`, ui.width).map(ui.bold),
@@ -310,8 +320,7 @@ function expandedUsage(t: Messages, ui: Palette): string {
     "tonedial <command> [options]",
     "",
     ...wrap(t.help.firstSteps, ui.width),
-    "  tonedial init --tools none --global --auto",
-    "  tonedial show",
+    ...FIRST_STEPS,
     ...COMMAND_GROUPS.flatMap(([group, commands]) => [
       "",
       ui.bold(t.help.groups[group]),
@@ -319,10 +328,13 @@ function expandedUsage(t: Messages, ui: Palette): string {
     ]),
     "",
     ui.bold(t.help.groups.flags),
-    ...helpRows(FLAG_SYNTAX.map(([key, syntax]) => [syntax, t.help.flags[key]]), width, ui),
+    ...helpRows(REFERENCE_FLAGS.map(([key, syntax]) => [syntax, t.help.flags[key]]), width, ui),
+    ...wrap(t.help.recoveryOptions, ui.width - 2).map(line => `  ${line}`),
     "",
     ...wrap(t.help.footer, ui.width),
-    ...wrap(t.help.more, ui.width),
+    ...wrap(t.help.commandHelp, ui.width),
+    "",
+    ...wrap(t.help.feedback, ui.width),
   ].join("\n");
 }
 
@@ -334,15 +346,17 @@ function compactUsage(t: Messages, ui: Palette): string {
     "tonedial <command> [options]",
     "",
     ...wrap(t.help.firstSteps, ui.width),
-    "  tonedial init --tools none --global --auto",
-    "  tonedial show",
+    ...FIRST_STEPS,
     "",
     ...COMMAND_GROUPS.flatMap(([group, commands]) => [
       ui.bold(t.help.groups[group]),
       ...wrap(commands.map(([key]) => key).join("  "), ui.width - 2).map(line => `  ${line}`),
     ]),
     "",
-    ...wrap(t.help.more, ui.width),
+    ...wrap(t.help.commandHelp, ui.width),
+    ...wrap(t.help.fullReference, ui.width),
+    "",
+    ...wrap(t.help.feedback, ui.width),
   ].join("\n");
 }
 
@@ -358,10 +372,25 @@ function commandUsage(name: string, copy: Catalogue, ui: Palette): string {
     "color",
     "help",
   ] as (keyof Messages["help"]["flags"])[];
+  const overrides = t.help.commandFlags[name as keyof Messages["help"]["commands"]] ?? {};
+  // A shared row's `compile:` or `use:` clause names the command it applies to. Inside one
+  // command's help, its own label is noise and another command's clause does not apply.
+  // `doctor --fix:` stays, since it names the flag the option also needs.
+  const own = (description: string) => {
+    const kept = description.split(" · ").flatMap((segment) => {
+      const prefix = /^([a-z]+(?:\/[a-z]+)*)[:：] ?/.exec(segment);
+      const owners = prefix?.[1]!.split("/") ?? [];
+      if (!prefix || !owners.every((owner) => Object.hasOwn(COMMANDS, owner))) return [segment];
+      return owners.includes(name) ? [segment.slice(prefix[0].length)] : [];
+    });
+    return kept.length ? kept.join(" · ") : description;
+  };
   const flags = flagKeys.map((key) => {
     const syntax = FLAG_SYNTAX.find(([candidate]) => candidate === key)?.[1] ?? `--${key}`;
-    return [syntax, t.help.flags[key]] as [string, string];
+    return [syntax, overrides[key] ?? own(t.help.flags[key])] as [string, string];
   });
+  // Section headings here carry no colon, like Options and Examples.
+  const heading = (text: string) => ui.bold(text.replace(/[:：]\s*$/, ""));
   const width = Math.max(...flags.map(([flag]) => maxCells(flag)));
   const keyWidth = Math.max(...[...AXIS_ORDER, ...SETTING_KEYS].map(key => maxCells(key)));
   return [
@@ -375,9 +404,9 @@ function commandUsage(name: string, copy: Catalogue, ui: Palette): string {
     ui.bold(t.help.examples),
     ...COMMAND_EXAMPLES[name as keyof Messages["help"]["commands"]].map(example => `  ${ui.accent(example)}`),
     ...(["get", "set"].includes(name) ? [
-      "", ui.bold(t.artifact.whatEachAxisObserves),
+      "", heading(t.artifact.whatEachAxisObserves),
       ...helpRows(AXIS_ORDER.map(key => [key, settingHelp(key, copy).join(" · ")]), keyWidth, ui),
-      "", ui.bold(t.artifact.whatElseIsSettable),
+      "", heading(t.artifact.whatElseIsSettable),
       ...helpRows(SETTING_KEYS.map(key => [key, settingHelp(key, copy).join(" · ")]), keyWidth, ui),
     ] : []),
   ].join("\n");
@@ -403,6 +432,9 @@ function columns(env: NodeJS.ProcessEnv, stream: NodeJS.WriteStream, isTTY: bool
  * them. Replace it with a measured one when a user reports a word that is not here.
  */
 const STOPPING = ["disable", "stop", "quit", "uninstall", "remove", "delete"];
+
+/** Flags people type as commands. They point to the flag rather than to a near spelling. */
+const FLAG_WORDS = ["help", "version"];
 
 export async function run(
   argv: string[],
@@ -452,11 +484,14 @@ export async function run(
     const flag = /'(-[^']*)'/.exec((cause as Error).message)?.[1];
     // Let the same parser recognize intent despite invalid options. Its tokens distinguish
     // --json from a string option's value or a literal argument after --.
-    const asJson = parseArgs({ args: argv, options, allowPositionals: true, strict: false, tokens: true })
-      .tokens.some((token) => token.kind === "option" && token.name === "json");
+    const { tokens } = parseArgs({ args: argv, options, allowPositionals: true, strict: false, tokens: true });
+    const asJson = tokens.some((token) => token.kind === "option" && token.name === "json");
+    // Point to that command's own help when the first argument names one.
+    const first = tokens.find((token) => token.kind === "positional")?.value;
+    const command = first !== undefined && Object.hasOwn(COMMANDS, first) ? first : null;
     return fail(
       asJson,
-      flag ? messages(resolvePaths(env).config, env).errors.notAnOption(asJson ? flag : humanText(flag)) : (cause as Error).message,
+      flag ? messages(resolvePaths(env).config, env).errors.notAnOption(asJson ? flag : humanText(flag), command) : (cause as Error).message,
       2,
       palette("never", env, false, resolveBudget(columns(env, process.stderr, isErrTTY))),
     );
@@ -505,7 +540,7 @@ export async function run(
   }
   if (parsed.values.help) {
     if (!Object.hasOwn(COMMANDS, name)) {
-      return fail(asJson, say.errors.notACommand(asJson ? name : humanText(name), COMMAND_NAMES, nearest(name, COMMAND_NAMES)), 2, uiErr);
+      return fail(asJson, say.errors.notACommand(asJson ? name : humanText(name), nearest(name, COMMAND_NAMES)), 2, uiErr);
     }
     process.stdout.write(`${commandUsage(name, copy, ui)}\n`);
     return 0;
@@ -525,7 +560,8 @@ export async function run(
     // one: `stop` is two edits from `show` and `delete` three from `reset`, so the match would
     // answer a person trying to leave with the command they were leaving.
     if (STOPPING.includes(name)) return fail(asJson, say.errors.stoppingHelp, 2, uiErr);
-    return fail(asJson, say.errors.notACommand(asJson ? name : humanText(name), COMMAND_NAMES, nearest(name, COMMAND_NAMES)), 2, uiErr);
+    if (FLAG_WORDS.includes(name)) return fail(asJson, say.errors.isAFlag(name), 2, uiErr);
+    return fail(asJson, say.errors.notACommand(asJson ? name : humanText(name), nearest(name, COMMAND_NAMES)), 2, uiErr);
   }
 
   const flags: Flags = {
@@ -593,7 +629,15 @@ export async function run(
       ? [`  ${scopeLabel}`, `  ${humanText(agent.root)}`] : [];
     const contextExempt = name === "compile" && flags.check;
     if (command.context !== undefined && command.context !== "setup" && !contextExempt) {
-      const { change, config } = planConfig(ctx);
+      let planned: ReturnType<typeof planConfig>;
+      try {
+        planned = planConfig(ctx);
+      } catch (cause) {
+        // The parser names the bad field; the recovery route is what the user can act on.
+        if (cause instanceof ConfigError) throw new ConfigError(`${cause.message}\n${t.errors.unreadableConfigFile(paths.config)}`);
+        throw cause;
+      }
+      const { change, config } = planned;
       const layout = inspectContextLayout(paths, change, t, {
         config: change.before === null ? null : config,
         expectedArtifact: compile(toCompileInput(config)),

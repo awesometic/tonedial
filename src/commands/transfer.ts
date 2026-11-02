@@ -92,6 +92,7 @@ export async function runImport(ctx: Ctx, args: string[]): Promise<CommandResult
       text = readFileSync(file, "utf8");
     } catch (cause) {
       const error = cause as NodeJS.ErrnoException;
+      if (error.code === "ENOENT") throw new ConfigError(ctx.t.preset.fileNotFound(file), { cause });
       // The path has its own copyable row; do not repeat it inside the OS diagnostic.
       const suffix = `, ${error.syscall} '${error.path}'`;
       const reason = error.path === file && error.message.endsWith(suffix)

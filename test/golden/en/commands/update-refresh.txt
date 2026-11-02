@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=211; endsWithNewline=true]
+--- stdout --- [bytes=218; endsWithNewline=true]
 ToneDial · update
 
   tonedial <VERSION>
@@ -8,9 +8,9 @@ ToneDial · update
     npm update -g tonedial
   --dry-run · nothing written
 
-  Bundled file updates available: 5
+  Bundled files to refresh: 5
 
-  Refresh application files:
+  Refresh bundled files and repair state:
     tonedial doctor --fix
 --- stderr --- [bytes=0; endsWithNewline=false]
 

@@ -77,7 +77,7 @@ function assign(config: Config, key: string, value: string, t: Messages, asJson:
   }
 
   if (key === "language") {
-    if (!isLanguage(value)) throw new ConfigError(t.errors.languageUnsupported(asJson ? value : humanText(value), LANGUAGES));
+    if (!isLanguage(value)) throw new ConfigError(t.errors.languageUnsupported(`language=${asJson ? value : humanText(value)}`, LANGUAGES));
     config.language = value;
     return;
   }
