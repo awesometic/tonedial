@@ -2213,3 +2213,16 @@ test("wire without an agent outside a terminal gives a runnable example", async 
   assert.equal(await cli("wire", "--global", "--auto"), 1);
   assert.ok(stderr().includes(EN.errors.wireToolsRequired("tonedial wire codex --global", true)), stderr());
 });
+
+test("a risk warning on stderr carries one marker while JSON keeps the notice text", async () => {
+  await initializeState();
+  assert.equal(await cli("use", "ego-sword"), 0, stderr());
+  err = [];
+  assert.equal(await cli("set", "warmth=4"), 0, stderr());
+  const risk = EN.notice.riskAxes(["critique"]);
+  assert.ok(stderr().includes(`⚠ ${risk.replace(/^! /, "")}`), stderr());
+  assert.doesNotMatch(stderr(), /⚠ !/);
+  out = [];
+  assert.equal(await cli("set", "warmth=3", "--json"), 0, stderr());
+  assert.ok(JSON.parse(stdout()).warnings.includes(risk), "JSON warnings are unchanged");
+});

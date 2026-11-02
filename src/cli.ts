@@ -688,7 +688,8 @@ const CONTINUATION = "    ";
 
 /** Fold warning prose without reflowing copyable paths or commands. */
 function notice(message: string, ui: Palette): string {
-  const folded = message.split("\n").flatMap(line => {
+  // A risk notice leads with "!" for stdout rows; here the warning marker stands in for it.
+  const folded = message.replace(/^! /, "").split("\n").flatMap(line => {
     const safe = humanText(line);
     return isCopyableLine(safe) ? [safe] : wrap(safe, ui.width - cells(MARKER));
   });

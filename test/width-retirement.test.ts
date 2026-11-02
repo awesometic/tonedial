@@ -173,7 +173,7 @@ test("existing init and doctor rebuild disclose selected risky tone without lowe
   const humanPreview = await invoke(f, ["init", "--global", "--tools", "none", "--auto", "--dry-run"], false);
   assert.equal(humanPreview.code, 0, humanPreview.stderr);
   const humanOutput = (humanPreview.stdout + humanPreview.stderr).replace(/\s+/g, " ");
-  assert.ok(humanOutput.includes(EN.notice.riskAxes(expectedRisk)), "the selected risks remain visible in the preview");
+  assert.ok(humanOutput.includes(EN.notice.riskAxes(expectedRisk).replace(/^! /, "")), "the selected risks remain visible in the preview");
   assert.ok(!humanOutput.includes(EN.notice.riskIntro), "a preview must not repeat the generic product disclaimer");
   assert.deepEqual(snapshot(f.paths.root), before);
   for (const args of [["init", "--global", "--tools", "none", "--auto"], ["doctor", "--fix", "--global", "--tools", "none", "--auto"]]) {

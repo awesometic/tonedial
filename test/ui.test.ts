@@ -960,7 +960,8 @@ test("normal setup stays quiet and --explain describes advisory risk in every la
     out = [];
     err = [];
     assert.equal(await cli("show"), 0);
-    assert.ok(flatten(err.join("")).includes(flatten(copy.cli.notice.riskAxes(["flattery", "refusal"]))), `${language}: selected risky axes missing`);
+    // stderr renders the warning marker in place of the notice's own "!".
+    assert.ok(flatten(err.join("")).includes(flatten(copy.cli.notice.riskAxes(["flattery", "refusal"]).replace(/^! /, ""))), `${language}: selected risky axes missing`);
     out = [];
     err = [];
     assert.equal(await cli("list"), 0);
