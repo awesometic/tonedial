@@ -190,8 +190,9 @@ test("the rules section has twelve axis lines, selected composites, and shared c
     assert.ok(rules, `${name}: no rules section`);
     const lines = rules!.trimEnd().split("\n").filter((l) => l.startsWith("- "));
 
-    let expected = 17; // Twelve axes, formatting, register, address composition/frequency and speech level.
-    assert.match(lines.at(-5)!, /Choose format from the whole selection/, name);
+    let expected = 18; // Twelve axes, formatting, host styles, register, address composition/frequency and speech level.
+    assert.match(lines.at(-6)!, /Choose format from the whole selection/, name);
+    assert.match(lines.at(-5)!, /Combine this tone with any reply style or length instructions/, name);
     assert.match(lines.at(-4)!, /formality changes distance within them/, name);
     assert.match(lines.at(-4)!, /allow role variants/, name);
     const register: Record<string, string> = {

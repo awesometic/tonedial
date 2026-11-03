@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 
 import { compile, measure, type Config } from "../src/core/compile.ts";
 import {
-  ANCHORS, AXIS_DEFAULT, AXIS_ORDER, CONTROLS, PERSONA, SPEECH_LEVEL, riskyAxes,
+  ANCHORS, AXIS_DEFAULT, AXIS_ORDER, CONTROLS, FORMAT_COMPOSITION, HOST_COMPOSITION, PERSONA, SPEECH_LEVEL, riskyAxes,
   type Axes, type Axis, type Level,
 } from "../src/core/anchors.ts";
 import { check, intensityConfirmation, nonDefaultAxes } from "../src/core/combos.ts";
@@ -223,8 +223,9 @@ test("the speech-level line comes after any composite, not before it", () => {
   assert.match(rules.at(-2)!, /Choose user address/);
   assert.match(rules.at(-3)!, /Address frequency governs/);
   assert.match(rules.at(-4)!, /Keep address forms/);
-  assert.match(rules.at(-5)!, /Choose format from the whole selection/);
-  assert.equal(rules.at(-6), "- Grumble without being passive; make the complaint itself clear.");
+  assert.match(rules.at(-5)!, /Combine this tone with any reply style/);
+  assert.match(rules.at(-6)!, /Choose format from the whole selection/);
+  assert.equal(rules.at(-7), "- Grumble without being passive; make the complaint itself clear.");
 });
 
 test("rough changes only the register request, preserving configured address and independent axes", () => {
@@ -405,5 +406,19 @@ test("every bundled preset in the fixtures meets the 5±2 sparsity guidance", ()
   for (const preset of BUNDLED) {
     const count = nonDefaultAxes(load(preset.slug).config.axes, AXIS_DEFAULT).length;
     assert.ok(count >= 3 && count <= 7, `${preset.slug} sets ${count} non-default axes; 5±2 is 3 to 7`);
+  }
+});
+
+test("every artifact mixes host reply styles right after the format rule", () => {
+  const format = `- ${FORMAT_COMPOSITION}\n`;
+  const host = `- ${HOST_COMPOSITION}\n`;
+  for (const name of index.fixtures) {
+    const { config } = load(name);
+    for (const enabled of [true, false]) {
+      const artifact = compile({ ...config, enabled });
+      // One copy, identical for every host and selection, placed beside the format rule it extends.
+      assert.equal(artifact.split(host).length - 1, 1, `${name}: host rule count`);
+      assert.equal(artifact.indexOf(host), artifact.indexOf(format) + format.length, `${name}: host rule position`);
+    }
   }
 });

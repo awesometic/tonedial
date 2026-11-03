@@ -1,11 +1,12 @@
 import assert from "node:assert/strict";
-import { ADDRESS_COMPOSITION, ADDRESS_FREQUENCY, PERSONA } from "../../src/core/anchors.ts";
+import { ADDRESS_COMPOSITION, ADDRESS_FREQUENCY, HOST_COMPOSITION, PERSONA } from "../../src/core/anchors.ts";
 import { compile, type Config } from "../../src/core/compile.ts";
 
 /** Preserve captured bytes while checking all compiler text outside the new address policy. */
 export function assertRecordedTone(input: Config, recorded: string): void {
   assert.equal(input.address_frequency, undefined, "this capture predates address frequency");
-  let current = compile(input).replace(`- ${ADDRESS_COMPOSITION}\n`, "")
+  // Captures predate the address policy and the host reply-style rule; strip those lines only.
+  let current = compile(input).replace(`- ${ADDRESS_COMPOSITION}\n`, "").replace(`- ${HOST_COMPOSITION}\n`, "")
     .replace(`- ${ADDRESS_FREQUENCY.auto}\n`, "");
   const refs = input.persona?.address;
   const modern = PERSONA.address(refs?.self_ref ?? null, refs?.user_ref ?? null);

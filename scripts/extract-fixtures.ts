@@ -106,13 +106,14 @@ function checkComposites(name: string, axes: Axes, artifact: string, frequency: 
   const lines = rules.trimEnd().split("\n").filter((l) => l.startsWith("- "));
 
   const frequencyPrefix: Record<string, string> = { none: "- Use no name, title or role-specific address", auto: "- Choose user address when it helps", rarely: "- Usually omit user address.", frequently: "- Use user address in most substantive prose replies;" };
-  let expected = 17; // Twelve axes, format/register, address composition/frequency and speech level.
+  let expected = 18; // Twelve axes, format/host/register, address composition/frequency and speech level.
   if (!Object.hasOwn(frequencyPrefix, frequency) || !lines.at(-2)?.startsWith(frequencyPrefix[frequency]!) ||
       !lines.at(-3)?.startsWith("- Address frequency governs names, titles and role variants") ||
-      !lines.at(-5)?.startsWith("- Choose format from the whole selection:") ||
+      !lines.at(-6)?.startsWith("- Choose format from the whole selection:") ||
+      !lines.at(-5)?.startsWith("- Combine this tone with any reply style or length instructions") ||
       !lines.some(line => line.includes("formality changes distance within them")) ||
       !lines.at(-1)?.startsWith("- In languages with honorifics,")) {
-    throw new Error(`${name}: format/register composition or speech-level rule missing`);
+    throw new Error(`${name}: format/host/register composition or speech-level rule missing`);
   }
   for (const { fires, line } of COMPOSITES) {
     const should = fires(axes);

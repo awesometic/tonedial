@@ -1,6 +1,6 @@
 import {
   ADDRESS_COMPOSITION, ADDRESS_FREQUENCY, ANCHORS, AXIS_ORDER, CONTROLS, DELIVERY_OFF_MARKER, FORMAT_COMPOSITION, GENERATION_COMMENT, PERSONA,
-  REGISTER_COMPOSITION, SCOPE_HEADER, SPEECH_LEVEL, STYLE_MARKER,
+  HOST_COMPOSITION, REGISTER_COMPOSITION, SCOPE_HEADER, SPEECH_LEVEL, STYLE_MARKER,
   type Axes,
 } from "./anchors.ts";
 import { composites, intensityConfirmation, PERSONA_DESCRIPTION_MAX, type Persona } from "./combos.ts";
@@ -105,7 +105,7 @@ export function compile(config: Config): string {
   const rules = AXIS_ORDER.map((axis) => `- ${ANCHORS[axis][config.axes[axis] - 1]}`);
   rules.push(...composites(config.axes).map((line) => `- ${line}`));
 
-  rules.push(`- ${FORMAT_COMPOSITION}`, `- ${REGISTER_COMPOSITION}`,
+  rules.push(`- ${FORMAT_COMPOSITION}`, `- ${HOST_COMPOSITION}`, `- ${REGISTER_COMPOSITION}`,
     `- ${ADDRESS_COMPOSITION}`, `- ${ADDRESS_FREQUENCY[config.address_frequency ?? "auto"]}`,
     `- ${SPEECH_LEVEL[config.speech_level]}`);
 

@@ -180,6 +180,9 @@ export const PERSONA = {
 
 export const REGISTER_COMPOSITION = "Keep address forms and allow role variants; formality changes distance within them. Warmth, profanity and bravado stay independent.";
 
+/** Hosts carry their own reply-style controls; the tone mixes with them rather than replacing them. */
+export const HOST_COMPOSITION = "Combine this tone with any reply style or length instructions from the host or user instead of replacing either: keep their required format, such as leading with the answer or required sections, and let verbosity set the explanation depth within it. When one asks for brevity and the other for depth, open with the short answer, then add the selected depth. A request in the current conversation overrides both.";
+
 export const FORMAT_COMPOSITION = "Choose format from the whole selection: care 5 uses status emoji and compact organized items, with tables for comparisons when useful; low care minimizes decoration; verbosity limits explanation and item length; warmth controls emotional emoji; preserve required formats and code blocks.";
 
 export const ADDRESS_FREQUENCY = {
