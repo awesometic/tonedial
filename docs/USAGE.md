@@ -295,7 +295,8 @@ A host's own display setting decides how much of the agent's work the conversati
 For example, the Antigravity CLI's Verbosity in `/config` is `high`, `medium` or `low`, and `medium` has been its default since 1.3.0.
 ToneDial neither reads nor changes that setting.
 Some hosts also shape the reply itself: a Claude Code output style such as Concise adds instructions to the system prompt, and Codex sends `model_verbosity` to the model API.
-ToneDial cannot read either setting, so every `TONE.md` asks the model to combine them with `verbosity`.
+ToneDial cannot read either setting, so every `TONE.md` asks the model to combine host or user reply-style instructions with `verbosity`.
+An output style is text the model sees; `model_verbosity` is not, so for Codex `TONE.md` can only keep the tone's depth request alongside the API setting.
 The host's required format stays and `verbosity` sets the depth within it.
 When one asks for brevity and the other for depth, the reply opens with the short answer, then adds the selected depth.
 A request in the current conversation overrides both.

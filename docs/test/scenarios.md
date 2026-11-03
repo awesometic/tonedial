@@ -459,16 +459,21 @@ These procedures and generated artifacts are not measurement results or native e
 ## S11 — Host reply styles
 
 Hold all axes at their defaults except `verbosity=5`, with no persona, role or safeword.
-Run three conditions in fresh conversations:
+Run these conditions in fresh conversations:
 Claude Code with `outputStyle` set to `Concise`, Codex with `model_verbosity = "low"`,
-and a control on each host with no output style and no `model_verbosity` override.
-Freeze each compiled artifact, its complete input and SHA-256 before sending it,
-and record the host version, model, effort, the host style setting and its source file.
+and a control on each host: Claude Code with no output style, and Codex with an explicit
+`model_verbosity = "medium"`, because an unset value falls back to the model's default.
+Run every host-style condition twice, with the current artifact and with a matched pre-rule
+artifact: the same compile with the `Combine this tone with any reply style` line removed.
+Freeze each artifact, its complete input and SHA-256 before sending it, and record the host
+version, model, effort, the host style setting, its source file and the model's effective default.
 Send one request per conversation:
 `Explain why this function can return undefined and how to fix it: function first(items) { return items.find(Boolean); }`
 Predict that the host-style conditions open with a one- or two-sentence answer
 and then add the selected depth (reason, edge cases, an example),
 while the control may open with the explanation directly.
+Predict that the pre-rule arm drops more depth or host format than the current arm;
+no difference between the two arms means the rule adds nothing on that host and model.
 Fail a condition when the host style's required format is dropped
 or when `verbosity=5` depth disappears without a user request.
 Repeat each host-style condition once with the follow-up `Just the fix, please.`

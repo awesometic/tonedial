@@ -185,13 +185,18 @@ Required content, strict output formats and language naturalness remain separate
 
 ## Host reply-style mixing
 
-Score each S11 reply from its visible text only.
+Score each S11 reply from its visible text only, and score first replies and follow-ups separately.
 
-| Score | Meaning |
+| Score | First reply in a host-style arm |
 |---|---|
-| 2 | Keeps the host style's required format and opens with the short answer, then gives the selected depth; the follow-up turn obeys the latest request. |
+| 2 | Keeps the host style's required format and opens with the short answer, then gives the selected depth. |
 | 1 | Keeps one side fully and the other only partly, such as the depth without a leading short answer. |
-| 0 | Drops the host style's format, drops the selected depth without a user request, or ignores the latest request. |
+| 0 | Drops the host style's format, or drops the selected depth without a user request. |
+
+A follow-up passes when it obeys the latest request and fails otherwise.
+A control has no host format to keep; record only whether the selected depth is present.
+Codex `model_verbosity` imposes no visible format, so score its arms on depth and the leading answer.
+Compare each current arm with its matched pre-rule arm before drawing any conclusion about the rule.
 
 Report each host separately; a Concise output style and Codex `model_verbosity` act on different layers
 and are not pooled.

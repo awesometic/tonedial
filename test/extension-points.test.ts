@@ -150,4 +150,6 @@ test("the skill keeps a host's display verbosity apart from the verbosity axis",
 test("the traits reference leaves host reply styles to the compiled mixing rule", () => {
   // Moving verbosity to fight a host output style would undo the mixing TONE.md requests.
   assert.match(SKILL_TRAITS_MD, /host reply style[^\n]*mixed/);
+  // Codex model_verbosity reaches the API, not the model's text; the guidance must not claim more.
+  assert.match(SKILL_TRAITS_MD, /model_verbosity[^\n]*not visible to the model as text/);
 });
