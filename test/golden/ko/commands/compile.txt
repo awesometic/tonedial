@@ -4,7 +4,7 @@ ToneDial · compile
 
   TONE.md 최신
   <ROOT>/state/TONE.md
-  저장된 설정 기준 크기: 4,355자
+  저장된 설정 기준 크기: 4,769자
   --check · 기록하지 않음
 
   tonedial show

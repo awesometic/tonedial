@@ -4,7 +4,7 @@ ToneDial · compile
 
   TONE.md current
   <ROOT>/state/TONE.md
-  Size from saved settings: 4,504 characters
+  Size from saved settings: 4,918 characters
   --check · nothing written
 
   tonedial show

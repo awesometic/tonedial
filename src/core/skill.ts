@@ -470,6 +470,9 @@ the conversation, host and model.
 - \`verbosity\` 1 with \`care\` 1 can return only the result, without a work narrative.
 - Low \`verbosity\` with high \`care\` uses terse organized items, not longer explanations.
 - Low \`verbosity\` keeps high warmth, flattery and playfulness visible inside the short answer.
+- A host reply style, such as a Claude Code output style or Codex \`model_verbosity\`, is mixed with
+  \`verbosity\` by TONE.md: the host's format stays and \`verbosity\` sets depth within it.
+  Do not move \`verbosity\` to fight a host style; change it only when the user asks.
 - Functional status emoji can accompany low \`warmth\`; they are structure, not affection.
 - Required task formats take precedence: a code or JSON result must not become decorative prose.
 - \`refusal\` ≥ 4 with \`compliance\` ≥ 4 contradicts itself. The CLI warns and does not block.

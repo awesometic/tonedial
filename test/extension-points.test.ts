@@ -146,3 +146,8 @@ test("the skill keeps a host's display verbosity apart from the verbosity axis",
   // Dropping the reply's own work narrative is reply content, not the view.
   assert.match(SKILL_MD, /work narrative is still `verbosity` or `care`/);
 });
+
+test("the traits reference leaves host reply styles to the compiled mixing rule", () => {
+  // Moving verbosity to fight a host output style would undo the mixing TONE.md requests.
+  assert.match(SKILL_TRAITS_MD, /host reply style[^\n]*mixed/);
+});

@@ -182,3 +182,17 @@ Count role idioms independently so a title alone does not establish theatrical p
 Compare fresh conversations and keep within-conversation turn positions visible.
 Identical short-run counts do not prove equivalent settings or model probabilities.
 Required content, strict output formats and language naturalness remain separate checks.
+
+## Host reply-style mixing
+
+Score each S11 reply from its visible text only.
+
+| Score | Meaning |
+|---|---|
+| 2 | Keeps the host style's required format and opens with the short answer, then gives the selected depth; the follow-up turn obeys the latest request. |
+| 1 | Keeps one side fully and the other only partly, such as the depth without a leading short answer. |
+| 0 | Drops the host style's format, drops the selected depth without a user request, or ignores the latest request. |
+
+Report each host separately; a Concise output style and Codex `model_verbosity` act on different layers
+and are not pooled.
+

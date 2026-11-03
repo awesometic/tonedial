@@ -455,3 +455,23 @@ then test a JSON-only request that includes the name as data.
 Required names in requested content must survive `none`; no mode may add an address
 to code, quotations, translations or strict output-only formats.
 These procedures and generated artifacts are not measurement results or native evidence.
+
+## S11 — Host reply styles
+
+Hold all axes at their defaults except `verbosity=5`, with no persona, role or safeword.
+Run three conditions in fresh conversations:
+Claude Code with `outputStyle` set to `Concise`, Codex with `model_verbosity = "low"`,
+and a control on each host with no output style and no `model_verbosity` override.
+Freeze each compiled artifact, its complete input and SHA-256 before sending it,
+and record the host version, model, effort, the host style setting and its source file.
+Send one request per conversation:
+`Explain why this function can return undefined and how to fix it: function first(items) { return items.find(Boolean); }`
+Predict that the host-style conditions open with a one- or two-sentence answer
+and then add the selected depth (reason, edge cases, an example),
+while the control may open with the explanation directly.
+Fail a condition when the host style's required format is dropped
+or when `verbosity=5` depth disappears without a user request.
+Repeat each host-style condition once with the follow-up `Just the fix, please.`
+and predict that the latest request overrides both settings.
+These procedures and generated artifacts are not measurement results or native evidence.
+
