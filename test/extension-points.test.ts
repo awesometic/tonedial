@@ -133,3 +133,11 @@ test("a preset's display name is distinct, because it is what a person picks by"
   const slugs = BUNDLED.map((p) => p.slug);
   assert.equal(new Set(slugs).size, slugs.length, `two presets share a slug: ${slugs.join(", ")}`);
 });
+
+test("the skill keeps a host's display verbosity apart from the verbosity axis", () => {
+  assert.match(SKILL_MD, /"be brief" → `verbosity` down/);
+  // A request about the conversation view changes no axis; the host owns that display.
+  assert.match(SKILL_MD, /tool calls[^\n]*→ no axis/);
+  assert.ok(SKILL_MD.includes("Antigravity CLI") && SKILL_MD.includes("/config"), "the host setting is named");
+  assert.match(SKILL_TRAITS_MD, /verbosity[^\n]*not the host's display/);
+});
