@@ -290,6 +290,11 @@ Required task formats and code blocks remain intact.
 With low verbosity, high warmth, flattery or playfulness stays visible inside the short answer
 through a clause, interjection or address term instead of extra sentences.
 
+`verbosity` sets how long the reply explains.
+A host's own display setting decides how much of the agent's work the conversation view shows.
+For example, the Antigravity CLI's Verbosity in `/config` is `high`, `medium` or `low`, and `medium` is its default since 1.3.0.
+ToneDial neither reads nor changes that setting.
+
 `show` marks deviations; `show --explain` describes settings and advisory risks.
 Red levels and a color-independent `!` start at `profanity=4`, `critique=4`, `flattery=3`, `conviction=5`, `compliance=5`, `refusal=2` and `bravado=2`.
 They never clamp values or block a setting; the intense-tone approval below is based on the requested components, not the warning display.
