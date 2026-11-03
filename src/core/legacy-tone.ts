@@ -1,6 +1,6 @@
 // Decode known current and historical English artifact bodies. Unknown prose is never a data source.
 import {
-  ADDRESS_COMPOSITION, ADDRESS_FREQUENCY, ANCHORS, AXIS_DEFAULT, AXIS_ORDER, CONTROLS, DELIVERY_OFF_MARKER, FORMAT_COMPOSITION, PERSONA, REGISTER_COMPOSITION, SCOPE_HEADER,
+  ADDRESS_COMPOSITION, ADDRESS_FREQUENCY, ANCHORS, AXIS_DEFAULT, AXIS_ORDER, CONTROLS, DELIVERY_OFF_MARKER, FORMAT_COMPOSITION, HOST_COMPOSITION, PERSONA, REGISTER_COMPOSITION, SCOPE_HEADER,
   SPEECH_LEVEL, type Axis, type Level,
 } from "./anchors.ts";
 import {
@@ -410,6 +410,8 @@ export function recoverLegacyTone(text: string, t: Messages): SettingsRecovery |
     register: string | null;
     format: boolean;
     address?: boolean;
+    /** The host reply-style rule follows the format rule from 0.1.13 on. */
+    host?: boolean;
   };
   const oldComposites = (axes: Config["axes"]): string[] => [
     ...(axes.warmth >= 4 && axes.profanity >= 4
@@ -427,6 +429,7 @@ export function recoverLegacyTone(text: string, t: Messages): SettingsRecovery |
     current: false, anchors: OLD_ANCHORS, composites: oldComposites,
     speech: OLD_SPEECH_LEVEL, register: null, format: false,
   }] : [
+    { current: true, anchors: ANCHORS, composites, speech: SPEECH_LEVEL, register: REGISTER_COMPOSITION, format: true, address: true, host: true },
     { current: true, anchors: ANCHORS, composites, speech: SPEECH_LEVEL, register: REGISTER_COMPOSITION, format: true, address: true },
     { current: true, anchors: ANCHORS, composites, speech: SPEECH_LEVEL, register: REGISTER_COMPOSITION, format: true },
     { current: false, anchors: RELEASED_0_1_4_ANCHORS, composites: releasedComposites,
@@ -437,7 +440,7 @@ export function recoverLegacyTone(text: string, t: Messages): SettingsRecovery |
       speech: PREVIOUS_SPEECH_LEVEL, register: PREVIOUS_REGISTER_COMPOSITION, format: false }] : []),
   ];
   const controls = body.slice(controlsAt + heading.length).replace(/\n$/, "");
-  let selected: { axes: Config["axes"]; speech: Config["speech_level"]; frequency: Config["address_frequency"] | undefined; safeword: string | null } | null = null;
+  let selected: { axes: Config["axes"]; speech: Config["speech_level"]; frequency: Config["address_frequency"] | undefined; safeword: string | null; host: boolean } | null = null;
 
   for (const producer of producers) {
     if (addressFormat !== null && (addressFormat === "current") !== (producer.address === true)) continue;
@@ -468,6 +471,7 @@ export function recoverLegacyTone(text: string, t: Messages): SettingsRecovery |
       ...AXIS_ORDER.map((axis) => `- ${producer.anchors[axis][axes[axis] - 1]}`),
       ...producer.composites(axes).map((line) => `- ${line}`),
       ...(producer.format ? [`- ${FORMAT_COMPOSITION}`] : []),
+      ...(producer.host ? [`- ${HOST_COMPOSITION}`] : []),
       ...(producer.register === null ? [] : [`- ${producer.register}`]),
       ...(frequency === undefined ? [] : [`- ${ADDRESS_COMPOSITION}`, `- ${ADDRESS_FREQUENCY[frequency]}`]),
       ...(speechRule == null ? [] : [`- ${speechRule}`]),
@@ -496,7 +500,7 @@ export function recoverLegacyTone(text: string, t: Messages): SettingsRecovery |
       ...(historical ? [`- ${oldSafeword(safeword)}\n${tail}`] : []),
     ];
     if (!known.includes(remaining)) continue;
-    selected = { axes, speech, frequency, safeword };
+    selected = { axes, speech, frequency, safeword, host: producer.host === true };
     break;
   }
   if (selected === null) return null;
@@ -508,7 +512,11 @@ export function recoverLegacyTone(text: string, t: Messages): SettingsRecovery |
   config.preset = marker[1] === "unsaved" ? null : marker[1]!;
   config.unsaved = marker[1] === "unsaved";
   if (selected.frequency !== undefined) {
-    try { if (compile(toCompileInput(config)) !== source) return null; }
+    // An artifact from before the host reply-style rule is the current compile without that line.
+    try {
+      const compiled = compile(toCompileInput(config));
+      if ((selected.host ? compiled : compiled.replace(`- ${HOST_COMPOSITION}\n`, "")) !== source) return null;
+    }
     catch { return null; }
   }
   const parsed = recoverSettings(JSON.stringify(config), t);

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
-import { ADDRESS_COMPOSITION, ADDRESS_FREQUENCY, PERSONA } from "../src/core/anchors.ts";
+import { ADDRESS_COMPOSITION, ADDRESS_FREQUENCY, HOST_COMPOSITION, PERSONA } from "../src/core/anchors.ts";
 import { compile, type AddressFrequency } from "../src/core/compile.ts";
 import { ADDRESS_FREQUENCIES, defaultConfig, parseConfig, recoverSettings, serializeConfig } from "../src/core/config.ts";
 import { catalogue } from "../src/core/i18n.ts";
@@ -67,7 +67,9 @@ test("all address policies preserve literal terms and recover complete current a
   assert.equal(recoverLegacyTone(current.replace(`- ${PERSONA.precedence}`,
     `- ${PERSONA.userWrapper}\n  > ${"x".repeat(201)}\n- ${PERSONA.precedence}`), EN), null,
   "damaged descriptions must not escape the decoder's null failure result");
+  // Artifacts from before the address policy also predate the host reply-style rule.
   const oldArtifact = compile(toCompileInput(config))
+    .replace(`- ${HOST_COMPOSITION}\n`, "")
     .replace(`- ${PERSONA.address(null, "reader")}`, "- Call the user reader.")
     .replace(`- ${ADDRESS_COMPOSITION}\n`, "")
     .replace(`- ${ADDRESS_FREQUENCY[config.address_frequency]}\n`, "");

@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { AXIS_DEFAULT, CONTROLS, SPEECH_LEVEL } from "../src/core/anchors.ts";
+import { AXIS_DEFAULT, CONTROLS, HOST_COMPOSITION, SPEECH_LEVEL } from "../src/core/anchors.ts";
 import { compile } from "../src/core/compile.ts";
 import {
   defaultConfig, parseConfig, recoverSettings, serializeConfig,
@@ -396,4 +396,16 @@ test("ambiguous unquoted address text never guesses original references and keep
   assert.ok(!result.recovered.includes("persona.address"));
   assert.ok(!result.recovered.includes("persona"));
   assert.doesNotMatch(JSON.stringify(result.invalid), /Dummy Agent|Dummy Reader|Dummy private/);
+});
+
+test("artifacts written before the host reply-style rule still recover their settings", () => {
+  const config = defaultConfig();
+  config.axes = { ...AXIS_DEFAULT, verbosity: 5, care: 2 };
+  config.speech_level = "polite";
+  const current = compile(toCompileInput(config));
+  const previous = current.replace(`- ${HOST_COMPOSITION}\n`, "");
+  assert.notEqual(previous, current, "the current artifact carries the host rule");
+  for (const artifact of [current, previous]) {
+    assert.deepEqual(recoverLegacyTone(artifact, EN)!.config.axes, config.axes);
+  }
 });
