@@ -312,8 +312,10 @@ Report the movement back to the user in their own terms, from the \`moves\` fiel
 - "gentler" → usually \`critique\` down, sometimes \`warmth\` up. Not \`compliance\`.
 - "stop flattering me" → \`flattery=1\`. Not \`warmth\`, which is a different observable.
 - "be brief" → \`verbosity\` down. Change \`care\` only for requested coverage or organization changes.
-- "show fewer tool calls", "hide the thinking" or a quieter view → no axis. That is the host's display
-  setting, such as the Antigravity CLI's \`/config\` → Verbosity (\`high\`, \`medium\` or \`low\`); say so and change nothing.
+- "show fewer tool calls", "hide the thinking" or a quieter view → no axis.
+  That is the host's display setting; name the current host's own setting when you know it,
+  such as the Antigravity CLI's \`/config\` → Verbosity (\`high\`, \`medium\` or \`low\`), and change no axis for that part.
+  Asking the reply itself to drop its work narrative is still \`verbosity\` or \`care\`.
 - "more casual" → \`formality\` down. Change the register system only on an explicit request,
   such as "use plain forms" → \`speech_level=plain\`, or "use curt, blunt plain forms" → \`speech_level=rough\`.
 

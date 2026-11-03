@@ -140,4 +140,9 @@ test("the skill keeps a host's display verbosity apart from the verbosity axis",
   assert.match(SKILL_MD, /tool calls[^\n]*→ no axis/);
   assert.ok(SKILL_MD.includes("Antigravity CLI") && SKILL_MD.includes("/config"), "the host setting is named");
   assert.match(SKILL_TRAITS_MD, /verbosity[^\n]*not the host's display/);
+  // A combined request still gets its axis change, and the current host's own setting is named.
+  assert.match(SKILL_MD, /change no axis for that part/);
+  assert.match(SKILL_MD, /current host's own setting/);
+  // Dropping the reply's own work narrative is reply content, not the view.
+  assert.match(SKILL_MD, /work narrative is still `verbosity` or `care`/);
 });
