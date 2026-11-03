@@ -138,10 +138,13 @@ test("regular prompt events refresh the complete safe pair, while Stop can reque
       assert.equal(output.decision, "block");
       assert.match(String(output.reason), /Preserve every task-required detail/);
       assert.match(String(output.reason), /safeword or a task-required output format/);
+      // The compression nudge keeps whatever reply style the host requires.
+      assert.match(String(output.reason), /the host's required response style/);
     } else {
       const hookOutput = output.hookSpecificOutput as { hookEventName: string; additionalContext: string };
       assert.equal(hookOutput.hookEventName, "Stop");
       assert.match(hookOutput.additionalContext, /Compress unnecessary prose while preserving/);
+      assert.match(hookOutput.additionalContext, /the host's required response style/);
       assert.doesNotMatch(hookOutput.additionalContext, /functional emoji/);
     }
   }

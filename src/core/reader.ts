@@ -409,7 +409,7 @@ function styleFeedback(pair, input) {
     missingOrganization ? "Use concise organized items." : null,
     missingEmoji ? "Add a functional emoji where useful." : null,
   ].filter(Boolean).join(" ");
-  return { feedback: "Review and rewrite the response for the saved tone. If this turn uses the safeword or a task-required output format, preserve that request; revise only where the saved tone still applies. Preserve every task-required detail and requested format. " + adjustment + " Do not rerun tools or change permissions.", diagnostic: null };
+  return { feedback: "Review and rewrite the response for the saved tone. If this turn uses the safeword or a task-required output format, preserve that request; revise only where the saved tone still applies. Preserve every task-required detail, requested format and the host's required response style. " + adjustment + " Do not rerun tools or change permissions.", diagnostic: null };
 }
 
 async function main() {
