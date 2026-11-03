@@ -1,6 +1,6 @@
 {
   "name": "tonedial",
-  "version": "0.1.12",
+  "version": "0.1.13",
   "description": "Give your coding agent a character. Pick one of 7 profiles or tune 12 tone axes, then connect Claude Code, Codex or Antigravity.",
   "license": "MIT",
   "type": "module",
