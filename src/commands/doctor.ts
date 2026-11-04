@@ -729,6 +729,17 @@ export function stoppedOperationSteps(paths: Paths, t: Ctx["t"], scope: string, 
   return steps;
 }
 
+/** A command refused while an operation needs recovery ends with what doctor offers for it. */
+export function recoveryPendingError(paths: Paths, t: Ctx["t"], scope: string): ConfigError {
+  const { resume, rollback } = stoppedOperationSteps(paths, t, scope);
+  const steps = [...(resume === null ? [] : [t.doctor.resumeOperation, `  ${resume}`]),
+    ...(rollback === null ? [] : [t.doctor.undoOperation, `  ${rollback}`])];
+  // Neither applies while its owner may still run, or to an unreadable record: diagnose first.
+  const commands = steps.length ? [resume, rollback].filter((command) => command !== null) : [`tonedial doctor ${scope}`];
+  return new ConfigError([t.doctor.recoveryPending, ...(steps.length ? steps : [`  ${commands[0]}`])].join("\n"),
+    { reason: "recovery-pending", commands });
+}
+
 async function doctorReport(ctx: Ctx, showRollbackCommands = true): Promise<CommandResult> {
   // Recovery must remain available even if an interrupted operation left config unparseable.
   const inspected = inspectOperations(ctx.paths);

@@ -9,6 +9,8 @@ import { join } from "node:path";
 
 import { run } from "../src/cli.ts";
 import { HOST_COMPOSITION } from "../src/core/anchors.ts";
+import { acquireOperation, beginJournal } from "../src/core/operations.ts";
+import { resolvePaths } from "../src/core/paths.ts";
 import { addLegacyRider } from "./support/legacy-fixture.ts";
 
 let scratch: string;
@@ -446,4 +448,38 @@ test("an agent with no hook to inspect is connected with wire, the command that 
   const antigravity = report.value.checks.find((check: { name: string }) => check.name === "Antigravity IDE/Desktop");
   assert.match(antigravity.detail, /run wire with this agent/);
   assert.doesNotMatch(antigravity.detail, /\binit\b/);
+});
+
+/** An operation whose owner died after recording its journal: doctor can continue or undo it. */
+function stopOperation(): string {
+  const paths = resolvePaths(env);
+  const operation = acquireOperation(paths, "mutation");
+  beginJournal(operation, []);
+  const id = operation.owner.operationId;
+  for (const path of [join(paths.operationsLock, "owner.json"), join(paths.operations, `${id}.json`)]) {
+    const record = JSON.parse(readFileSync(path, "utf8"));
+    (record.owner ?? record).pid = 2_147_483_000;
+    writeFileSync(path, JSON.stringify(record));
+  }
+  return id;
+}
+
+test("a command a stopped operation blocks ends with doctor's commands to continue or undo it", async () => {
+  assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
+  const id = stopOperation();
+  const resume = `tonedial doctor --fix --from-operation ${id} --global`;
+  const undo = `tonedial doctor --fix --rollback ${id}`;
+  const report = (await human(["doctor"], project)).out;
+  for (const command of [resume, undo]) assert.match(report, new RegExp(`^ {2}${command}$`, "m"));
+
+  for (const args of [["set", "warmth=2"], ["use", "bratty-kid"], ["off"], ["wire", "claude", "--global", "--auto"],
+    ["init", "--tools", "codex", "--global", "--auto"]]) {
+    const refused = await human(args, project);
+    assert.equal(refused.code, 1, args.join(" "));
+    const lines = refused.err.trimEnd().split("\n").map((line) => line.trim());
+    assert.match(lines[0]!, /An operation is active or needs recovery/);
+    assert.deepEqual([lines.at(-3), lines.at(-1)], [resume, undo], refused.err);
+    const machine = await json(args, project);
+    assert.deepEqual([machine.value.reason, machine.value.commands], ["recovery-pending", [resume, undo]], args.join(" "));
+  }
 });

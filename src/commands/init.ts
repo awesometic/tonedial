@@ -7,6 +7,7 @@ import { lstatSync, readdirSync } from "node:fs";
 import type { CommandResult, Ctx } from "../cli.ts";
 import { runAppRebuild } from "./rebuild.ts";
 import { runRebuildNative } from "./wire.ts";
+import { recoveryPendingError } from "./doctor.ts";
 import { refuseHomeProject } from "../wiring/scopes.ts";
 import { activationStep } from "./test.ts";
 import { ConfigError, OwnershipConflict, defaultConfig, requireConfigV2, safewordRejection, serializeConfig } from "../core/config.ts";
@@ -33,16 +34,15 @@ export async function runInit(entry: Ctx, _args: string[]): Promise<CommandResul
   refuseHomeProject(entry.agent, entry.env, `tonedial init${entry.flags.tools ? ` --tools ${entry.flags.tools}` : ""} --global`, entry.t);
   const operations = inspectOperations(entry.paths);
   const pending = operations.lock.state !== "none" || operations.journals.some(({ state }) => state === "pending" || state === "invalid");
-  if (pending && (entry.flags.auto || !entry.canPrompt)) throw new ConfigError(entry.t.doctor.recoveryPending);
+  const recovery = () => recoveryPendingError(entry.paths, entry.t, connectionScopeFlag(entry.agent, entry.cwd));
+  if (pending && (entry.flags.auto || !entry.canPrompt)) throw recovery();
   // Package-only installation is still fresh setup; any saved app entry instead shares the
   // data-first existing-state owner. Probe entries without decoding or following links.
   const existing = [entry.paths.config, entry.paths.agents, entry.paths.tone,
     join(entry.paths.root, LEGACY_CONTEXT_ARTIFACT_FILENAME)]
     .some((path) => lstatSync(path, { throwIfNoEntry: false }) !== undefined) || hasPresetState(entry.paths.presets);
   if (existing) return rebuildExisting(entry);
-  if (pending) {
-    throw new ConfigError(entry.t.doctor.recoveryPending);
-  }
+  if (pending) throw recovery();
   const scopeExplicit = entry.scopeExplicit ?? (entry.flags.global || entry.flags.here === true || entry.flags.project !== null);
   if (entry.flags.auto && !entry.flags.dryRun && !scopeExplicit) throw new ConfigError(entry.t.errors.scopeRequired, { reason: "scope-required" });
   // Everything down to `chooseLanguage` speaks `entry.t`, which came from the config or, when
@@ -83,7 +83,7 @@ export async function runInit(entry: Ctx, _args: string[]): Promise<CommandResul
     instructionRoots: [ctx.agent.root, ctx.cwd, ...(ctx.env.HOME ? [ctx.env.HOME] : [])],
     operations,
   });
-  if (layout.cause === "operation") throw new ConfigError(ctx.t.doctor.recoveryPending);
+  if (layout.cause === "operation") throw recoveryPendingError(ctx.paths, ctx.t, connectionScopeFlag(ctx.agent, ctx.cwd));
   if (layout.cause === "overlap") throw new ConfigError(ctx.t.errors.stateInstructionOverlap(ctx.paths.root));
   if (layout.kind === "conflict") {
     const failed = layout.inspectionFailure;

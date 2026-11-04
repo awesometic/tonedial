@@ -28,7 +28,7 @@ import { runAddress, runPersona, runSet, runReset } from "./commands/set.ts";
 import { runShow } from "./commands/show.ts";
 import { runGet, settingHelp } from "./commands/get.ts";
 import { runUse } from "./commands/use.ts";
-import { runDoctor } from "./commands/doctor.ts";
+import { recoveryPendingError, runDoctor } from "./commands/doctor.ts";
 import { runEject } from "./commands/eject.ts";
 import { runInit } from "./commands/init.ts";
 import { runUnwire, runWire } from "./commands/wire.ts";
@@ -651,7 +651,9 @@ export async function run(
           ...(isConfigV2(config) ? Object.values(config.wiring.registrations).map(registration => registration.destination) : [])],
       });
       if (layout.cause === "overlap") throw new ConfigError(t.errors.stateInstructionOverlap(paths.root));
-      if (layout.cause === "operation") throw new ConfigError(t.doctor.recoveryPending);
+      // The steps name the scope a plain `doctor` from here inspects: the command's own, or global.
+      if (layout.cause === "operation") throw recoveryPendingError(paths, t,
+        connectionScopeFlag(connection ? agent : resolveAgentPaths({ global: true, project: null }, env, cwd), cwd));
       if (layout.kind === "legacy" || layout.kind === "conflict" ||
           layout.kind === "fresh") {
         throw new ConfigError(t.errors.contextLayout(layout.kind, paths.root, `tonedial doctor ${connectionScopeFlag(agent, cwd)} --json`));

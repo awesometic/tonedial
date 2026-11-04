@@ -734,6 +734,8 @@ For a stopped valid operation, use the exact `--from-operation` command shown by
 Preview it with `--dry-run`, then review and approve the proposed repair.
 This continues application repair with valid current settings first; it does not undo the previous changes.
 To undo the stopped operation's changes instead, use the `--rollback` command doctor shows beside it.
+A setting change or connection command refused while the operation is stopped ends with the same two commands;
+JSON reports them in `commands` with `reason: "recovery-pending"`.
 Interactive selection asks for the full displayed operation ID; Enter cancels and a different ID is rejected without writing.
 The file-change preview still requires separate approval after selection.
 
@@ -820,7 +822,7 @@ Ordinary changes compile automatically; `compile --check --json` also supplies r
 | Machine contract | Behavior |
 |---|---|
 | Envelope | Every command accepts `--json`; integer `schema: 3`, including version/errors |
-| Refusals | `ok: false` with the message in `error`; a named refusal adds a stable `reason` (`scope-required`, `home-directory`, `tools-required`, `approval-required`, `ownership-conflict`) and the `commands` it prints |
+| Refusals | `ok: false` with the message in `error`; a named refusal adds a stable `reason` (`scope-required`, `home-directory`, `tools-required`, `approval-required`, `ownership-conflict`, `recovery-pending`) and the `commands` it prints |
 | Delivery state | `get`, `show`, `compile --check`, `on` and `off` report boolean `enabled` |
 | Stored schemas | Config 2; preset 2 with legacy 1 support; operation formats separate |
 | Streams | JSON stdout has no terminal escapes or ToneDial prompts/provider handoff |

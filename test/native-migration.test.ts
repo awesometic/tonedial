@@ -675,7 +675,9 @@ for (const state of ["pending", "invalid"] as const) {
     const result = await invoke(["init", "--tools", "none", "--auto"]);
     assert.equal(result.code, 1, result.stdout);
     assert.match(result.value.error, /recover|rollback|doctor/i);
-    assert.doesNotMatch(result.value.error, /JSON|--global|--here|--project/);
+    // The recovery refusal, not the config parser or the missing-scope refusal; it names doctor.
+    assert.equal(result.value.reason, "recovery-pending");
+    assert.doesNotMatch(result.value.error, /JSON|explicit scope/);
     assert.equal(readFileSync(paths.config, "utf8"), "damaged config\n");
     assert.equal(readFileSync(provider, "utf8"), "damaged provider settings\n");
     assert.deepEqual(readdirSync(paths.root, { recursive: true }).sort(), before);
