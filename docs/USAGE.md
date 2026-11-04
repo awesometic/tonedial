@@ -713,6 +713,8 @@ Flat user presets stay readable; conflicts receive a reported recovered copy wit
 After a failed repair, the error identifies the phase, affected path when known, safe error code and operation ID.
 Some file changes may already be applied; keep the operation record and run the reported scoped diagnosis.
 Doctor shows current blockers by default; `--verbose` and `--json` retain the full operation history.
+A repair's receipt ends with the `--rollback` command that undoes it;
+afterwards, `doctor --verbose` lists that command for each completed operation that can still be restored.
 Running and uncertain owners remain protected and receive no automatic mutation recommendation.
 
 An unreadable operation record has no trusted actions to resume or restore.

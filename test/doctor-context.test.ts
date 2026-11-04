@@ -112,16 +112,22 @@ async function invokeHuman(args: string[], extra: NodeJS.ProcessEnv = {}): Promi
   }
 }
 
-test("a repair receipt offers each rollback command once and standalone diagnosis retains it", async () => {
+test("a repair receipt offers each rollback command once and verbose diagnosis retains it", async () => {
   assert.equal((await invoke(["init", "--global", "--tools", "none", "--auto"])).code, 0);
   writeFileSync(join(env.TONEDIAL_HOME!, "AGENTS.md"), "damaged generated guide\n");
   const result = await invokeHuman(["doctor", "--fix", "--global", "--tools", "none", "--auto"]);
   assert.equal(result.code, 0, result.error);
   const commands = result.output.match(/tonedial doctor --fix --rollback [0-9a-f]{32}/g) ?? [];
   assert.equal(commands.length, 1, result.output);
+  const id = commands[0]!.split(" ").at(-1)!;
+  // Completed repairs are history: the default view leaves them to --verbose and JSON.
   const diagnosis = await invokeHuman(["doctor", "--global"]);
   assert.equal(diagnosis.code, 0, diagnosis.error);
-  assert.ok(diagnosis.output.includes(commands[0]!), "standalone diagnosis must retain the restorable operation");
+  assert.ok(!diagnosis.output.includes(id), diagnosis.output);
+  const verbose = await invokeHuman(["doctor", "--global", "--verbose"]);
+  assert.ok(verbose.output.includes(commands[0]!), "verbose diagnosis must retain the restorable operation");
+  const json = await invoke(["doctor", "--global"]);
+  assert.ok((json.value.recovery as { operations: { operationId: string }[] }).operations.some(entry => entry.operationId === id));
 });
 
 test("a repair receipt preserves ordered rollback instructions when another operation becomes pending", async t => {

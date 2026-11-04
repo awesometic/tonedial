@@ -477,7 +477,9 @@ test("doctor previews and restores an explicitly selected retained migration wit
   const journalBefore = readFileSync(join(paths.operations, `${id}.json`), "utf8");
   const args = ["doctor", "--fix", "--rollback", id];
 
-  const listing = await invoke(["doctor", "--here"]);
+  // A retained backup is history: discoverable without JSON, but only in the verbose view.
+  assert.ok(!(await invoke(["doctor", "--here"])).out.includes(id));
+  const listing = await invoke(["doctor", "--here", "--verbose"]);
   assert.ok(listing.out.includes(id), "the retained backup must be discoverable without JSON");
   for (const lang of ["en_US.UTF-8", "ko_KR.UTF-8"]) {
     const preview = await invoke([...args, "--dry-run", "--json"], { LANG: lang });

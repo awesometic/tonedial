@@ -975,9 +975,9 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true): Promise<Comm
     ...section(ctx.t.doctor.checksHeading, ctx.ui),
     ...renderCheckBlocks(shownChecks, ctx.flags.verbose ? [] : hookSettings, integrations, ctx,
       integrations.length || nativeAttention ? wrap(ctx.t.doctor.hookSettingScope, ctx.ui.width - 2).map(line => `  ${ctx.ui.dim(line)}`) : []),
-    // A repair receipt presents its new IDs once in native→app order. Standalone diagnosis
-    // still lists available historical rollback commands.
-    ...(showRollbackCommands ? inspected.journals.flatMap(({ operationId, state, journal }) =>
+    // A repair receipt presents its new IDs once in native→app order. Completed operations are
+    // history: verbose diagnosis lists their rollback commands, and JSON keeps `recovery`.
+    ...(showRollbackCommands && ctx.flags.verbose ? inspected.journals.flatMap(({ operationId, state, journal }) =>
       state === "complete" && journal?.retention && inspectRollback(ctx.paths, operationId).allowed
         ? ["", `  ${operationId}  ${ctx.t.doctor.operationState.complete}`, `  tonedial doctor --fix --rollback ${operationId}`]
         : []) : []),
