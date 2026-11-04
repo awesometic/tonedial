@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=378; endsWithNewline=true]
+--- stdout --- [bytes=387; endsWithNewline=true]
 ToneDial · update
 
   tonedial <VERSION>
@@ -15,6 +15,6 @@ ToneDial · update
   갱신할 기본 파일: 5개
 
   기본 파일을 갱신하고 상태를 복구하려면:
-    tonedial doctor --fix
+    tonedial doctor --fix --global
 --- stderr --- [bytes=0; endsWithNewline=false]
 

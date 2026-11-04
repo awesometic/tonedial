@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=318; endsWithNewline=true]
+--- stdout --- [bytes=327; endsWithNewline=true]
 ToneDial · update
 
   tonedial <VERSION>
@@ -13,6 +13,6 @@ ToneDial · update
   --dry-run · nothing written
 
   Refresh bundled files and repair state:
-    tonedial doctor --fix
+    tonedial doctor --fix --global
 --- stderr --- [bytes=34; endsWithNewline=true]
   ⚠ Saved settings are invalid.

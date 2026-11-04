@@ -408,7 +408,7 @@ test("curl package update replaces its program despite damaged config and leaves
     assert.equal(payload.replaced, previousVersion);
     assert.equal(payload.seedVersion, null);
     assert.equal(payload.packageSeedVersion, null);
-    assert.equal(payload.recoveryCommand, "tonedial doctor --fix");
+    assert.equal(payload.recoveryCommand, `tonedial doctor --fix --project "${join(scratch, "agents")}"`);
     assert.doesNotMatch(result.stdout + result.stderr, /DO_NOT_PRINT_UPDATE_6392/);
     assert.deepEqual(readFileSync(join(root, "config.json")), bytes);
     assert.deepEqual(JSON.parse((await cli(root, ["export", "keep-me", "--json"], join(root, "lib"))).stdout), preset);
@@ -427,7 +427,7 @@ test("npm update guidance survives malformed and non-UTF-8 config without replac
     const result = await cli(root, ["update", "--json"], release, { TONEDIAL_INSTALL_SHAPE: "npm" });
     const payload = JSON.parse(result.stdout);
     assert.equal(payload.command, "npm update -g tonedial");
-    assert.equal(payload.recoveryCommand, "tonedial doctor --fix");
+    assert.equal(payload.recoveryCommand, `tonedial doctor --fix --project "${join(scratch, "agents")}"`);
     assert.equal(payload.checkedRemote, false);
     assert.equal(payload.stateRecoveryRequired, true);
     assert.equal(payload.seedVersion, null);

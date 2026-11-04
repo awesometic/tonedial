@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=347; endsWithNewline=true]
+--- stdout --- [bytes=356; endsWithNewline=true]
 ToneDial · update
 
   tonedial <VERSION>
@@ -16,7 +16,7 @@ ToneDial · update
   <ROOT>/state
 
   Review the flagged bundled files:
-    tonedial doctor
+    tonedial doctor --global
 --- stderr --- [bytes=120; endsWithNewline=true]
   ⚠ Locally modified · review before replacement
     skill/tonedial/SKILL.md

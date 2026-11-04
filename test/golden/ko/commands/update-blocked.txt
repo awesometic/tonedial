@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=381; endsWithNewline=true]
+--- stdout --- [bytes=390; endsWithNewline=true]
 ToneDial · update
 
   tonedial <VERSION>
@@ -16,7 +16,7 @@ ToneDial · update
   <ROOT>/state
 
   표시된 기본 파일을 확인하려면:
-    tonedial doctor
+    tonedial doctor --global
 --- stderr --- [bytes=125; endsWithNewline=true]
   ⚠ ToneDial 관리 파일 아님 · 보존됨
     presets/builtin/caring-brother.json

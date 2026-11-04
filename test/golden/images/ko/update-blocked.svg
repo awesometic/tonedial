@@ -16,7 +16,7 @@
   &lt;ROOT&gt;/state
 
   표시된 기본 파일을 확인하려면:
-    tonedial doctor
+    tonedial doctor --global
   ⚠ ToneDial 관리 파일 아님 · 보존됨
     presets/builtin/caring-brother.json
     presets/builtin/bratty-kid.json
@@ -35,7 +35,7 @@
 <text x="60" y="384" fill="#edf3f6" font-weight="400" opacity="1">ToneDial 공통 상태 디렉터리:</text>
 <text x="60" y="412" fill="#edf3f6" font-weight="400" opacity="1">&lt;ROOT&gt;/state</text>
 <text x="60" y="468" fill="#edf3f6" font-weight="400" opacity="1">표시된 기본 파일을 확인하려면:</text>
-<text x="88" y="496" fill="#edf3f6" font-weight="400" opacity="1">tonedial doctor</text>
+<text x="88" y="496" fill="#edf3f6" font-weight="400" opacity="1">tonedial doctor --global</text>
 <text x="60" y="524" fill="#edf3f6" font-weight="400" opacity="1">⚠ ToneDial 관리 파일 아님 · 보존됨</text>
 <text x="88" y="552" fill="#edf3f6" font-weight="400" opacity="1">presets/builtin/caring-brother.json</text>
 <text x="88" y="580" fill="#edf3f6" font-weight="400" opacity="1">presets/builtin/bratty-kid.json</text></g>

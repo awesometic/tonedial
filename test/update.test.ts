@@ -226,6 +226,26 @@ test("npm JSON without approval and dry-run with approval never run npm update o
   assert.equal(readFileSync(f.manifest, "utf8"), packageBefore);
 });
 
+test("update ends with the scoped repair an unattended run accepts", (t) => {
+  const f = fixture(t);
+  // Bundled files an earlier package recorded, as an update leaves them.
+  const config = join(f.state, "config.json");
+  const saved = JSON.parse(readFileSync(config, "utf8"));
+  for (const record of Object.values(saved.managedSeeds) as { version: number }[]) record.version -= 1;
+  writeFileSync(config, JSON.stringify(saved));
+
+  const json = f.invoke(["update", "--dry-run", "--json"], { TEST_NPM_VIEW: npmView("9.8.7") });
+  assert.equal(json.code, 0, json.out + json.err);
+  assert.equal(json.value.stateRecoveryRequired, true);
+  assert.equal(json.value.recoveryCommand, "tonedial doctor --fix --global");
+  const human = f.invoke(["update", "--dry-run"], { TEST_NPM_VIEW: npmView("9.8.7") });
+  assert.equal(human.out.trimEnd().split("\n").at(-1)!.trim(), "tonedial doctor --fix --global");
+
+  const repaired = f.invoke([...json.value.recoveryCommand.split(" ").slice(1), "--auto", "--json"]);
+  assert.equal(repaired.code, 0, repaired.out + repaired.err);
+  assert.equal(f.invoke(["update", "--dry-run", "--json"], { TEST_NPM_VIEW: npmView("9.8.7") }).value.stateRecoveryRequired, false);
+});
+
 test("npm update refuses a global prefix that owns a different ToneDial copy", (t) => {
   const f = fixture(t);
   const other = join(f.scratch, "other-prefix");

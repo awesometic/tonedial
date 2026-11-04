@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=345; endsWithNewline=true]
+--- stdout --- [bytes=354; endsWithNewline=true]
 ToneDial · update
 
   tonedial <VERSION>
@@ -13,6 +13,6 @@ ToneDial · update
   --dry-run · 기록하지 않음
 
   기본 파일을 갱신하고 상태를 복구하려면:
-    tonedial doctor --fix
+    tonedial doctor --fix --global
 --- stderr --- [bytes=53; endsWithNewline=true]
   ⚠ 저장된 설정이 올바르지 않습니다.

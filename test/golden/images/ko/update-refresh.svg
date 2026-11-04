@@ -15,7 +15,7 @@
   갱신할 기본 파일: 5개
 
   기본 파일을 갱신하고 상태를 복구하려면:
-    tonedial doctor --fix
+    tonedial doctor --fix --global
 </desc>
 <rect width="100%" height="100%" rx="16" fill="#171b20"/>
 <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, system-ui" font-size="22"><text x="32" y="48" fill="#edf3f6" font-weight="400" opacity="1">ToneDial · update</text>
@@ -30,5 +30,5 @@
 <text x="60" y="328" fill="#edf3f6" font-weight="400" opacity="1">--dry-run · 기록하지 않음</text>
 <text x="60" y="384" fill="#edf3f6" font-weight="400" opacity="1">갱신할 기본 파일: 5개</text>
 <text x="60" y="440" fill="#edf3f6" font-weight="400" opacity="1">기본 파일을 갱신하고 상태를 복구하려면:</text>
-<text x="88" y="468" fill="#edf3f6" font-weight="400" opacity="1">tonedial doctor --fix</text></g>
+<text x="88" y="468" fill="#edf3f6" font-weight="400" opacity="1">tonedial doctor --fix --global</text></g>
 </svg>

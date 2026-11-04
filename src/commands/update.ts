@@ -6,7 +6,7 @@ import { closeSync, constants, fstatSync, lstatSync, openSync, readSync } from "
 import { TextDecoder } from "node:util";
 
 import { ConfigError, parseConfig, type Config } from "../core/config.ts";
-import { AGENT_TOOLS, UPDATE_COMMAND, installShape, shellQuote } from "../core/paths.ts";
+import { AGENT_TOOLS, UPDATE_COMMAND, connectionScopeFlag, installShape, resolveAgentPaths, shellQuote } from "../core/paths.ts";
 import { REGISTRY, compareVersions, downloadRelease, haveTar, inspectNpmInstall, installRelease, installedVersion, latestRelease, npmLatest, updateNpmInstall, type LatestVersion } from "../core/selfupdate.ts";
 import { confirm } from "../ui/prompt.ts";
 import { SEED_VERSION, inspectSeeds, recordedSeedSelection } from "../core/seeds.ts";
@@ -196,7 +196,9 @@ export async function runUpdate(ctx: Ctx): Promise<CommandResult> {
     }
   }
   const stateRecoveryRequired = !fresh && (stateIssue !== null || config?.seedVersion === 0 || inspectable.length > 0 || replaced !== null);
-  const recoveryCommand = fresh ? "tonedial init" : problems.length ? "tonedial doctor" : "tonedial doctor --fix";
+  // The update concerns the global install, and an unattended repair needs its scope named.
+  const scope = connectionScopeFlag(resolveAgentPaths({ global: true, project: null }, ctx.env, ctx.cwd), ctx.cwd);
+  const recoveryCommand = fresh ? "tonedial init" : problems.length ? `tonedial doctor ${scope}` : `tonedial doctor --fix ${scope}`;
   if (fresh || stateRecoveryRequired) lines.push("", `  ${fresh ? ctx.t.update.setupNeeded : problems.length ? ctx.t.update.reviewState : ctx.t.update.thenRefresh}`,
     `    ${ctx.ui.accent(recoveryCommand)}`);
 

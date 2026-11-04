@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=349; endsWithNewline=true]
+--- stdout --- [bytes=358; endsWithNewline=true]
 ToneDial · update
 
   tonedial <VERSION>
@@ -15,6 +15,6 @@ ToneDial · update
   Bundled files to refresh: 5
 
   Refresh bundled files and repair state:
-    tonedial doctor --fix
+    tonedial doctor --fix --global
 --- stderr --- [bytes=0; endsWithNewline=false]
 

@@ -13,7 +13,7 @@
   --dry-run · nothing written
 
   Refresh bundled files and repair state:
-    tonedial doctor --fix
+    tonedial doctor --fix --global
   ⚠ Saved settings are invalid.
 </desc>
 <rect width="100%" height="100%" rx="16" fill="#171b20"/>
@@ -28,6 +28,6 @@
 <text x="88" y="300" fill="#edf3f6" font-weight="400" opacity="1">npm update -g tonedial</text>
 <text x="60" y="328" fill="#edf3f6" font-weight="400" opacity="1">--dry-run · nothing written</text>
 <text x="60" y="384" fill="#edf3f6" font-weight="400" opacity="1">Refresh bundled files and repair state:</text>
-<text x="88" y="412" fill="#edf3f6" font-weight="400" opacity="1">tonedial doctor --fix</text>
+<text x="88" y="412" fill="#edf3f6" font-weight="400" opacity="1">tonedial doctor --fix --global</text>
 <text x="60" y="440" fill="#edf3f6" font-weight="400" opacity="1">⚠ Saved settings are invalid.</text></g>
 </svg>

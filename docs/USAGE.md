@@ -929,7 +929,8 @@ JSON adds `latestVersion`, `installedPublishedAt` and `latestPublishedAt`, each 
 For npm installations, ToneDial runs `npm update` only after checking that its global target matches the running copy.
 A different prefix or linked development copy is reported without updating another installation.
 The npm receipt says whether npm updated the package or it was already up to date, with the version npm left installed.
-If generated files need attention, the command reports their state and the applicable repair action once.
+If generated files need attention, the command reports their state and the applicable repair action once,
+scoped to the global installation (`tonedial doctor --fix --global`) so an unattended run can use it.
 ToneDial does not require root privileges; npm's global prefix must be writable by your user.
 For `EACCES` or `EPERM`, follow [npm permission recovery](#npm-permissions).
 
