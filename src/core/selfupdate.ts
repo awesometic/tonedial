@@ -26,7 +26,10 @@ export const RELEASE_MAX_BYTES = 16 * 1024 * 1024;
 export const RELEASE_TIMEOUT_MS = 30_000;
 
 const TARBALL_BOUNDS = { maxBytes: RELEASE_MAX_BYTES, timeoutMs: RELEASE_TIMEOUT_MS };
-/** Metadata is a small JSON document. The tarball's cap here would hand `JSON.parse` 16 MB. */
+/**
+ * Metadata is a small JSON document. The tarball's cap here would hand `JSON.parse` 16 MB.
+ * shortcut: the whole packument must fit (about 43 KB at 0.1.11); raise the cap if a long release history outgrows it.
+ */
 const METADATA_BOUNDS = { maxBytes: 1024 * 1024, timeoutMs: RELEASE_TIMEOUT_MS };
 
 /** The registry's latest release and the publication times it reports, `null` where it vouches for none. */

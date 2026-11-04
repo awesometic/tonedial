@@ -494,7 +494,7 @@ Restore the entries exactly as ToneDial wrote them (`doctor --verbose` lists the
 When delivery is paused it suggests `tonedial on`; when no agent is connected it ends with `tonedial wire` for that scope.
 Other registered connections are grouped by scope/directory and shared file status.
 Inspecting global from a folder with its own connections says so and gives `tonedial doctor --here`; that folder's listed commands also use `--here`.
-A project hook that repeats the global hook for the same agent is reported in both scopes, with the `unwire --here` command that keeps only the global one; JSON lists it in `integrations[].duplicates`.
+A project hook that repeats the global hook for the same agent is reported in both scopes, with the `unwire --here` command that keeps only the global one; JSON lists it in `integrations[].duplicates` with its `scope`, `destination`, `path` and `state`.
 Missing files mean some or all recorded files were absent, not that no connection was registered.
 These are presence checks; `--fix` leaves other scopes alone.
 Use the displayed read-only `doctor` command to inspect them, or `eject` if no longer needed.
@@ -882,7 +882,8 @@ npm installations ask `npm view tonedial version time --json`, so your npm regis
 curl installations read the package metadata from `TONEDIAL_REGISTRY`.
 If npm cannot answer, `update` says the latest version could not be checked and still offers the npm update.
 `update --dry-run` previews the update without replacing the package; `--auto` approves an unattended update (JSON output never prompts).
-JSON adds `latestVersion`, `installedPublishedAt` and `latestPublishedAt`, each `null` when unknown.
+JSON adds `latestVersion`, `installedPublishedAt` and `latestPublishedAt`, each `null` when unknown;
+`checkedRemote` is `true` when the registry or npm answered.
 For npm installations, ToneDial runs `npm update` only after checking that its global target matches the running copy.
 A different prefix or linked development copy is reported without updating another installation.
 The npm receipt says whether npm updated the package or it was already up to date, with the version npm left installed.
