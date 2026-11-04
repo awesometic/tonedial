@@ -102,14 +102,14 @@ export async function runUpdate(ctx: Ctx): Promise<CommandResult> {
   };
   let latest: LatestVersion | null;
   let replaced: string | null = null;
-  let installed: string | null = null;
+  // Until a package update reports another, the running copy is the installed one.
+  let installed = VERSION;
   let outcome: "updated" | "unchanged" | "dry-run" | "approval-required" | "declined";
   if (shape !== "curl") {
     // npm answers with the user's own registry configuration; a failed check keeps the update path.
     latest = npmLatest(ctx.env, VERSION);
     lines.push(...versionLines(latest));
     if (latest !== null && compareVersions(latest.version, VERSION) <= 0) {
-      installed = VERSION;
       outcome = "unchanged";
       if (ctx.flags.dryRun) lines.push(`  ${ctx.t.wiring.dryRun}`);
     } else if (ctx.flags.dryRun) {
@@ -146,7 +146,6 @@ export async function runUpdate(ctx: Ctx): Promise<CommandResult> {
       // Nothing downloaded. The common case is an install that is already current, and paying
       // for the whole package to be told so is a cost with nothing on the other side of it.
       // An install newer than the registry is never offered the older release.
-      installed = VERSION;
       outcome = "unchanged";
       if (ctx.flags.dryRun) lines.push(`  ${ctx.t.wiring.dryRun}`);
     } else if (ctx.flags.dryRun) {
@@ -164,9 +163,9 @@ export async function runUpdate(ctx: Ctx): Promise<CommandResult> {
         const tarball = await downloadRelease(release, ctx.t);
         lines.push(`  ${ctx.ui.accent(ctx.t.update.found(release.version, tarball.byteLength))}`);
         installRelease(ctx.paths, tarball, ctx.t);
-        installed = installedVersion(ctx.paths);
-        if (installed === null) throw new ConfigError(ctx.t.update.versionUnknown);
-        replaced = installed;
+        const swapped = installedVersion(ctx.paths);
+        if (swapped === null) throw new ConfigError(ctx.t.update.versionUnknown);
+        installed = replaced = swapped;
         outcome = "updated";
         lines.push(`  ${ctx.ui.success(ctx.ui.bold(ctx.t.update.replaced(installed)))}`);
       } else {

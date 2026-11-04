@@ -925,6 +925,7 @@ If npm cannot answer, `update` says the latest version could not be checked and 
 `update --dry-run` previews the update without replacing the package; `--auto` approves an unattended update (JSON output never prompts).
 JSON adds `latestVersion`, `installedPublishedAt` and `latestPublishedAt`, each `null` when unknown;
 `checkedRemote` is `true` when the registry or npm answered.
+`installedVersion` is the version left installed: the running one, unless the update replaced it.
 For npm installations, ToneDial runs `npm update` only after checking that its global target matches the running copy.
 A different prefix or linked development copy is reported without updating another installation.
 The npm receipt says whether npm updated the package or it was already up to date, with the version npm left installed.

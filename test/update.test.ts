@@ -217,7 +217,8 @@ test("npm JSON without approval and dry-run with approval never run npm update o
     assert.equal(result.code, 0, result.out + result.err);
     assert.equal(result.value.outcome, args.includes("--dry-run") ? "dry-run" : "approval-required");
     assert.equal(result.value.replaced, null);
-    assert.equal(result.value.installedVersion, null);
+    // Nothing was replaced, so the running version is still the installed one.
+    assert.equal(result.value.installedVersion, VERSION);
     assert.equal(result.err, "");
   }
   assert.deepEqual(f.calls().filter(([command]) => command !== "view"), []);
