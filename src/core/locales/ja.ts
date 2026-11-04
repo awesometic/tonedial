@@ -342,7 +342,7 @@ const messages: Messages = {
     recoveryPending: "実行中または復旧が必要な操作があります。この実行ではファイルを変更していません。",
     invalidRecoveryPending: "読み取れない操作履歴が復旧を妨げています。この実行ではファイルを変更していません。",
     resumeOperation: "現在の設定で修復を終えるには、続きを実行してください：",
-    rollbackStopped: (id) => `変更を取り消し、開始前のファイルに戻すには：\ntonedial doctor --fix --rollback ${id}`,
+    undoOperation: "変更を取り消し、開始前のファイルに戻すには：",
     contextCurrent: "AGENTS.md と TONE.md の構成は最新です。",
     contextRepair: "管理対象のコンテキストファイルに修復が必要です。ガイドと口調ファイルの診断を確認してください。",
     contextSize: (guide, total) => total === null

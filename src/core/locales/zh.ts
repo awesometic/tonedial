@@ -342,7 +342,7 @@ const messages: Messages = {
     recoveryPending: "有操作正在运行或需要恢复。本次执行未更改文件。",
     invalidRecoveryPending: "无法读取的操作历史阻止了恢复。本次执行未更改文件。",
     resumeOperation: "要用当前设置完成修复，请继续：",
-    rollbackStopped: (id) => `要撤销其更改并恢复为开始前的文件：\ntonedial doctor --fix --rollback ${id}`,
+    undoOperation: "要撤销其更改并恢复为开始前的文件：",
     contextCurrent: "AGENTS.md 与 TONE.md 布局已是最新。",
     contextRepair: "受管理的上下文文件需要修复，请检查指南和语气文件诊断。",
     contextSize: (guide, total) => total === null

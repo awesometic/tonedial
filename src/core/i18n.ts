@@ -422,7 +422,7 @@ export type Messages = {
     invalidRecoveryPending: string;
     resumeOperation: string;
     /** The rollback beside a stopped operation's continue command, with when to choose it. */
-    rollbackStopped: (id: string) => string;
+    undoOperation: string;
     contextCurrent: string;
     contextRepair: string;
     contextSize: (guideChars: number, totalChars: number | null) => string;
@@ -1018,7 +1018,7 @@ const enMessages: Messages = {
     recoveryPending: "An operation is active or needs recovery. No files were changed by this command.",
     invalidRecoveryPending: "Unreadable operation history is blocking recovery. No files were changed by this command.",
     resumeOperation: "To finish the repair with your current settings, continue it:",
-    rollbackStopped: (id) => `To undo its changes and go back to the files from before it started:\ntonedial doctor --fix --rollback ${id}`,
+    undoOperation: "To undo its changes and go back to the files from before it started:",
     contextCurrent: "AGENTS.md and TONE.md layout is current.",
     contextRepair: "Managed context files need repair. Check the guide and tone-file diagnostics.",
     contextSize: (guide, total) => total === null
@@ -1805,7 +1805,7 @@ const koMessages: Messages = {
     recoveryPending: "진행 중이거나 복구가 필요한 작업이 있습니다. 이번 실행에서는 파일을 바꾸지 않았습니다.",
     invalidRecoveryPending: "읽을 수 없는 작업 기록 때문에 복구를 진행할 수 없습니다. 이번 실행에서는 파일을 바꾸지 않았습니다.",
     resumeOperation: "현재 설정으로 복구를 마치려면 이어서 실행하세요:",
-    rollbackStopped: (id) => `변경을 취소하고 시작 전 파일로 되돌리려면:\ntonedial doctor --fix --rollback ${id}`,
+    undoOperation: "변경을 취소하고 시작 전 파일로 되돌리려면:",
     contextCurrent: "AGENTS.md와 TONE.md 구성이 최신입니다.",
     contextRepair: "관리 중인 컨텍스트 파일을 복구해야 합니다. 안내 파일과 톤 파일의 진단을 확인해 주세요.",
     contextSize: (guide, total) => total === null

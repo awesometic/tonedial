@@ -12,7 +12,7 @@ import { ConfigError, defaultConfig, isConfigV2, parseConfig, type Config, type 
 import { inspectOperations, inspectRollback } from "../core/operations.ts";
 import { join, relative } from "node:path";
 
-import { AGENT_TOOLS, CONTEXT_ARTIFACT_FILENAME, CONTEXT_GUIDE_FILENAME, UPDATE_COMMAND, connectionScopeFlag, onPath, readerPath, resolveAgentPaths, shimScript, installShape, type AgentTool, type InstallShape, canonicalDestination, shellQuote} from "../core/paths.ts";
+import { AGENT_TOOLS, CONTEXT_ARTIFACT_FILENAME, CONTEXT_GUIDE_FILENAME, UPDATE_COMMAND, connectionScopeFlag, onPath, readerPath, resolveAgentPaths, shimScript, installShape, type AgentTool, type InstallShape, type Paths, canonicalDestination, shellQuote} from "../core/paths.ts";
 import { SKILL_NAME } from "../core/skill.ts";
 import { GUIDE_FORMAT_MARKER } from "../core/reader.ts";
 import { DELIVERY_OFF_MARKER } from "../core/anchors.ts";
@@ -712,6 +712,23 @@ export async function runDoctor(ctx: Ctx, _args: string[]): Promise<CommandResul
   };
 }
 
+/** Doctor's commands for a stopped operation: continue its repair, undo it, both or neither. */
+export function stoppedOperationSteps(paths: Paths, t: Ctx["t"], scope: string, inspected = inspectOperations(paths)):
+  { resume: string | null; rollback: string | null } {
+  const steps = { resume: null as string | null, rollback: null as string | null };
+  const owner = inspected.lock.owner;
+  if (inspected.lock.state !== "dead" || owner?.kind !== "mutation") return steps;
+  const entry = inspected.journals.find(({ operationId }) => operationId === owner.operationId);
+  if (!entry?.journal || entry.journal.owner.nonce !== owner.nonce) return steps;
+  const blocking = inspected.journals.filter(({ state }) => state === "pending" || state === "invalid");
+  if (entry.state === "pending" && !inspectRollback(paths, owner.operationId).synthetic &&
+    blocking.every(({ operationId, journal }) => operationId === owner.operationId && journal !== null)) {
+    steps.resume = `tonedial doctor --fix --from-operation ${owner.operationId} ${scope}`;
+  }
+  if (previewRollback(paths, owner.operationId, t).status === "ready") steps.rollback = `tonedial doctor --fix --rollback ${owner.operationId}`;
+  return steps;
+}
+
 async function doctorReport(ctx: Ctx, showRollbackCommands = true): Promise<CommandResult> {
   // Recovery must remain available even if an interrupted operation left config unparseable.
   const inspected = inspectOperations(ctx.paths);
@@ -734,17 +751,11 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true): Promise<Comm
     if (inspected.lock.state === "live" || inspected.lock.state === "unknown" || inspected.lock.state === "invalid") {
       lines.push(...wrap(ctx.t.doctor.rollbackStatus[inspected.lock.state === "live" ? "busy" : "unresolved"], ctx.ui.width - 2)
         .map(line => `  ${line}`));
-    } else if (inspected.lock.state === "dead" && owner?.kind === "mutation") {
-      const entry = inspected.journals.find(({ operationId }) => operationId === owner.operationId);
-      if (entry?.journal && entry.journal.owner.nonce === owner.nonce) {
-        const selection = inspectRollback(ctx.paths, owner.operationId);
-        if (entry.state === "pending" && !selection.synthetic && blocking.every(({ operationId, journal }) => operationId === owner.operationId && journal !== null)) {
-          lines.push("", `  ${ctx.t.doctor.resumeOperation}`,
-            ...nextStep(repairCommand(ctx, `doctor --fix --from-operation ${owner.operationId}`), ctx.ui).slice(1));
-        }
-        if (showRollbackCommands && previewRollback(ctx.paths, owner.operationId, ctx.t).status === "ready") {
-          lines.push("", ...receiptLines(ctx.t.doctor.rollbackStopped(owner.operationId), ctx.ui.width - 2).map(line => `  ${line}`));
-        }
+    } else {
+      const { resume, rollback } = stoppedOperationSteps(ctx.paths, ctx.t, connectionScopeFlag(ctx.agent, ctx.cwd), inspected);
+      if (resume !== null) lines.push("", `  ${ctx.t.doctor.resumeOperation}`, ...nextStep(resume, ctx.ui).slice(1));
+      if (showRollbackCommands && rollback !== null) {
+        lines.push("", ...receiptLines(`${ctx.t.doctor.undoOperation}\n${rollback}`, ctx.ui.width - 2).map(line => `  ${line}`));
       }
     }
     if (quarantineable) {

@@ -342,7 +342,7 @@ const messages: Messages = {
     recoveryPending: "Hay una operación en curso o que necesita recuperación. Esta ejecución no cambió archivos.",
     invalidRecoveryPending: "Un historial de operaciones ilegible está bloqueando la recuperación. Esta ejecución no cambió archivos.",
     resumeOperation: "Para terminar la reparación con tus ajustes actuales, continúala:",
-    rollbackStopped: (id) => `Para deshacer sus cambios y volver a los archivos de antes de empezar:\ntonedial doctor --fix --rollback ${id}`,
+    undoOperation: "Para deshacer sus cambios y volver a los archivos de antes de empezar:",
     contextCurrent: "La estructura de AGENTS.md y TONE.md está al día.",
     contextRepair: "Los archivos de contexto gestionados necesitan reparación. Revisa el diagnóstico de la guía y del tono.",
     contextSize: (guide, total) => total === null
