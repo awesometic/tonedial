@@ -3,7 +3,7 @@ import { dirname, join, relative } from "node:path";
 import { createInterface } from "node:readline/promises";
 
 import type { CommandResult, Ctx } from "../cli.ts";
-import { AGENT_TOOLS, CONTEXT_ARTIFACT_FILENAME, LEGACY_CONTEXT_ARTIFACT_FILENAME, aliasesState, canonicalDestination, canonicalResourcePath, connectionScopeFlag, installShape, type AgentTool } from "../core/paths.ts";
+import { AGENT_TOOLS, CONTEXT_ARTIFACT_FILENAME, LEGACY_CONTEXT_ARTIFACT_FILENAME, aliasesState, canonicalDestination, canonicalResourcePath, connectionScopeFlag, installShape, onPath, type AgentTool } from "../core/paths.ts";
 import {
   ConfigError,
   isConfigV2,
@@ -27,6 +27,8 @@ import { assertRecordedTextAccess, assertRegisteredFileChange, contentHash, deta
 import { pathLineState, rcPath, withPathLine } from "../wiring/shell.ts";
 import { humanText, nativeSetup, receiptLines } from "../ui/format.ts";
 import { pickTools } from "../ui/prompt.ts";
+import { connectionsAt, connectionsInScope } from "../wiring/scopes.ts";
+import { planConfig } from "./compile.ts";
 
 /** The positional form names one target; lists belong to --tools. */
 function selectTool(ctx: Ctx, named: string): AgentTool[] {
@@ -49,18 +51,26 @@ export async function runWire(ctx: Ctx, args: string[]): Promise<CommandResult> 
     if (ctx.flags.auto || !ctx.canPrompt) {
       throw new ConfigError(ctx.t.errors.wireToolsRequired(`tonedial wire codex ${connectionScopeFlag(ctx.agent, ctx.flags.here === true)}`, ctx.flags.auto));
     }
-    const rl = createInterface({ input: process.stdin, output: process.stdout });
-    let picked: AgentTool[];
-    try {
-      process.stdout.write(`  ${ctx.t.errors.toolsPrompt.trimEnd()}\n`);
-      picked = await pickTools(rl, false, ctx.t);
-    } finally {
-      rl.close();
-    }
-    return wireSelected(ctx, picked);
+    return wireSelected(ctx, await askTools(ctx, ctx.t.errors.toolsPrompt));
   }
   const tools = args[0] !== undefined ? selectTool(ctx, args[0]) : parseToolSelection(selection, false, ctx.t);
   return wireSelected(ctx, tools);
+}
+
+/** The shared picker, marking agents found on PATH and those this scope already connects. */
+async function askTools(ctx: Ctx, question: string): Promise<AgentTool[]> {
+  const connected = new Set(connectionsInScope(planConfig(ctx).config, ctx.agent).map((connection) => connection.target));
+  const marks = Object.fromEntries(AGENT_TOOLS.map((tool) => [tool, [
+    ...(onPath(tool, ctx.env) ? [ctx.t.errors.toolInstalled] : []),
+    ...(connected.has(tool) ? [ctx.t.errors.toolConnected] : []),
+  ]]));
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  try {
+    process.stdout.write(`  ${question.trimEnd()}\n`);
+    return await pickTools(rl, false, ctx.t, marks);
+  } finally {
+    rl.close();
+  }
 }
 
 type ShellSelection = { path: string; id: string; destination: string; recorded: ManagedResource | undefined };
@@ -316,8 +326,26 @@ async function wireSelected(ctx: Ctx, tools: AgentTool[], rebuilding?: NativeReb
   };
 }
 
+/**
+ * Disconnect names its agent and, where the folder has its own connections, its scope: the
+ * global default would otherwise remove a different connection than the one in front of the user.
+ */
 export async function runUnwire(ctx: Ctx, args: string[]): Promise<CommandResult> {
-  const tools = args[0] !== undefined ? selectTool(ctx, args[0]) : [...AGENT_TOOLS];
+  const named = args[0] !== undefined ? selectTool(ctx, args[0]) : null;
+  if (named === null && (ctx.flags.auto || !ctx.canPrompt)) {
+    const flag = connectionScopeFlag(ctx.agent, ctx.flags.here === true);
+    throw new ConfigError(ctx.t.errors.unwireToolsRequired(`tonedial unwire codex ${flag}`, `tonedial eject ${flag}`, ctx.flags.auto));
+  }
+  const scopeExplicit = ctx.scopeExplicit ?? (ctx.flags.global || ctx.flags.here === true || ctx.flags.project !== null);
+  if (!scopeExplicit && connectionsAt(planConfig(ctx).config, "project", ctx.cwd).length > 0) {
+    const command = `tonedial unwire${named ? ` ${named[0]}` : ""}`;
+    throw new ConfigError(ctx.t.errors.unwireScopeRequired(`${command} --here`, `${command} --global`));
+  }
+  return disconnect(ctx, named ?? await askTools(ctx, ctx.t.errors.unwireToolsPrompt));
+}
+
+/** `all` is eject's every-agent removal, which reports an empty scope as such. */
+export async function disconnect(ctx: Ctx, tools: AgentTool[], all = false): Promise<CommandResult> {
   const configChange = planChange(ctx.paths.config, (before) => before, ctx.t, undefined, ctx.paths.root);
   const config = configChange.before === null ? defaultConfig() : parseConfig(configChange.before, ctx.t);
   // Disconnect remains available on legacy roots. These are exact delivery identities, not
@@ -440,8 +468,8 @@ export async function runUnwire(ctx: Ctx, args: string[]): Promise<CommandResult
   });
 
   const reason = result.reason === "written" && !disconnected.length ? "nothing" : result.reason;
-  // A bare unwire with nothing registered here names no tools rather than every supported one.
-  const nothingWired = reason === "nothing" && args[0] === undefined && !disconnected.length;
+  // An eject with nothing registered here names no tools rather than every supported one.
+  const nothingWired = reason === "nothing" && all && !disconnected.length;
   return {
     lines: [...result.lines, ...(result.lines.length ? [""] : []), ...(nothingWired
       ? receiptLines(ctx.t.wiring.nothingWired, ctx.ui.width - 2).map((line) => `  ${ctx.ui.bold(line)}`)

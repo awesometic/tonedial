@@ -312,7 +312,7 @@ test("init and unwire use the bounded config snapshot instead of reopening its p
         };
         syncBuiltinESMExports();
         const init = await invoke(["init", "--here", "--lang", "en", "--tools", "none", "--auto"]);
-        const unwire = await invoke(["unwire", "--here", "--auto"]);
+        const unwire = await invoke(["unwire", "codex", "--here", "--auto"]);
         originalWrite(JSON.stringify({ init, unwire, configPathReads }));
       } finally {
         process.stdout.write = originalWrite;

@@ -457,7 +457,9 @@ When `codex` is connected interactively and installed on `PATH`, `init` offers t
 When `claude` is connected to a project interactively and installed on `PATH`, `init` offers to open Claude Code there so you can answer its workspace trust prompt.
 When both are connected, the first installed of Codex and Claude Code is offered.
 `wire` accepts a positional tool name or `--tools <list>`.
-With neither, it shows `init`'s numbered agent picker in a terminal; without a terminal it stops and shows an example command.
+With neither, it shows `init`'s numbered agent picker in a terminal,
+marking agents installed on `PATH` and those already connected in the scope;
+without a terminal it stops and shows an example command.
 
 ### Review host enablement
 
@@ -483,7 +485,7 @@ Other registered connections are grouped by scope/directory and shared file stat
 Missing files mean some or all recorded files were absent, not that no connection was registered.
 These are presence checks; `--fix` leaves other scopes alone.
 Use the displayed read-only `doctor` command to inspect them, or `eject` if no longer needed.
-Eject disconnects every agent in that displayed scope, including those with present files; use scoped `unwire <tool>` for one (`unwire` without a tool disconnects all tools in that scope).
+Eject disconnects every agent in that displayed scope, including those with present files; use scoped `unwire <tool>` for one.
 Unimplemented targets do not appear as connections or hook observations.
 
 JSON `hookSettings` records each tool's `state` (`enabled`, `disabled`, `unknown`), `basis` and inspected `path`.
@@ -501,6 +503,10 @@ tonedial unwire codex --here
 tonedial eject --here
 ```
 
+`unwire <tool>` disconnects one agent and `eject` every agent in the scope.
+`unwire` without a tool shows the same picker as `wire` in a terminal; without a terminal it stops and shows an example.
+Without a scope flag, `unwire <tool>` stops in a folder that has its own project connections
+and shows the `--here` and `--global` commands; elsewhere it disconnects the global connection.
 Removal preserves shared state, profiles, CLI, shell PATH, other scopes/consumers and changed or ambiguous foreign resources.
 Use `off` instead when the connections should remain installed and only delivery should pause.
 
@@ -685,7 +691,7 @@ A reader that closes early, as in `tonedial show | head`, does not crash the com
 | `export <slug>` / `import <file-or-https-url>` | Transfer complete profiles |
 | `edit [preset <slug>]` | Open config/custom profile in the editor; `--dry-run` previews |
 | `init` | Set up and refresh bundled files; accepts scope flags, `--tools`, `--lang`, `--commands`, `--migrate-legacy`, `--auto`, `--dry-run` |
-| `wire [tool \| --tools <list>]` / `unwire [tool]` | Connect/disconnect in the selected scope (`--auto`, `--dry-run`); `wire` without a tool prompts, `unwire` without one disconnects all |
+| `wire [tool \| --tools <list>]` / `unwire [tool]` | Connect/disconnect in the selected scope (`--auto`, `--dry-run`); without a tool, both show the agent picker in a terminal |
 | `doctor` | Diagnose; `--fix` repairs (`--tools`, `--from-preset`, `--from-operation [--restore-preset]`, `--quarantine-operation`, `--rollback`) |
 | `eject` | Disconnect every agent in a scope; retain shared state and profiles (`--auto`, `--dry-run`) |
 | `compile` | Rebuild missing/stale `TONE.md`; `--check` reports without writing |
