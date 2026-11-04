@@ -483,3 +483,21 @@ test("a command a stopped operation blocks ends with doctor's commands to contin
     assert.deepEqual([machine.value.reason, machine.value.commands], ["recovery-pending", [resume, undo]], args.join(" "));
   }
 });
+
+test("show and get with unreadable settings name doctor, as set does", async () => {
+  assert.equal((await human(["init", "--tools", "none", "--global", "--auto"])).code, 0);
+  const config = join(home, ".tonedial", "config.json");
+  writeFileSync(config, "{");
+  const guidance = (await human(["set", "warmth=2"])).err;
+  assert.match(guidance, /tonedial doctor --fix/);
+  for (const args of [["show"], ["show", "caring-brother"], ["get", "warmth"]]) {
+    const refused = await human(args);
+    assert.equal(refused.code, 1, args.join(" "));
+    // The parser's reason, then where the settings are and the doctor command that recovers them.
+    assert.match(refused.err, /cannot read/);
+    assert.ok(refused.err.split("\n").includes(config), refused.err);
+    assert.match(refused.err, /tonedial doctor --fix/, args.join(" "));
+    assert.match((await json(args)).value.error, /tonedial doctor --fix/);
+  }
+  assert.equal(readFileSync(config, "utf8"), "{");
+});

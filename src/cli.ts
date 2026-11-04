@@ -635,15 +635,7 @@ export async function run(
       ? [`  ${scopeLabel}`, `  ${humanText(agent.root)}`] : [];
     const contextExempt = name === "compile" && flags.check;
     if (command.context !== undefined && command.context !== "setup" && !contextExempt) {
-      let planned: ReturnType<typeof planConfig>;
-      try {
-        planned = planConfig(ctx);
-      } catch (cause) {
-        // The parser names the bad field; the recovery route is what the user can act on.
-        if (cause instanceof ConfigError) throw new ConfigError(`${cause.message}\n${t.errors.unreadableConfigFile(paths.config)}`);
-        throw cause;
-      }
-      const { change, config } = planned;
+      const { change, config } = planConfig(ctx);
       const layout = inspectContextLayout(paths, change, t, {
         config: change.before === null ? null : config,
         expectedArtifact: compile(toCompileInput(config)),

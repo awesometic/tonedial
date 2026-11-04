@@ -21,9 +21,15 @@ function artifactChange(ctx: Ctx, target: ReturnType<typeof contextArtifactTarge
 
 /** Capture the config before any command reads or transforms it. */
 export function planConfig(ctx: Ctx): { change: Change; config: Config } {
-  const change = planChange(ctx.paths.config, (before) => before, ctx.t, undefined, ctx.paths.root);
-  const config = change.before === null ? defaultConfig() : parseConfig(change.before, ctx.t);
-  return { change, config };
+  try {
+    const change = planChange(ctx.paths.config, (before) => before, ctx.t, undefined, ctx.paths.root);
+    const config = change.before === null ? defaultConfig() : parseConfig(change.before, ctx.t);
+    return { change, config };
+  } catch (cause) {
+    // The parser names the bad field; the recovery route is what the user can act on.
+    if (cause instanceof ConfigError) throw new ConfigError(`${cause.message}\n${ctx.t.errors.unreadableConfigFile(ctx.paths.config)}`, { cause });
+    throw cause;
+  }
 }
 
 /** Compile a candidate config and plan the artifact without writing either resource. */

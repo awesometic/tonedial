@@ -708,6 +708,7 @@ in a terminal, or previewed with `--dry-run` and then approved with `--auto`.
 JSON reports `native.reason: "approval-required"`.
 Rebuild replaces generated files while preserving valid settings, unsaved profile changes and custom profiles.
 Healthy profiles remain listable/exportable with damaged config; one bad profile does not hide others.
+Other commands that read damaged config, `show` and `get` included, name the file and the `doctor --fix` that recovers it.
 Flat user presets stay readable; conflicts receive a reported recovered copy without overwriting originals.
 
 After a failed repair, the error identifies the phase, affected path when known, safe error code and operation ID.
