@@ -637,10 +637,12 @@ const messages: Messages = {
     unwireToolsPrompt: "接続を解除するエージェント（カンマ区切り）： ",
     toolInstalled: "インストール済み",
     toolConnected: "接続済み",
-    unwireToolsRequired: (example, eject, auto) => `接続を解除するエージェントを指定してください。例：\n  ${example}\nこの範囲のすべてのエージェントの接続を解除するには：\n  ${eject}${auto ? "\n--auto は選択の承認だけです。エージェントは明示的に選んでください。" : ""}`,
-    unwireScopeRequired: (here, global) => `このフォルダーには独自の接続があります。解除する接続を選んでください：\n  ${here}\n  ${global}\n--here はこのフォルダーの接続を、--global はプロジェクト共通の接続を解除します。`,
-    wireToolsRequired: (example, auto) => `接続するエージェントを指定してください。例：\n  ${example}\n` +
-      `エージェント：claude, codex, antigravity · 複数：--tools codex,claude${auto ? "\n--auto は選択の承認だけです。エージェントは明示的に選んでください。" : ""}`,
+    unwireToolsRequired: (example, eject, auto) => `接続を解除するエージェントを指定してください。${auto ? "\n--auto は選択の承認だけです。エージェントは明示的に選んでください。" : ""}\n例：\n  ${example}\nこの範囲のすべてのエージェントの接続を解除するには：\n  ${eject}`,
+    unwireScopeRequired: (here, global, eject) => eject
+      ? `このフォルダーには独自の接続があります。すべての接続を解除する範囲を選んでください。\n--here はこのフォルダーの接続を、--global はプロジェクト共通の接続をすべて解除します。\n  ${here}\n  ${global}`
+      : `このフォルダーには独自の接続があります。解除する接続を選んでください。\n--here はこのフォルダーの接続を、--global はプロジェクト共通の接続を解除します。\n  ${here}\n  ${global}`,
+    wireToolsRequired: (example, auto) => `接続するエージェントを指定してください。\nエージェント：claude, codex, antigravity · 複数：--tools codex,claude` +
+      `${auto ? "\n--auto は選択の承認だけです。エージェントは明示的に選んでください。" : ""}\n例：\n  ${example}`,
     ownershipConflict: (path) => `所有権が不明か、管理対象の内容または種類が変わっています：\n${path}\nファイルは保持しました。接続を変更する前に doctor で確認してください。`,
     rollbackNeedsFix: "--rollback は doctor --fix と doctor が示した操作IDとともに指定してください。",
     editNotApplied: (path, reason) => `${reason}\n何も適用していません。編集済みコピーを保持しました：\n${path}`,

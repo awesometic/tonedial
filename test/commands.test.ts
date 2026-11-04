@@ -2212,6 +2212,10 @@ test("wire without an agent outside a terminal gives a runnable example", async 
   err = [];
   assert.equal(await cli("wire", "--global", "--auto"), 1);
   assert.ok(stderr().includes(EN.errors.wireToolsRequired("tonedial wire codex --global", true)), stderr());
+  assert.ok(stderr().endsWith("\n  tonedial wire codex --global\n"), "the example command comes last");
+  err = [];
+  assert.equal(await cli("unwire", "--global", "--auto"), 1);
+  assert.ok(stderr().endsWith("\n  tonedial eject --global\n"), `the commands come last:\n${stderr()}`);
 });
 
 test("a risk warning on stderr carries one marker while JSON keeps the notice text", async () => {

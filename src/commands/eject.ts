@@ -11,7 +11,7 @@ import { refuseHomeProject, refuseUnscopedDisconnect } from "../wiring/scopes.ts
 export async function runEject(ctx: Ctx, _args: string[]): Promise<CommandResult> {
   refuseHomeProject(ctx.agent, ctx.env, "tonedial eject --global", ctx.t);
   if (!(ctx.scopeExplicit ?? (ctx.flags.global || ctx.flags.here === true || ctx.flags.project !== null))) {
-    refuseUnscopedDisconnect(planConfig(ctx).config, ctx.cwd, "tonedial eject", ctx.t);
+    refuseUnscopedDisconnect(planConfig(ctx).config, ctx.cwd, "tonedial eject", ctx.t, undefined, true);
   }
   const result = await disconnect(ctx, [...AGENT_TOOLS], true);
   const diff = result.json.diff as { path: string }[];

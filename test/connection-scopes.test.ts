@@ -203,8 +203,8 @@ test("unwire without a scope refuses in a folder with its own connections and na
   const config = readFileSync(paths.config, "utf8");
   const refused = await invoke(["unwire", "codex", "--dry-run"]);
   assert.equal(refused.code, 1, JSON.stringify(refused.value));
-  assert.match(refused.value.error, /^  tonedial unwire codex --here$/m);
-  assert.match(refused.value.error, /^  tonedial unwire codex --global$/m);
+  // The explanation comes first and the commands it offers last.
+  assert.deepEqual(refused.value.error.split("\n").slice(-2), ["  tonedial unwire codex --here", "  tonedial unwire codex --global"]);
   // The folder has no Claude connection of its own, so `--here` could not mean it.
   const claude = await invoke(["unwire", "claude", "--dry-run"]);
   assert.equal(claude.code, 0, JSON.stringify(claude.value));
@@ -332,8 +332,9 @@ test("eject without a scope refuses in a folder with its own connections and nam
   const config = readFileSync(paths.config, "utf8");
   const refused = await invoke(["eject", "--dry-run"]);
   assert.equal(refused.code, 1, JSON.stringify(refused.value));
-  assert.match(refused.value.error, /^ {2}tonedial eject --here$/m);
-  assert.match(refused.value.error, /^ {2}tonedial eject --global$/m);
+  assert.deepEqual(refused.value.error.split("\n").slice(-2), ["  tonedial eject --here", "  tonedial eject --global"]);
+  // Eject disconnects every agent in the scope it is given, so it speaks of connections.
+  assert.match(refused.value.error, /this folder's connections; --global disconnects the ones shared/);
   assert.equal(readFileSync(paths.config, "utf8"), config);
   assert.equal((await invoke(["eject", "--here", "--dry-run"])).code, 0);
 });

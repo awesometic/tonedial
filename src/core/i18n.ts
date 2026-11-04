@@ -619,7 +619,8 @@ export type Messages = {
     toolInstalled: string;
     toolConnected: string;
     unwireToolsRequired: (example: string, eject: string, auto: boolean) => string;
-    unwireScopeRequired: (here: string, global: string) => string;
+    /** `eject` disconnects every agent in the chosen scope, so it speaks of connections. */
+    unwireScopeRequired: (here: string, global: string, eject: boolean) => string;
     /** `wire` without an agent outside a terminal; the --auto rule shows only when it was passed. */
     wireToolsRequired: (example: string, auto: boolean) => string;
     ownershipConflict: (path: string) => string;
@@ -1322,10 +1323,12 @@ const enMessages: Messages = {
     unwireToolsPrompt: "Agents to disconnect (comma-separated): ",
     toolInstalled: "installed",
     toolConnected: "connected",
-    unwireToolsRequired: (example, eject, auto) => `Choose an agent to disconnect, for example:\n  ${example}\nTo disconnect every agent in this scope:\n  ${eject}${auto ? "\n--auto approves your selection only; choose agents explicitly." : ""}`,
-    unwireScopeRequired: (here, global) => `This folder has its own connections. Choose which one to disconnect:\n  ${here}\n  ${global}\n--here disconnects this folder's connection; --global disconnects the one shared across projects.`,
-    wireToolsRequired: (example, auto) => `Choose an agent to connect, for example:\n  ${example}\n` +
-      `Agents: claude, codex, antigravity · several: --tools codex,claude${auto ? "\n--auto approves your selection only; choose agents explicitly." : ""}`,
+    unwireToolsRequired: (example, eject, auto) => `Choose an agent to disconnect.${auto ? "\n--auto approves your selection only; choose agents explicitly." : ""}\nFor example:\n  ${example}\nTo disconnect every agent in this scope:\n  ${eject}`,
+    unwireScopeRequired: (here, global, eject) => eject
+      ? `This folder has its own connections, so choose which ones to disconnect.\n--here disconnects this folder's connections; --global disconnects the ones shared across projects.\n  ${here}\n  ${global}`
+      : `This folder has its own connection, so choose which one to disconnect.\n--here disconnects this folder's connection; --global disconnects the one shared across projects.\n  ${here}\n  ${global}`,
+    wireToolsRequired: (example, auto) => `Choose an agent to connect.\nAgents: claude, codex, antigravity · several: --tools codex,claude` +
+      `${auto ? "\n--auto approves your selection only; choose agents explicitly." : ""}\nFor example:\n  ${example}`,
     ownershipConflict: (path) => `Ownership is unknown, or managed content or file type changed:\n${path}\nThe file was preserved. Check it with doctor before changing the connection.`,
     rollbackNeedsFix: "Use --rollback with doctor --fix and an operation ID reported by doctor.",
     editNotApplied: (path, reason) => `${reason}\nNothing was applied. Edited copy preserved at:\n${path}`,
@@ -2110,10 +2113,12 @@ const koMessages: Messages = {
     unwireToolsPrompt: "연결을 해제할 에이전트(쉼표로 구분): ",
     toolInstalled: "설치됨",
     toolConnected: "연결됨",
-    unwireToolsRequired: (example, eject, auto) => `연결을 해제할 에이전트를 지정해 주세요. 예:\n  ${example}\n이 범위의 모든 에이전트 연결을 해제하려면:\n  ${eject}${auto ? "\n--auto는 선택한 변경만 승인합니다. 에이전트는 직접 골라 주세요." : ""}`,
-    unwireScopeRequired: (here, global) => `이 폴더에 따로 등록된 연결이 있습니다. 해제할 연결을 골라 주세요:\n  ${here}\n  ${global}\n--here는 이 폴더의 연결을, --global은 모든 프로젝트가 함께 쓰는 연결을 해제합니다.`,
-    wireToolsRequired: (example, auto) => `연결할 에이전트를 지정해 주세요. 예:\n  ${example}\n` +
-      `에이전트: claude, codex, antigravity · 여러 개: --tools codex,claude${auto ? "\n--auto는 선택한 변경만 승인합니다. 에이전트는 직접 골라 주세요." : ""}`,
+    unwireToolsRequired: (example, eject, auto) => `연결을 해제할 에이전트를 지정해 주세요.${auto ? "\n--auto는 선택한 변경만 승인합니다. 에이전트는 직접 골라 주세요." : ""}\n예:\n  ${example}\n이 범위의 모든 에이전트 연결을 해제하려면:\n  ${eject}`,
+    unwireScopeRequired: (here, global, eject) => eject
+      ? `이 폴더에 따로 등록된 연결이 있습니다. 연결을 모두 해제할 범위를 골라 주세요.\n--here는 이 폴더의 연결을, --global은 모든 프로젝트가 함께 쓰는 연결을 모두 해제합니다.\n  ${here}\n  ${global}`
+      : `이 폴더에 따로 등록된 연결이 있습니다. 해제할 연결을 골라 주세요.\n--here는 이 폴더의 연결을, --global은 모든 프로젝트가 함께 쓰는 연결을 해제합니다.\n  ${here}\n  ${global}`,
+    wireToolsRequired: (example, auto) => `연결할 에이전트를 지정해 주세요.\n에이전트: claude, codex, antigravity · 여러 개: --tools codex,claude` +
+      `${auto ? "\n--auto는 선택한 변경만 승인합니다. 에이전트는 직접 골라 주세요." : ""}\n예:\n  ${example}`,
     ownershipConflict: (path) => `관리 기록이 없거나 관리하던 내용·파일 종류가 바뀌었습니다:\n${path}\n파일을 보존했습니다. 연결을 바꾸기 전에 doctor로 확인해 주세요.`,
     rollbackNeedsFix: "doctor가 보여준 작업 ID로 doctor --fix --rollback을 실행해 주세요.",
     editNotApplied: (path, reason) => `${reason}\n아무것도 적용하지 않았습니다. 편집한 사본 보존 위치:\n${path}`,

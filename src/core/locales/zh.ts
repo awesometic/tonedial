@@ -637,10 +637,12 @@ const messages: Messages = {
     unwireToolsPrompt: "要断开的代理（逗号分隔）： ",
     toolInstalled: "已安装",
     toolConnected: "已连接",
-    unwireToolsRequired: (example, eject, auto) => `请指定要断开的代理，例如：\n  ${example}\n若要断开此范围内的所有代理：\n  ${eject}${auto ? "\n--auto 仅批准你的选择；请明确指定代理。" : ""}`,
-    unwireScopeRequired: (here, global) => `此文件夹有自己的连接。请选择要断开的连接：\n  ${here}\n  ${global}\n--here 断开此文件夹的连接；--global 断开跨项目共享的连接。`,
-    wireToolsRequired: (example, auto) => `请指定要连接的代理，例如：\n  ${example}\n` +
-      `代理：claude, codex, antigravity · 多个：--tools codex,claude${auto ? "\n--auto 仅批准你的选择；请明确指定代理。" : ""}`,
+    unwireToolsRequired: (example, eject, auto) => `请指定要断开的代理。${auto ? "\n--auto 仅批准你的选择；请明确指定代理。" : ""}\n例如：\n  ${example}\n若要断开此范围内的所有代理：\n  ${eject}`,
+    unwireScopeRequired: (here, global, eject) => eject
+      ? `此文件夹有自己的连接。请选择要断开全部连接的范围。\n--here 断开此文件夹的全部连接；--global 断开跨项目共享的全部连接。\n  ${here}\n  ${global}`
+      : `此文件夹有自己的连接。请选择要断开的连接。\n--here 断开此文件夹的连接；--global 断开跨项目共享的连接。\n  ${here}\n  ${global}`,
+    wireToolsRequired: (example, auto) => `请指定要连接的代理。\n代理：claude, codex, antigravity · 多个：--tools codex,claude` +
+      `${auto ? "\n--auto 仅批准你的选择；请明确指定代理。" : ""}\n例如：\n  ${example}`,
     ownershipConflict: (path) => `所有权未知，或受管理内容、文件类型已变化：\n${path}\n已保留文件。更改连接前请先用 doctor 检查。`,
     rollbackNeedsFix: "请将 --rollback 与 doctor --fix 及 doctor 报告的操作 ID 一起使用。",
     editNotApplied: (path, reason) => `${reason}\n未应用任何更改。已保留编辑副本：\n${path}`,

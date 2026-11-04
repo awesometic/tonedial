@@ -637,10 +637,12 @@ const messages: Messages = {
     unwireToolsPrompt: "Agentes que desconectar (separados por comas): ",
     toolInstalled: "instalado",
     toolConnected: "conectado",
-    unwireToolsRequired: (example, eject, auto) => `Elige un agente que desconectar, por ejemplo:\n  ${example}\nPara desconectar todos los agentes de este ámbito:\n  ${eject}${auto ? "\n--auto solo aprueba tu selección; elige los agentes explícitamente." : ""}`,
-    unwireScopeRequired: (here, global) => `Esta carpeta tiene sus propias conexiones. Elige cuál desconectar:\n  ${here}\n  ${global}\n--here desconecta la conexión de esta carpeta; --global, la compartida entre proyectos.`,
-    wireToolsRequired: (example, auto) => `Elige un agente que conectar, por ejemplo:\n  ${example}\n` +
-      `Agentes: claude, codex, antigravity · varios: --tools codex,claude${auto ? "\n--auto solo aprueba tu selección; elige los agentes explícitamente." : ""}`,
+    unwireToolsRequired: (example, eject, auto) => `Elige un agente que desconectar.${auto ? "\n--auto solo aprueba tu selección; elige los agentes explícitamente." : ""}\nPor ejemplo:\n  ${example}\nPara desconectar todos los agentes de este ámbito:\n  ${eject}`,
+    unwireScopeRequired: (here, global, eject) => eject
+      ? `Esta carpeta tiene sus propias conexiones, así que elige cuáles desconectar.\n--here desconecta las conexiones de esta carpeta; --global, las compartidas entre proyectos.\n  ${here}\n  ${global}`
+      : `Esta carpeta tiene su propia conexión, así que elige cuál desconectar.\n--here desconecta la conexión de esta carpeta; --global, la compartida entre proyectos.\n  ${here}\n  ${global}`,
+    wireToolsRequired: (example, auto) => `Elige un agente que conectar.\nAgentes: claude, codex, antigravity · varios: --tools codex,claude` +
+      `${auto ? "\n--auto solo aprueba tu selección; elige los agentes explícitamente." : ""}\nPor ejemplo:\n  ${example}`,
     ownershipConflict: (path) => `Propiedad desconocida, o contenido gestionado o tipo de archivo cambiado:\n${path}\nSe conservó el archivo. Revísalo con doctor antes de cambiar la conexión.`,
     rollbackNeedsFix: "Usa --rollback con doctor --fix y un ID de operación indicado por doctor.",
     editNotApplied: (path, reason) => `${reason}\nNo se aplicó nada. Copia editada conservada en:\n${path}`,

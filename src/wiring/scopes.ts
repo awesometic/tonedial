@@ -94,12 +94,12 @@ export function refuseHomeProject(agent: AgentPaths, env: NodeJS.ProcessEnv, glo
 /**
  * A disconnect without a scope flag, in a folder with its own connections (of `tools`, when
  * named), names both scopes: the global default would remove a different connection than the
- * one in front of the user.
+ * one in front of the user. `eject` words it for every connection in the chosen scope.
  */
-export function refuseUnscopedDisconnect(config: Config, cwd: string, command: string, t: Messages, tools?: readonly string[]): void {
+export function refuseUnscopedDisconnect(config: Config, cwd: string, command: string, t: Messages, tools?: readonly string[], eject = false): void {
   if (folderConnections(config, cwd, tools).length === 0) return;
   const commands = [`${command} --here`, `${command} --global`];
-  throw new ConfigError(t.errors.unwireScopeRequired(commands[0]!, commands[1]!), { reason: "scope-required", commands });
+  throw new ConfigError(t.errors.unwireScopeRequired(commands[0]!, commands[1]!, eject), { reason: "scope-required", commands });
 }
 
 /** The path a registration reaches its recorded hook through, or null when it records none. */
