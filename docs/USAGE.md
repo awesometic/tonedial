@@ -514,6 +514,65 @@ and shows the `--here` and `--global` commands; elsewhere it disconnects the glo
 Removal preserves shared state, profiles, CLI, shell PATH, other scopes/consumers and changed or ambiguous foreign resources.
 Use `off` instead when the connections should remain installed and only delivery should pause.
 
+### Connection recipes
+
+**Connect one project**
+
+```bash
+cd ~/work/app
+tonedial wire codex --here
+```
+
+Only this folder gets the hook and skill link.
+The receipt lists the files and the version-control choice.
+
+**Connect globally**
+
+```bash
+tonedial wire codex --global
+```
+
+Run it from any folder; the global hook applies in every project.
+
+**Move from project to global**
+
+```bash
+cd ~/work/app
+tonedial unwire codex --here
+tonedial wire codex --global
+```
+
+Disconnect the project first; otherwise the agent loads the tone from both hooks.
+
+**Disconnect one agent**
+
+```bash
+tonedial unwire codex --here      # this folder's connection
+tonedial unwire codex --global    # the shared connection
+```
+
+`eject --here` or `eject --global` disconnects every agent in that scope instead.
+
+**See what is connected where**
+
+```bash
+tonedial show
+tonedial show --json
+```
+
+`show` groups connections by scope and directory; JSON lists them in `connections`.
+`tonedial doctor --here` checks one folder's files and lists the other connections.
+
+**Recover after a host or Node update**
+
+```bash
+tonedial doctor --here
+tonedial doctor --fix --here
+```
+
+Hooks record the Node runtime path, so `doctor` flags a hook whose runtime moved, and `doctor --fix` rewrites it after approval.
+Use `--global` for global connections, and review a rewritten Codex hook again in `/hooks`.
+
 ## Hook refresh and bounded style feedback
 
 Claude/Codex refresh current instructions at `UserPromptSubmit`.
