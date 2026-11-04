@@ -5,7 +5,9 @@ import assert from "node:assert/strict";
 import { afterEach, beforeEach, test } from "node:test";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { spawnSync } from "node:child_process";
+import { dirname, join } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { run } from "../src/cli.ts";
 import { HOST_COMPOSITION } from "../src/core/anchors.ts";
@@ -305,6 +307,27 @@ test("a missing hook's path sits on its own line", async () => {
   rmSync(hook);
   const codex = block((await human(["doctor", "--global"])).out, "Codex CLI");
   assert.deepEqual(codex.slice(1, 3), ["No ToneDial SessionStart hook", hook]);
+});
+
+test("an interactive repair reports the application phase before the agent phase starts", async () => {
+  assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
+  rmSync(resolvePaths(env).tone);
+  const entry = join(dirname(fileURLToPath(import.meta.url)), "..", "src", "cli.ts");
+  const source = `
+    Object.defineProperty(process.stdin, "isTTY", { value: true });
+    Object.defineProperty(process.stdout, "isTTY", { value: true });
+    process.stdin.setRawMode = () => process.stdin;
+    const { run } = await import(${JSON.stringify(pathToFileURL(entry).href)});
+    process.exitCode = await run(["doctor", "--fix", "--global"]);
+  `;
+  const result = spawnSync(process.execPath, ["--input-type=module", "-e", source], {
+    cwd: home, env: { ...env, NO_COLOR: "1" }, input: "y\n", encoding: "utf8", timeout: 10_000,
+  });
+  assert.equal(result.status, 0, result.stderr);
+  const restored = result.stdout.indexOf("Application restored");
+  const native = result.stdout.indexOf("Connect agents");
+  assert.ok(restored >= 0 && native >= 0, result.stdout);
+  assert.ok(restored < native, `the application receipt came after the agent phase:\n${result.stdout}`);
 });
 
 test("a global wire names a project hook it would double in the preview, and once", async () => {

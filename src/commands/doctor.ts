@@ -689,12 +689,15 @@ export async function runDoctor(ctx: Ctx, _args: string[]): Promise<CommandResul
     json: { ...app.json, root: ctx.agent.root, stateRoot: ctx.paths.root, agentRoot: ctx.agent.root,
       live: ctx.agent.live, fixed: false, appHealthy: false },
   };
+  // In a terminal the agent phase prints its preview as it asks, so the application receipt goes first.
+  const streamed = ctx.canPrompt && !ctx.flags.auto;
+  if (streamed && app.lines.length) process.stdout.write(`${app.lines.join("\n")}\n`);
   const native = await runRebuildNative(ctx, app.legacy);
   const rollbackLines = recoveryRollbackLines(ctx.t, app.json.operationId, native.json.operationId);
   const report = await doctorReport(ctx, rollbackLines.length === 0);
   return {
     lines: [
-      ...app.lines,
+      ...streamed ? [] : app.lines,
       ...native.lines,
       ...((app.lines.length || native.lines.length) && report.lines.length ? [""] : []),
       ...report.lines,
