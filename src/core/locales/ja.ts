@@ -667,8 +667,8 @@ const messages: Messages = {
       `そのまま接続するとファイルを破損します。`,
     projectNeedsWiring: "--project には接続機能が必要です",
     hooksNotJson: (path, reason) =>
-      `${path}: JSONとして読み取れません${reason ? `：${reason}` : ""}。ToneDialは他のフックを上書きしません。` +
-      `ファイルを修正して再実行してください。`,
+      `このファイルをJSONとして読み取れません${reason ? `：${reason}` : ""}\n${path}\n` +
+      `ファイル内の他のフックを守るため、ToneDialは上書きしません。ファイルを修正してから再実行してください。`,
   },
   config: {
     unknownKey: (key, known) => `config.json: 不明なキー ${key} · 選択肢：${known.join(", ")}`,

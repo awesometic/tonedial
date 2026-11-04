@@ -667,8 +667,8 @@ const messages: Messages = {
       `直接连接会损坏文件。`,
     projectNeedsWiring: "--project 需要连接支持",
     hooksNotJson: (path, reason) =>
-      `${path}：无法作为 JSON 读取${reason ? `：${reason}` : ""}。ToneDial 不会覆盖其他钩子。` +
-      `请修复文件后重新运行。`,
+      `无法将此文件作为 JSON 读取${reason ? `：${reason}` : ""}\n${path}\n` +
+      `为保留文件中的其他钩子，ToneDial 不会覆盖它。请修复文件后重新运行。`,
   },
   config: {
     unknownKey: (key, known) => `config.json：未知键 ${key} · 可选：${known.join(", ")}`,

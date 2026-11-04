@@ -181,6 +181,21 @@ test("a project that inherits the global hook is not reported as a duplicate", a
   }
 });
 
+test("a hook file that no longer parses is reported as unreadable, not as edited entries", async () => {
+  assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
+  const hook = join(home, ".codex", "hooks.json");
+  writeFileSync(hook, readFileSync(hook, "utf8").replace(/\}\s*$/, ""));
+
+  const lines = block((await human(["doctor", "--global"])).out, "Codex CLI");
+  const codex = lines.join(" ");
+  assert.doesNotMatch(codex, /edited outside ToneDial/);
+  assert.match(codex, /Cannot read this file as JSON/);
+  assert.ok(lines.includes(hook), codex);
+  assert.equal(lines.at(-1), "tonedial doctor --global");
+  const machine = await json(["doctor", "--global"]);
+  assert.equal(machine.value.integrations.find((row: { tool: string }) => row.tool === "codex").configuration, "foreign");
+});
+
 test("an externally edited hook gets what ToneDial expected and two routes that work", async () => {
   assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
   const hook = join(home, ".codex", "hooks.json");

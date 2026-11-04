@@ -667,8 +667,8 @@ const messages: Messages = {
       `o de la palabra clave; conectarlo dañaría el archivo.`,
     projectNeedsWiring: "--project requiere soporte de conexiones",
     hooksNotJson: (path, reason) =>
-      `${path}: no se puede leer como JSON${reason ? `: ${reason}` : ""}. ToneDial no sobrescribirá ` +
-      `otros hooks. Corrige el archivo y repite.`,
+      `No se puede leer este archivo como JSON${reason ? `: ${reason}` : ""}\n${path}\n` +
+      `ToneDial no sobrescribirá los demás hooks que contiene. Corrige el archivo y vuelve a ejecutar el comando.`,
   },
   config: {
     unknownKey: (key, known) => `config.json: clave desconocida ${key} · disponibles: ${known.join(", ")}`,

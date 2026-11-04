@@ -423,8 +423,13 @@ function diagnoseNative(
       // The file is still the recorded one, so anything but an intact handler is an outside edit.
       edited = true;
       owned = ownedHook(change.before, installed, route.path, ctx.t);
-    } catch {
+    } catch (error) {
       owned = null;
+      // A recorded file that no longer parses is a broken file, not an edit of ToneDial's entries.
+      if (edited && error instanceof ConfigError) {
+        edited = false;
+        detail = `${error.message}\n${repairCommand(ctx, "doctor")}`;
+      }
     }
     const recordedHash = metadata.handlerSha256 ?? resource.managed.handlerSha256;
     if (owned !== null && recordedHash !== undefined && contentHash(owned) === recordedHash) {

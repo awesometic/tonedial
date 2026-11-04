@@ -1343,8 +1343,8 @@ const enMessages: Messages = {
       `or safeword; connecting it would corrupt the file.`,
     projectNeedsWiring: "--project requires connection support",
     hooksNotJson: (path, reason) =>
-      `${path}: cannot read as JSON${reason ? `: ${reason}` : ""}. ToneDial will not overwrite ` +
-      `other hooks. Fix the file, then rerun.`,
+      `Cannot read this file as JSON${reason ? `: ${reason}` : ""}\n${path}\n` +
+      `ToneDial will not overwrite the other hooks in it. Fix the file, then rerun.`,
   },
   config: {
     unknownKey: (key, known) => `config.json: unknown key ${key} · available: ${known.join(", ")}`,
@@ -2122,8 +2122,8 @@ const koMessages: Messages = {
       `세이프워드에서 지워 주세요. 그대로 연결하면 파일이 깨집니다`,
     projectNeedsWiring: "--project에는 연결 기능이 필요합니다",
     hooksNotJson: (path, reason) =>
-      `${path}: JSON으로 읽을 수 없습니다${reason ? `: ${reason}` : ""}. 다른 훅을 보존하기 위해 ` +
-      `ToneDial은 덮어쓰지 않습니다. 파일을 고친 뒤 다시 실행해 주세요`,
+      `이 파일을 JSON으로 읽을 수 없습니다${reason ? `: ${reason}` : ""}\n${path}\n` +
+      `파일 안의 다른 훅을 지키기 위해 ToneDial은 덮어쓰지 않습니다. 파일을 고친 뒤 다시 실행해 주세요.`,
   },
   config: {
     unknownKey: (key, known) => `config.json: 알 수 없는 키 ${key} · 사용 가능: ${known.join(", ")}`,
