@@ -414,6 +414,10 @@ Local setup does not configure remote/cloud runtimes.
 
 Scope flags are mutually exclusive.
 Use the same scope for `init`, `wire`, `doctor`, `unwire` and `eject`.
+After a project `wire`, the receipt names the project files it wrote.
+Their hooks run ToneDial with paths from this machine, so keep them out of version control
+(for example with `.git/info/exclude`) or commit them knowingly.
+In your home directory a project scope would use the global files, so `wire --here` there stops and shows the `--global` command.
 The scope chooses wiring destinations, not another tone or profile library.
 `use --project` instead exports `.tonedial/TONE.md`; `test --project` selects a conversation folder.
 

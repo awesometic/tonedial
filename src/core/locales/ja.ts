@@ -291,6 +291,8 @@ const messages: Messages = {
     stateKept: (root) => `プリセットと設定はここに残ります：\n${root}`,
     deleteYourself: "状態も削除する場合は、このディレクトリを手動で削除してください",
     nothingWired: "この範囲に接続なし · 解除するものはありません",
+    projectFiles: (files) => `プロジェクトに書き込んだファイル：${files.join(", ")}\nフックにはこのマシンのパスが含まれます。バージョン管理から除外する（例：.git/info/exclude）か、承知のうえでコミットしてください。`,
+    projectIsHome: (command) => `このフォルダーはホームディレクトリなので、プロジェクト接続はグローバルと同じファイルを使います。グローバルに接続してください：\n  ${command}`,
     damaged: (path, reason) => `${path}: ${reason}。余分なマーカーを削除して eject を再実行してください。`,
     needsApproval:
       "ファイル変更には承認が必要です。ターミナルで実行するか、--dry-run で確認してから --auto で再実行してください。",

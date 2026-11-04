@@ -1,9 +1,9 @@
 import { existsSync } from "node:fs";
-import { dirname, join, relative } from "node:path";
+import { dirname, isAbsolute, join, relative } from "node:path";
 import { createInterface } from "node:readline/promises";
 
 import type { CommandResult, Ctx } from "../cli.ts";
-import { AGENT_TOOLS, CONTEXT_ARTIFACT_FILENAME, LEGACY_CONTEXT_ARTIFACT_FILENAME, aliasesState, canonicalDestination, canonicalResourcePath, connectionScopeFlag, installShape, onPath, type AgentTool } from "../core/paths.ts";
+import { AGENT_TOOLS, CONTEXT_ARTIFACT_FILENAME, LEGACY_CONTEXT_ARTIFACT_FILENAME, aliasesState, canonicalDestination, canonicalResourcePath, connectionScopeFlag, inside, installShape, onPath, type AgentTool } from "../core/paths.ts";
 import {
   ConfigError,
   isConfigV2,
@@ -27,7 +27,7 @@ import { assertRecordedTextAccess, assertRegisteredFileChange, contentHash, deta
 import { pathLineState, rcPath, withPathLine } from "../wiring/shell.ts";
 import { humanText, nativeSetup, receiptLines } from "../ui/format.ts";
 import { pickTools } from "../ui/prompt.ts";
-import { connectionsAt, connectionsInScope } from "../wiring/scopes.ts";
+import { connectionsAt, connectionsInScope, projectIsHome } from "../wiring/scopes.ts";
 import { planConfig } from "./compile.ts";
 
 /** The positional form names one target; lists belong to --tools. */
@@ -47,6 +47,9 @@ function artifact(ctx: Ctx): Change {
 export async function runWire(ctx: Ctx, args: string[]): Promise<CommandResult> {
   if (args[0] !== undefined && ctx.flags.tools !== null) throw new ConfigError(ctx.t.errors.toolsAmbiguous);
   const selection = args[0] ?? ctx.flags.tools;
+  if (projectIsHome(ctx.agent, ctx.env)) {
+    throw new ConfigError(ctx.t.wiring.projectIsHome(`tonedial wire${args[0] ? ` ${args[0]}` : ctx.flags.tools ? ` --tools ${ctx.flags.tools}` : ""} --global`));
+  }
   if (selection === null) {
     if (ctx.flags.auto || !ctx.canPrompt) {
       throw new ConfigError(ctx.t.errors.wireToolsRequired(`tonedial wire codex ${connectionScopeFlag(ctx.agent, ctx.flags.here === true)}`, ctx.flags.auto));
@@ -302,6 +305,12 @@ async function wireSelected(ctx: Ctx, tools: AgentTool[], rebuilding?: NativeReb
   // headline. Doctor's repair report repeats per-host review steps, so its receipt omits them.
   const setup = configured ? nativeSetupLines(ctx, nativeSetup(ctx.t, routes, ctx.agent.live, !rebuilding || rebuilding.preview),
     result.reason === "written") : [];
+  // Project hooks name this machine's runtime and state paths, so committing them is a choice.
+  const projectFiles = !ctx.agent.live && !rebuilding && result.reason === "written"
+    ? result.diff.filter((change) => !inside(change.path, ctx.paths.root)).map((change) => relative(ctx.agent.root, change.path))
+      .filter((path) => path !== "" && !path.startsWith("..") && !isAbsolute(path))
+    : [];
+  if (projectFiles.length) setup.push("", ...receiptLines(ctx.t.wiring.projectFiles(projectFiles.map(humanText)), ctx.ui.width - 2).map((line) => `  ${line}`));
   const headline = tools.length ? summary(ctx, result.reason, tools) :
     configured && shellChange ? [`  ${ctx.t.doctor.pathLineAt(humanText(shellChange.path))}`] : [];
   return {

@@ -267,3 +267,34 @@ test("bare unwire in a terminal asks with the wire picker and marks installed an
   assert.match(result.stdout, /--dry-run · nothing written/);
   assert.equal(existsSync(join(project, ".codex", "hooks.json")), true);
 });
+
+test("project wiring names the files it wrote and the version-control choice; global wiring does not", async () => {
+  assert.equal((await invoke(["init", "--global", "--tools", "none", "--auto"])).code, 0);
+  const wired = await human(["wire", "codex", "--here", "--auto"]);
+  assert.equal(wired.code, 0, wired.errors);
+  // Shared state files are in the preview but are not project files.
+  assert.match(wired.output, /^  Project files written: \.codex\/hooks\.json, \.agents\/skills\/tonedial$/m);
+  const flat = wired.output.replace(/\s+/g, " ");
+  assert.match(flat, /paths from this machine/);
+  assert.match(flat, /\.git\/info\/exclude/);
+  const global = await human(["wire", "claude", "--global", "--auto"]);
+  assert.equal(global.code, 0, global.errors);
+  assert.doesNotMatch(global.output, /Project files written|paths from this machine/);
+});
+
+test("project wiring in the home directory explains that it is the global destination", async () => {
+  const home = env.HOME!;
+  assert.equal((await invoke(["init", "--global", "--tools", "codex", "--auto"])).code, 0);
+  const paths = resolvePaths(env);
+  const config = readFileSync(paths.config, "utf8");
+  for (const [args, cwd] of [[["wire", "codex", "--here", "--auto"], home], [["wire", "claude", "--here", "--dry-run"], home],
+    [["wire", "claude", "--project", home, "--auto"], project]] as const) {
+    const refused = await human([...args], {}, cwd);
+    assert.equal(refused.code, 1, args.join(" "));
+    assert.doesNotMatch(refused.errors, /Ownership is unknown/);
+    assert.match(refused.errors, /home directory/);
+    assert.match(refused.errors, new RegExp(`^  tonedial wire ${args[1]} --global$`, "m"));
+  }
+  assert.equal(readFileSync(paths.config, "utf8"), config);
+  assert.equal(existsSync(join(home, ".claude")), false);
+});
