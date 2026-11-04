@@ -331,3 +331,17 @@ test("init --here in the home directory refuses like wire --here and names the g
   assert.equal(existsSync(join(home, ".codex")), false);
   assert.equal(existsSync(resolvePaths(env).config), false);
 });
+
+test("unwire --here removes the skill directories it created once they are empty, and keeps a folder's own", async () => {
+  assert.equal((await invoke(["init", "--here", "--tools", "codex,claude", "--auto"])).code, 0);
+  assert.equal(existsSync(join(project, ".agents", "skills", "tonedial")), true);
+  for (const tool of ["codex", "claude"]) assert.equal((await invoke(["unwire", tool, "--here", "--auto"])).code, 0, tool);
+  assert.deepEqual(readdirSync(project), []);
+
+  // A directory that was there before ToneDial stays, even when it ends up empty.
+  mkdirSync(join(project, ".agents"));
+  assert.equal((await invoke(["wire", "codex", "--here", "--auto"])).code, 0);
+  assert.equal((await invoke(["unwire", "codex", "--here", "--auto"])).code, 0);
+  assert.equal(existsSync(join(project, ".agents")), true);
+  assert.equal(existsSync(join(project, ".codex")), false);
+});

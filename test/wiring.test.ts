@@ -1652,7 +1652,7 @@ test("doctor --fix leaves an installed-but-unselected tool unwired", async () =>
   assert.deepEqual(readFileSync(join(home, "config.json")), config);
 });
 
-test("legacy owned wiring ejects while retaining empty host containers", async () => {
+test("legacy owned wiring ejects and prunes only the empty containers its setup created", async () => {
   // `init` wires through the same gate but was not recording what it created, so its wiring
   // survived an eject that promises tracelessness. Provenance has to be written by whoever
   // writes the file, at the only moment it is knowable.
@@ -1664,8 +1664,9 @@ test("legacy owned wiring ejects while retaining empty host containers", async (
   assert.equal(await cli("eject", "--here"), 0);
   assert.equal(existsSync(agentFile("claude")), false);
   assert.equal(existsSync(agentFile("codex")), false);
-  assert.deepEqual(readdirSync(join(work, "output", ".agents", "skills")), [], "the shared skill entry is gone");
-  assert.deepEqual(readdirSync(join(work, "output", ".claude", "skills")), [], "the Claude alias is gone");
+  // Setup created both skill containers whole, so nothing of them remains once they are empty.
+  assert.equal(existsSync(join(work, "output", ".agents")), false, "the shared skill entry and its containers are gone");
+  assert.equal(existsSync(join(work, "output", ".claude")), false, "the Claude alias and its containers are gone");
 });
 
 // ── the skill, the command, and the PATH line ────────────────────────────────────────────

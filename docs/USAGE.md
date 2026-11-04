@@ -561,6 +561,7 @@ tonedial unwire codex --global    # the shared connection
 ```
 
 `eject --here` or `eject --global` disconnects every agent in that scope instead.
+Disconnecting removes the skill folders setup created, such as `.agents/skills`, once they are empty; folders that existed before setup stay.
 
 **See what is connected where**
 

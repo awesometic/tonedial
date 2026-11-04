@@ -202,6 +202,9 @@ test("link removal rollback preserves a foreign replacement and its referent", (
   const foreignSource = join(scratch, "foreign", "skill");
   mkdirSync(foreignSource, { recursive: true });
   writeFileSync(join(foreignSource, "SKILL.md"), "foreign\n");
+  // Removal pruned the parents its install created; the replacement brings its own.
+  assert.equal(existsSync(join(scratch, ".agents")), false);
+  mkdirSync(dirname(destination), { recursive: true });
   symlinkSync(foreignSource, destination, "dir");
   const replacementIdentity = entryIdentity(destination);
 

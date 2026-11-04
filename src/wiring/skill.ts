@@ -10,7 +10,7 @@ import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 
 import { ConfigError, writeAtomic } from "../core/config.ts";
 import { SKILL_NAME } from "../core/skill.ts";
-import { canonicalDestination, canonicalResourcePath, entryIdentity, nearestRealPath, skillDestinations, type SkillDestination } from "../core/paths.ts";
+import { canonicalDestination, canonicalResourcePath, entryIdentity, inside, nearestRealPath, skillDestinations, type SkillDestination } from "../core/paths.ts";
 import type { ManagedResource, WiringV2 } from "../core/config.ts";
 import type { Messages } from "../core/i18n.ts";
 import type { JsonValue, OperationAction } from "../core/operations.ts";
@@ -467,6 +467,7 @@ function resourceFor(
   expectedFiles: Record<string, string> | undefined,
   previous: ManagedResource | undefined,
   before: SkillSnapshot,
+  boundary: string | undefined,
 ): ManagedResource {
   const expected: ManagedResource["expected"] = mode === "link"
     ? { type: "symlink", linkTarget: source }
@@ -478,10 +479,10 @@ function resourceFor(
     path: storedPath,
     kind: "skill",
     created: previous?.created ?? before.kind === "missing",
-    // For a copied delivery this is the destination directory itself; for a link it is the
-    // parent chain that the link action may have created and later prune.  These are different
-    // facts even though both travel in the one ownership record.
-    createdDir: previous?.createdDir ?? (mode === "copy" ? before.kind === "missing" : before.parentIdentity === null),
+    // For a copied delivery this is the destination directory itself; for a link it is the whole
+    // parent chain below the boundary, so removal may prune exactly what this install created.
+    // These are different facts even though both travel in the one ownership record.
+    createdDir: previous?.createdDir ?? (mode === "copy" ? before.kind === "missing" : parentChainMissing(destination, boundary)),
     consumers: previous?.consumers ?? [],
     expected,
     managed: { version: previous?.managed.version ?? 1 },
@@ -514,6 +515,28 @@ function ensureSafeDirectory(path: string, boundary: string | undefined, t: Mess
     here = up;
   }
   for (const directory of missing) mkdirSync(directory);
+}
+
+/** Whether no directory between the boundary and the link's parent exists yet. */
+function parentChainMissing(destination: string, boundary: string | undefined): boolean {
+  const parent = dirname(destination);
+  if (boundary === undefined) return lstatSync(parent, { throwIfNoEntry: false }) === undefined;
+  const first = relative(resolve(boundary), parent).split(sep)[0];
+  return first !== undefined && first !== "" && first !== ".." && lstatSync(join(resolve(boundary), first), { throwIfNoEntry: false }) === undefined;
+}
+
+/** Remove the now-empty parents a link install created, up to its boundary. */
+function pruneCreatedParents(destination: string, boundary: string): void {
+  const root = resolve(boundary);
+  for (let dir = dirname(destination); dir !== root && inside(dir, root); dir = dirname(dir)) {
+    try {
+      if (readdirSync(dir).length > 0) return;
+      rmdirSync(dir);
+    } catch {
+      // A directory that will not go is not a failed removal.
+      return;
+    }
+  }
 }
 
 function ensureSkillParent(destination: string, boundary: string | undefined, t: Messages): void {
@@ -772,9 +795,9 @@ function actionFor(
           if (!current.isSymbolicLink()) throwConflict(destination, t);
           rmSync(destination, { force: false });
         }
-        // Keep parent containers. A single `createdDir` bit cannot prove which intermediate
-        // directory this action created, so pruning them could delete a pre-existing empty
-        // `.agents` or `.claude` container.
+        // Prune only a parent chain the install created whole; a pre-existing `.agents` or
+        // `.claude` container stays, even when it ends up empty.
+        if (resource.createdDir && boundary !== undefined && boundary !== null) pruneCreatedParents(destination, boundary);
       }
     } else if (operation === "install") {
       applyCopy(destination, desiredFiles, oldFiles, boundary, t);
@@ -826,7 +849,7 @@ export function planSkillInstall(
       if (expectedType !== "directory" && before.kind !== "missing") throwConflict(lexicalDestination, t);
     }
   }
-  const resource = resourceFor(lexicalDestination, lexicalSource, options.mode, hashes, previous, before);
+  const resource = resourceFor(lexicalDestination, lexicalSource, options.mode, hashes, previous, before, options.boundary);
   const desired = desiredSnapshot(lexicalDestination, options.mode, lexicalSource, desiredFiles, trackedFiles);
   const obsoleteClean = Object.entries(oldFiles).every(([name]) =>
     desiredFiles[name] !== undefined || before.files[name]?.kind === "missing");
@@ -856,7 +879,7 @@ export function planSkillRemoval(
   const before = captureSnapshot(lexicalDestination, Object.keys(previous?.expected.files ?? {}).sort());
   if (previous === undefined) {
     if (before.kind !== "missing") throwConflict(lexicalDestination, t);
-    const resource = resourceFor(lexicalDestination, lexicalSource, "link", undefined, undefined, before);
+    const resource = resourceFor(lexicalDestination, lexicalSource, "link", undefined, undefined, before, options.boundary);
     return { state: "absent", resourceId, resource, action: null };
   }
   const remaining = previous.consumers.filter((consumer) => consumer !== registrationId);
