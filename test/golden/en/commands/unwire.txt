@@ -19,7 +19,7 @@ ToneDial · unwire
   (skill link removed)
 
   <ROOT>/state/config.json
-  (modified)  +2 -106
+  (modified)  +2 -107
   -     "registrations": {
   -       "[\"codex\",\"project\",\"<ROOT>/project\"]": {
   +     "registrations": {},

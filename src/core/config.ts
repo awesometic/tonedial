@@ -67,6 +67,11 @@ export type ManagedResource = {
   kind: ResourceKind;
   created: boolean;
   createdDir: boolean;
+  /**
+   * A skill link's parent directories, counted upward from its own, that its install created.
+   * Absent in records written before 0.1.14, which know only `createdDir`: that the parent was missing.
+   */
+  createdParents?: number;
   consumers: string[];
   /** Optional for older schema-2 records; keyed by registration, not by physical resource. */
   accessPaths?: Record<string, ResourceAccess>;
@@ -506,7 +511,7 @@ function readWiringV2(raw: unknown, t: Messages): WiringV2 {
     const tuple = decodeTupleKey(key, 2);
     if (!tuple) invalidValue(`wiring.resources.${key}`, t);
     const value = requiredObject(resourceSource[key], `wiring.resources.${key}`, t);
-    rejectUnknown(value, ["path", "kind", "created", "createdDir", "consumers", "accessPaths", "expected", "managed", "managedByRegistration", "documentDescription"], `wiring.resources.${key}`, t);
+    rejectUnknown(value, ["path", "kind", "created", "createdDir", "createdParents", "consumers", "accessPaths", "expected", "managed", "managedByRegistration", "documentDescription"], `wiring.resources.${key}`, t);
     const canonicalPath = absolutePath(tuple[0], `wiring.resources.${key}`, t);
     const kind = requiredString(tuple[1], `wiring.resources.${key}`, t);
     if (!(RESOURCE_KINDS as readonly string[]).includes(kind)) invalidValue(`wiring.resources.${key}`, t);
@@ -555,6 +560,10 @@ function readWiringV2(raw: unknown, t: Messages): WiringV2 {
       kind: kind as ResourceKind,
       created: requiredBoolean(value.created, `wiring.resources.${key}.created`, t),
       createdDir: requiredBoolean(value.createdDir, `wiring.resources.${key}.createdDir`, t),
+      ...(value.createdParents === undefined ? {} : {
+        createdParents: kind === "skill" && Number.isSafeInteger(value.createdParents) && (value.createdParents as number) >= 0
+          ? value.createdParents as number : invalidValue(`wiring.resources.${key}.createdParents`, t),
+      }),
       consumers: stringArray(value.consumers, `wiring.resources.${key}.consumers`, t),
       ...(accessPaths === undefined ? {} : { accessPaths }),
       ...(Object.keys(managedByRegistration).length ? { managedByRegistration } : {}),

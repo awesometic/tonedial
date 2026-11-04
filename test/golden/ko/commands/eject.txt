@@ -19,7 +19,7 @@ ToneDial · eject
   (스킬 링크 삭제)
 
   <ROOT>/state/config.json
-  (수정)  +2 -106
+  (수정)  +2 -107
   -     "registrations": {
   -       "[\"codex\",\"project\",\"<ROOT>/project\"]": {
   +     "registrations": {},

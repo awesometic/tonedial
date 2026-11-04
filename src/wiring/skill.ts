@@ -479,10 +479,12 @@ function resourceFor(
     path: storedPath,
     kind: "skill",
     created: previous?.created ?? before.kind === "missing",
-    // For a copied delivery this is the destination directory itself; for a link it is the whole
-    // parent chain below the boundary, so removal may prune exactly what this install created.
-    // These are different facts even though both travel in the one ownership record.
-    createdDir: previous?.createdDir ?? (mode === "copy" ? before.kind === "missing" : parentChainMissing(destination, boundary)),
+    // For a copied delivery this is the destination directory itself; for a link it is the
+    // link's parent. These are different facts even though both travel in the one ownership record.
+    createdDir: previous?.createdDir ?? (mode === "copy" ? before.kind === "missing" : before.parentIdentity === null),
+    // Creation is historical: a record from before this count existed keeps not knowing it.
+    ...(mode === "link" && (previous === undefined || previous.createdParents !== undefined)
+      ? { createdParents: previous?.createdParents ?? missingParents(destination, boundary) } : {}),
     consumers: previous?.consumers ?? [],
     expected,
     managed: { version: previous?.managed.version ?? 1 },
@@ -517,18 +519,20 @@ function ensureSafeDirectory(path: string, boundary: string | undefined, t: Mess
   for (const directory of missing) mkdirSync(directory);
 }
 
-/** Whether no directory between the boundary and the link's parent exists yet. */
-function parentChainMissing(destination: string, boundary: string | undefined): boolean {
-  const parent = dirname(destination);
-  if (boundary === undefined) return lstatSync(parent, { throwIfNoEntry: false }) === undefined;
-  const first = relative(resolve(boundary), parent).split(sep)[0];
-  return first !== undefined && first !== "" && first !== ".." && lstatSync(join(resolve(boundary), first), { throwIfNoEntry: false }) === undefined;
+/** How many of the link's parents, counted upward from its own and below the boundary, are missing. */
+function missingParents(destination: string, boundary: string | undefined): number {
+  const missing = (dir: string) => lstatSync(dir, { throwIfNoEntry: false }) === undefined;
+  if (boundary === undefined) return missing(dirname(destination)) ? 1 : 0;
+  const root = resolve(boundary);
+  let count = 0;
+  for (let dir = dirname(resolve(destination)); dir !== root && inside(dir, root) && missing(dir); dir = dirname(dir)) count += 1;
+  return count;
 }
 
-/** Remove the now-empty parents a link install created, up to its boundary. */
-function pruneCreatedParents(destination: string, boundary: string): void {
+/** Remove the now-empty parents a link install created, up to `count` levels and its boundary. */
+function pruneCreatedParents(destination: string, boundary: string, count: number): void {
   const root = resolve(boundary);
-  for (let dir = dirname(destination); dir !== root && inside(dir, root); dir = dirname(dir)) {
+  for (let dir = dirname(destination); count > 0 && dir !== root && inside(dir, root); dir = dirname(dir), count -= 1) {
     try {
       if (readdirSync(dir).length > 0) return;
       rmdirSync(dir);
@@ -795,9 +799,10 @@ function actionFor(
           if (!current.isSymbolicLink()) throwConflict(destination, t);
           rmSync(destination, { force: false });
         }
-        // Prune only a parent chain the install created whole; a pre-existing `.agents` or
-        // `.claude` container stays, even when it ends up empty.
-        if (resource.createdDir && boundary !== undefined && boundary !== null) pruneCreatedParents(destination, boundary);
+        // Prune only the parents the install created; a pre-existing `.agents` or `.claude`
+        // container stays, even when it ends up empty. An older record knows only its own parent.
+        const created = resource.createdParents ?? (resource.createdDir ? 1 : 0);
+        if (boundary !== undefined && boundary !== null) pruneCreatedParents(destination, boundary, created);
       }
     } else if (operation === "install") {
       applyCopy(destination, desiredFiles, oldFiles, boundary, t);

@@ -208,6 +208,7 @@ export function normalizeWiring(wiring: WiringV2): WiringV2 {
       kind: resource.kind,
       created: resource.created,
       createdDir: resource.createdDir,
+      ...(resource.createdParents === undefined ? {} : { createdParents: resource.createdParents }),
       consumers: [...resource.consumers].sort(),
       ...(Object.keys(accessPaths).length > 0 ? { accessPaths } : {}),
       expected,
@@ -249,8 +250,9 @@ export function putResource(
   if (previous) {
     const accessPaths = { ...(previous.accessPaths ?? {}), ...(resource.accessPaths ?? {}) };
     const managedByRegistration = { ...previous.managedByRegistration, ...resource.managedByRegistration };
+    const { createdParents: _observed, ...observed } = resource;
     next.resources[key] = {
-      ...resource,
+      ...observed,
       // Hook identities have their own per-registration map; retain a legacy handler's witness.
       managed: resource.kind === "hook" && previous.managed.version === 1 && resource.managed.version === 2
         ? previous.managed : resource.managed,
@@ -258,6 +260,7 @@ export function putResource(
       // turn an originally existing file into something eject may delete.
       created: previous.created,
       createdDir: previous.createdDir,
+      ...(previous.createdParents === undefined ? {} : { createdParents: previous.createdParents }),
       consumers: [...new Set([...previous.consumers, ...resource.consumers])],
       ...(Object.keys(accessPaths).length > 0 ? { accessPaths } : {}),
       ...(Object.keys(managedByRegistration).length > 0 ? { managedByRegistration } : {}),

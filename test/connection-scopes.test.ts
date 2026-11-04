@@ -344,5 +344,25 @@ test("unwire --here removes the skill directories it created once they are empty
   assert.equal((await invoke(["wire", "codex", "--here", "--auto"])).code, 0);
   assert.equal((await invoke(["unwire", "codex", "--here", "--auto"])).code, 0);
   assert.equal(existsSync(join(project, ".agents")), true);
+  assert.deepEqual(readdirSync(join(project, ".agents")), [], "the skills folder it created is gone");
   assert.equal(existsSync(join(project, ".codex")), false);
+});
+
+test("a skill record from before 0.1.14 prunes only the folder it recorded creating", async () => {
+  // Older records carry only `createdDir`: the link's own parent was missing. A user's empty
+  // `.agents` above it was not ToneDial's, so it stays.
+  mkdirSync(join(project, ".agents"));
+  assert.equal((await invoke(["init", "--here", "--tools", "codex", "--auto"])).code, 0);
+  const paths = resolvePaths(env);
+  const config = JSON.parse(readFileSync(paths.config, "utf8"));
+  const skills = Object.values(config.wiring.resources as Record<string, { kind: string; createdDir: boolean; createdParents?: number }>)
+    .filter(({ kind }) => kind === "skill");
+  assert.equal(skills.length, 1);
+  skills[0]!.createdDir = true;
+  delete skills[0]!.createdParents;
+  writeFileSync(paths.config, JSON.stringify(config, null, 2) + "\n");
+
+  assert.equal((await invoke(["unwire", "codex", "--here", "--auto"])).code, 0);
+  assert.equal(existsSync(join(project, ".agents")), true);
+  assert.deepEqual(readdirSync(join(project, ".agents")), []);
 });
