@@ -309,6 +309,14 @@ test("a missing hook's path sits on its own line", async () => {
   assert.deepEqual(codex.slice(1, 3), ["No ToneDial SessionStart hook", hook]);
 });
 
+test("an unlinked skill names wire in the scope doctor inspected", async () => {
+  assert.equal((await human(["init", "--tools", "claude", "--here", "--auto"], project)).code, 0);
+  rmSync(join(project, ".claude", "skills", "tonedial"));
+  const machine = await json(["doctor", "--here"], project);
+  const skill = machine.value.checks.find((check: { name: string }) => check.name === "Claude Code skill");
+  assert.equal(skill?.repair, "tonedial wire claude --here", JSON.stringify(skill));
+});
+
 test("an interactive repair reports the application phase before the agent phase starts", async () => {
   assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
   rmSync(resolvePaths(env).tone);

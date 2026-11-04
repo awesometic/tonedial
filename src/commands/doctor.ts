@@ -1114,7 +1114,7 @@ function skillCheck(ctx: Ctx, tool: AgentTool): Check {
         detail: ctx.t.doctor.skillForeign(path),
       };
     default:
-      return { name, state: "note", detail: ctx.t.doctor.skillNotLinked, repair: `tonedial wire ${tool}` };
+      return { name, state: "note", detail: ctx.t.doctor.skillNotLinked, repair: repairCommand(ctx, `wire ${tool}`) };
   }
 }
 
