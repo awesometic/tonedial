@@ -310,7 +310,7 @@ test("a project keeps inheriting an older global Codex hook, and doctor names th
   assert.equal(readFileSync(path, "utf8"), oldSettings, "project setup does not rewrite the global hook");
   const stale = await invoke(["doctor", "--here"]);
   const check = stale.value.checks.find((entry: { name: string }) => entry.name === "Codex CLI");
-  assert.equal(check.repair, "tonedial init --tools codex --global");
+  assert.equal(check.repair, "tonedial doctor --fix --global");
   const refreshed = await invoke(check.repair.split(" ").slice(1).concat("--auto"));
   assert.equal(refreshed.code, 0, JSON.stringify(refreshed.value));
   assert.equal(JSON.parse(readFileSync(path, "utf8")).hooks.SessionStart[0].hooks[0].additionalContextLimit, 0);

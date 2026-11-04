@@ -449,7 +449,7 @@ Claude Code replaces hook context over 10,000 characters with a short preview.
 When Claude Code is connected and the guide and an enabled tone exceed that, tone-changing commands and `doctor` show a notice; the change is still saved.
 For Codex, ToneDial writes the pair as JSON `additionalContext` with `additionalContextLimit: 0` on `SessionStart` and `UserPromptSubmit`.
 Codex then skips its default preview of hook context over about 2,500 tokens (observed on Codex 0.164.0).
-Hooks written by earlier versions keep that preview until `doctor --fix` or `init` rewrites them; a project inheriting a global hook needs `init --global --tools codex`.
+Hooks written by earlier versions keep that preview until `doctor --fix` or `init` rewrites them; a project inheriting a global hook needs `doctor --fix --global`.
 Codex keys hook trust to the definition, so review a rewritten hook again in `/hooks`.
 Tone changes regenerate the artifact without rewriting the guide.
 Setup merges owned entries and preserves unrelated handlers; no home instruction-file import is added.
@@ -484,6 +484,7 @@ Use [actual-host trials](./TESTING.md#actual-host-and-one-day-trial) for deliver
 <summary>Doctor connection and enablement details</summary>
 
 Human diagnosis always shows the selected scope/directory, without needing `--verbose`.
+Each finding appears once and ends with the command that fixes it; `tonedial doctor --fix` with the same scope when `--fix` repairs it.
 When delivery is paused it suggests `tonedial on`; when no agent is connected it ends with `tonedial wire` for that scope.
 Other registered connections are grouped by scope/directory and shared file status.
 Missing files mean some or all recorded files were absent, not that no connection was registered.

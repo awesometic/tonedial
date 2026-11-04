@@ -491,9 +491,10 @@ function diagnoseNative(
   const state: State =
     configuration === "configured" && runtime.state === "available" &&
     hookSetting.state !== "disabled" ? "ok" : "problem";
-  // An inherited hook lives in the global file, and only a global refresh rewrites it.
-  const repair = configuration === "stale" && route.inherited ? `tonedial init --tools ${route.tool} --global`
-    : repairable ? repairCommand(ctx, `init --tools ${route.tool}`) : undefined;
+  // An inherited hook lives in the global file, and only a global repair rewrites it.
+  const inheritedRepair = route.inherited && (configuration === "stale" || configuration === "missing" && !route.repairAllowed);
+  const repair = inheritedRepair ? "tonedial doctor --fix --global"
+    : repairable ? repairCommand(ctx, "doctor --fix") : undefined;
   return {
     integration,
     hookSetting,
@@ -572,7 +573,7 @@ function contextCheck(ctx: Ctx, diagnosis: ContextDiagnosis): Check {
     return { name: "context", state: "ok", detail: ctx.t.doctor.contextCurrent };
   }
   if (kind === "current" && cause === "repair") {
-    return { name: "context", state: "problem", detail: ctx.t.doctor.contextRepair };
+    return { name: "context", state: "problem", detail: ctx.t.doctor.contextRepair, repair: repairCommand(ctx, "doctor --fix") };
   }
   if (kind === "legacy") {
     return {
@@ -757,6 +758,7 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true): Promise<Comm
     detail: payload.guideFormat === "supported"
       ? ctx.t.doctor.contextSize(payload.guideChars!, payload.totalChars)
       : ctx.t.doctor.guideFormat[payload.guideFormat],
+    ...(payload.guideFormat === "missing" ? { repair: repairCommand(ctx, "doctor --fix") } : {}),
   });
 
   const expected = compile(toCompileInput(config));
@@ -768,14 +770,14 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true): Promise<Comm
     const onDisk = toneChange.before;
     checks.push(
       onDisk === null
-        ? { name: "TONE.md", state: "problem", detail: ctx.t.doctor.toneNotWritten, repair: "tonedial compile" }
+        ? { name: "TONE.md", state: "problem", detail: ctx.t.doctor.toneNotWritten, repair: repairCommand(ctx, "doctor --fix") }
         : onDisk === expected
           ? { name: "TONE.md", state: "ok", detail: artifactSize(measure(expected), ctx.t) }
           : {
               name: "TONE.md",
               state: "problem",
               detail: ctx.t.doctor.toneDisagrees,
-              repair: "tonedial compile",
+              repair: repairCommand(ctx, "doctor --fix"),
             },
     );
   }
@@ -875,8 +877,12 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true): Promise<Comm
       integration.trust === "disabled") || hookSettings.some(setting => setting.state === "disabled");
   const elsewhere = wiredElsewhere(config, { scope, destination });
   const nativeCheckNames = new Set(hookSettings.map(({ tool }) => TARGETS[tool].label));
-  // Before setup, the missing guide and artifact restate the context check's single cause.
-  const derived = diagnosis.layout.kind === "fresh" ? new Set(["AGENTS.md", "TONE.md"]) : new Set<string>();
+  // One finding per cause. Before setup, the missing guide and artifact restate the context
+  // check; after it, a guide or artifact finding names the file the context summary points to.
+  const fileProblem = checks.some((check) => (check.name === "AGENTS.md" || check.name === "TONE.md") && check.state === "problem");
+  const derived = diagnosis.layout.kind === "fresh" ? new Set(["AGENTS.md", "TONE.md"])
+    : diagnosis.layout.kind === "current" && diagnosis.layout.cause === "repair" && fileProblem ? new Set(["context"])
+      : new Set<string>();
   const shownChecks = ctx.flags.verbose
     ? checks
     : checks.filter((check) => !derived.has(check.name) &&
@@ -988,7 +994,7 @@ function seedCheck(ctx: Ctx, config: Config, seeds: readonly SeedInspection[]): 
         state: "problem",
         detail: ctx.t.doctor.seedsAttention,
         files: stale.map(({ seed, state }) => ({ path: seed.path, reason: state as Exclude<SeedState, "current"> })),
-        ...(stale.every(({ state }) => state === "missing" || state === "stale") ? { repair: repairCommand(ctx, "doctor --fix") } : {}),
+        ...(stale.every(({ state }) => state === "missing" || state === "stale" || state === "modified") ? { repair: repairCommand(ctx, "doctor --fix") } : {}),
       };
 }
 

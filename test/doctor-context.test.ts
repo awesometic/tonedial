@@ -779,8 +779,11 @@ test("pair registration without a hook resource stays native and does not fall b
   const claude = check(report, "Claude Code");
   assert.equal(claude.state, "problem");
   assert.match(claude.detail, /No ToneDial SessionStart hook/i);
-  assert.match(claude.repair ?? "", /tonedial init --tools claude/i,
-    "missing reader/skill seeds point back to the seed owner");
+  assert.equal(claude.repair, `tonedial doctor --fix --project "${project}"`,
+    "the scoped repair, which also restores missing reader/skill seeds");
+  const repaired = await invoke(["doctor", "--fix", "--project", project, "--auto"]);
+  assert.equal((repaired.value.integrations as Array<Record<string, any>>)
+    .find((entry) => entry.tool === "claude")?.configuration, "configured", repaired.output);
   assert.equal((report.value.integrations as Array<Record<string, any>>)
     .some((entry) => entry.tool === "claude" && entry.configuration === "missing"), true);
   // Check the diagnosed status, not serialized paths that may legitimately contain "imported".

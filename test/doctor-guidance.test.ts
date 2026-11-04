@@ -3,7 +3,7 @@
 
 import assert from "node:assert/strict";
 import { afterEach, beforeEach, test } from "node:test";
-import { mkdirSync, mkdtempSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -61,4 +61,47 @@ test("doctor --fix without a terminal reports approval, not a protected file, wi
   assert.match(shown.out, /approval required/);
   assert.match(shown.out, /^ {2,}tonedial doctor --fix --global$/m);
   assert.match(shown.out, /^ {2,}tonedial doctor --fix --global --auto$/m);
+});
+
+/** One finding's lines, from its marked heading to the blank line that ends it. */
+function block(out: string, heading: string): string[] {
+  const lines = out.split("\n");
+  const start = lines.findIndex((line) => /^ {2}(ok|!|·) /.test(line) && line.endsWith(` ${heading}`));
+  assert.ok(start >= 0, `no ${heading} finding in:\n${out}`);
+  const end = lines.findIndex((line, index) => index > start && line.trim() === "");
+  return lines.slice(start, end < 0 ? undefined : end).map((line) => line.trim());
+}
+
+test("each fixable finding ends with the scoped doctor --fix that fixes it, once per cause", async () => {
+  assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
+  const state = join(home, ".tonedial");
+  rmSync(join(home, ".codex", "hooks.json"));
+  rmSync(join(state, "TONE.md"));
+  writeFileSync(join(state, "skill", "tonedial", "SKILL.md"), "locally edited\n");
+
+  const machine = await json(["doctor", "--global"]);
+  const repair = (name: string) => machine.value.checks.find((check: { name: string }) => check.name === name)?.repair;
+  for (const name of ["Codex CLI", "TONE.md", "seeds"]) assert.equal(repair(name), "tonedial doctor --fix --global", name);
+
+  const shown = await human(["doctor", "--global"]);
+  for (const heading of ["Codex CLI", "TONE.md", "Bundled files"]) {
+    assert.equal(block(shown.out, heading).at(-1), "tonedial doctor --fix --global", heading);
+  }
+  // The missing artifact is one cause: the context-layout summary does not repeat it.
+  assert.doesNotMatch(shown.out, /Context files/);
+  assert.doesNotMatch(shown.out, /tonedial (compile|init --tools)/);
+
+  assert.equal((await human(["doctor", "--fix", "--global", "--auto"])).code, 0);
+  const after = await json(["doctor", "--global"]);
+  for (const name of ["Codex CLI", "TONE.md", "seeds"]) {
+    assert.notEqual(after.value.checks.find((check: { name: string }) => check.name === name).state, "problem", name);
+  }
+});
+
+test("an edited TONE.md is one finding with the doctor --fix command", async () => {
+  assert.equal((await human(["init", "--tools", "none", "--global", "--auto"])).code, 0);
+  writeFileSync(join(home, ".tonedial", "TONE.md"), "edited by hand\n");
+  const shown = await human(["doctor", "--global"]);
+  assert.doesNotMatch(shown.out, /Context files/);
+  assert.equal(block(shown.out, "TONE.md").at(-1), "tonedial doctor --fix --global");
 });
