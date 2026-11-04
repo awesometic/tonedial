@@ -1,6 +1,7 @@
 // What is connected where. One owner for the scope rules that `show`, `wire`, `unwire` and
 // `doctor` read, so each command answers "which connection" from the same records.
 
+import { existsSync } from "node:fs";
 import { homedir } from "node:os";
 
 import { ConfigError, isConfigV2, type Config, type ConfigV2, type WiringScope } from "../core/config.ts";
@@ -37,6 +38,46 @@ export function folderConnections(config: Config, folder: string, tools: readonl
 /** The connections the selected scope of this invocation owns. */
 export function connectionsInScope(config: Config, agent: AgentPaths): Connection[] {
   return connectionsAt(config, agent.live ? "global" : "project", agent.root);
+}
+
+/** A registration this run is not inspecting, and whether its destination is still there. */
+export type Elsewhere = { target: string; scope: WiringScope; destination: string; state: "ok" | "gone" | "unwired" };
+
+/**
+ * Wiring that lives outside the scope being inspected.
+ *
+ * Presence only, and report only. `existsSync` is false on `EACCES` and on an unmounted volume,
+ * and a renamed project still carries a hook whose handler keeps delivering, so "gone" is a
+ * guess about a directory rather than a fact about delivery. That is why nothing here acts on
+ * it: `--fix` leaves every one of these records alone, and the row names the one explicit act
+ * that removes it instead.
+ *
+ * Agent targets only. A curl install registers the directory of its rc file as a `shell`
+ * target, and `eject --project ~` is not how a PATH line is removed.
+ */
+export function wiredElsewhere(config: Config, agent: AgentPaths): Elsewhere[] {
+  if (!isConfigV2(config)) return [];
+  const own = new Set(connectionsInScope(config, agent).map((connection) => JSON.stringify(connection)));
+  const rows: Elsewhere[] = [];
+  for (const connection of connections(config)) {
+    if (!(AGENT_TOOLS as readonly string[]).includes(connection.target) || own.has(JSON.stringify(connection))) continue;
+    const id = registrationKey(connection.target, connection.scope!, connection.destination!);
+    const registration = config.wiring.registrations[id]!;
+    // Every resource, not the first: a codex registration carries a skill directory and a hook,
+    // and the skill survives the hook's deletion, so reading one of them would call a
+    // destination that stopped delivering healthy.
+    const wired = registration.resourceIds.length > 0 && registration.resourceIds.every((resourceId) => {
+      const resource = config.wiring.resources[resourceId];
+      return resource !== undefined && existsSync(resource.accessPaths?.[id]?.path ?? resource.path);
+    });
+    rows.push({
+      target: registration.target,
+      scope: registration.scope,
+      destination: registration.destination,
+      state: !existsSync(registration.destination) ? "gone" : wired ? "ok" : "unwired",
+    });
+  }
+  return rows;
 }
 
 /** A project scope in the home directory names the files the global scope already owns. */

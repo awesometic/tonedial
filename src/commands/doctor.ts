@@ -8,11 +8,11 @@ import type { CommandResult, Ctx } from "../cli.ts";
 import { runAppRebuild } from "./rebuild.ts";
 import { runRebuildNative } from "./wire.ts";
 import { compile, measure } from "../core/compile.ts";
-import { ConfigError, defaultConfig, isConfigV2, parseConfig, type Config, type ManagedResource, type WiringScope } from "../core/config.ts";
+import { ConfigError, defaultConfig, isConfigV2, parseConfig, type Config, type ManagedResource } from "../core/config.ts";
 import { inspectOperations, inspectRollback } from "../core/operations.ts";
 import { join, relative } from "node:path";
 
-import { AGENT_TOOLS, CONTEXT_ARTIFACT_FILENAME, CONTEXT_GUIDE_FILENAME, UPDATE_COMMAND, connectionScopeFlag, onPath, readerPath, resolveAgentPaths, shimScript, installShape, type AgentPaths, type AgentTool, type InstallShape, canonicalDestination, shellQuote} from "../core/paths.ts";
+import { AGENT_TOOLS, CONTEXT_ARTIFACT_FILENAME, CONTEXT_GUIDE_FILENAME, UPDATE_COMMAND, connectionScopeFlag, onPath, readerPath, resolveAgentPaths, shimScript, installShape, type AgentTool, type InstallShape, canonicalDestination, shellQuote} from "../core/paths.ts";
 import { SKILL_NAME } from "../core/skill.ts";
 import { GUIDE_FORMAT_MARKER } from "../core/reader.ts";
 import { DELIVERY_OFF_MARKER } from "../core/anchors.ts";
@@ -34,7 +34,7 @@ import { ApprovalRequired, applyRollback, assertFresh, planChange, previewRollba
 import { confirm } from "../ui/prompt.ts";
 import { RegionError, find } from "../wiring/region.ts";
 import { TARGETS, exactDelivery, inspectContextConsumers, orderedFingerprint, orderedHook, projectDuplicates, recordedHook, regionContent, wiredAt, type DeliveryDuplicate, type WiredAt } from "../wiring/targets.ts";
-import { connections, connectionsInScope, folderConnections, riders } from "../wiring/scopes.ts";
+import { connections, folderConnections, riders, wiredElsewhere, type Elsewhere } from "../wiring/scopes.ts";
 import { hasHook, hookCommand, ownedHook, runsReader, withHook, withoutHook } from "../wiring/hooks.ts";
 import { codexHookTrust, type CodexTrust } from "../wiring/codex-trust.ts";
 import { assertRecordedTextAccess, contentHash, registrationKey, resourceKey } from "../wiring/ownership.ts";
@@ -1309,46 +1309,6 @@ function summaryLine(ctx: Ctx, problems: number, notices: number): string {
 }
 
 const MARK: Record<State, string> = { ok: "ok", problem: "!", note: "·", absent: "·" };
-
-/** A registration this run is not inspecting, and whether its destination is still there. */
-type Elsewhere = { target: string; scope: WiringScope; destination: string; state: "ok" | "gone" | "unwired" };
-
-/**
- * Wiring that lives outside the scope being inspected.
- *
- * Presence only, and report only. `existsSync` is false on `EACCES` and on an unmounted volume,
- * and a renamed project still carries a hook whose handler keeps delivering, so "gone" is a
- * guess about a directory rather than a fact about delivery. That is why nothing here acts on
- * it: `--fix` leaves every one of these records alone, and the row names the one explicit act
- * that removes it instead.
- *
- * Agent targets only. A curl install registers the directory of its rc file as a `shell`
- * target, and `eject --project ~` is not how a PATH line is removed.
- */
-function wiredElsewhere(config: Config, agent: AgentPaths): Elsewhere[] {
-  if (!isConfigV2(config)) return [];
-  const own = new Set(connectionsInScope(config, agent).map((connection) => JSON.stringify(connection)));
-  const rows: Elsewhere[] = [];
-  for (const connection of connections(config)) {
-    if (!(AGENT_TOOLS as readonly string[]).includes(connection.target) || own.has(JSON.stringify(connection))) continue;
-    const id = registrationKey(connection.target, connection.scope!, connection.destination!);
-    const registration = config.wiring.registrations[id]!;
-    // Every resource, not the first: a codex registration carries a skill directory and a hook,
-    // and the skill survives the hook's deletion, so reading one of them would call a
-    // destination that stopped delivering healthy.
-    const wired = registration.resourceIds.length > 0 && registration.resourceIds.every((resourceId) => {
-      const resource = config.wiring.resources[resourceId];
-      return resource !== undefined && existsSync(resource.accessPaths?.[id]?.path ?? resource.path);
-    });
-    rows.push({
-      target: registration.target,
-      scope: registration.scope,
-      destination: registration.destination,
-      state: !existsSync(registration.destination) ? "gone" : wired ? "ok" : "unwired",
-    });
-  }
-  return rows;
-}
 
 /** Group presentation only; JSON retains each registration and its individual state. */
 function elsewhereReport(rows: Elsewhere[], ctx: Ctx): string[] {
