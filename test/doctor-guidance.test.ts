@@ -277,6 +277,25 @@ test("doctor --fix --dry-run previews without a configured-hook receipt", async 
   assert.doesNotMatch(preview.out, /hook configured|enable the hook/);
 });
 
+test("the doctor --fix receipt gives each agent one state", async () => {
+  assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
+  const hook = join(home, ".codex", "hooks.json");
+  const receipt = (out: string) => out.slice(out.indexOf("Connect agents"), out.indexOf("\n  Checks\n"));
+
+  // An application repair with the hook already in place: nothing to write for Codex.
+  writeFileSync(join(home, ".tonedial", "TONE.md"), "edited by hand\n");
+  const unchanged = receipt((await human(["doctor", "--fix", "--global", "--auto"])).out);
+  assert.equal(unchanged.match(/Codex CLI:/g)?.length, 1, unchanged);
+  assert.match(unchanged, /Codex CLI: already up to date · no changes/);
+
+  // A hook the repair writes again is reported once, as configured, with its file.
+  rmSync(hook);
+  const written = receipt((await human(["doctor", "--fix", "--global", "--auto"])).out);
+  assert.equal(written.match(/Codex CLI:/g)?.length, 1, written);
+  assert.match(written, /Codex CLI: hook configured/);
+  assert.ok(written.split("\n").some((line) => line.trim() === hook), written);
+});
+
 test("a missing hook's path sits on its own line", async () => {
   env.COLUMNS = "60";
   assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
