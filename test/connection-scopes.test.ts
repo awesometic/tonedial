@@ -489,3 +489,15 @@ test("eject --global removes earlier-version project records with the global hoo
   assert.deepEqual(readdirSync(project), []);
   assert.deepEqual((await invoke(["show"])).value.connections, []);
 });
+
+test("show labels a project connection an earlier version recorded on the global hook", async () => {
+  assert.equal((await invoke(["init", "--global", "--tools", "codex", "--auto"])).code, 0);
+  await addLegacyRider(env, "codex", project);
+  const shown = await invoke(["show"]);
+  assert.deepEqual(shown.value.connections, [
+    { target: "codex", scope: "global", destination: realpathSync(env.HOME!) },
+    { target: "codex", scope: "project", destination: realpathSync(project), sharesGlobalHook: true },
+  ]);
+  const rows = (await human(["show"])).output.split("\n").map((line) => line.trim());
+  assert.equal(rows[rows.indexOf(realpathSync(project)) + 1], "codex · uses the global hook (earlier version)");
+});

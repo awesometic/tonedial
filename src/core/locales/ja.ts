@@ -226,6 +226,7 @@ const messages: Messages = {
     connectionRecords: (records) => `接続：${records.length ? records.join(", ") : "なし"}`,
     connectionsHeading: "接続",
     connectionScope: { global: "グローバル", project: "プロジェクト" },
+    sharesGlobalHook: (target) => `${target}・グローバルフックを使用（以前のバージョン）`,
     dialTitle: "ToneDial · エージェントの口調を調整",
     dialPreview: (presetName, changed) => `${presetName} · ${changed ? "未適用の変更" : "現在の口調"}`,
     dialHelpTitle: "ダイヤルの操作",

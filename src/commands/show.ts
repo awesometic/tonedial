@@ -12,12 +12,13 @@ import { compile, measure } from "../core/compile.ts";
 import { withPreset, matchesPreset, inspectPresetLibrary, resolvePreset } from "../core/presets.ts";
 import { toCompileInput } from "../core/resolve.ts";
 import { inspectContextLayout } from "../core/seeds.ts";
+import { AGENT_TOOLS } from "../core/paths.ts";
 import { catalogue, isLanguage, type Messages } from "../core/i18n.ts";
 import { explainBlock, gaugeBlock, gaugeHeader } from "../ui/gauge.ts";
 import { planConfig } from "./compile.ts";
 import { artifactSize, combination, humanText, isCopyableLine, nextStep, riskWarnings } from "../ui/format.ts";
 import { maxCells, truncate, wrap } from "../ui/width.ts";
-import { connections, type Connection } from "../wiring/scopes.ts";
+import { connections, riders, type Connection } from "../wiring/scopes.ts";
 import { inspectContextConsumers } from "../wiring/targets.ts";
 
 export function runShow(ctx: Ctx, args: string[]): CommandResult {
@@ -122,7 +123,11 @@ export function runShow(ctx: Ctx, args: string[]): CommandResult {
   for (const text of [stateRow(values, ctx.t), ctx.t.artifact.displaySettings(values.language)]) {
     for (const folded of wrap(text, detailWidth)) details.push(folded);
   }
-  details.push(...connectionRows(connections(config), detailWidth, ctx.t));
+  // Project connections an earlier version recorded on the global hook leave with that hook.
+  const shared = new Set(AGENT_TOOLS.flatMap((tool) => riders(config, tool, ctx.env, ctx.cwd)).map((rider) => JSON.stringify(rider)));
+  const recorded = connections(config).map((connection) =>
+    shared.has(JSON.stringify(connection)) ? { ...connection, sharesGlobalHook: true as const } : connection);
+  details.push(...connectionRows(recorded, detailWidth, ctx.t));
   if (layout !== null) {
     const advice = layout.kind === "fresh"
       ? ctx.t.artifact.notSetUp
@@ -195,7 +200,7 @@ export function runShow(ctx: Ctx, args: string[]): CommandResult {
       language: values.language,
       chars: size.chars,
       artifact: { exists: artifactOnDisk },
-      connections: connections(config),
+      connections: recorded,
     },
     warnings,
   };
@@ -220,7 +225,7 @@ function titleRow(name: string, sizeLabel: string, ctx: Ctx): string {
  * Scope, then each directory on its own copyable row, then the agents connected there.
  * Legacy records carry no scope or directory, so they keep the single summary row.
  */
-function connectionRows(records: Connection[], width: number, t: Messages): string[] {
+function connectionRows(records: (Connection & { sharesGlobalHook?: true })[], width: number, t: Messages): string[] {
   if (records.length === 0 || records.some((record) => record.scope === null)) {
     return wrap(t.artifact.connectionRecords(records.map((record) => humanText(record.target))), width);
   }
@@ -231,9 +236,12 @@ function connectionRows(records: Connection[], width: number, t: Messages): stri
     if (record.scope !== scope) rows.push(...wrap(t.artifact.connectionScope[record.scope!], width - 2).map((line) => `  ${line}`));
     if (record.scope !== scope || record.destination !== destination) {
       rows.push(`    ${humanText(record.destination!)}`);
-      const targets = records.filter((other) => other.scope === record.scope && other.destination === record.destination)
-        .map((other) => humanText(other.target)).join(", ");
-      rows.push(...wrap(targets, width - 6).map((line) => `      ${line}`));
+      const here = records.filter((other) => other.scope === record.scope && other.destination === record.destination);
+      const targets = here.filter((other) => !other.sharesGlobalHook).map((other) => humanText(other.target)).join(", ");
+      for (const text of [...(targets ? [targets] : []), ...here.filter((other) => other.sharesGlobalHook)
+        .map((other) => t.artifact.sharesGlobalHook(humanText(other.target)))]) {
+        rows.push(...wrap(text, width - 6).map((line) => `      ${line}`));
+      }
     }
     scope = record.scope;
     destination = record.destination;

@@ -594,6 +594,8 @@ tonedial show --json
 ```
 
 `show` groups connections by scope and directory; JSON lists them in `connections`.
+A project connection an earlier version recorded on the global hook is labelled, and JSON marks it `sharesGlobalHook: true`;
+`unwire <tool> --global` removes it with the global hook.
 `tonedial doctor --here` checks one folder's files and lists the other connections.
 
 **Recover after a host or Node update**

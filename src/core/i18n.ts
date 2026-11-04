@@ -309,6 +309,7 @@ export type Messages = {
     connectionRecords: (records: string[]) => string;
     connectionsHeading: string;
     connectionScope: Record<"global" | "project", string>;
+    sharesGlobalHook: (target: string) => string;
     dialTitle: string;
     dialPreview: (presetName: string, changed: boolean) => string;
     dialHelpTitle: string;
@@ -898,6 +899,7 @@ const enMessages: Messages = {
     connectionRecords: (records) => `Connections: ${records.length ? records.join(", ") : "none"}`,
     connectionsHeading: "Connections",
     connectionScope: { global: "Global", project: "Project" },
+    sharesGlobalHook: (target) => `${target} · uses the global hook (earlier version)`,
     dialTitle: "ToneDial · shape your agent's voice",
     dialPreview: (presetName, changed) => `${presetName} · ${changed ? "changes pending" : "current voice"}`,
     dialHelpTitle: "Dial keys",
@@ -1683,6 +1685,7 @@ const koMessages: Messages = {
     connectionRecords: (records) => `연결: ${records.length ? records.join(", ") : "없음"}`,
     connectionsHeading: "연결",
     connectionScope: { global: "전역", project: "프로젝트" },
+    sharesGlobalHook: (target) => `${target} · 전역 훅 사용(이전 버전)`,
     dialTitle: "ToneDial · 내 취향의 말투",
     dialPreview: (presetName, changed) => `${presetName} · ${changed ? "변경 미리보기" : "현재 말투"}`,
     dialHelpTitle: "다이얼 키",

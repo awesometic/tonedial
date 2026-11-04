@@ -226,6 +226,7 @@ const messages: Messages = {
     connectionRecords: (records) => `连接：${records.length ? records.join(", ") : "无"}`,
     connectionsHeading: "连接",
     connectionScope: { global: "全局", project: "项目" },
+    sharesGlobalHook: (target) => `${target} · 使用全局钩子（旧版本）`,
     dialTitle: "ToneDial · 调整代理的语气",
     dialPreview: (presetName, changed) => `${presetName} · ${changed ? "待应用变更" : "当前语气"}`,
     dialHelpTitle: "面板按键",

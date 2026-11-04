@@ -209,7 +209,8 @@ const SETUP_MD = `## Connection scope and application recovery
 \`--project <path>\` selects another project. These choices never create another tone store.
 Do not combine scope flags. \`use --project <path>\` remains an artifact export, not setup.
 \`show --json\` lists every recorded connection's \`target\`, \`scope\` and \`destination\` in
-\`connections\`. \`unwire <tool>\` disconnects one agent; \`eject\` disconnects every agent in a scope.
+\`connections\`; \`sharesGlobalHook: true\` marks a project entry an earlier version recorded on the global
+hook. \`unwire <tool>\` disconnects one agent; \`eject\` disconnects every agent in a scope.
 A global connection already serves every folder: \`wire <tool> --here\` beside it writes nothing and JSON
 marks that agent \`covered: true\`. To keep the tone in one project only, offer \`unwire <tool> --global\`,
 then \`wire <tool> --here\` in that project. \`unwire <tool> --global\` also removes project connections an
