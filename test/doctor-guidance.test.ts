@@ -378,3 +378,11 @@ test("a repair blocked by an edited hook says which file and why, not only that 
     if (args[0] === "init") assert.match(shown.out, /^ {2}tonedial doctor --global$/m);
   }
 });
+
+test("an agent with no hook to inspect is connected with wire, the command that adds one", async () => {
+  assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
+  const report = await json(["doctor", "--global"]);
+  const antigravity = report.value.checks.find((check: { name: string }) => check.name === "Antigravity IDE/Desktop");
+  assert.match(antigravity.detail, /run wire with this agent/);
+  assert.doesNotMatch(antigravity.detail, /\binit\b/);
+});
