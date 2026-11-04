@@ -366,7 +366,8 @@ function commandUsage(name: string, copy: Catalogue, ui: Palette): string {
   const command = COMMANDS[name]!;
   const syntax = COMMAND_SYNTAX.find(([key]) => key === name)?.[1] ?? name;
   const flagKeys = [
-    ...command.flags,
+    // `update --global` stays accepted from earlier releases; it never selected anything.
+    ...command.flags.filter((key) => !(name === "update" && key === "global")),
     "json",
     "verbose",
     "color",

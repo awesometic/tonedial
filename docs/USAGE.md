@@ -689,7 +689,7 @@ A reader that closes early, as in `tonedial show | head`, does not crash the com
 | `doctor` | Diagnose; `--fix` repairs (`--tools`, `--from-preset`, `--from-operation [--restore-preset]`, `--quarantine-operation`, `--rollback`) |
 | `eject` | Disconnect every agent in a scope; retain shared state and profiles (`--auto`, `--dry-run`) |
 | `compile` | Rebuild missing/stale `TONE.md`; `--check` reports without writing |
-| `update` | Update the running npm or curl installation (`--global`, `--auto`, `--dry-run`) |
+| `update` | Update the running npm or curl installation (`--auto`, `--dry-run`) |
 
 Ordinary changes compile automatically; `compile --check --json` also supplies reload paths.
 
@@ -791,7 +791,7 @@ npm install --global tonedial
 tonedial update
 ```
 
-`update --dry-run` previews the update without replacing the package; `--global` is accepted explicitly and `--auto` approves an unattended update (JSON output never prompts).
+`update --dry-run` previews the update without replacing the package; `--auto` approves an unattended update (JSON output never prompts).
 For npm installations, ToneDial runs npm only after checking that its global target matches the running copy.
 A different prefix or linked development copy is reported without updating another installation.
 The receipt reports the installed version, not a separate registry freshness check.

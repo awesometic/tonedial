@@ -218,3 +218,12 @@ test("npm success without a verifiable installed version is not reported as an u
   assert.match(result.value.error, /version could not be verified/);
   assert.doesNotMatch(result.out + result.err, /PRIVATE_|update complete/);
 });
+
+test("update help omits the scope flag it still accepts from earlier releases", (t) => {
+  const f = fixture(t);
+  const help = f.invoke(["update", "--help"]);
+  assert.equal(help.code, 0, help.out + help.err);
+  assert.doesNotMatch(help.out, /--global/);
+  assert.match(help.out, /--dry-run/);
+  assert.equal(f.invoke(["update", "--global", "--dry-run", "--json"]).code, 0);
+});
