@@ -12,7 +12,7 @@ import { ConfigError, defaultConfig, isConfigV2, parseConfig, type Config, type 
 import { inspectOperations, inspectRollback } from "../core/operations.ts";
 import { join, relative } from "node:path";
 
-import { AGENT_TOOLS, CONTEXT_ARTIFACT_FILENAME, CONTEXT_GUIDE_FILENAME, UPDATE_COMMAND, connectionScopeFlag, onPath, readerPath, resolveAgentPaths, shimScript, installShape, type AgentTool, type InstallShape, canonicalDestination, shellQuote} from "../core/paths.ts";
+import { AGENT_TOOLS, CONTEXT_ARTIFACT_FILENAME, CONTEXT_GUIDE_FILENAME, UPDATE_COMMAND, connectionScopeFlag, onPath, readerPath, resolveAgentPaths, shimScript, installShape, type AgentPaths, type AgentTool, type InstallShape, canonicalDestination, shellQuote} from "../core/paths.ts";
 import { SKILL_NAME } from "../core/skill.ts";
 import { GUIDE_FORMAT_MARKER } from "../core/reader.ts";
 import { DELIVERY_OFF_MARKER } from "../core/anchors.ts";
@@ -34,6 +34,7 @@ import { applyRollback, assertFresh, planChange, previewRollback, type Change } 
 import { confirm } from "../ui/prompt.ts";
 import { RegionError, find } from "../wiring/region.ts";
 import { TARGETS, inspectContextConsumers, orderedFingerprint, orderedHook, recordedHook, regionContent, wiredAt, type WiredAt } from "../wiring/targets.ts";
+import { connections, connectionsInScope } from "../wiring/scopes.ts";
 import { hasHook, hookCommand, ownedHook } from "../wiring/hooks.ts";
 import { codexHookTrust, type CodexTrust } from "../wiring/codex-trust.ts";
 import { assertRecordedTextAccess, contentHash, registrationKey, resourceKey } from "../wiring/ownership.ts";
@@ -877,7 +878,7 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true): Promise<Comm
     diagnosis.layout.nativeAttention?.inspectionFailure != null || integrations.some((integration) =>
       integration.configuration !== "configured" || integration.runtime.state !== "available" ||
       integration.trust === "disabled") || hookSettings.some(setting => setting.state === "disabled");
-  const elsewhere = wiredElsewhere(config, { scope, destination });
+  const elsewhere = wiredElsewhere(config, ctx.agent);
   const nativeCheckNames = new Set(hookSettings.map(({ tool }) => TARGETS[tool].label));
   // One finding per cause. Before setup, the missing guide and artifact restate the context
   // check; after it, a guide or artifact finding names the file the context summary points to.
@@ -1232,12 +1233,14 @@ type Elsewhere = { target: string; scope: WiringScope; destination: string; stat
  * Agent targets only. A curl install registers the directory of its rc file as a `shell`
  * target, and `eject --project ~` is not how a PATH line is removed.
  */
-function wiredElsewhere(config: Config, here: { scope: WiringScope; destination: string }): Elsewhere[] {
+function wiredElsewhere(config: Config, agent: AgentPaths): Elsewhere[] {
   if (!isConfigV2(config)) return [];
+  const own = new Set(connectionsInScope(config, agent).map((connection) => JSON.stringify(connection)));
   const rows: Elsewhere[] = [];
-  for (const [id, registration] of Object.entries(config.wiring.registrations)) {
-    if (!(AGENT_TOOLS as readonly string[]).includes(registration.target)) continue;
-    if (registration.scope === here.scope && registration.destination === here.destination) continue;
+  for (const connection of connections(config)) {
+    if (!(AGENT_TOOLS as readonly string[]).includes(connection.target) || own.has(JSON.stringify(connection))) continue;
+    const id = registrationKey(connection.target, connection.scope!, connection.destination!);
+    const registration = config.wiring.registrations[id]!;
     // Every resource, not the first: a codex registration carries a skill directory and a hook,
     // and the skill survives the hook's deletion, so reading one of them would call a
     // destination that stopped delivering healthy.
@@ -1252,7 +1255,7 @@ function wiredElsewhere(config: Config, here: { scope: WiringScope; destination:
       state: !existsSync(registration.destination) ? "gone" : wired ? "ok" : "unwired",
     });
   }
-  return rows.sort((a, b) => a.destination.localeCompare(b.destination));
+  return rows;
 }
 
 /** Group presentation only; JSON retains each registration and its individual state. */
