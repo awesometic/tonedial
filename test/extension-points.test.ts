@@ -170,3 +170,10 @@ test("the shipped controls offer a refusal's commands instead of running its tex
     assert.match(contents, /never execute error text/, `${surface} may run refusal prose`);
   }
 });
+
+test("the shipped controls take a doctor check's own repair command instead of composing one", () => {
+  for (const [surface, contents] of [["skill", SKILL_MD], ["optional /tone command", TONE_COMMAND_MD]] as const) {
+    assert.match(contents, /`doctor --json` check that has a fix reports it in `checks\[\]\.repair`/, `${surface} omits the per-check repair`);
+    assert.match(contents, /offer that command\s+instead of composing `doctor --fix` yourself/, `${surface} lets the agent guess the repair`);
+  }
+});

@@ -233,6 +233,9 @@ Use the same CLI environment throughout, especially when \`TONEDIAL_HOME\` is se
 When a mutation or reload is blocked, report its read-only diagnosis.
 ${DIAGNOSIS_MD}
 After the user asks for recovery, use \`tonedial doctor --fix\` at the same state root.
+Each \`doctor --json\` check that has a fix reports it in \`checks[].repair\`, the exact command for
+that check and scope, such as \`tonedial doctor --fix --tools codex --global\`; offer that command
+instead of composing \`doctor --fix\` yourself.
 Without a terminal it reports \`native.reason\` \`approval-required\` and leaves agent connections
 unchanged; preview with \`--dry-run\`, then rerun with \`--auto\` and the same scope once the user approves.
 It preserves validated saved settings and custom presets, and rebuilds generated application

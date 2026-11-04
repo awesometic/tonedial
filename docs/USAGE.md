@@ -495,6 +495,7 @@ Use [actual-host trials](./TESTING.md#actual-host-and-one-day-trial) for deliver
 Human diagnosis always shows the selected scope/directory, without needing `--verbose`.
 It then opens with a count of problems and notices; doctor exits 0 either way, and JSON `healthy` reports problems.
 Each finding appears once and ends with the command that fixes it; `tonedial doctor --fix` with the same scope when `--fix` repairs it.
+JSON gives a check's repair command in `checks[].repair` when it has one.
 A connected agent reads as connected, then whether its settings file shows the hook enabled, then the step that enables it in the app.
 The Codex project-trust step appears only for project connections.
 When ToneDial's own entries in a hook file were edited outside it, doctor leaves the file alone and gives two manual routes.
