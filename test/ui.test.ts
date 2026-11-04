@@ -391,6 +391,45 @@ test("short receipts start with their result; plan commands and the full view ke
   assert.ok(out.join("").startsWith("ToneDial · show"), "show lost its title");
 });
 
+test("a dry run that would change files ends with the command that applies it", async () => {
+  mkdirSync(join(home, "project"));
+  const last = () => out.join("").trimEnd().split("\n").at(-1);
+  for (const [argv, apply] of [
+    [["init", "--here", "--tools", "codex", "--lang", "en", "--dry-run"], "tonedial init --lang en --tools codex --here"],
+  ] as const) {
+    out = [];
+    assert.equal(await cli(...argv), 0, err.join(""));
+    assert.equal(last(), `  ${apply}`, out.join(""));
+  }
+  await initializeState();
+  for (const [argv, apply] of [
+    [["wire", "codex", "--here", "--dry-run"], "tonedial wire codex --here"],
+    [["create", "Example", "--slug", "example", "--dry-run"], "tonedial create Example --slug example"],
+  ] as const) {
+    out = [];
+    assert.equal(await cli(...argv), 0, err.join(""));
+    assert.equal(last(), `  ${apply}`, out.join(""));
+  }
+  assert.equal(await cli("wire", "codex", "--here", "--auto"), 0, err.join(""));
+  for (const [argv, apply] of [
+    [["unwire", "codex", "--here", "--dry-run"], "tonedial unwire codex --here"],
+    [["eject", "--here", "--dry-run"], "tonedial eject --here"],
+  ] as const) {
+    out = [];
+    assert.equal(await cli(...argv), 0, err.join(""));
+    assert.equal(last(), `  ${apply}`, out.join(""));
+  }
+  rmSync(join(home, "project", ".codex"), { recursive: true });
+  out = [];
+  assert.equal(await cli("doctor", "--fix", "--here", "--dry-run"), 0, err.join(""));
+  assert.equal(last(), "  tonedial doctor --fix --here", out.join(""));
+  // Nothing to change, nothing to apply.
+  assert.equal(await cli("doctor", "--fix", "--here", "--auto"), 0, err.join(""));
+  out = [];
+  assert.equal(await cli("wire", "codex", "--here", "--dry-run"), 0, err.join(""));
+  assert.doesNotMatch(out.join(""), /^ {2}tonedial wire/m, out.join(""));
+});
+
 test("a refused connection command writes no title or scope to stdout", async () => {
   mkdirSync(join(home, "project"));
   await initializeState();

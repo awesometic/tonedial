@@ -14,7 +14,7 @@ import { catalogue, configLanguage, detectLanguage, messages, type Catalogue, ty
 import { isColourMode, palette, type Palette } from "./ui/style.ts";
 import { cells, maxCells, resolveBudget, wrap } from "./ui/width.ts";
 import { interactive } from "./ui/prompt.ts";
-import { humanText, isCopyableLine } from "./ui/format.ts";
+import { humanText, isCopyableLine, nextStep } from "./ui/format.ts";
 import { ApprovalRequired, type Change } from "./wiring/apply.ts";
 
 import { planConfig, runCompile } from "./commands/compile.ts";
@@ -106,6 +106,8 @@ export type CommandResult = {
   json: Record<string, unknown>;
   /** Non-blocking notices about tone combinations and persona settings. */
   warnings?: string[];
+  /** A dry run that found changes to make; the output ends with the command that makes them. */
+  previewed?: boolean;
   /**
    * Something to do once the receipt is on screen, and only then.
    *
@@ -687,7 +689,12 @@ export async function run(
     } else {
       flush();
       if (introduction.length && result.lines.length && result.lines[0] !== "") process.stdout.write("\n");
-      for (const line of result.lines) process.stdout.write(`${line}\n`);
+      const lines = [...result.lines];
+      if (result.previewed && ctx.rerun !== undefined) {
+        while (lines.at(-1) === "") lines.pop();
+        lines.push(...nextStep(ctx.rerun, ui));
+      }
+      for (const line of lines) process.stdout.write(`${line}\n`);
       for (const w of result.warnings ?? []) process.stderr.write(notice(w, uiErr));
       // After the receipt, never instead of part of it.
       const afterStatus = await result.after?.();

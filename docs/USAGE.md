@@ -399,7 +399,7 @@ tonedial init --tools codex --here
 tonedial doctor --here
 ```
 
-The plan writes nothing and launches no provider.
+The plan writes nothing and launches no provider; when it finds changes, its last line is the command that applies them.
 Review proposed file changes before approving; `--verbose` includes the diff and `--auto` supplies approval without hiding the plan.
 Without a terminal to approve in, a command writes nothing and prints the commands that rerun it with the same agents, options and scope:
 in a terminal, with `--dry-run`, and with `--auto`; JSON reports them in `commands` with `reason: "approval-required"`.

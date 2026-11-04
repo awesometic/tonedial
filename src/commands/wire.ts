@@ -354,6 +354,7 @@ async function wireSelected(ctx: Ctx, requested: AgentTool[], rebuilding?: Nativ
   const coveredBlock = coveredLines(ctx, [...covered.keys()]);
   const body = [...headline, ...(headline.length && setup.length ? [""] : []), ...setup];
   return {
+    previewed: result.reason === "dry-run",
     lines: [...result.lines, ...(result.lines.length ? [""] : []), ...body,
       ...(body.length && coveredBlock.length ? [""] : []), ...coveredBlock],
     json: {
@@ -544,6 +545,7 @@ export async function disconnect(ctx: Ctx, tools: AgentTool[], all = false): Pro
   // An eject with nothing registered here names no tools rather than every supported one.
   const nothingWired = reason === "nothing" && all && !disconnected.length;
   return {
+    previewed: result.reason === "dry-run",
     lines: [...result.lines, ...(result.lines.length ? [""] : []), ...(nothingWired
       ? receiptLines(ctx.t.wiring.nothingWired, ctx.ui.width - 2).map((line) => `  ${ctx.ui.bold(line)}`)
       : summary(ctx, reason, disconnected.length ? disconnected : tools, "disconnect"))],

@@ -244,6 +244,7 @@ export async function runInit(entry: Ctx, _args: string[]): Promise<CommandResul
   // and "a handoff that is undefined", and the first one is what this means.
   const after = hostHandoff(ctx, applied, tools);
   return {
+    previewed: wiring.reason === "dry-run",
     lines,
     ...(after ? { after } : {}),
     json: {
@@ -314,6 +315,7 @@ async function rebuildExisting(entry: Ctx): Promise<CommandResult> {
     if (ctx.flags.commands && !tools.includes("claude")) throw new ConfigError(ctx.t.errors.commandsNeedClaude);
     const native = await runRebuildNative({ ...ctx, flags: { ...ctx.flags, tools: tools.length ? tools.join(",") : "none" } }, app.legacy, app.proposedConfig);
     return {
+      previewed: app.json.reason === "dry-run" || native.json.reason === "dry-run",
       lines: [...(ctx.canPrompt ? [] : introduction), ...app.lines, ...native.lines],
       json: { ...app.json, agentRoot: ctx.agent.root, live: ctx.agent.live,
         scope: ctx.agent.live ? "global" : "project", scopeExplicit, language: app.proposedConfig.language,

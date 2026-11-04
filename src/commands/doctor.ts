@@ -675,6 +675,7 @@ export async function runDoctor(ctx: Ctx, _args: string[]): Promise<CommandResul
   if (ctx.flags.dryRun) {
     const native = await runRebuildNative(ctx, app.legacy, app.proposedConfig);
     return {
+      previewed: app.json.reason === "dry-run" || native.json.reason === "dry-run",
       lines: [...app.lines, ...native.lines],
       json: { ...app.json, root: ctx.agent.root, stateRoot: ctx.paths.root, agentRoot: ctx.agent.root,
         live: ctx.agent.live, fixed: false, native: native.json,

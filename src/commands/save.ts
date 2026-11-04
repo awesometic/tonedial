@@ -89,6 +89,7 @@ export async function savePreset(
   const result = await applyPlanned(ctx, [...selectionReads, presetChange, toneChange], [finalConfig], options.create === true);
 
   if (options.create && !result.applied) return {
+    previewed: result.reason === "dry-run",
     lines: [...result.lines, ...(result.lines.length ? [""] : []), `  ${ctx.t.create.notCreated}`],
     json: { slug, displayName, created: false, reason: result.reason, diff: result.diff },
   };
