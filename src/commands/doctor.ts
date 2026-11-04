@@ -34,7 +34,7 @@ import { applyRollback, assertFresh, planChange, previewRollback, type Change } 
 import { confirm } from "../ui/prompt.ts";
 import { RegionError, find } from "../wiring/region.ts";
 import { TARGETS, inspectContextConsumers, orderedFingerprint, orderedHook, projectDuplicates, recordedHook, regionContent, wiredAt, type DeliveryDuplicate, type WiredAt } from "../wiring/targets.ts";
-import { connections, connectionsAt, connectionsInScope } from "../wiring/scopes.ts";
+import { connections, connectionsInScope, folderConnections } from "../wiring/scopes.ts";
 import { hasHook, hookCommand, ownedHook, withHook } from "../wiring/hooks.ts";
 import { codexHookTrust, type CodexTrust } from "../wiring/codex-trust.ts";
 import { assertRecordedTextAccess, contentHash, registrationKey, resourceKey } from "../wiring/ownership.ts";
@@ -926,8 +926,7 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true): Promise<Comm
       integration.trust === "disabled") || hookSettings.some(setting => setting.state === "disabled");
   const elsewhere = wiredElsewhere(config, ctx.agent);
   // Inspecting global from a folder with its own connections: say so and name `doctor --here`.
-  const folder = ctx.agent.live
-    ? connectionsAt(config, "project", ctx.cwd).filter(({ target }) => (AGENT_TOOLS as readonly string[]).includes(target)) : [];
+  const folder = ctx.agent.live ? folderConnections(config, ctx.cwd) : [];
   const nativeCheckNames = new Set(hookSettings.map(({ tool }) => TARGETS[tool].label));
   // One finding per cause. Before setup, the missing guide and artifact restate the context
   // check; after it, a guide or artifact finding names the file the context summary points to.

@@ -27,7 +27,7 @@ import { assertRecordedTextAccess, assertRegisteredFileChange, contentHash, deta
 import { pathLineState, rcPath, withPathLine } from "../wiring/shell.ts";
 import { humanText, nativeSetup, receiptLines } from "../ui/format.ts";
 import { pickTools } from "../ui/prompt.ts";
-import { connectionsAt, connectionsInScope, projectIsHome } from "../wiring/scopes.ts";
+import { connectionsInScope, folderConnections, projectIsHome } from "../wiring/scopes.ts";
 import { planConfig } from "./compile.ts";
 
 /** The positional form names one target; lists belong to --tools. */
@@ -359,8 +359,7 @@ export async function runUnwire(ctx: Ctx, args: string[]): Promise<CommandResult
  */
 export function requireDisconnectScope(ctx: Ctx, command: string, tools?: readonly string[]): void {
   const scopeExplicit = ctx.scopeExplicit ?? (ctx.flags.global || ctx.flags.here === true || ctx.flags.project !== null);
-  if (!scopeExplicit && connectionsAt(planConfig(ctx).config, "project", ctx.cwd)
-    .some(({ target }) => tools === undefined || tools.includes(target))) {
+  if (!scopeExplicit && folderConnections(planConfig(ctx).config, ctx.cwd, tools).length > 0) {
     throw new ConfigError(ctx.t.errors.unwireScopeRequired(`${command} --here`, `${command} --global`));
   }
 }

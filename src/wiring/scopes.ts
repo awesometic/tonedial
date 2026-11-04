@@ -4,7 +4,7 @@
 import { homedir } from "node:os";
 
 import { isConfigV2, type Config, type WiringScope } from "../core/config.ts";
-import { canonicalDestination, type AgentPaths } from "../core/paths.ts";
+import { AGENT_TOOLS, canonicalDestination, type AgentPaths } from "../core/paths.ts";
 
 /** A legacy record names its target only; its scope and directory stay unknown. */
 export type Connection = { target: string; scope: WiringScope | null; destination: string | null };
@@ -22,6 +22,14 @@ export function connections(config: Config): Connection[] {
 export function connectionsAt(config: Config, scope: WiringScope, directory: string): Connection[] {
   const destination = canonicalDestination(directory);
   return connections(config).filter((connection) => connection.scope === scope && connection.destination === destination);
+}
+
+/**
+ * The agent connections a folder has of its own, of `tools` when named. This is what makes an
+ * unscoped disconnect ambiguous there and what `doctor` points to with `--here`.
+ */
+export function folderConnections(config: Config, folder: string, tools: readonly string[] = AGENT_TOOLS): Connection[] {
+  return connectionsAt(config, "project", folder).filter(({ target }) => tools.includes(target));
 }
 
 /** The connections the selected scope of this invocation owns. */
