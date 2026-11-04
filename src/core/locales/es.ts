@@ -223,6 +223,8 @@ const messages: Messages = {
     settingsHeading: "Ajustes",
     displaySettings: (language) => `Idioma de la interfaz ${language}`,
     connectionRecords: (records) => `Conexiones: ${records.length ? records.join(", ") : "ninguna"}`,
+    connectionsHeading: "Conexiones",
+    connectionScope: { global: "Global", project: "Proyecto" },
     dialTitle: "ToneDial · ajusta la voz de tu agente",
     dialPreview: (presetName, changed) => `${presetName} · ${changed ? "cambios pendientes" : "tono actual"}`,
     dialHelpTitle: "Teclas del dial",

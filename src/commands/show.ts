@@ -7,7 +7,7 @@ import { stripVTControlCharacters } from "node:util";
 import type { CommandResult, Ctx } from "../cli.ts";
 import { AXIS_DEFAULT, AXIS_GROUP, AXIS_KIND, AXIS_RISK_FROM, riskyAxes } from "../core/anchors.ts";
 import { check as checkCombos, PERSONA_DESCRIPTION_MAX } from "../core/combos.ts";
-import { ConfigError, isConfigV2, settingValues } from "../core/config.ts";
+import { ConfigError, settingValues } from "../core/config.ts";
 import { compile, measure } from "../core/compile.ts";
 import { withPreset, matchesPreset, inspectPresetLibrary, resolvePreset } from "../core/presets.ts";
 import { toCompileInput } from "../core/resolve.ts";
@@ -17,6 +17,7 @@ import { explainBlock, gaugeBlock, gaugeHeader } from "../ui/gauge.ts";
 import { planConfig } from "./compile.ts";
 import { artifactSize, combination, humanText, isCopyableLine, nextStep, riskWarnings } from "../ui/format.ts";
 import { maxCells, truncate, wrap } from "../ui/width.ts";
+import { connections, type Connection } from "../wiring/scopes.ts";
 import { inspectContextConsumers } from "../wiring/targets.ts";
 
 export function runShow(ctx: Ctx, args: string[]): CommandResult {
@@ -118,13 +119,10 @@ export function runShow(ctx: Ctx, args: string[]): CommandResult {
 
   // Folded rather than laid out: the safeword is user text of unbounded length, so this row
   // can always exceed the budget and no amount of shortening the fixed words prevents it.
-  const records = isConfigV2(config)
-    ? [...new Set(Object.values(config.wiring.registrations).map((record) => `${record.target} (${record.scope})`))]
-    : Object.keys(config.wiring);
-  for (const text of [
-    stateRow(values, ctx.t), ctx.t.artifact.displaySettings(values.language),
-    ctx.t.artifact.connectionRecords(records.map(humanText)),
-  ]) for (const folded of wrap(text, detailWidth)) details.push(folded);
+  for (const text of [stateRow(values, ctx.t), ctx.t.artifact.displaySettings(values.language)]) {
+    for (const folded of wrap(text, detailWidth)) details.push(folded);
+  }
+  details.push(...connectionRows(connections(config), detailWidth, ctx.t));
   if (layout !== null) {
     const advice = layout.kind === "fresh"
       ? ctx.t.artifact.notSetUp
@@ -197,6 +195,7 @@ export function runShow(ctx: Ctx, args: string[]): CommandResult {
       language: values.language,
       chars: size.chars,
       artifact: { exists: artifactOnDisk },
+      connections: connections(config),
     },
     warnings,
   };
@@ -215,6 +214,31 @@ function titleRow(name: string, sizeLabel: string, ctx: Ctx): string {
   const used = maxCells(name) + maxCells(sizeLabel);
   const gap = used < ctx.ui.width ? " ".repeat(ctx.ui.width - used) : " ";
   return `${ctx.ui.bold(name)}${gap}${ctx.ui.dim(sizeLabel)}`;
+}
+
+/**
+ * Scope, then each directory on its own copyable row, then the agents connected there.
+ * Legacy records carry no scope or directory, so they keep the single summary row.
+ */
+function connectionRows(records: Connection[], width: number, t: Messages): string[] {
+  if (records.length === 0 || records.some((record) => record.scope === null)) {
+    return wrap(t.artifact.connectionRecords(records.map((record) => humanText(record.target))), width);
+  }
+  const rows = [t.artifact.connectionsHeading];
+  let scope: Connection["scope"] = null;
+  let destination: string | null = null;
+  for (const record of records) {
+    if (record.scope !== scope) rows.push(...wrap(t.artifact.connectionScope[record.scope!], width - 2).map((line) => `  ${line}`));
+    if (record.scope !== scope || record.destination !== destination) {
+      rows.push(`    ${humanText(record.destination!)}`);
+      const targets = records.filter((other) => other.scope === record.scope && other.destination === record.destination)
+        .map((other) => humanText(other.target)).join(", ");
+      rows.push(...wrap(targets, width - 6).map((line) => `      ${line}`));
+    }
+    scope = record.scope;
+    destination = record.destination;
+  }
+  return rows;
 }
 
 /**

@@ -305,6 +305,8 @@ export type Messages = {
     settingsHeading: string;
     displaySettings: (language: string) => string;
     connectionRecords: (records: string[]) => string;
+    connectionsHeading: string;
+    connectionScope: Record<"global" | "project", string>;
     dialTitle: string;
     dialPreview: (presetName: string, changed: boolean) => string;
     dialHelpTitle: string;
@@ -863,6 +865,8 @@ const enMessages: Messages = {
     settingsHeading: "Settings",
     displaySettings: (language) => `Interface language ${language}`,
     connectionRecords: (records) => `Connections: ${records.length ? records.join(", ") : "none"}`,
+    connectionsHeading: "Connections",
+    connectionScope: { global: "Global", project: "Project" },
     dialTitle: "ToneDial · shape your agent's voice",
     dialPreview: (presetName, changed) => `${presetName} · ${changed ? "changes pending" : "current voice"}`,
     dialHelpTitle: "Dial keys",
@@ -1621,6 +1625,8 @@ const koMessages: Messages = {
     settingsHeading: "사용자 설정",
     displaySettings: (language) => `화면 언어 ${language}`,
     connectionRecords: (records) => `연결: ${records.length ? records.join(", ") : "없음"}`,
+    connectionsHeading: "연결",
+    connectionScope: { global: "전역", project: "프로젝트" },
     dialTitle: "ToneDial · 내 취향의 말투",
     dialPreview: (presetName, changed) => `${presetName} · ${changed ? "변경 미리보기" : "현재 말투"}`,
     dialHelpTitle: "다이얼 키",

@@ -148,3 +148,44 @@ test("the agent-home override isolates both default previews and explicit global
   assert.deepEqual(readdirSync(env.HOME!), []);
   assert.deepEqual(readdirSync(project), []);
 });
+
+async function human(args: string[], extra: NodeJS.ProcessEnv = {}, cwd = project) {
+  let output = "";
+  let errors = "";
+  const stdout = process.stdout.write;
+  const stderr = process.stderr.write;
+  process.stdout.write = ((text: string) => { output += text; return true; }) as typeof stdout;
+  process.stderr.write = ((text: string) => { errors += text; return true; }) as typeof stderr;
+  try {
+    const code = await run(args, { ...env, NO_COLOR: "1", COLUMNS: "200", ...extra }, cwd, false, false);
+    return { code, output, errors };
+  } finally {
+    process.stdout.write = stdout;
+    process.stderr.write = stderr;
+  }
+}
+
+test("show lists every connection with its scope and directory, keeping two projects apart", async () => {
+  const other = join(scratch, "other");
+  mkdirSync(other);
+  assert.equal((await invoke(["init", "--global", "--tools", "codex", "--auto"])).code, 0);
+  assert.equal((await invoke(["wire", "codex", "--here", "--auto"])).code, 0);
+  assert.equal((await invoke(["wire", "codex", "--project", other, "--auto"])).code, 0);
+  const home = realpathSync(env.HOME!);
+  const shown = await invoke(["show"]);
+  assert.equal(shown.code, 0, JSON.stringify(shown.value));
+  assert.deepEqual(shown.value.connections, [
+    { target: "codex", scope: "global", destination: home },
+    { target: "codex", scope: "project", destination: realpathSync(other) },
+    { target: "codex", scope: "project", destination: realpathSync(project) },
+  ]);
+  const text = await human(["show"]);
+  assert.equal(text.code, 0, text.errors);
+  const rows = text.output.split("\n").map((line) => line.trim());
+  const at = (row: string) => rows.indexOf(row);
+  // One label per scope, each directory on its own copyable row, its agents beneath it.
+  assert.equal(rows.filter((row) => row === "Project").length, 1);
+  assert.ok(at("Global") < at(home) && at(home) < at("Project"), text.output);
+  assert.ok(at("Project") < at(realpathSync(other)) && at(realpathSync(other)) < at(realpathSync(project)), text.output);
+  assert.equal(rows[at(realpathSync(project)) + 1], "codex");
+});

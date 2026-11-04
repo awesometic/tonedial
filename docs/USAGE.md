@@ -131,7 +131,7 @@ tonedial get speech_level            # honorific forms, separate from formality
 tonedial get persona.agent           # full saved role description
 tonedial get warmth --json           # { "schema": 3, "ok": true, "values": { "warmth": 3 }, ... }
 tonedial get --help                  # available keys, meanings and choices
-tonedial show                       # gauges, settings, profile and artifact state
+tonedial show                       # gauges, settings, profile, artifact state and connections
 ```
 
 `get` reads the active configuration, including changes not yet saved to a profile.
@@ -701,7 +701,7 @@ Ordinary changes compile automatically; `compile --check --json` also supplies r
 | Streams | JSON stdout has no terminal escapes or ToneDial prompts/provider handoff |
 | Export | Plain is raw preset JSON; `--json` wraps it |
 | Get | Flat `values` object using editable keys; one requested key or all; full text and typed nulls |
-| Show | Includes `riskAxes`, `riskThresholds`; no unsupported guard/ceiling/width fields |
+| Show | Includes `riskAxes`, `riskThresholds` and `connections` (`target`, `scope`, `destination`; null scope and directory for legacy records); no unsupported guard/ceiling/width fields |
 | Compile check | Human: current/stale/missing; JSON: character count and absolute `agentsPath`/`path`, not existence/delivery proof |
 | Explicit editor | `edit --json` still launches the requested editor; live output uses stderr |
 
