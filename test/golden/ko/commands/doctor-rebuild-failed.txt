@@ -1,9 +1,6 @@
 status: 1
---- stdout --- [bytes=53; endsWithNewline=true]
-ToneDial · doctor
+--- stdout --- [bytes=0; endsWithNewline=false]
 
-  검사 범위: 전역
-  <ROOT>
 --- stderr --- [bytes=264; endsWithNewline=true]
 앱 복구의 파일 쓰기 단계에서 실패했습니다 (EACCES).
 <ROOT>/state/skill/tonedial/SKILL.md

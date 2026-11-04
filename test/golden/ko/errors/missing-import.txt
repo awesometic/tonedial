@@ -1,6 +1,5 @@
 status: 1
---- stdout --- [bytes=20; endsWithNewline=true]
-ToneDial · import
+--- stdout --- [bytes=0; endsWithNewline=false]
 
 --- stderr --- [bytes=114; endsWithNewline=true]
 <ROOT>/missing.json

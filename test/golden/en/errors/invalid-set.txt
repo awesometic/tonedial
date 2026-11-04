@@ -1,6 +1,5 @@
 status: 1
---- stdout --- [bytes=17; endsWithNewline=true]
-ToneDial · set
+--- stdout --- [bytes=0; endsWithNewline=false]
 
 --- stderr --- [bytes=31; endsWithNewline=true]
 warmth: expected 1–5 (got 9)

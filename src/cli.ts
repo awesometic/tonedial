@@ -652,17 +652,38 @@ export async function run(
       }
       ctx.contextChecks = layout.checks;
     }
-    // The dial owns its live title; other human commands identify themselves before approval.
-    const earlyBanner = !["export", "show"].includes(name) && !(name === "set" && rest.length === 0);
-    if (!asJson && earlyBanner) process.stdout.write(`${ui.bold(`ToneDial · ${name}`)}\n\n`);
-    if (introduction.length) process.stdout.write(`${introduction.join("\n")}\n`);
-    const result = await command.run(ctx, rest);
+    // The title and scope precede the command's first output, so a refusal on stderr has neither.
+    // The dial draws its own live title; the receipt after it gets this one.
+    const dial = name === "set" && rest.length === 0;
+    const header = [...(!asJson && !["export", "show"].includes(name) ? [ui.bold(`ToneDial · ${name}`), ""] : []), ...introduction];
+    const write = process.stdout.write;
+    let pending = header.length > 0;
+    const flush = () => {
+      if (!pending) return;
+      pending = false;
+      process.stdout.write = write;
+      write.call(process.stdout, `${header.join("\n")}\n`);
+    };
+    // Prompts, pickers and previews write to stdout directly. Only text counts: a test runner's
+    // binary reports share this stream.
+    if (pending && !dial) {
+      process.stdout.write = ((chunk: string | Uint8Array, ...more: never[]) => {
+        if (typeof chunk === "string") flush();
+        return write.call(process.stdout, chunk, ...more);
+      }) as typeof write;
+    }
+    let result: CommandResult;
+    try {
+      result = await command.run(ctx, rest);
+    } finally {
+      if (pending) process.stdout.write = write;
+    }
     if (asJson) {
       process.stdout.write(
         `${JSON.stringify({ ...result.json, schema: JSON_SCHEMA, ok: true, warnings: result.warnings ?? [] }, null, 2)}\n`,
       );
     } else {
-      if (!earlyBanner && !["export", "show"].includes(name)) process.stdout.write(`${ui.bold(`ToneDial · ${name}`)}\n\n`);
+      flush();
       if (introduction.length && result.lines.length && result.lines[0] !== "") process.stdout.write("\n");
       for (const line of result.lines) process.stdout.write(`${line}\n`);
       for (const w of result.warnings ?? []) process.stderr.write(notice(w, uiErr));

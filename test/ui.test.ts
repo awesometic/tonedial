@@ -370,17 +370,23 @@ test("hosts without Claude Code get no Claude context cap notice", async () => {
   assert.ok(!JSON.parse(out.join("")).checks.some((check: { name: string }) => check.name === "Claude Code context"));
 });
 
-test("a rejected connection command identifies itself and its scope without writes", async () => {
+test("a refused connection command writes no title or scope to stdout", async () => {
   mkdirSync(join(home, "project"));
   await initializeState();
   const configPath = join(home, "state", "config.json");
   const before = readFileSync(configPath, "utf8");
+  // Approval is needed and there is no terminal to give it in.
   assert.equal(await cli("wire", "codex", "--here"), 1);
-  const screen = out.join("");
-  assert.ok(screen.startsWith("ToneDial · wire\n\n"), "the rejected command had no leading title");
-  assert.equal(screen.split("ToneDial · wire").length - 1, 1, "the result repeated the title");
-  assert.ok(screen.includes(`  ${EN.wiring.scopeHere}\n`), "the rejected command did not identify its scope");
+  assert.equal(out.join(""), "", "the refusal printed a title or a resolved scope");
+  assert.ok(err.join("").includes("tonedial wire codex --here --auto"), err.join(""));
   assert.equal(readFileSync(configPath, "utf8"), before, "an unapproved preview changed the settings");
+  // Without a scope flag, a folder with its own connection is refused before any scope is assumed.
+  assert.equal(await cli("wire", "codex", "--here", "--auto"), 0, err.join(""));
+  out = [];
+  err = [];
+  assert.equal(await cli("unwire", "codex"), 1);
+  assert.equal(out.join(""), "", "the refusal printed the global scope it did not use");
+  assert.ok(err.join("").includes("tonedial unwire codex --global"), err.join(""));
 });
 
 test("an unreadable import keeps its path copyable and reflows the diagnostic", async () => {
@@ -1080,7 +1086,7 @@ test("a Korean install speaks Korean where a user actually reads", async () => {
   out = [];
   err = [];
   assert.equal(await cli("wire", "--here", "--tools", "other-agent", "--dry-run", "--auto"), 1, "wire --tools other-agent");
-  assert.equal(out.join(""), `ToneDial · wire\n\n  ${catalogue("ko").cli.wiring.scopeHere}\n  ${join(home, "project")}\n`, "native refusal must contain only the command title and scope");
+  assert.equal(out.join(""), "", "a native refusal writes nothing to stdout");
   const expectedRefusal = catalogue("ko").cli.wiring.unknownTool("other-agent", ["claude", "antigravity", "codex"]);
   assert.equal(
     err.join("").replace(/\s+/g, " ").trim(),
