@@ -708,7 +708,7 @@ test("native doctor refreshes an owned runtime but preserves an edited handler",
   // the two need different answers because only one of them may be overwritten.
   assert.equal(foreignIntegration?.configuration, "foreign");
   assert.equal(check(foreign, "Claude Code").repair, null);
-  assert.match(check(foreign, "Claude Code").detail, /changed outside ToneDial/i);
+  assert.match(check(foreign, "Claude Code").detail, /edited outside ToneDial/i);
 
   const refused = await invoke(["doctor", "--here", "--fix", "--auto"]);
   assert.equal(refused.code, 0, refused.output);

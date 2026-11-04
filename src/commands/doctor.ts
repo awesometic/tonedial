@@ -35,7 +35,7 @@ import { confirm } from "../ui/prompt.ts";
 import { RegionError, find } from "../wiring/region.ts";
 import { TARGETS, inspectContextConsumers, orderedFingerprint, orderedHook, projectDuplicates, recordedHook, regionContent, wiredAt, type DeliveryDuplicate, type WiredAt } from "../wiring/targets.ts";
 import { connections, connectionsAt, connectionsInScope } from "../wiring/scopes.ts";
-import { hasHook, hookCommand, ownedHook } from "../wiring/hooks.ts";
+import { hasHook, hookCommand, ownedHook, withHook } from "../wiring/hooks.ts";
 import { codexHookTrust, type CodexTrust } from "../wiring/codex-trust.ts";
 import { assertRecordedTextAccess, contentHash, registrationKey, resourceKey } from "../wiring/ownership.ts";
 
@@ -54,6 +54,8 @@ type Check = {
   repair?: string;
   /** PATH repair snapshot used to check recorded shell ownership. */
   change?: Change;
+  /** Lines shown as written, unwrapped, so they can be copied back into a file. */
+  verbatim?: readonly string[];
   files?: { path: string; reason: Exclude<SeedState, "current"> }[];
 };
 
@@ -392,6 +394,7 @@ function diagnoseNative(
   let configuration: NativeIntegration["configuration"] = "foreign";
   let repairable = false;
   let detail = ctx.t.doctor.nativeForeign;
+  let edited = false;
   const change = inspected.change;
 
   if (change === null) {
@@ -417,6 +420,8 @@ function diagnoseNative(
     let owned: string | null = null;
     try {
       assertRecordedTextAccess(change, resource, resource.accessPaths?.[route.sourceId], ctx.t);
+      // The file is still the recorded one, so anything but an intact handler is an outside edit.
+      edited = true;
       owned = ownedHook(change.before, installed, route.path, ctx.t);
     } catch {
       owned = null;
@@ -434,14 +439,27 @@ function diagnoseNative(
         ? (route.inherited ? ctx.t.doctor.nativeInherited(route.path, event) : ctx.t.doctor.nativeConfigured(event))
         : ctx.t.doctor.nativeStale;
       repairable = current ? false : route.repairAllowed;
+      edited = false;
     }
   }
+  if (edited) detail = ctx.t.doctor.nativeEdited(route.path);
 
   const humanDetail = [configuration === "configured"
     ? route.inherited
       ? ctx.t.doctor.nativeInheritedCompact(route.path, event)
       : ctx.t.doctor.nativeConfiguredCompact(event)
     : detail];
+  // Decision D5: an outside edit gets guidance, never a repair or adoption. Both routes end in
+  // a state the planner already accepts: the recorded handler intact, or no file at all.
+  let verbatim: string[] | undefined;
+  if (edited) {
+    const fix = route.inherited ? "tonedial doctor --fix --global" : repairCommand(ctx, "doctor --fix");
+    humanDetail.push(ctx.t.doctor.editedRoutes(ctx.flags.verbose ? null : `${repairCommand(ctx, "doctor")} --verbose`, fix));
+    if (ctx.flags.verbose) {
+      humanDetail.push(ctx.t.doctor.editedExpected);
+      verbatim = withHook(null, installed!, route.path, ctx.t).trimEnd().split("\n");
+    }
+  }
 
   // Runtime availability is its own observation. It can make a configured entry unusable, and it
   // says so beside that reading rather than overwriting it — the configuration is what this tool
@@ -523,6 +541,7 @@ function diagnoseNative(
       detail: `${detail} ${ctx.t.doctor.nativeActivationUnverified(trust !== "unknown")}`,
       humanDetail,
       ...(repair ? { repair } : {}),
+      ...(verbatim ? { verbatim } : {}),
     },
   };
 }
@@ -1330,7 +1349,8 @@ function report(check: Check, ctx: Ctx): string[] {
   // indent. A fixed name column made a narrow doctor report spend most of its width on padding.
   const body = (check.files?.length ? [] : check.humanDetail ?? [check.detail]).flatMap(detail => detail.split("\n"))
     .flatMap(line => receiptLines(humanText(line), ctx.ui.width - 6));
-  const lines = [head, ...body.map((line) => `    ${check.state === "ok" ? ctx.ui.dim(line) : line}`)];
+  const lines = [head, ...body.map((line) => `    ${check.state === "ok" ? ctx.ui.dim(line) : line}`),
+    ...(check.verbatim ?? []).map((line) => `      ${humanText(line)}`)];
   if (check.files?.length) {
     lines.push(`    ${humanText(ctx.paths.root)}`);
     for (const reason of ["missing", "stale", "modified", "foreign", "unreadable"] as const) {

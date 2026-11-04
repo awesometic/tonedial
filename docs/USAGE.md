@@ -488,6 +488,8 @@ It then opens with a count of problems and notices; doctor exits 0 either way, a
 Each finding appears once and ends with the command that fixes it; `tonedial doctor --fix` with the same scope when `--fix` repairs it.
 A connected agent reads as connected, then whether its settings file shows the hook enabled, then the step that enables it in the app.
 The Codex project-trust step appears only for project connections.
+When ToneDial's own entries in a hook file were edited outside it, doctor leaves the file alone and gives two manual routes.
+Restore the entries exactly as ToneDial wrote them (`doctor --verbose` lists them), or move the file aside, run `doctor --fix` in that scope and copy your own entries back.
 When delivery is paused it suggests `tonedial on`; when no agent is connected it ends with `tonedial wire` for that scope.
 Other registered connections are grouped by scope/directory and shared file status.
 Inspecting global from a folder with its own connections says so and gives `tonedial doctor --here`; that folder's listed commands also use `--here`.

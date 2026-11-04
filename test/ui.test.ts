@@ -292,7 +292,7 @@ for (const language of LANGUAGES) {
     out = [];
     assert.equal(await cli("doctor", "--here"), 0, err.join(""));
     const foreign = out.join("").replace(/\s+/g, "");
-    assert.ok(foreign.includes(localized.doctor.nativeForeign.replace(/\s+/g, "")));
+    assert.ok(foreign.includes(localized.doctor.nativeEdited(hookPath).replace(/\s+/g, "")));
     assert.doesNotMatch(out.join("").replace(/\s+/g, " "), /\/hooks → SessionStart → ToneDial/, "do not advise enabling a foreign definition");
   });
 }

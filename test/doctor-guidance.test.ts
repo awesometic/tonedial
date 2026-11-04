@@ -3,7 +3,7 @@
 
 import assert from "node:assert/strict";
 import { afterEach, beforeEach, test } from "node:test";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -178,4 +178,33 @@ test("a project that inherits the global hook is not reported as a duplicate", a
     assert.deepEqual(machine.value.integrations.find((row: { tool: string }) => row.tool === "codex").duplicates, []);
     assert.doesNotMatch((await human([...args], cwd)).out, /both hooks are present/);
   }
+});
+
+test("an externally edited hook gets what ToneDial expected and two routes that work", async () => {
+  assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
+  const hook = join(home, ".codex", "hooks.json");
+  const written = readFileSync(hook, "utf8");
+  writeFileSync(hook, written.replace('"additionalContextLimit": 0', '"additionalContextLimit": 5'));
+
+  const codex = block((await human(["doctor", "--global"])).out, "Codex CLI");
+  assert.match(codex.join(" "), /edited outside ToneDial/);
+  assert.ok(codex.includes(hook), codex.join("\n"));
+  assert.ok(codex.includes("tonedial doctor --global --verbose"), codex.join("\n"));
+  assert.equal(codex.at(-1), "tonedial doctor --fix --global");
+  const verbose = block((await human(["doctor", "--global", "--verbose"])).out, "Codex CLI");
+  assert.ok(verbose.includes('"statusMessage": "ToneDial: load saved response tone",'), verbose.join("\n"));
+  assert.ok(verbose.includes('"additionalContextLimit": 0'), "the expected entries, not the edited ones");
+
+  // Refresh does not dead-end either: it points to the diagnosis that carries these routes.
+  assert.match((await human(["init", "--tools", "codex", "--global", "--auto"])).out, /^ {2}tonedial doctor --global$/m);
+
+  // Route 1: restoring the entries as written makes the hook ToneDial's again.
+  writeFileSync(hook, written);
+  assert.equal((await json(["doctor", "--global"])).value.integrations[0].configuration, "configured");
+
+  // Route 2: with the edited file moved aside, doctor --fix writes a new one.
+  writeFileSync(hook, written.replace('"additionalContextLimit": 0', '"additionalContextLimit": 5'));
+  renameSync(hook, `${hook}.mine`);
+  assert.equal((await human(["doctor", "--fix", "--global", "--auto"])).code, 0);
+  assert.equal((await json(["doctor", "--global"])).value.integrations[0].configuration, "configured");
 });

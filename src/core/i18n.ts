@@ -445,6 +445,11 @@ export type Messages = {
     nativeMissing: (path: string, event: "SessionStart" | "PreInvocation") => string;
     nativeStale: string;
     nativeForeign: string;
+    /** Our recorded entries changed inside a file that is otherwise still ours. */
+    nativeEdited: (path: string) => string;
+    /** The two manual routes; `show` is null when the expected entries are listed below. */
+    editedRoutes: (show: string | null, fix: string) => string;
+    editedExpected: string;
     nativeInherited: (path: string, event: "SessionStart" | "PreInvocation") => string;
     nativeInheritedCompact: (path: string, event: "SessionStart" | "PreInvocation") => string;
     legacyRepairWithheld: string;
@@ -1060,6 +1065,9 @@ const enMessages: Messages = {
     nativeMissing: (path, event) => `No ToneDial ${event} hook · ${path}`,
     nativeStale: "ToneDial hook uses an older reader or runtime configuration.",
     nativeForeign: "Settings changed outside ToneDial. Preserve the file and review it before repair.",
+    nativeEdited: (path) => `ToneDial's entries in this file were edited outside ToneDial, so ToneDial leaves the file as it is:\n${path}`,
+    editedRoutes: (show, fix) => `To repair it, restore ToneDial's entries exactly as it wrote them. ${show === null ? "They are listed below." : `To see them:\n${show}`}\nOr move this file aside, let ToneDial write a new one, then copy your own entries back into it:\n${fix}`,
+    editedExpected: "ToneDial wrote these entries:",
     nativeInherited: (path, event) => `Using the global ${event} hook · ${path} · no project hook needed`,
     nativeInheritedCompact: (path, event) => `Connected through the global ${event} hook\n${path}`,
     legacyRepairWithheld: "This connection method is no longer set up. Reconnect with init for hook delivery.",
@@ -1834,6 +1842,9 @@ const koMessages: Messages = {
     nativeMissing: (path, event) => `ToneDial ${event} 훅 없음 · ${path}`,
     nativeStale: "ToneDial 훅이 이전 전달 스크립트나 런타임 설정을 사용합니다.",
     nativeForeign: "ToneDial 밖에서 설정이 바뀌었습니다. 파일을 보존하고 복구 전에 확인해 주세요.",
+    nativeEdited: (path) => `이 파일의 ToneDial 항목이 ToneDial 밖에서 수정되어 파일을 그대로 두었습니다:\n${path}`,
+    editedRoutes: (show, fix) => `복구하려면 ToneDial 항목을 처음 작성된 그대로 되돌려 주세요. ${show === null ? "해당 항목은 아래에 있습니다." : `항목을 보려면:\n${show}`}\n또는 이 파일을 다른 곳으로 옮기고 ToneDial이 새 파일을 쓰게 한 뒤, 직접 추가한 항목을 다시 옮겨 주세요:\n${fix}`,
+    editedExpected: "ToneDial이 작성한 항목:",
     nativeInherited: (path, event) => `전역 ${event} 훅 사용 · ${path} · 프로젝트 훅은 필요 없음`,
     nativeInheritedCompact: (path, event) => `전역 ${event} 훅으로 연결됨\n${path}`,
     legacyRepairWithheld: "더는 이 방식으로 연결하지 않습니다. init으로 다시 연결하면 훅으로 전달합니다.",
