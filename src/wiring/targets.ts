@@ -365,7 +365,8 @@ function projectDuplicates(
     if (id === selfId || registration.target !== tool || registration.scope !== "project") continue;
     const hook = registration.resourceIds.map((key) => wiring.resources[key]).find((resource) => resource?.kind === "hook");
     const recorded = hook ? recordedHook(hook, id) : null;
-    if (!hook || !recorded) continue;
+    // A project that inherits this hook shares its resource; that is one delivery, not two.
+    if (!hook || !recorded || hook.consumers.includes(selfId)) continue;
     const runtime = hook.managedByRegistration?.[id]?.runtime;
     const current = sameDelivery(recorded, desired);
     const stale = !current && runtime !== undefined &&

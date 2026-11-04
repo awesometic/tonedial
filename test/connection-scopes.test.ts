@@ -298,3 +298,11 @@ test("project wiring in the home directory explains that it is the global destin
   assert.equal(readFileSync(paths.config, "utf8"), config);
   assert.equal(existsSync(join(home, ".claude")), false);
 });
+
+test("rewiring global does not report a project that inherits the global hook as a duplicate", async () => {
+  assert.equal((await invoke(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
+  assert.equal((await invoke(["wire", "codex", "--here", "--auto"])).code, 0);
+  const rewired = await invoke(["wire", "codex", "--global", "--auto"]);
+  assert.equal(rewired.code, 0, JSON.stringify(rewired.value));
+  assert.deepEqual(rewired.value.tools[0].duplicates, []);
+});
