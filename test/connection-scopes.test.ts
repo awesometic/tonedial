@@ -1,8 +1,10 @@
 import assert from "node:assert/strict";
 import { afterEach, beforeEach, test } from "node:test";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { run } from "../src/cli.ts";
 import { isConfigV2, parseConfig } from "../src/core/config.ts";
@@ -147,4 +149,152 @@ test("the agent-home override isolates both default previews and explicit global
   assert.equal(existsSync(join(isolated, ".codex", "hooks.json")), true);
   assert.deepEqual(readdirSync(env.HOME!), []);
   assert.deepEqual(readdirSync(project), []);
+});
+
+async function human(args: string[], extra: NodeJS.ProcessEnv = {}, cwd = project) {
+  let output = "";
+  let errors = "";
+  const stdout = process.stdout.write;
+  const stderr = process.stderr.write;
+  process.stdout.write = ((text: string) => { output += text; return true; }) as typeof stdout;
+  process.stderr.write = ((text: string) => { errors += text; return true; }) as typeof stderr;
+  try {
+    const code = await run(args, { ...env, NO_COLOR: "1", COLUMNS: "200", ...extra }, cwd, false, false);
+    return { code, output, errors };
+  } finally {
+    process.stdout.write = stdout;
+    process.stderr.write = stderr;
+  }
+}
+
+test("show lists every connection with its scope and directory, keeping two projects apart", async () => {
+  const other = join(scratch, "other");
+  mkdirSync(other);
+  assert.equal((await invoke(["init", "--global", "--tools", "codex", "--auto"])).code, 0);
+  assert.equal((await invoke(["wire", "codex", "--here", "--auto"])).code, 0);
+  assert.equal((await invoke(["wire", "codex", "--project", other, "--auto"])).code, 0);
+  const home = realpathSync(env.HOME!);
+  const shown = await invoke(["show"]);
+  assert.equal(shown.code, 0, JSON.stringify(shown.value));
+  assert.deepEqual(shown.value.connections, [
+    { target: "codex", scope: "global", destination: home },
+    { target: "codex", scope: "project", destination: realpathSync(other) },
+    { target: "codex", scope: "project", destination: realpathSync(project) },
+  ]);
+  const text = await human(["show"]);
+  assert.equal(text.code, 0, text.errors);
+  const rows = text.output.split("\n").map((line) => line.trim());
+  const at = (row: string) => rows.indexOf(row);
+  // One label per scope, each directory on its own copyable row, its agents beneath it.
+  assert.equal(rows.filter((row) => row === "Project").length, 1);
+  assert.ok(at("Global") < at(home) && at(home) < at("Project"), text.output);
+  assert.ok(at("Project") < at(realpathSync(other)) && at(realpathSync(other)) < at(realpathSync(project)), text.output);
+  assert.equal(rows[at(realpathSync(project)) + 1], "codex");
+});
+
+test("unwire without a scope refuses in a folder with its own connections and names both commands", async () => {
+  const other = join(scratch, "other");
+  mkdirSync(other);
+  const paths = resolvePaths(env);
+  assert.equal((await invoke(["init", "--global", "--tools", "codex", "--auto"])).code, 0);
+  assert.equal((await invoke(["wire", "codex", "--here", "--auto"])).code, 0);
+  const config = readFileSync(paths.config, "utf8");
+  for (const args of [["unwire", "codex", "--dry-run"], ["unwire", "claude", "--dry-run"]]) {
+    const refused = await invoke(args);
+    assert.equal(refused.code, 1, JSON.stringify(refused.value));
+    const tool = args[1];
+    assert.match(refused.value.error, new RegExp(`^  tonedial unwire ${tool} --here$`, "m"));
+    assert.match(refused.value.error, new RegExp(`^  tonedial unwire ${tool} --global$`, "m"));
+  }
+  const text = await human(["unwire", "codex"]);
+  assert.equal(text.code, 1);
+  assert.match(text.errors, /tonedial unwire codex --here/);
+  assert.equal(readFileSync(paths.config, "utf8"), config);
+  // A project Codex connection inherits the global hook, so its own resource is the skill link.
+  assert.equal(existsSync(join(project, ".agents", "skills", "tonedial")), true);
+  assert.equal(existsSync(join(env.HOME!, ".codex", "hooks.json")), true);
+
+  // Elsewhere the default stays global, and an explicit scope is never refused.
+  const elsewhere = await human(["unwire", "codex", "--dry-run"], {}, other);
+  assert.equal(elsewhere.code, 0, elsewhere.errors);
+  assert.match(elsewhere.output, /Connection scope: global/);
+  const global = await invoke(["unwire", "codex", "--global", "--dry-run"]);
+  assert.equal(global.code, 0, JSON.stringify(global.value));
+  assert.deepEqual(global.value.diff.map((change: { path: string }) => change.path).filter((path: string) => path.endsWith("tonedial")),
+    [join(env.HOME!, ".agents", "skills", "tonedial")]);
+});
+
+test("bare unwire outside a terminal refuses with an example and leaves eject as the disconnect-all route", async () => {
+  const paths = resolvePaths(env);
+  assert.equal((await invoke(["init", "--global", "--tools", "codex", "--auto"])).code, 0);
+  const config = readFileSync(paths.config, "utf8");
+  for (const args of [["unwire", "--global"], ["unwire", "--global", "--auto"], ["unwire", "--dry-run"]]) {
+    const refused = await invoke(args);
+    assert.equal(refused.code, 1, args.join(" "));
+    assert.match(refused.value.error, /^  tonedial unwire codex --global$/m);
+    assert.match(refused.value.error, /^  tonedial eject --global$/m);
+  }
+  assert.equal(readFileSync(paths.config, "utf8"), config);
+  assert.equal(existsSync(join(env.HOME!, ".codex", "hooks.json")), true);
+  const ejected = await invoke(["eject", "--global", "--auto"]);
+  assert.equal(ejected.code, 0, JSON.stringify(ejected.value));
+  assert.equal(existsSync(join(env.HOME!, ".codex", "hooks.json")), false);
+});
+
+test("bare unwire in a terminal asks with the wire picker and marks installed and connected agents", async () => {
+  assert.equal((await invoke(["init", "--global", "--tools", "none", "--auto"])).code, 0);
+  assert.equal((await invoke(["wire", "codex", "--here", "--auto"])).code, 0);
+  const bin = join(scratch, "bin");
+  mkdirSync(bin);
+  writeFileSync(join(bin, "claude"), "#!/bin/sh\n");
+  chmodSync(join(bin, "claude"), 0o755);
+  const entry = join(dirname(fileURLToPath(import.meta.url)), "..", "src", "cli.ts");
+  const source = `
+    Object.defineProperty(process.stdin, "isTTY", { value: true });
+    Object.defineProperty(process.stdout, "isTTY", { value: true });
+    const { run } = await import(${JSON.stringify(pathToFileURL(entry).href)});
+    process.exitCode = await run(["unwire", "--here", "--dry-run"]);
+  `;
+  const result = spawnSync(process.execPath, ["--input-type=module", "-e", source], {
+    cwd: project, env: { ...env, PATH: bin, NO_COLOR: "1" }, input: "3\n", encoding: "utf8", timeout: 10_000,
+  });
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /Agents to disconnect/);
+  assert.match(result.stdout, /^ +1\. Claude Code \(claude\) · installed$/m);
+  assert.match(result.stdout, /^ +2\. Antigravity IDE\/Desktop \(antigravity\)$/m);
+  assert.match(result.stdout, /^ +3\. Codex CLI \(codex\) · connected$/m);
+  assert.match(result.stdout, new RegExp(`${join(realpathSync(project), ".codex", "hooks.json").replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\n *\\(removed\\)`));
+  assert.match(result.stdout, /--dry-run · nothing written/);
+  assert.equal(existsSync(join(project, ".codex", "hooks.json")), true);
+});
+
+test("project wiring names the files it wrote and the version-control choice; global wiring does not", async () => {
+  assert.equal((await invoke(["init", "--global", "--tools", "none", "--auto"])).code, 0);
+  const wired = await human(["wire", "codex", "--here", "--auto"]);
+  assert.equal(wired.code, 0, wired.errors);
+  // Shared state files are in the preview but are not project files.
+  assert.match(wired.output, /^  Project files written: \.codex\/hooks\.json, \.agents\/skills\/tonedial$/m);
+  const flat = wired.output.replace(/\s+/g, " ");
+  assert.match(flat, /paths from this machine/);
+  assert.match(flat, /\.git\/info\/exclude/);
+  const global = await human(["wire", "claude", "--global", "--auto"]);
+  assert.equal(global.code, 0, global.errors);
+  assert.doesNotMatch(global.output, /Project files written|paths from this machine/);
+});
+
+test("project wiring in the home directory explains that it is the global destination", async () => {
+  const home = env.HOME!;
+  assert.equal((await invoke(["init", "--global", "--tools", "codex", "--auto"])).code, 0);
+  const paths = resolvePaths(env);
+  const config = readFileSync(paths.config, "utf8");
+  for (const [args, cwd] of [[["wire", "codex", "--here", "--auto"], home], [["wire", "claude", "--here", "--dry-run"], home],
+    [["wire", "claude", "--project", home, "--auto"], project]] as const) {
+    const refused = await human([...args], {}, cwd);
+    assert.equal(refused.code, 1, args.join(" "));
+    assert.doesNotMatch(refused.errors, /Ownership is unknown/);
+    assert.match(refused.errors, /home directory/);
+    assert.match(refused.errors, new RegExp(`^  tonedial wire ${args[1]} --global$`, "m"));
+  }
+  assert.equal(readFileSync(paths.config, "utf8"), config);
+  assert.equal(existsSync(join(home, ".claude")), false);
 });

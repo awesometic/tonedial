@@ -305,6 +305,8 @@ export type Messages = {
     settingsHeading: string;
     displaySettings: (language: string) => string;
     connectionRecords: (records: string[]) => string;
+    connectionsHeading: string;
+    connectionScope: Record<"global" | "project", string>;
     dialTitle: string;
     dialPreview: (presetName: string, changed: boolean) => string;
     dialHelpTitle: string;
@@ -358,6 +360,8 @@ export type Messages = {
     stateKept: (root: string) => string;
     deleteYourself: string;
     nothingWired: string;
+    projectFiles: (files: string[]) => string;
+    projectIsHome: (command: string) => string;
     damaged: (path: string, reason: string) => string;
     needsApproval: string;
     projectExclude: string;
@@ -591,6 +595,11 @@ export type Messages = {
     toolsAmbiguous: string;
     commandsNeedClaude: string;
     toolsPrompt: string;
+    unwireToolsPrompt: string;
+    toolInstalled: string;
+    toolConnected: string;
+    unwireToolsRequired: (example: string, eject: string, auto: boolean) => string;
+    unwireScopeRequired: (here: string, global: string) => string;
     /** `wire` without an agent outside a terminal; the --auto rule shows only when it was passed. */
     wireToolsRequired: (example: string, auto: boolean) => string;
     ownershipConflict: (path: string) => string;
@@ -870,6 +879,8 @@ const enMessages: Messages = {
     settingsHeading: "Settings",
     displaySettings: (language) => `Interface language ${language}`,
     connectionRecords: (records) => `Connections: ${records.length ? records.join(", ") : "none"}`,
+    connectionsHeading: "Connections",
+    connectionScope: { global: "Global", project: "Project" },
     dialTitle: "ToneDial · shape your agent's voice",
     dialPreview: (presetName, changed) => `${presetName} · ${changed ? "changes pending" : "current voice"}`,
     dialHelpTitle: "Dial keys",
@@ -936,6 +947,8 @@ const enMessages: Messages = {
     stateKept: (root) => `Presets and settings stay in:\n${root}`,
     deleteYourself: "to remove state too, delete this directory yourself",
     nothingWired: "No connections in this scope · nothing to disconnect",
+    projectFiles: (files) => `Project files written: ${files.join(", ")}\nTheir hooks run ToneDial with paths from this machine. Keep them out of version control (for example with .git/info/exclude), or commit them knowingly.`,
+    projectIsHome: (command) => `This folder is your home directory, so a project connection here would use the global files. Connect globally instead:\n  ${command}`,
     damaged: (path, reason) => `${path}: ${reason}. Remove the stray marker, then run eject again.`,
     needsApproval:
       "File changes require approval. Run in a terminal, or review with --dry-run before rerunning with --auto.",
@@ -1164,7 +1177,7 @@ const enMessages: Messages = {
       export: "back up a profile, including address and role, as JSON",
       import: "import a profile from JSON · use applies it",
       wire: "connect an agent in the chosen scope · no args prompts",
-      unwire: "disconnect one agent · no args disconnects all",
+      unwire: "disconnect an agent · no args prompts",
       doctor: "check connections · repair with --fix",
       update: "update this install",
       eject: "disconnect agents in the selected scope · keep presets",
@@ -1273,6 +1286,11 @@ const enMessages: Messages = {
     toolsAmbiguous: "Pass a positional agent or --tools, not both.",
     commandsNeedClaude: "--commands requires claude in the selected agents.",
     toolsPrompt: "Agents to connect (comma-separated): ",
+    unwireToolsPrompt: "Agents to disconnect (comma-separated): ",
+    toolInstalled: "installed",
+    toolConnected: "connected",
+    unwireToolsRequired: (example, eject, auto) => `Choose an agent to disconnect, for example:\n  ${example}\nTo disconnect every agent in this scope:\n  ${eject}${auto ? "\n--auto approves your selection only; choose agents explicitly." : ""}`,
+    unwireScopeRequired: (here, global) => `This folder has its own connections. Choose which one to disconnect:\n  ${here}\n  ${global}\n--here disconnects this folder's connection; --global disconnects the one shared across projects.`,
     wireToolsRequired: (example, auto) => `Choose an agent to connect, for example:\n  ${example}\n` +
       `Agents: claude, codex, antigravity · several: --tools codex,claude${auto ? "\n--auto approves your selection only; choose agents explicitly." : ""}`,
     ownershipConflict: (path) => `Ownership is unknown, or managed content or file type changed:\n${path}\nThe file was preserved. Review it before changing the connection.`,
@@ -1635,6 +1653,8 @@ const koMessages: Messages = {
     settingsHeading: "사용자 설정",
     displaySettings: (language) => `화면 언어 ${language}`,
     connectionRecords: (records) => `연결: ${records.length ? records.join(", ") : "없음"}`,
+    connectionsHeading: "연결",
+    connectionScope: { global: "전역", project: "프로젝트" },
     dialTitle: "ToneDial · 내 취향의 말투",
     dialPreview: (presetName, changed) => `${presetName} · ${changed ? "변경 미리보기" : "현재 말투"}`,
     dialHelpTitle: "다이얼 키",
@@ -1701,6 +1721,8 @@ const koMessages: Messages = {
     stateKept: (root) => `프리셋과 설정은 이곳에 그대로 남습니다:\n${root}`,
     deleteYourself: "상태까지 지우려면 이 디렉터리를 직접 삭제해 주세요",
     nothingWired: "이 범위에 연결된 항목 없음 · 해제할 것 없음",
+    projectFiles: (files) => `프로젝트에 쓴 파일: ${files.join(", ")}\n훅에는 이 컴퓨터의 경로가 들어 있습니다. 버전 관리에서 제외하거나(예: .git/info/exclude) 이 점을 알고 커밋하세요.`,
+    projectIsHome: (command) => `이 폴더는 홈 디렉터리라서 프로젝트 연결이 전역 연결과 같은 파일을 씁니다. 전역으로 연결하세요:\n  ${command}`,
     damaged: (path, reason) => `${path}: ${reason}. 남은 마커를 지운 뒤 eject를 다시 실행해 주세요`,
     needsApproval:
       "파일을 바꾸려면 승인이 필요합니다. 터미널에서 실행하거나 --dry-run으로 변경 내용을 확인한 뒤 --auto로 다시 실행해 주세요",
@@ -1929,7 +1951,7 @@ const koMessages: Messages = {
       export: "호칭·역할을 포함한 프로필을 JSON으로 백업",
       import: "JSON에서 프로필 가져오기 · use로 적용",
       wire: "선택한 범위에 에이전트 연결 · 인자 없으면 질문",
-      unwire: "에이전트 하나 연결 해제 · 인자 없으면 전체",
+      unwire: "에이전트 연결 해제 · 인자 없으면 질문",
       doctor: "연결 점검 · 복구는 --fix",
       update: "현재 설치 업데이트",
       eject: "선택한 범위의 모든 에이전트 연결 해제 · 프리셋 유지",
@@ -2039,6 +2061,11 @@ const koMessages: Messages = {
     toolsAmbiguous: "에이전트 인자와 --tools 중 하나만 써 주세요.",
     commandsNeedClaude: "--commands를 쓰려면 에이전트 선택에 claude를 포함해 주세요.",
     toolsPrompt: "연결할 에이전트(쉼표로 구분): ",
+    unwireToolsPrompt: "연결을 해제할 에이전트(쉼표로 구분): ",
+    toolInstalled: "설치됨",
+    toolConnected: "연결됨",
+    unwireToolsRequired: (example, eject, auto) => `연결을 해제할 에이전트를 지정해 주세요. 예:\n  ${example}\n이 범위의 모든 에이전트 연결을 해제하려면:\n  ${eject}${auto ? "\n--auto는 선택한 변경만 승인합니다. 에이전트는 직접 골라 주세요." : ""}`,
+    unwireScopeRequired: (here, global) => `이 폴더에 따로 등록된 연결이 있습니다. 해제할 연결을 골라 주세요:\n  ${here}\n  ${global}\n--here는 이 폴더의 연결을, --global은 모든 프로젝트가 함께 쓰는 연결을 해제합니다.`,
     wireToolsRequired: (example, auto) => `연결할 에이전트를 지정해 주세요. 예:\n  ${example}\n` +
       `에이전트: claude, codex, antigravity · 여러 개: --tools codex,claude${auto ? "\n--auto는 선택한 변경만 승인합니다. 에이전트는 직접 골라 주세요." : ""}`,
     ownershipConflict: (path) => `관리 기록이 없거나 관리하던 내용·파일 종류가 바뀌었습니다:\n${path}\n파일을 보존했습니다. 연결을 바꾸기 전에 확인해 주세요.`,

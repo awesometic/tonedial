@@ -102,11 +102,11 @@ test("read-only and package-only commands do not initialize fresh state", async 
 });
 
 test("disconnecting an uninitialized scope does not create config or context", async () => {
-  for (const command of ["unwire", "eject"]) {
-    const result = await invoke([command, "--here", "--auto"]);
+  for (const command of [["unwire", "codex"], ["eject"]]) {
+    const result = await invoke([...command, "--here", "--auto"]);
     assert.equal(result.code, 0, JSON.stringify(result.value));
     assert.equal(result.value.applied, false);
-    assert.deepEqual(readdirSync(scratch), [], command);
+    assert.deepEqual(readdirSync(scratch), [], command.join(" "));
   }
 });
 

@@ -138,12 +138,14 @@ export async function confirm(question: string): Promise<Answer> {
 }
 
 /**
- * The numbered agent picker `init` and `wire` share. Rows name each host as people know it,
- * and the answer takes numbers or ids; an empty answer is `none`, which only init accepts.
+ * The numbered agent picker `init`, `wire` and `unwire` share. Rows name each host as people
+ * know it, with any marks the caller gives, and the answer takes numbers or ids; an empty
+ * answer is `none`, which only init accepts.
  */
-export async function pickTools(rl: Interface, allowNone: boolean, t: Messages): Promise<AgentTool[]> {
+export async function pickTools(rl: Interface, allowNone: boolean, t: Messages, marks: Partial<Record<AgentTool, string[]>> = {}): Promise<AgentTool[]> {
   for (const [i, tool] of AGENT_TOOLS.entries()) {
-    process.stdout.write(`    ${i + 1}. ${TARGETS[tool].label} (${tool})\n`);
+    const marked = (marks[tool] ?? []).map((mark) => ` · ${mark}`).join("");
+    process.stdout.write(`    ${i + 1}. ${TARGETS[tool].label} (${tool})${marked}\n`);
   }
   const chosen = (await rl.question("  > ")).trim();
   const names = chosen.split(",").map((name) => AGENT_TOOLS[Number(name.trim()) - 1] ?? name.trim()).join(",");

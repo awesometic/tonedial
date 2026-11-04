@@ -452,11 +452,11 @@ test("empty disconnect reports already disconnected when only config formatting 
   const path = join(home, "state", "config.json");
   const original = JSON.parse(readFileSync(path, "utf8"));
   assert.deepEqual(original.wiring.registrations, {});
-  for (const command of ["unwire", "eject"]) {
+  for (const [command, empty] of [[["unwire", "codex"], /Codex CLI: already disconnected/], [["eject"], /nothing to disconnect/]] as const) {
     for (const json of [false, true]) {
       writeFileSync(path, JSON.stringify(original));
       out = [];
-      assert.equal(await cli(command, "--here", "--auto", ...(json ? ["--json"] : [])), 0, err.join(""));
+      assert.equal(await cli(...command, "--here", "--auto", ...(json ? ["--json"] : [])), 0, err.join(""));
       assert.deepEqual(JSON.parse(readFileSync(path, "utf8")), original);
       assert.notEqual(readFileSync(path, "utf8"), JSON.stringify(original));
       if (json) {
@@ -467,7 +467,7 @@ test("empty disconnect reports already disconnected when only config formatting 
         assert.deepEqual(result.diff.map((change: { path: string }) => change.path), [path]);
       } else {
         const receipt = out.join("").replace(/\s+/g, " ");
-        assert.match(receipt, /nothing to disconnect/);
+        assert.match(receipt, empty);
         assert.doesNotMatch(receipt, /(?:Codex CLI|Claude Code|Antigravity IDE\/Desktop): disconnected/);
       }
     }

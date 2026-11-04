@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=3573; endsWithNewline=true]
+--- stdout --- [bytes=3564; endsWithNewline=true]
 tonedial — give your coding agent a character and keep it in every project
 
 tonedial <command> [options]
@@ -34,7 +34,7 @@ Preset library
 Connections
   init                  set up and refresh bundled files
   wire [tool]           connect an agent in the chosen scope · no args prompts
-  unwire [tool]         disconnect one agent · no args disconnects all
+  unwire [tool]         disconnect an agent · no args prompts
   doctor                check connections · repair with --fix
   eject                 disconnect agents in the selected scope · keep presets
 

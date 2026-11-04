@@ -131,7 +131,7 @@ tonedial get speech_level            # honorific forms, separate from formality
 tonedial get persona.agent           # full saved role description
 tonedial get warmth --json           # { "schema": 3, "ok": true, "values": { "warmth": 3 }, ... }
 tonedial get --help                  # available keys, meanings and choices
-tonedial show                       # gauges, settings, profile and artifact state
+tonedial show                       # gauges, settings, profile, artifact state and connections
 ```
 
 `get` reads the active configuration, including changes not yet saved to a profile.
@@ -414,6 +414,10 @@ Local setup does not configure remote/cloud runtimes.
 
 Scope flags are mutually exclusive.
 Use the same scope for `init`, `wire`, `doctor`, `unwire` and `eject`.
+After a project `wire`, the receipt names the project files it wrote.
+Their hooks run ToneDial with paths from this machine, so keep them out of version control
+(for example with `.git/info/exclude`) or commit them knowingly.
+In your home directory a project scope would use the global files, so `wire --here` there stops and shows the `--global` command.
 The scope chooses wiring destinations, not another tone or profile library.
 `use --project` instead exports `.tonedial/TONE.md`; `test --project` selects a conversation folder.
 
@@ -457,7 +461,9 @@ When `codex` is connected interactively and installed on `PATH`, `init` offers t
 When `claude` is connected to a project interactively and installed on `PATH`, `init` offers to open Claude Code there so you can answer its workspace trust prompt.
 When both are connected, the first installed of Codex and Claude Code is offered.
 `wire` accepts a positional tool name or `--tools <list>`.
-With neither, it shows `init`'s numbered agent picker in a terminal; without a terminal it stops and shows an example command.
+With neither, it shows `init`'s numbered agent picker in a terminal,
+marking agents installed on `PATH` and those already connected in the scope;
+without a terminal it stops and shows an example command.
 
 ### Review host enablement
 
@@ -483,7 +489,7 @@ Other registered connections are grouped by scope/directory and shared file stat
 Missing files mean some or all recorded files were absent, not that no connection was registered.
 These are presence checks; `--fix` leaves other scopes alone.
 Use the displayed read-only `doctor` command to inspect them, or `eject` if no longer needed.
-Eject disconnects every agent in that displayed scope, including those with present files; use scoped `unwire <tool>` for one (`unwire` without a tool disconnects all tools in that scope).
+Eject disconnects every agent in that displayed scope, including those with present files; use scoped `unwire <tool>` for one.
 Unimplemented targets do not appear as connections or hook observations.
 
 JSON `hookSettings` records each tool's `state` (`enabled`, `disabled`, `unknown`), `basis` and inspected `path`.
@@ -501,8 +507,71 @@ tonedial unwire codex --here
 tonedial eject --here
 ```
 
+`unwire <tool>` disconnects one agent and `eject` every agent in the scope.
+`unwire` without a tool shows the same picker as `wire` in a terminal; without a terminal it stops and shows an example.
+Without a scope flag, `unwire <tool>` stops in a folder that has its own project connections
+and shows the `--here` and `--global` commands; elsewhere it disconnects the global connection.
 Removal preserves shared state, profiles, CLI, shell PATH, other scopes/consumers and changed or ambiguous foreign resources.
 Use `off` instead when the connections should remain installed and only delivery should pause.
+
+### Connection recipes
+
+**Connect one project**
+
+```bash
+cd ~/work/app
+tonedial wire codex --here
+```
+
+Only this folder gets the hook and skill link.
+The receipt lists the files and the version-control choice.
+
+**Connect globally**
+
+```bash
+tonedial wire codex --global
+```
+
+Run it from any folder; the global hook applies in every project.
+
+**Move from project to global**
+
+```bash
+cd ~/work/app
+tonedial unwire codex --here
+tonedial wire codex --global
+```
+
+Disconnect the project first; otherwise the agent loads the tone from both hooks.
+
+**Disconnect one agent**
+
+```bash
+tonedial unwire codex --here      # this folder's connection
+tonedial unwire codex --global    # the shared connection
+```
+
+`eject --here` or `eject --global` disconnects every agent in that scope instead.
+
+**See what is connected where**
+
+```bash
+tonedial show
+tonedial show --json
+```
+
+`show` groups connections by scope and directory; JSON lists them in `connections`.
+`tonedial doctor --here` checks one folder's files and lists the other connections.
+
+**Recover after a host or Node update**
+
+```bash
+tonedial doctor --here
+tonedial doctor --fix --here
+```
+
+Hooks record the Node runtime path, so `doctor` flags a hook whose runtime moved, and `doctor --fix` rewrites it after approval.
+Use `--global` for global connections, and review a rewritten Codex hook again in `/hooks`.
 
 ## Hook refresh and bounded style feedback
 
@@ -685,7 +754,7 @@ A reader that closes early, as in `tonedial show | head`, does not crash the com
 | `export <slug>` / `import <file-or-https-url>` | Transfer complete profiles |
 | `edit [preset <slug>]` | Open config/custom profile in the editor; `--dry-run` previews |
 | `init` | Set up and refresh bundled files; accepts scope flags, `--tools`, `--lang`, `--commands`, `--migrate-legacy`, `--auto`, `--dry-run` |
-| `wire [tool \| --tools <list>]` / `unwire [tool]` | Connect/disconnect in the selected scope (`--auto`, `--dry-run`); `wire` without a tool prompts, `unwire` without one disconnects all |
+| `wire [tool \| --tools <list>]` / `unwire [tool]` | Connect/disconnect in the selected scope (`--auto`, `--dry-run`); without a tool, both show the agent picker in a terminal |
 | `doctor` | Diagnose; `--fix` repairs (`--tools`, `--from-preset`, `--from-operation [--restore-preset]`, `--quarantine-operation`, `--rollback`) |
 | `eject` | Disconnect every agent in a scope; retain shared state and profiles (`--auto`, `--dry-run`) |
 | `compile` | Rebuild missing/stale `TONE.md`; `--check` reports without writing |
@@ -701,7 +770,7 @@ Ordinary changes compile automatically; `compile --check --json` also supplies r
 | Streams | JSON stdout has no terminal escapes or ToneDial prompts/provider handoff |
 | Export | Plain is raw preset JSON; `--json` wraps it |
 | Get | Flat `values` object using editable keys; one requested key or all; full text and typed nulls |
-| Show | Includes `riskAxes`, `riskThresholds`; no unsupported guard/ceiling/width fields |
+| Show | Includes `riskAxes`, `riskThresholds` and `connections` (`target`, `scope`, `destination`; null scope and directory for legacy records); no unsupported guard/ceiling/width fields |
 | Compile check | Human: current/stale/missing; JSON: character count and absolute `agentsPath`/`path`, not existence/delivery proof |
 | Explicit editor | `edit --json` still launches the requested editor; live output uses stderr |
 

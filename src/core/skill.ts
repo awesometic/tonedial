@@ -208,6 +208,10 @@ const SETUP_MD = `## Connection scope and application recovery
 \`--global\` names that scope explicitly; \`--here\` selects the current project and
 \`--project <path>\` selects another project. These choices never create another tone store.
 Do not combine scope flags. \`use --project <path>\` remains an artifact export, not setup.
+\`show --json\` lists every recorded connection's \`target\`, \`scope\` and \`destination\` in
+\`connections\`. \`unwire <tool>\` disconnects one agent; \`eject\` disconnects every agent in a scope.
+Without a scope flag, \`unwire <tool>\` refuses in a folder that has its own project connections,
+so pass the scope the user chose rather than retrying with \`--global\`.
 
 Ordinary unattended connection writes require an explicit scope with \`--auto\`.
 Read-only diagnosis, \`--dry-run\`, and \`doctor --fix --rollback <id>\` are exceptions:
