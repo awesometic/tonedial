@@ -1,8 +1,12 @@
 status: 0
---- stdout --- [bytes=187; endsWithNewline=true]
+--- stdout --- [bytes=318; endsWithNewline=true]
 ToneDial · update
 
   tonedial <VERSION>
+
+  installed  <VERSION> · released 2026-11-01
+  latest     9.9.9 · released 2026-11-03
+  update available · <VERSION> → 9.9.9
 
   Package update:
     npm update -g tonedial

@@ -28,12 +28,12 @@ test("update JSON on actual process TTY flags returns without approval input or 
   let registry = "";
   const server = createServer((request, response) => {
     requests.push(request.url!);
-    if (request.url !== "/tonedial/latest") {
+    if (request.url !== "/tonedial") {
       response.writeHead(500).end("An unapproved update must not download a tarball.");
       return;
     }
     response.setHeader("Content-Type", "application/json");
-    response.end(JSON.stringify({ version: "9.9.9", dist: { tarball: `${registry}/package.tgz`, integrity: "sha512-dummy" } }));
+    response.end(JSON.stringify({ "dist-tags": { latest: "9.9.9" }, versions: { "9.9.9": { dist: { tarball: `${registry}/package.tgz`, integrity: "sha512-dummy" } } } }));
   });
   await new Promise<void>((resolve, reject) => {
     server.once("error", reject);
@@ -62,5 +62,5 @@ test("update JSON on actual process TTY flags returns without approval input or 
     assert.equal(result.stderr, "");
     assert.deepEqual(snapshot(), before, "the package or state changed");
   }
-  assert.deepEqual(requests, ["/tonedial/latest", "/tonedial/latest"], "the no-install result fetched an update archive");
+  assert.deepEqual(requests, ["/tonedial", "/tonedial"], "the no-install result fetched an update archive");
 });

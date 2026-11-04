@@ -7,11 +7,12 @@ import { TextDecoder } from "node:util";
 
 import { ConfigError, parseConfig, type Config } from "../core/config.ts";
 import { AGENT_TOOLS, UPDATE_COMMAND, installShape, shellQuote } from "../core/paths.ts";
-import { REGISTRY, downloadRelease, haveTar, inspectNpmInstall, installRelease, installedVersion, latestRelease, updateNpmInstall } from "../core/selfupdate.ts";
+import { REGISTRY, compareVersions, downloadRelease, haveTar, inspectNpmInstall, installRelease, installedVersion, latestRelease, npmLatest, updateNpmInstall, type LatestVersion } from "../core/selfupdate.ts";
 import { confirm } from "../ui/prompt.ts";
 import { SEED_VERSION, inspectSeeds, recordedSeedSelection } from "../core/seeds.ts";
 import { humanText, receiptLines } from "../ui/format.ts";
 import { urlIdentity } from "../core/net.ts";
+import { cells } from "../ui/width.ts";
 
 /** A damaged state file must not disable package guidance or reveal its parser excerpt. */
 function updateConfig(ctx: Ctx): { config: Config | null; issue: keyof Ctx["t"]["update"]["stateIssue"] | null } {
@@ -86,27 +87,48 @@ export async function runUpdate(ctx: Ctx): Promise<CommandResult> {
       lines.length = 0;
     }
   };
+  // Installed and latest versions with their dates, then whether there is anything to update.
+  const versionLines = (latest: LatestVersion | null): string[] => {
+    if (latest === null) return [`  ${ctx.ui.warn(ctx.t.update.checkUnavailable)}`];
+    const labels = [ctx.t.update.installedLabel, ctx.t.update.latestLabel];
+    const width = Math.max(...labels.map(cells));
+    const row = (label: string, version: string, date: string | null) =>
+      `  ${label}${" ".repeat(width - cells(label))}  ${version}${date === null ? "" : ` · ${ctx.t.update.released(date.slice(0, 10))}`}`;
+    const order = compareVersions(latest.version, VERSION);
+    const status = order === 0 ? ctx.t.update.upToDate : order > 0 ? ctx.t.update.available(VERSION, latest.version) : ctx.t.update.newer;
+    const style = order === 0 ? ctx.ui.success : order > 0 ? ctx.ui.accent : (text: string) => text;
+    return [row(labels[0]!, VERSION, latest.installedPublishedAt), row(labels[1]!, latest.version, latest.publishedAt),
+      ...receiptLines(status, ctx.ui.width - 2).map(line => `  ${style(line)}`)];
+  };
+  let latest: LatestVersion | null;
   let replaced: string | null = null;
   let installed: string | null = null;
   let outcome: "updated" | "unchanged" | "dry-run" | "approval-required" | "declined";
   if (shape !== "curl") {
-    if (ctx.flags.dryRun) {
+    // npm answers with the user's own registry configuration; a failed check keeps the update path.
+    latest = npmLatest(ctx.env, VERSION);
+    lines.push(...versionLines(latest));
+    if (latest !== null && compareVersions(latest.version, VERSION) <= 0) {
+      installed = VERSION;
+      outcome = "unchanged";
+      if (ctx.flags.dryRun) lines.push(`  ${ctx.t.wiring.dryRun}`);
+    } else if (ctx.flags.dryRun) {
       outcome = "dry-run";
-      lines.push(`  ${ctx.t.update.toUpdate}`, `    ${ctx.ui.accent(command)}`, `  ${ctx.t.wiring.dryRun}`);
+      lines.push("", `  ${ctx.t.update.toUpdate}`, `    ${ctx.ui.accent(command)}`, `  ${ctx.t.wiring.dryRun}`);
     } else if (!ctx.flags.auto && !ctx.canPrompt) {
       outcome = "approval-required";
-      lines.push(`  ${ctx.t.update.toUpdate}`, `    ${ctx.ui.accent(command)}`,
+      lines.push("", `  ${ctx.t.update.toUpdate}`, `    ${ctx.ui.accent(command)}`,
         ...receiptLines(ctx.t.update.needsApproval, ctx.ui.width - 2).map(line => `  ${line}`));
     } else {
       const target = inspectNpmInstall(ctx.env, ctx.t);
-      lines.push(`  ${ctx.t.update.toUpdate}`,
+      lines.push("", `  ${ctx.t.update.toUpdate}`,
         `    ${ctx.ui.accent(`${command} --prefix "${shellQuote(humanText(target.prefix))}"`)}`);
       preview();
       if (ctx.flags.auto || (await confirm(ctx.t.update.npmQuestion)) === "yes") {
         installed = updateNpmInstall(target, ctx.env, ctx.t);
         replaced = installed === target.version ? null : installed;
         outcome = replaced === null ? "unchanged" : "updated";
-        lines.push(`  ${ctx.ui.success(ctx.t.update.npmComplete(installed))}`);
+        lines.push(`  ${ctx.ui.success(replaced === null ? ctx.t.update.npmUnchanged(installed) : ctx.t.update.npmComplete(installed))}`);
       } else {
         outcome = "declined";
         lines.push(`  ${ctx.t.update.declined}`);
@@ -116,17 +138,20 @@ export async function runUpdate(ctx: Ctx): Promise<CommandResult> {
     // Before the network, like `install.sh` checks its tools before it fetches anything.
     if (!haveTar()) throw new ConfigError(ctx.t.update.noTar);
     lines.push(`  ${ctx.ui.dim(ctx.t.update.fetching(humanText(urlIdentity(registry, ctx.t))))}`);
-    const release = await latestRelease(registry, ctx.t);
+    const release = await latestRelease(registry, ctx.t, VERSION);
+    latest = release;
+    lines.push(...versionLines(release));
 
-    if (release.version === VERSION) {
+    if (compareVersions(release.version, VERSION) <= 0) {
       // Nothing downloaded. The common case is an install that is already current, and paying
       // for the whole package to be told so is a cost with nothing on the other side of it.
+      // An install newer than the registry is never offered the older release.
       installed = VERSION;
       outcome = "unchanged";
-      lines.push(`  ${ctx.ui.success(ctx.t.update.already(release.version))}`);
+      if (ctx.flags.dryRun) lines.push(`  ${ctx.t.wiring.dryRun}`);
     } else if (ctx.flags.dryRun) {
       outcome = "dry-run";
-      lines.push(`  ${ctx.t.update.wouldReplace(humanText(ctx.paths.lib), humanText(release.version))}`);
+      lines.push(`  ${ctx.t.update.wouldReplace(humanText(ctx.paths.lib), humanText(release.version))}`, `  ${ctx.t.wiring.dryRun}`);
     } else if (!ctx.flags.auto && !ctx.canPrompt) {
       // JSON never asks, including on a terminal. Explicit --auto supplies approval through
       // the same branch as human output; absent approval, report the existing no-install result.
@@ -184,6 +209,9 @@ export async function runUpdate(ctx: Ctx): Promise<CommandResult> {
       command,
       replaced,
       installedVersion: installed,
+      latestVersion: latest?.version ?? null,
+      installedPublishedAt: latest?.installedPublishedAt ?? null,
+      latestPublishedAt: latest?.publishedAt ?? null,
       outcome,
       seedVersion: config?.seedVersion ?? null,
       stateIssue,
@@ -194,8 +222,8 @@ export async function runUpdate(ctx: Ctx): Promise<CommandResult> {
       packageSeedVersion: replaced === null ? SEED_VERSION : null,
       staleSeeds: replaced === null ? (stale?.map(({ seed }) => seed.label) ?? null) : null,
       seedIssues: replaced === null ? (stale?.map(({ seed, state }) => ({ path: seed.path, reason: state })) ?? null) : null,
-      // npm owns registry/cache resolution; only the curl branch observes remote metadata.
-      checkedRemote: shape === "curl",
+      // Whether the latest release was observed: by npm's own configuration, or the curl registry.
+      checkedRemote: latest !== null,
     },
     warnings,
   };

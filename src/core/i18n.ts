@@ -494,6 +494,14 @@ export type Messages = {
     stateIssue: Record<"missing" | "unsafe" | "changed" | "invalid" | "unreadable", string>;
     npmQuestion: string;
     npmComplete: (version: string) => string;
+    npmUnchanged: (version: string) => string;
+    installedLabel: string;
+    latestLabel: string;
+    released: (date: string) => string;
+    upToDate: string;
+    available: (from: string, to: string) => string;
+    newer: string;
+    checkUnavailable: string;
     npmMissing: string;
     npmScopeUnknown: string;
     npmScopeMismatch: string;
@@ -502,7 +510,6 @@ export type Messages = {
     versionUnknown: string;
     fetching: (registry: string) => string;
     found: (version: string, bytes: number) => string;
-    already: (version: string) => string;
     wouldReplace: (lib: string, version: string) => string;
     question: (version: string) => string;
     replaced: (version: string) => string;
@@ -1089,7 +1096,15 @@ const enMessages: Messages = {
     refreshFiles: (count) => `Bundled files to refresh: ${count}`,
     reviewState: "Review the flagged bundled files:",
     npmQuestion: "  Run this npm update?",
-    npmComplete: (version) => `npm update complete · installed ${version}`,
+    npmComplete: (version) => `npm update complete · updated to ${version}`,
+    npmUnchanged: (version) => `npm update complete · already up to date (${version})`,
+    installedLabel: "installed",
+    latestLabel: "latest",
+    released: (date) => `released ${date}`,
+    upToDate: "up to date",
+    available: (from, to) => `update available · ${from} → ${to}`,
+    newer: "installed version is newer than the latest release · nothing to update",
+    checkUnavailable: "latest version could not be checked",
     npmMissing: "npm was not found on PATH. Use the Node/npm installation that owns this ToneDial copy.",
     npmScopeUnknown: "Cannot verify npm's global installation directory. Check npm prefix -g and npm root -g before retrying.",
     npmScopeMismatch: "This ToneDial copy is not the global package managed by the selected npm. Use the matching Node/npm installation; no update was run.",
@@ -1105,7 +1120,6 @@ const enMessages: Messages = {
     },
     fetching: (registry) => `checking · ${registry}`,
     found: (version, bytes) => `${version}, ${bytes.toLocaleString("en")} bytes`,
-    already: (version) => `${version} already installed`,
     wouldReplace: (lib, version) => `would replace · ${lib} → ${version}`,
     question: (version) => `  Replace this install with ${version}?`,
     replaced: (version) => `updated · ${version}`,
@@ -1847,7 +1861,15 @@ const koMessages: Messages = {
     refreshFiles: (count) => `갱신할 기본 파일: ${count}개`,
     reviewState: "표시된 기본 파일을 확인하려면:",
     npmQuestion: "  npm으로 업데이트할까요?",
-    npmComplete: (version) => `npm 업데이트 완료 · 설치 버전 ${version}`,
+    npmComplete: (version) => `npm 업데이트 완료 · 새 버전 ${version}`,
+    npmUnchanged: (version) => `npm 업데이트 완료 · 이미 최신 상태 (${version})`,
+    installedLabel: "설치됨",
+    latestLabel: "최신",
+    released: (date) => `${date} 배포`,
+    upToDate: "최신 상태",
+    available: (from, to) => `업데이트 가능 · ${from} → ${to}`,
+    newer: "설치 버전이 최신 배포보다 새로움 · 업데이트하지 않음",
+    checkUnavailable: "최신 버전을 확인하지 못함",
     npmMissing: "PATH에서 npm을 찾지 못했습니다. 현재 ToneDial을 설치한 Node/npm 환경을 사용해 주세요.",
     npmScopeUnknown: "npm의 전역 설치 경로를 확인할 수 없습니다. npm prefix -g와 npm root -g를 확인한 뒤 다시 시도해 주세요.",
     npmScopeMismatch: "현재 ToneDial은 선택한 npm이 관리하는 전역 패키지가 아닙니다. 설치할 때 사용한 Node/npm 환경을 선택해 주세요. 업데이트는 실행하지 않았습니다.",
@@ -1863,7 +1885,6 @@ const koMessages: Messages = {
     },
     fetching: (registry) => `확인 중 · ${registry}`,
     found: (version, bytes) => `${version}, ${bytes.toLocaleString("ko")}바이트`,
-    already: (version) => `설치 버전 ${version} · 이미 설치됨`,
     wouldReplace: (lib, version) => `교체 예정 · ${lib} → ${version}`,
     question: (version) => `  대상 버전 ${version} · 이 설치를 바꿀까요?`,
     replaced: (version) => `업데이트됨 · ${version}`,

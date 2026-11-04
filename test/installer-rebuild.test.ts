@@ -98,7 +98,10 @@ before(async () => {
   const version = (JSON.parse(readFileSync(join(release, "package.json"), "utf8")) as { version: string }).version;
   registryVersion = version;
   server = createServer((request, response) => {
-    if (request.url === "/tonedial/latest") response.end(JSON.stringify({ version: registryVersion, dist: { tarball: registry + "/package.tgz", integrity: "sha512-" + createHash("sha512").update(tarball).digest("base64") } }));
+    const manifest = { version: registryVersion, dist: { tarball: registry + "/package.tgz", integrity: "sha512-" + createHash("sha512").update(tarball).digest("base64") } };
+    // `install.sh` reads the latest manifest; `tonedial update` reads the packument.
+    if (request.url === "/tonedial/latest") response.end(JSON.stringify(manifest));
+    else if (request.url === "/tonedial") response.end(JSON.stringify({ "dist-tags": { latest: registryVersion }, versions: { [registryVersion]: manifest } }));
     else if (request.url === "/package.tgz") response.end(tarball);
     else { response.statusCode = 404; response.end(); }
   });

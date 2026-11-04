@@ -99,14 +99,13 @@ before(async () => {
   served.integrity = integrityOf(packedBytes);
 
   server = createServer((request, response) => {
-    if (request.url === "/tonedial/latest") {
+    // `install.sh` reads the latest manifest; `tonedial update` reads the packument.
+    if (request.url === "/tonedial/latest" || request.url === "/tonedial") {
+      const manifest = { version: served.version, dist: { tarball: registry + "/tarball", integrity: served.integrity } };
       response.setHeader("content-type", "application/json");
       response.end(
         served.raw ??
-          JSON.stringify({
-            version: served.version,
-            dist: { tarball: registry + "/tarball", integrity: served.integrity },
-          }),
+          JSON.stringify(request.url === "/tonedial" ? { "dist-tags": { latest: served.version }, versions: { [served.version]: manifest } } : manifest),
       );
       return;
     }
