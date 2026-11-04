@@ -285,7 +285,7 @@ for (const language of LANGUAGES) {
     rmSync(hookPath);
     out = [];
     assert.equal(await cli("doctor", "--here"), 0, err.join(""));
-    assert.ok(out.join("").includes(localized.doctor.nativeMissing("", "SessionStart").split(" · ")[0]!));
+    assert.ok(out.join("").includes(localized.doctor.nativeMissing("", "SessionStart").split("\n")[0]!));
     assert.doesNotMatch(out.join("").replace(/\s+/g, " "), /\/hooks → SessionStart → ToneDial/, "a missing hook must be repaired before enabling it");
     document.hooks.SessionStart[0].hooks[0].statusMessage = "User-edited hook";
     writeFileSync(hookPath, JSON.stringify(document));

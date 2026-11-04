@@ -731,7 +731,7 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true): Promise<Comm
             ...nextStep(repairCommand(ctx, `doctor --fix --from-operation ${owner.operationId}`), ctx.ui).slice(1));
         }
         if (showRollbackCommands && previewRollback(ctx.paths, owner.operationId, ctx.t).status === "ready") {
-          lines.push("", ...receiptLines(ctx.t.recovery.rollback(owner.operationId), ctx.ui.width - 2).map(line => `  ${line}`));
+          lines.push("", ...receiptLines(ctx.t.doctor.rollbackStopped(owner.operationId), ctx.ui.width - 2).map(line => `  ${line}`));
         }
       }
     }

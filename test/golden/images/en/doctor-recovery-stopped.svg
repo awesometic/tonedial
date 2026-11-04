@@ -9,10 +9,10 @@
   command.
   ffffffffffffffffffffffffffffffff  pending
 
-  To continue the application repair:
+  To finish the repair with your current settings, continue it:
   tonedial doctor --fix --from-operation ffffffffffffffffffffffffffffffff --global
 
-  To restore the previous files:
+  To undo its changes and go back to the files from before it started:
   tonedial doctor --fix --rollback ffffffffffffffffffffffffffffffff
 
   Full details:
@@ -26,9 +26,9 @@
 <text x="60" y="216" fill="#edf3f6" font-weight="400" opacity="1">command.</text>
 <text x="60" y="244" fill="#edf3f6" font-weight="400" opacity="1">ffffffffffffffffffffffffffffffff</text>
 <text x="536" y="244" fill="#edf3f6" font-weight="400" opacity="1">pending</text>
-<text x="60" y="300" fill="#edf3f6" font-weight="400" opacity="1">To continue the application repair:</text>
+<text x="60" y="300" fill="#edf3f6" font-weight="400" opacity="1">To finish the repair with your current settings, continue it:</text>
 <text x="60" y="328" fill="#edf3f6" font-weight="400" opacity="1">tonedial doctor --fix --from-operation ffffffffffffffffffffffffffffffff --global</text>
-<text x="60" y="384" fill="#edf3f6" font-weight="400" opacity="1">To restore the previous files:</text>
+<text x="60" y="384" fill="#edf3f6" font-weight="400" opacity="1">To undo its changes and go back to the files from before it started:</text>
 <text x="60" y="412" fill="#edf3f6" font-weight="400" opacity="1">tonedial doctor --fix --rollback ffffffffffffffffffffffffffffffff</text>
 <text x="60" y="468" fill="#edf3f6" font-weight="400" opacity="1">Full details:</text>
 <text x="60" y="496" fill="#edf3f6" font-weight="400" opacity="1">tonedial doctor --global --json</text></g>

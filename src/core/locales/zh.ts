@@ -335,7 +335,8 @@ const messages: Messages = {
     seedsAttention: "内置文件需要处理",
     recoveryPending: "有操作正在运行或需要恢复。本次执行未更改文件。",
     invalidRecoveryPending: "无法读取的操作历史阻止了恢复。本次执行未更改文件。",
-    resumeOperation: "要继续恢复应用：",
+    resumeOperation: "要用当前设置完成修复，请继续：",
+    rollbackStopped: (id) => `要撤销其更改并恢复为开始前的文件：\ntonedial doctor --fix --rollback ${id}`,
     contextCurrent: "AGENTS.md 与 TONE.md 布局已是最新。",
     contextRepair: "受管理的上下文文件需要修复，请检查指南和语气文件诊断。",
     contextSize: (guide, total) => total === null
@@ -397,7 +398,7 @@ const messages: Messages = {
       claude: "/hooks → SessionStart：检查 ToneDial 命令和设置来源。若钩子已关闭，请将 disableAllHooks 设为 false 并检查工作区信任。",
       antigravity: "Antigravity IDE 代理面板 … → Customizations → Hooks（或 Desktop Settings → Customizations → Hooks）：检查并启用 ToneDial PreInvocation 命令。",
     },
-    nativeMissing: (path, event) => `无 ToneDial ${event} 钩子 · ${path}`,
+    nativeMissing: (path, event) => `无 ToneDial ${event} 钩子\n${path}`,
     nativeStale: "ToneDial 钩子使用旧版读取程序或运行时配置。",
     nativeForeign: "设置已在 ToneDial 外部被修改。请保留文件，检查后再修复。",
     nativeEdited: (path) => `此文件中的 ToneDial 条目在 ToneDial 之外被修改，因此保留文件原样：\n${path}`,
@@ -406,7 +407,7 @@ const messages: Messages = {
     nativeInherited: (path, event) => `使用全局 ${event} 钩子 · ${path} · 无需项目钩子`,
     nativeInheritedCompact: (path, event) => `已通过全局 ${event} 钩子连接\n${path}`,
     legacyRepairWithheld: "不再支持配置此连接方式，请用 init 重新连接以通过钩子注入。",
-    nativeRuntimeUnusable: (path) => `钩子程序不可用：${path}`,
+    nativeRuntimeUnusable: (path) => `钩子程序不可用：\n${path}`,
     codexHookDisabled: "Codex 设置：钩子已禁用。请在 /hooks → SessionStart → ToneDial 启用。",
     nativeActivationUnverified: (trustKnown) => trustKnown
       ? "应用内激活尚未验证"

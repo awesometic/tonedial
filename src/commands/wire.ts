@@ -306,7 +306,8 @@ async function wireSelected(ctx: Ctx, tools: AgentTool[], rebuilding?: NativeReb
 
   // Each host's group leads with its own status, so a written connection needs no separate
   // headline. Doctor's repair report repeats per-host review steps, so its receipt omits them.
-  const setup = configured ? nativeSetupLines(ctx, nativeSetup(ctx.t, routes, ctx.agent.live, !rebuilding || rebuilding.preview),
+  // A preview has nothing configured to report; the doctor report after a repair has its own steps.
+  const setup = configured && !rebuilding?.preview ? nativeSetupLines(ctx, nativeSetup(ctx.t, routes, ctx.agent.live, !rebuilding),
     result.reason === "written") : [];
   // Project hooks name this machine's runtime and state paths, so committing them is a choice.
   const projectFiles = !ctx.agent.live && !rebuilding && result.reason === "written"

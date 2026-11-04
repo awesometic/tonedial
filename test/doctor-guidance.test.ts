@@ -208,3 +208,21 @@ test("an externally edited hook gets what ToneDial expected and two routes that 
   assert.equal((await human(["doctor", "--fix", "--global", "--auto"])).code, 0);
   assert.equal((await json(["doctor", "--global"])).value.integrations[0].configuration, "configured");
 });
+
+test("doctor --fix --dry-run previews without a configured-hook receipt", async () => {
+  assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
+  writeFileSync(join(home, ".tonedial", "skill", "tonedial", "SKILL.md"), "locally edited\n");
+  const preview = await human(["doctor", "--fix", "--global", "--dry-run"]);
+  assert.equal(preview.code, 0, preview.err);
+  assert.match(preview.out, /--dry-run · nothing written/);
+  assert.doesNotMatch(preview.out, /hook configured|enable the hook/);
+});
+
+test("a missing hook's path sits on its own line", async () => {
+  env.COLUMNS = "60";
+  assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
+  const hook = join(home, ".codex", "hooks.json");
+  rmSync(hook);
+  const codex = block((await human(["doctor", "--global"])).out, "Codex CLI");
+  assert.deepEqual(codex.slice(1, 3), ["No ToneDial SessionStart hook", hook]);
+});

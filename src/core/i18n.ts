@@ -415,6 +415,8 @@ export type Messages = {
     recoveryPending: string;
     invalidRecoveryPending: string;
     resumeOperation: string;
+    /** The rollback beside a stopped operation's continue command, with when to choose it. */
+    rollbackStopped: (id: string) => string;
     contextCurrent: string;
     contextRepair: string;
     contextSize: (guideChars: number, totalChars: number | null) => string;
@@ -1000,7 +1002,8 @@ const enMessages: Messages = {
     seedsAttention: "bundled files need attention",
     recoveryPending: "An operation is active or needs recovery. No files were changed by this command.",
     invalidRecoveryPending: "Unreadable operation history is blocking recovery. No files were changed by this command.",
-    resumeOperation: "To continue the application repair:",
+    resumeOperation: "To finish the repair with your current settings, continue it:",
+    rollbackStopped: (id) => `To undo its changes and go back to the files from before it started:\ntonedial doctor --fix --rollback ${id}`,
     contextCurrent: "AGENTS.md and TONE.md layout is current.",
     contextRepair: "Managed context files need repair. Check the guide and tone-file diagnostics.",
     contextSize: (guide, total) => total === null
@@ -1062,7 +1065,7 @@ const enMessages: Messages = {
       claude: "/hooks → SessionStart: check the ToneDial command and settings source. If hooks are off, set disableAllHooks to false and check workspace trust.",
       antigravity: "Antigravity IDE agent panel … → Customizations → Hooks (or Desktop Settings → Customizations → Hooks): check the ToneDial PreInvocation command and enable it.",
     },
-    nativeMissing: (path, event) => `No ToneDial ${event} hook · ${path}`,
+    nativeMissing: (path, event) => `No ToneDial ${event} hook\n${path}`,
     nativeStale: "ToneDial hook uses an older reader or runtime configuration.",
     nativeForeign: "Settings changed outside ToneDial. Preserve the file and review it before repair.",
     nativeEdited: (path) => `ToneDial's entries in this file were edited outside ToneDial, so ToneDial leaves the file as it is:\n${path}`,
@@ -1071,7 +1074,7 @@ const enMessages: Messages = {
     nativeInherited: (path, event) => `Using the global ${event} hook · ${path} · no project hook needed`,
     nativeInheritedCompact: (path, event) => `Connected through the global ${event} hook\n${path}`,
     legacyRepairWithheld: "This connection method is no longer set up. Reconnect with init for hook delivery.",
-    nativeRuntimeUnusable: (path) => `Hook program is unusable: ${path}`,
+    nativeRuntimeUnusable: (path) => `Hook program is unusable:\n${path}`,
     codexHookDisabled: "Codex setting: hook disabled. Enable it in /hooks → SessionStart → ToneDial.",
     nativeActivationUnverified: (trustKnown) => trustKnown
       ? "app activation unverified"
@@ -1777,7 +1780,8 @@ const koMessages: Messages = {
     seedsAttention: "기본 파일 확인 필요",
     recoveryPending: "진행 중이거나 복구가 필요한 작업이 있습니다. 이번 실행에서는 파일을 바꾸지 않았습니다.",
     invalidRecoveryPending: "읽을 수 없는 작업 기록 때문에 복구를 진행할 수 없습니다. 이번 실행에서는 파일을 바꾸지 않았습니다.",
-    resumeOperation: "앱 복구를 이어가려면:",
+    resumeOperation: "현재 설정으로 복구를 마치려면 이어서 실행하세요:",
+    rollbackStopped: (id) => `변경을 취소하고 시작 전 파일로 되돌리려면:\ntonedial doctor --fix --rollback ${id}`,
     contextCurrent: "AGENTS.md와 TONE.md 구성이 최신입니다.",
     contextRepair: "관리 중인 컨텍스트 파일을 복구해야 합니다. 안내 파일과 톤 파일의 진단을 확인해 주세요.",
     contextSize: (guide, total) => total === null
@@ -1839,7 +1843,7 @@ const koMessages: Messages = {
       claude: "/hooks → SessionStart에서 ToneDial 실행 명령과 설정 출처를 확인하세요. 훅이 꺼져 있으면 disableAllHooks를 false로 바꾸고 프로젝트 신뢰 설정도 확인하세요.",
       antigravity: "Antigravity IDE 에이전트 패널 … → Customizations → Hooks(또는 데스크톱 Settings → Customizations → Hooks)에서 ToneDial PreInvocation 명령을 확인하고 켜세요.",
     },
-    nativeMissing: (path, event) => `ToneDial ${event} 훅 없음 · ${path}`,
+    nativeMissing: (path, event) => `ToneDial ${event} 훅 없음\n${path}`,
     nativeStale: "ToneDial 훅이 이전 전달 스크립트나 런타임 설정을 사용합니다.",
     nativeForeign: "ToneDial 밖에서 설정이 바뀌었습니다. 파일을 보존하고 복구 전에 확인해 주세요.",
     nativeEdited: (path) => `이 파일의 ToneDial 항목이 ToneDial 밖에서 수정되어 파일을 그대로 두었습니다:\n${path}`,
@@ -1848,7 +1852,7 @@ const koMessages: Messages = {
     nativeInherited: (path, event) => `전역 ${event} 훅 사용 · ${path} · 프로젝트 훅은 필요 없음`,
     nativeInheritedCompact: (path, event) => `전역 ${event} 훅으로 연결됨\n${path}`,
     legacyRepairWithheld: "더는 이 방식으로 연결하지 않습니다. init으로 다시 연결하면 훅으로 전달합니다.",
-    nativeRuntimeUnusable: (path) => `훅 실행 프로그램을 사용할 수 없습니다: ${path}`,
+    nativeRuntimeUnusable: (path) => `훅 실행 프로그램을 사용할 수 없습니다:\n${path}`,
     codexHookDisabled: "Codex 설정: 훅 꺼짐. /hooks → SessionStart → ToneDial에서 켜세요.",
     nativeActivationUnverified: (trustKnown) => trustKnown
       ? "앱 활성화 확인 안 됨"

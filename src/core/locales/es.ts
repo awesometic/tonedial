@@ -335,7 +335,8 @@ const messages: Messages = {
     seedsAttention: "los archivos incluidos requieren atención",
     recoveryPending: "Hay una operación en curso o que necesita recuperación. Esta ejecución no cambió archivos.",
     invalidRecoveryPending: "Un historial de operaciones ilegible está bloqueando la recuperación. Esta ejecución no cambió archivos.",
-    resumeOperation: "Para continuar la reparación de la aplicación:",
+    resumeOperation: "Para terminar la reparación con tus ajustes actuales, continúala:",
+    rollbackStopped: (id) => `Para deshacer sus cambios y volver a los archivos de antes de empezar:\ntonedial doctor --fix --rollback ${id}`,
     contextCurrent: "La estructura de AGENTS.md y TONE.md está al día.",
     contextRepair: "Los archivos de contexto gestionados necesitan reparación. Revisa el diagnóstico de la guía y del tono.",
     contextSize: (guide, total) => total === null
@@ -397,7 +398,7 @@ const messages: Messages = {
       claude: "/hooks → SessionStart: revisa el comando ToneDial y su origen. Si los hooks están desactivados, pon disableAllHooks en false y revisa la confianza del espacio.",
       antigravity: "Panel del agente de Antigravity IDE … → Customizations → Hooks (o Desktop Settings → Customizations → Hooks): revisa el comando ToneDial PreInvocation y actívalo.",
     },
-    nativeMissing: (path, event) => `Sin hook ${event} de ToneDial · ${path}`,
+    nativeMissing: (path, event) => `Sin hook ${event} de ToneDial\n${path}`,
     nativeStale: "El hook de ToneDial usa un lector o una configuración de ejecución antiguos.",
     nativeForeign: "Los ajustes cambiaron fuera de ToneDial. Conserva el archivo y revísalo antes de repararlo.",
     nativeEdited: (path) => `Las entradas de ToneDial en este archivo se editaron fuera de ToneDial, así que ToneDial deja el archivo como está:\n${path}`,
@@ -406,7 +407,7 @@ const messages: Messages = {
     nativeInherited: (path, event) => `Usando el hook global ${event} · ${path} · no se necesita uno de proyecto`,
     nativeInheritedCompact: (path, event) => `Conectado mediante el hook global ${event}\n${path}`,
     legacyRepairWithheld: "Este método ya no se configura. Reconecta con init para entregar mediante hooks.",
-    nativeRuntimeUnusable: (path) => `El programa del hook no se puede usar: ${path}`,
+    nativeRuntimeUnusable: (path) => `El programa del hook no se puede usar:\n${path}`,
     codexHookDisabled: "Ajuste de Codex: hook desactivado. Actívalo en /hooks → SessionStart → ToneDial.",
     nativeActivationUnverified: (trustKnown) => trustKnown
       ? "activación en la aplicación sin verificar"

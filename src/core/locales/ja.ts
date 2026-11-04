@@ -335,7 +335,8 @@ const messages: Messages = {
     seedsAttention: "同梱ファイルの確認が必要",
     recoveryPending: "実行中または復旧が必要な操作があります。この実行ではファイルを変更していません。",
     invalidRecoveryPending: "読み取れない操作履歴が復旧を妨げています。この実行ではファイルを変更していません。",
-    resumeOperation: "アプリ復旧を続けるには:",
+    resumeOperation: "現在の設定で修復を終えるには、続きを実行してください：",
+    rollbackStopped: (id) => `変更を取り消し、開始前のファイルに戻すには：\ntonedial doctor --fix --rollback ${id}`,
     contextCurrent: "AGENTS.md と TONE.md の構成は最新です。",
     contextRepair: "管理対象のコンテキストファイルに修復が必要です。ガイドと口調ファイルの診断を確認してください。",
     contextSize: (guide, total) => total === null
@@ -397,7 +398,7 @@ const messages: Messages = {
       claude: "/hooks → SessionStart：ToneDialのコマンドと設定元を確認してください。無効なら disableAllHooks を false にし、ワークスペースの信頼も確認してください。",
       antigravity: "Antigravity IDEのエージェントパネル … → Customizations → Hooks（またはDesktop Settings → Customizations → Hooks）：ToneDial PreInvocation コマンドを確認して有効にしてください。",
     },
-    nativeMissing: (path, event) => `ToneDial ${event} フックなし · ${path}`,
+    nativeMissing: (path, event) => `ToneDial ${event} フックなし\n${path}`,
     nativeStale: "ToneDialフックが古いリーダーか実行設定を使用しています。",
     nativeForeign: "ToneDial外で設定が変更されました。修復前にファイルを保持して確認してください。",
     nativeEdited: (path) => `このファイルの ToneDial の項目が ToneDial 以外で編集されたため、ファイルはそのままにしています：\n${path}`,
@@ -406,7 +407,7 @@ const messages: Messages = {
     nativeInherited: (path, event) => `グローバル ${event} フックを使用 · ${path} · プロジェクト用は不要です`,
     nativeInheritedCompact: (path, event) => `グローバル ${event} フックで接続済み\n${path}`,
     legacyRepairWithheld: "この接続方式は新規設定できません。init でフック配信に接続し直してください。",
-    nativeRuntimeUnusable: (path) => `フックのプログラムを利用できません：${path}`,
+    nativeRuntimeUnusable: (path) => `フックのプログラムを利用できません：\n${path}`,
     codexHookDisabled: "Codex設定：フック無効。/hooks → SessionStart → ToneDial で有効にしてください。",
     nativeActivationUnverified: (trustKnown) => trustKnown
       ? "アプリ側の有効化は未検証"
