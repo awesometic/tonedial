@@ -326,8 +326,8 @@ function nativeRoute(ctx: Ctx, config: Config, tool: AgentTool): NativeRoute | n
     const globalResource = globalPair ? nativeResource(config, globalId) : undefined;
 
     if (requestedPair && resource === undefined && globalResource !== undefined) {
-      // `planOrderedDelivery` can attach this explicit project registration to the matching
-      // global resource. Inspect the actual physical source while retaining project repair scope.
+      // An earlier version could record this project registration on the matching global
+      // resource. Inspect the actual physical source while retaining project repair scope.
       sourceId = globalId;
       resource = globalResource;
       inherited = true;

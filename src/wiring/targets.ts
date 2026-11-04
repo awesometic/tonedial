@@ -146,8 +146,7 @@ export function sameDelivery(left: HookSpec | null, right: HookSpec | null): boo
 
 /**
  * Display fields and Codex's context limit may differ under one command; a changed runtime or
- * payload may not. A project keeps inheriting an older global hook until a global refresh adds
- * the limit, rather than refusing to connect.
+ * payload may not. A project hook written before a refresh added the limit is still a duplicate.
  */
 function sameDeliveryCommand(left: HookSpec | null, right: HookSpec | null): boolean {
   const commandOnly = (spec: HookSpec | null): HookSpec | null => {
@@ -300,8 +299,8 @@ export function planOrderedDelivery(
     carried.created = legacy.created;
     carried.createdDir = legacy.createdDir;
   }
-  // Inherited registrations share one physical handler. Refresh their identities together;
-  // otherwise the next scoped disconnect would compare the new bytes with an old command.
+  // Project registrations an earlier version recorded on this handler share it. Refresh their
+  // identities together; otherwise the next scoped disconnect would compare new bytes with an old command.
   if (prior && previous) {
     const shared = next.resources[resourceKey(change.realPath, "hook")]!;
     for (const consumer of prior.consumers) {
@@ -347,7 +346,7 @@ export function projectDuplicates(
     if (id === selfId || registration.target !== tool || registration.scope !== "project") continue;
     const hook = registration.resourceIds.map((key) => wiring.resources[key]).find((resource) => resource?.kind === "hook");
     const recorded = hook ? recordedHook(hook, id) : null;
-    // A project that inherits this hook shares its resource; that is one delivery, not two.
+    // A project an earlier version recorded on this hook shares its resource; one delivery, not two.
     if (!hook || !recorded || hook.consumers.includes(selfId)) continue;
     const runtime = hook.managedByRegistration?.[id]?.runtime;
     const current = sameDelivery(recorded, desired);
