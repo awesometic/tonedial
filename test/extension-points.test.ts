@@ -159,3 +159,12 @@ test("the skill names the disconnect routes and the unscoped unwire and eject re
   assert.match(SKILL_MD, /`unwire <tool>` and `eject` refuse in a folder that has its own project\s+connections/);
   assert.match(SKILL_MD, /`show --json` lists every recorded connection's `target`, `scope` and `destination`/);
 });
+
+test("the shipped controls offer a refusal's commands instead of running its text", () => {
+  for (const [surface, contents] of [["skill", SKILL_MD], ["optional /tone command", TONE_COMMAND_MD]] as const) {
+    assert.match(contents, /named refusal adds a stable `reason`/, `${surface} cannot tell refusals apart`);
+    assert.match(contents, /`commands`, the exact commands it printed\.\s+Offer them for the user to choose/,
+      `${surface} does not hand the choice back to the user`);
+    assert.match(contents, /never execute error text/, `${surface} may run refusal prose`);
+  }
+});

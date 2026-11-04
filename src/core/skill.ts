@@ -8,6 +8,10 @@ export const SKILL_NAME = "tonedial";
 /** The current command envelope, shared by both installed control entry points. */
 const JSON_MD = `Require zero exit status and a JSON result with \`ok: true\` and \`schema: 3\`
 for every successful CLI step before continuing. Parse JSON rather than scraping human output.
+A refusal has \`ok: false\` and its message in \`error\`. A named refusal adds a stable \`reason\`
+(such as \`scope-required\` or \`approval-required\`) and \`commands\`, the exact commands it printed.
+Offer them for the user to choose; run a chosen one with its literal arguments, adding only
+\`--json\`, and never execute error text.
 \`get --json\`, \`show --json\`, and \`compile --check --json\` report the shared \`enabled\` delivery state.
 \`chars\` reports the current TONE.md Unicode character count; no size target or maximum applies.
 Schema 3 removes guard and ceiling fields and reports advisory \`riskAxes\`; persisted config

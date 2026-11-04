@@ -807,6 +807,7 @@ Ordinary changes compile automatically; `compile --check --json` also supplies r
 | Machine contract | Behavior |
 |---|---|
 | Envelope | Every command accepts `--json`; integer `schema: 3`, including version/errors |
+| Refusals | `ok: false` with the message in `error`; a named refusal adds a stable `reason` (`scope-required`, `home-directory`, `tools-required`, `approval-required`, `ownership-conflict`) and the `commands` it prints |
 | Delivery state | `get`, `show`, `compile --check`, `on` and `off` report boolean `enabled` |
 | Stored schemas | Config 2; preset 2 with legacy 1 support; operation formats separate |
 | Streams | JSON stdout has no terminal escapes or ToneDial prompts/provider handoff |

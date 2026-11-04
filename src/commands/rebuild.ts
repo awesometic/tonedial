@@ -296,7 +296,7 @@ export async function runAppRebuild(ctx: Ctx, heading = ctx.t.recovery.heading):
     throw new ConfigError(t.doctor.recoveryPending);
   }
   const scopeExplicit = ctx.scopeExplicit ?? (ctx.flags.global || ctx.flags.here === true || ctx.flags.project !== null);
-  if (ctx.flags.auto && !ctx.flags.dryRun && !scopeExplicit) throw new ConfigError(t.errors.scopeRequired);
+  if (ctx.flags.auto && !ctx.flags.dryRun && !scopeExplicit) throw new ConfigError(t.errors.scopeRequired, { reason: "scope-required" });
   if (ctx.flags.tools !== null) parseToolSelection(ctx.flags.tools, true, t);
   if (quarantined !== null && invalid.length > 1) {
     return quarantineOneOperation(ctx, quarantined, invalid.filter(entry => entry !== quarantined).map(entry => entry.operationId));

@@ -5,7 +5,7 @@
 import { homedir } from "node:os";
 import { isAbsolute, join } from "node:path";
 
-import { ConfigError, isConfigV2, type Config, type ManagedHookEvent, type ManagedResource, type WiringV2 } from "../core/config.ts";
+import { ConfigError, OwnershipConflict, isConfigV2, type Config, type ManagedHookEvent, type ManagedResource, type WiringV2 } from "../core/config.ts";
 import { AGENT_TOOLS, LEGACY_CONTEXT_ARTIFACT_FILENAME, canonicalDestination, readerPath, resolveAgentPaths, shellQuote, type AgentPaths, type AgentTool, type Paths } from "../core/paths.ts";
 import type { ContextConsumerCheck, ContextInspectionFailure } from "../core/seeds.ts";
 import { planChange, type Change } from "./apply.ts";
@@ -210,25 +210,25 @@ export function planOrderedDelivery(
   const prior = existing;
   const checks: Change[] = [];
   const previous = prior ? recordedHook(prior, ownerId) : null;
-  if (prior && previous === null) throw new ConfigError(t.errors.ownershipConflict(path));
+  if (prior && previous === null) throw new OwnershipConflict(t.errors.ownershipConflict(path));
   const planned = planChange(path, (before) => before, t);
   const replacesLegacy = legacy !== undefined && legacy.realPath === planned.realPath;
   if (replacesLegacy && (legacy.before !== planned.before ||
     legacy.snapshot.targetIdentity !== planned.snapshot.targetIdentity)) {
-    throw new ConfigError(t.errors.ownershipConflict(path));
+    throw new OwnershipConflict(t.errors.ownershipConflict(path));
   }
   if (replacesLegacy) checks.push({ ...legacy, after: legacy.before });
   const before = planned.before;
   const desiredOwned = ownedHook(before, desired, path, t);
   const adopting = adopt && !prior && !replacesLegacy && exactDelivery(before, desired, paths.root, path, t);
   if (tool === "antigravity" && !prior && !adopting && before?.trim() && Object.hasOwn(JSON.parse(before), "tonedial")) {
-    throw new ConfigError(t.errors.ownershipConflict(path));
+    throw new OwnershipConflict(t.errors.ownershipConflict(path));
   }
   let remaining = replacesLegacy ? legacy.after : before;
   if (previous && prior) {
     const owned = ownedHook(before, previous, path, t);
     if (before !== null && (owned === null || contentHash(owned) !== (prior.managedByRegistration?.[ownerId] ?? prior.managed).handlerSha256)) {
-      throw new ConfigError(t.errors.ownershipConflict(path));
+      throw new OwnershipConflict(t.errors.ownershipConflict(path));
     }
     if (before !== null) {
       const handlerOnly = { ...previous };
@@ -236,7 +236,7 @@ export function planOrderedDelivery(
       remaining = withoutHook(before, handlerOnly, path, t);
     }
   } else if (desiredOwned !== null && !adopting) {
-    throw new ConfigError(t.errors.ownershipConflict(path));
+    throw new OwnershipConflict(t.errors.ownershipConflict(path));
   }
   const previousDescription = (prior ?? wiring.resources[resourceKey(planned.realPath, "hook")])?.documentDescription;
   const descriptionBefore = tool === "antigravity" ? undefined : hookDocumentDescription(remaining, path, t);
@@ -381,7 +381,7 @@ export function planLegacyDeliveryRemoval(
   if (recordedHook(resource, id)) return null;
   const path = resource.accessPaths?.[id]?.path ?? resource.path;
   if (resource.managed.version !== 1 || resource.consumers.some((consumer) => consumer !== id)) {
-    throw new ConfigError(t.errors.ownershipConflict(path));
+    throw new OwnershipConflict(t.errors.ownershipConflict(path));
   }
   const where = wiredAt(join(paths.root, LEGACY_CONTEXT_ARTIFACT_FILENAME), env);
   const planned = planChange(path, (before) => {
@@ -389,7 +389,7 @@ export function planLegacyDeliveryRemoval(
     const owned = ownedDelivery(TARGETS[tool], before, where, path, t);
     const remaining = wiringRemoved(TARGETS[tool], before, where, path, t);
     if (owned === null || contentHash(owned) !== resource.managed.handlerSha256 || remaining === before) {
-      throw new ConfigError(t.errors.ownershipConflict(path));
+      throw new OwnershipConflict(t.errors.ownershipConflict(path));
     }
     return remaining;
   }, t);
@@ -429,7 +429,7 @@ export function assertDistinctHookTargets(
   const owners = new Map<string, AgentTool>();
   for (const { tool, change } of planned) {
     const owner = owners.get(change.realPath);
-    if (owner !== undefined && owner !== tool) throw new ConfigError(t.errors.ownershipConflict(change.path));
+    if (owner !== undefined && owner !== tool) throw new OwnershipConflict(t.errors.ownershipConflict(change.path));
     owners.set(change.realPath, tool);
   }
 }

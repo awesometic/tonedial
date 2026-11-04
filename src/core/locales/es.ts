@@ -640,7 +640,7 @@ const messages: Messages = {
     unwireScopeRequired: (here, global) => `Esta carpeta tiene sus propias conexiones. Elige cuál desconectar:\n  ${here}\n  ${global}\n--here desconecta la conexión de esta carpeta; --global, la compartida entre proyectos.`,
     wireToolsRequired: (example, auto) => `Elige un agente que conectar, por ejemplo:\n  ${example}\n` +
       `Agentes: claude, codex, antigravity · varios: --tools codex,claude${auto ? "\n--auto solo aprueba tu selección; elige los agentes explícitamente." : ""}`,
-    ownershipConflict: (path) => `Propiedad desconocida, o contenido gestionado o tipo de archivo cambiado:\n${path}\nSe conservó el archivo. Revísalo antes de cambiar la conexión.`,
+    ownershipConflict: (path) => `Propiedad desconocida, o contenido gestionado o tipo de archivo cambiado:\n${path}\nSe conservó el archivo. Revísalo con doctor antes de cambiar la conexión.`,
     rollbackNeedsFix: "Usa --rollback con doctor --fix y un ID de operación indicado por doctor.",
     editNotApplied: (path, reason) => `${reason}\nNo se aplicó nada. Copia editada conservada en:\n${path}`,
     editSavedInvalid: "La edición se guardó tal cual; ToneDial no podrá cargar estos ajustes hasta que se corrija el archivo. Diagnostica y repara:\ntonedial doctor",

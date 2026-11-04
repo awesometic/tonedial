@@ -28,7 +28,7 @@ import {
 import { randomBytes } from "node:crypto";
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 
-import { ConfigError } from "../core/config.ts";
+import { ConfigError, OwnershipConflict } from "../core/config.ts";
 import { inside } from "../core/paths.ts";
 import type { Messages } from "../core/i18n.ts";
 import {
@@ -1873,7 +1873,7 @@ function moveWithoutReplacing(from: string, to: string, t: Messages): void {
     linkSync(from, to);
   } catch (cause) {
     if ((cause as NodeJS.ErrnoException).code === "EEXIST") {
-      throw new ConfigError(t.errors.ownershipConflict(to));
+      throw new OwnershipConflict(t.errors.ownershipConflict(to));
     }
     throw new ConfigError(t.errors.couldNotWrite(to, (cause as Error).message, []));
   }
@@ -2754,7 +2754,11 @@ export async function gate(changes: Change[], opts: GateOptions): Promise<GateRe
 const defaultOut = (text: string) => process.stdout.write(text);
 
 /** Approval was needed and nobody could give it: nothing is wrong with the files. */
-export class ApprovalRequired extends ConfigError {}
+export class ApprovalRequired extends ConfigError {
+  constructor(message: string, commands: readonly string[] = []) {
+    super(message, { reason: "approval-required", commands });
+  }
+}
 // The structured diff is unpainted: escape sequences are for a terminal, and a consumer reading
 // `--json` is not one.
 const palettePlain = () => paletteFor("never", {}, false);

@@ -8,7 +8,7 @@ import {
 import { createHash } from "node:crypto";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 
-import { ConfigError, writeAtomic } from "../core/config.ts";
+import { ConfigError, OwnershipConflict, writeAtomic } from "../core/config.ts";
 import { SKILL_NAME } from "../core/skill.ts";
 import { canonicalDestination, canonicalResourcePath, entryIdentity, inside, nearestRealPath, skillDestinations, type SkillDestination } from "../core/paths.ts";
 import type { ManagedResource, WiringV2 } from "../core/config.ts";
@@ -432,7 +432,7 @@ export function probeSkillAction(action: OperationAction): SkillRecoveryProbeSta
 }
 
 function throwConflict(path: string, t: Messages): never {
-  throw new ConfigError(t.errors.ownershipConflict(path));
+  throw new OwnershipConflict(t.errors.ownershipConflict(path));
 }
 
 function withinBoundary(destination: string, boundary: string | undefined, t: Messages): void {

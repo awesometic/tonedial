@@ -879,7 +879,7 @@ test("an edited optional command blocks native refresh and scoped removal withou
       assert.equal(refused.value.nativeAttention, true);
     } else {
       assert.notEqual(refused.code, 0, JSON.stringify(refused.value));
-      assert.equal(refused.value.error, catalogue("en").cli.errors.ownershipConflict(agent.command("tone")));
+      assert.equal(refused.value.error, `${catalogue("en").cli.errors.ownershipConflict(agent.command("tone"))}\n  tonedial doctor --here`);
     }
     for (const { path, bytes } of before) assert.deepEqual(readFileSync(path), bytes, path);
     assert.equal(existsSync(join(project, ".agents", "skills", "tonedial")), true);

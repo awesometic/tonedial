@@ -501,3 +501,44 @@ test("show labels a project connection an earlier version recorded on the global
   const rows = (await human(["show"])).output.split("\n").map((line) => line.trim());
   assert.equal(rows[rows.indexOf(realpathSync(project)) + 1], "codex · uses the global hook (earlier version)");
 });
+
+test("JSON refusals name their reason and the commands they print", async () => {
+  const home = env.HOME!;
+  assert.equal((await invoke(["init", "--global", "--tools", "codex", "--auto"])).code, 0);
+  const refusal = async (args: string[], cwd = project) => {
+    let output = "";
+    const stdout = process.stdout.write;
+    process.stdout.write = ((text: string) => { output += text; return true; }) as typeof stdout;
+    try {
+      assert.equal(await run(["--json", ...args], env, cwd, false, false), 1, args.join(" "));
+    } finally {
+      process.stdout.write = stdout;
+    }
+    const value = JSON.parse(output);
+    assert.equal(value.ok, false, args.join(" "));
+    for (const command of value.commands ?? []) assert.match(value.error, new RegExp(`^ *${command.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "m"), "printed as offered");
+    return { reason: value.reason, commands: value.commands };
+  };
+  assert.deepEqual(await refusal(["wire", "codex", "--here", "--auto"], home),
+    { reason: "home-directory", commands: ["tonedial wire codex --global"] });
+  assert.deepEqual(await refusal(["wire", "--global"]), { reason: "tools-required", commands: ["tonedial wire codex --global"] });
+  assert.deepEqual(await refusal(["unwire", "--global"]),
+    { reason: "tools-required", commands: ["tonedial unwire codex --global", "tonedial eject --global"] });
+  assert.equal((await refusal(["wire", "codex", "--auto"])).reason, "scope-required");
+  assert.equal((await refusal(["wire", "claude", "--global"])).reason, "approval-required");
+
+  assert.equal((await invoke(["unwire", "codex", "--global", "--auto"])).code, 0);
+  assert.equal((await invoke(["wire", "codex", "--here", "--auto"])).code, 0);
+  assert.equal((await invoke(["wire", "codex", "--global", "--auto"])).code, 0);
+  assert.deepEqual(await refusal(["unwire", "codex", "--dry-run"]),
+    { reason: "scope-required", commands: ["tonedial unwire codex --here", "tonedial unwire codex --global"] });
+
+  // An entry edited outside ToneDial is protected, and the refusal ends with the scoped diagnosis.
+  const hook = join(home, ".codex", "hooks.json");
+  writeFileSync(hook, readFileSync(hook, "utf8").replace(/"command": "/, '"command": "edited '));
+  const conflict = await refusal(["unwire", "codex", "--global", "--auto"]);
+  assert.deepEqual(conflict, { reason: "ownership-conflict", commands: ["tonedial doctor --global"] });
+  const text = await human(["unwire", "codex", "--global", "--auto"]);
+  assert.equal(text.code, 1);
+  assert.match(text.errors, /\n {2}tonedial doctor --global\n$/);
+});

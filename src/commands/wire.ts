@@ -6,6 +6,7 @@ import type { CommandResult, Ctx } from "../cli.ts";
 import { AGENT_TOOLS, CONTEXT_ARTIFACT_FILENAME, LEGACY_CONTEXT_ARTIFACT_FILENAME, aliasesState, canonicalDestination, canonicalResourcePath, connectionScopeFlag, inside, installShape, onPath, type AgentTool } from "../core/paths.ts";
 import {
   ConfigError,
+  OwnershipConflict,
   isConfigV2,
   defaultConfig,
   parseConfig,
@@ -48,11 +49,13 @@ export async function runWire(ctx: Ctx, args: string[]): Promise<CommandResult> 
   if (args[0] !== undefined && ctx.flags.tools !== null) throw new ConfigError(ctx.t.errors.toolsAmbiguous);
   const selection = args[0] ?? ctx.flags.tools;
   if (projectIsHome(ctx.agent, ctx.env)) {
-    throw new ConfigError(ctx.t.wiring.projectIsHome(`tonedial wire${args[0] ? ` ${args[0]}` : ctx.flags.tools ? ` --tools ${ctx.flags.tools}` : ""} --global`));
+    const global = `tonedial wire${args[0] ? ` ${args[0]}` : ctx.flags.tools ? ` --tools ${ctx.flags.tools}` : ""} --global`;
+    throw new ConfigError(ctx.t.wiring.projectIsHome(global), { reason: "home-directory", commands: [global] });
   }
   if (selection === null) {
     if (ctx.flags.auto || !ctx.canPrompt) {
-      throw new ConfigError(ctx.t.errors.wireToolsRequired(`tonedial wire codex ${connectionScopeFlag(ctx.agent, ctx.cwd)}`, ctx.flags.auto));
+      const example = `tonedial wire codex ${connectionScopeFlag(ctx.agent, ctx.cwd)}`;
+      throw new ConfigError(ctx.t.errors.wireToolsRequired(example, ctx.flags.auto), { reason: "tools-required", commands: [example] });
     }
     return wireSelected(ctx, await askTools(ctx, ctx.t.errors.toolsPrompt));
   }
@@ -115,7 +118,7 @@ export async function runRebuildNative(ctx: Ctx, legacy: LegacyOwnershipEvidence
       json: { nativeRepair: attention.length ? "attention" : "not-selected", applied: false, reason: "not-selected", tools: [], attention: attention.length > 0, issues: attention, activation: "unverified" },
     };
     const scopeExplicit = ctx.scopeExplicit ?? (ctx.flags.global || ctx.flags.here === true || ctx.flags.project !== null);
-    if (ctx.flags.auto && !ctx.flags.dryRun && !scopeExplicit) throw new ConfigError(ctx.t.errors.scopeRequired);
+    if (ctx.flags.auto && !ctx.flags.dryRun && !scopeExplicit) throw new ConfigError(ctx.t.errors.scopeRequired, { reason: "scope-required" });
     const result = await wireSelected({ ...ctx, contextChecks: [configRead] }, tools, { explicitTools, preview, shell, config, configCapture, configRead });
     const configured = result.json.applied === true || result.json.reason === "nothing";
     return {
@@ -149,7 +152,7 @@ function selectedShell(ctx: Ctx, wiring: WiringV2, tools: AgentTool[], explicitT
   const recorded = wiring.registrations[id]?.resourceIds.map((key) => wiring.resources[key]!).find((resource) =>
     resource.kind === "shell" && resource.accessPaths?.[id]?.path === path);
   if (!explicitTools && (!ctx.agent.live || recorded === undefined)) return null;
-  if (recorded && (recorded.managed.version !== 1 || recorded.managed.regionId !== "tonedial")) throw new ConfigError(ctx.t.errors.ownershipConflict(path));
+  if (recorded && (recorded.managed.version !== 1 || recorded.managed.regionId !== "tonedial")) throw new OwnershipConflict(ctx.t.errors.ownershipConflict(path));
   return { path, id, destination, recorded };
 }
 
@@ -175,7 +178,7 @@ function rebuildLegacyDelivery(ctx: Ctx, tool: AgentTool, wiring: WiringV2, expl
         const exact: HookSpec = { matchers: [block.matcher], handler: block.hooks[0]! };
         const broad = ownedHook(remaining, command, path, ctx.t);
         const known = ownedHook(remaining, exact, path, ctx.t);
-        if (broad !== known) throw new ConfigError(ctx.t.errors.ownershipConflict(path));
+        if (broad !== known) throw new OwnershipConflict(ctx.t.errors.ownershipConflict(path));
         if (known !== null) remaining = withoutHook(remaining, exact, path, ctx.t, "document");
       } else {
         remaining = wiringRemoved(TARGETS[tool], remaining, where, path, ctx.t) ?? "";
@@ -184,11 +187,11 @@ function rebuildLegacyDelivery(ctx: Ctx, tool: AgentTool, wiring: WiringV2, expl
     const region = remaining === before && tool !== "codex" ? ownedDelivery(TARGETS[tool], before, locations[0]!, path, ctx.t) : null;
     const references = locations.flatMap((where) => [where.tonePath, where.toneAbsolute]);
     if (region !== null || references.some((value) => remaining.includes(value) || remaining.includes(JSON.stringify(value).slice(1, -1)))) {
-      throw new ConfigError(ctx.t.errors.ownershipConflict(path));
+      throw new OwnershipConflict(ctx.t.errors.ownershipConflict(path));
     }
     return remaining;
   }, ctx.t);
-  if (change.snapshot.symbolicLink) throw new ConfigError(ctx.t.errors.ownershipConflict(path));
+  if (change.snapshot.symbolicLink) throw new OwnershipConflict(ctx.t.errors.ownershipConflict(path));
   return { change: change.before === change.after ? null : { ...change, created: false, createdDir: false }, wiring };
 }
 
@@ -228,7 +231,7 @@ async function wireSelected(ctx: Ctx, requested: AgentTool[], rebuilding?: Nativ
         const allowed = [ctx.agent.hookFile(tool), ctx.agent.wiredFile(tool)].some(candidate =>
           canonicalResourcePath(path) === canonicalResourcePath(candidate) &&
           canonicalDestination(dirname(path)) === canonicalDestination(dirname(candidate)));
-        if (!allowed) throw new ConfigError(ctx.t.errors.ownershipConflict(path));
+        if (!allowed) throw new OwnershipConflict(ctx.t.errors.ownershipConflict(path));
       }
     }
     const legacy = rebuilding ? rebuildLegacyDelivery(ctx, tool, config.wiring, rebuilding.explicitTools) : null;
@@ -255,7 +258,7 @@ async function wireSelected(ctx: Ctx, requested: AgentTool[], rebuilding?: Nativ
     if (ctx.flags.commands || previous) {
       commandChange = planChange(ctx.agent.command("tone"), () => TONE_COMMAND_MD, ctx.t);
       if (commandChange.snapshot.symbolicLink || (commandChange.before !== null && (!previous || previous.expected.type !== "file" ||
-          previous.expected.sha256 !== contentHash(commandChange.before)))) throw new ConfigError(ctx.t.errors.ownershipConflict(commandChange.path));
+          previous.expected.sha256 !== contentHash(commandChange.before)))) throw new OwnershipConflict(ctx.t.errors.ownershipConflict(commandChange.path));
       if (previous) assertRecordedTextAccess(commandChange, previous, previous.accessPaths?.[id], ctx.t);
       config.wiring = recordFileChange(config.wiring, { target: "claude", scope: ctx.agent.live ? "global" : "project", destination: canonicalDestination(ctx.agent.root) },
         commandChange, "command", { version: TONE_COMMAND_VERSION }, ctx.t);
@@ -270,17 +273,17 @@ async function wireSelected(ctx: Ctx, requested: AgentTool[], rebuilding?: Nativ
     shellChange = planChange(selected.path, (before) => withPathLine(before, ctx.paths.bin, ctx.env.SHELL), ctx.t);
     if (plans.some((plan) => plan.change.realPath === shellChange!.realPath) || removals.some((change) => change.realPath === shellChange!.realPath) ||
         commandChange?.realPath === shellChange.realPath) {
-      throw new ConfigError(ctx.t.errors.ownershipConflict(selected.path));
+      throw new OwnershipConflict(ctx.t.errors.ownershipConflict(selected.path));
     }
     assertRegisteredFileChange(config.wiring, selected.id, shellChange, "shell", ctx.t);
     if (selected.recorded) {
       const expected = selected.recorded.expected;
       if (expected.type !== "file" || typeof expected.sha256 !== "string" || !/^[0-9a-f]{64}$/.test(expected.sha256) ||
           (shellChange.before !== null && shellChange.before !== shellChange.after && contentHash(shellChange.before) !== expected.sha256)) {
-        throw new ConfigError(ctx.t.errors.ownershipConflict(selected.path));
+        throw new OwnershipConflict(ctx.t.errors.ownershipConflict(selected.path));
       }
     } else if (pathLineState(shellChange.before, ctx.paths.bin, ctx.env.SHELL) === "stale") {
-      throw new ConfigError(ctx.t.errors.ownershipConflict(selected.path));
+      throw new OwnershipConflict(ctx.t.errors.ownershipConflict(selected.path));
     }
     config.wiring = recordFileChange(config.wiring, { target: "shell", scope: "global", destination: selected.destination },
       shellChange, "shell", { version: 1, regionId: "tonedial" }, ctx.t);
@@ -366,7 +369,8 @@ export async function runUnwire(ctx: Ctx, args: string[]): Promise<CommandResult
   const named = args[0] !== undefined ? selectTool(ctx, args[0]) : null;
   if (named === null && (ctx.flags.auto || !ctx.canPrompt)) {
     const flag = connectionScopeFlag(ctx.agent, ctx.cwd);
-    throw new ConfigError(ctx.t.errors.unwireToolsRequired(`tonedial unwire codex ${flag}`, `tonedial eject ${flag}`, ctx.flags.auto));
+    const commands = [`tonedial unwire codex ${flag}`, `tonedial eject ${flag}`];
+    throw new ConfigError(ctx.t.errors.unwireToolsRequired(commands[0]!, commands[1]!, ctx.flags.auto), { reason: "tools-required", commands });
   }
   requireDisconnectScope(ctx, `tonedial unwire${named ? ` ${named[0]}` : ""}`, named ?? undefined);
   return disconnect(ctx, named ?? await askTools(ctx, ctx.t.errors.unwireToolsPrompt));
@@ -379,7 +383,8 @@ export async function runUnwire(ctx: Ctx, args: string[]): Promise<CommandResult
 export function requireDisconnectScope(ctx: Ctx, command: string, tools?: readonly string[]): void {
   const scopeExplicit = ctx.scopeExplicit ?? (ctx.flags.global || ctx.flags.here === true || ctx.flags.project !== null);
   if (!scopeExplicit && folderConnections(planConfig(ctx).config, ctx.cwd, tools).length > 0) {
-    throw new ConfigError(ctx.t.errors.unwireScopeRequired(`${command} --here`, `${command} --global`));
+    const commands = [`${command} --here`, `${command} --global`];
+    throw new ConfigError(ctx.t.errors.unwireScopeRequired(commands[0]!, commands[1]!), { reason: "scope-required", commands });
   }
 }
 
@@ -440,7 +445,7 @@ export async function disconnect(ctx: Ctx, tools: AgentTool[], all = false): Pro
         const change = planChange(path, (before) => {
           if (before === null) return null;
           if (resource.kind === "command") {
-            if (contentHash(before) !== resource.expected.sha256) throw new ConfigError(ctx.t.errors.ownershipConflict(path));
+            if (contentHash(before) !== resource.expected.sha256) throw new OwnershipConflict(ctx.t.errors.ownershipConflict(path));
             return resource.created ? null : before;
           }
           const native = recordedHook(resource, registrationId);
@@ -448,7 +453,7 @@ export async function disconnect(ctx: Ctx, tools: AgentTool[], all = false): Pro
             const owned = ownedHook(before, native, path, ctx.t);
             const managed = resource.managedByRegistration?.[registrationId] ?? resource.managed;
             if (owned === null || contentHash(owned) !== managed.handlerSha256) {
-              throw new ConfigError(ctx.t.errors.ownershipConflict(path));
+              throw new OwnershipConflict(ctx.t.errors.ownershipConflict(path));
             }
             const sharedHandler = resource.consumers.some((consumer) => consumer !== registrationId
               && sameDelivery(recordedHook(resource, consumer), native));
@@ -460,7 +465,7 @@ export async function disconnect(ctx: Ctx, tools: AgentTool[], all = false): Pro
           const owned = shownPaths.map((where) => ownedDelivery(TARGETS[tool], before, where, path, ctx.t))
             .find((delivery) => delivery !== null) ?? null;
           if (owned !== null && contentHash(owned) !== resource.managed.handlerSha256) {
-            throw new ConfigError(ctx.t.errors.ownershipConflict(path));
+            throw new OwnershipConflict(ctx.t.errors.ownershipConflict(path));
           }
           return removeDelivery(tool, before, path);
         }, ctx.t);

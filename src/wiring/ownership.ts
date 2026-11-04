@@ -16,7 +16,7 @@ import type {
 } from "../core/config.ts";
 import { createHash } from "node:crypto";
 import type { Change } from "./apply.ts";
-import { ConfigError } from "../core/config.ts";
+import { OwnershipConflict } from "../core/config.ts";
 import type { Messages } from "../core/i18n.ts";
 import { canonicalResourcePath } from "../core/paths.ts";
 
@@ -69,7 +69,7 @@ export function assertRegisteredFileChange(
     const resource = wiring.resources[id]!;
     if (resource.kind !== kind) continue;
     const access = resource.accessPaths?.[registrationId];
-    if (!access) throw new ConfigError(t.errors.ownershipConflict(change.path));
+    if (!access) throw new OwnershipConflict(t.errors.ownershipConflict(change.path));
     // One shell registration may retain several rc files after a login-shell change.
     if (kind === "shell" && access.path !== change.path
       && canonicalResourcePath(access.path) !== canonicalResourcePath(change.path)) continue;
@@ -89,7 +89,7 @@ export function assertRecordedTextAccess(
   if (!access || change.realPath !== resource.path
     || change.snapshot.symbolicLink !== (access.type === "symlink")
     || (access.type === "symlink" && change.snapshot.linkTarget !== access.linkTarget)) {
-    throw new ConfigError(t.errors.ownershipConflict(access?.path ?? resource.path));
+    throw new OwnershipConflict(t.errors.ownershipConflict(access?.path ?? resource.path));
   }
 }
 

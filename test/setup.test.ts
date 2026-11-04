@@ -221,7 +221,9 @@ test("native setup refuses before touching an existing unowned tone command", as
   writeFileSync(command, ownCommand);
   const result = await invoke(["init", "--here", "--tools", "claude", "--commands", "--auto", "--json"]);
   assert.notEqual(result.code, 0, result.out + result.err);
-  assert.equal(JSON.parse(result.out).error, catalogue("en").cli.errors.ownershipConflict(command));
+  const refusal = JSON.parse(result.out);
+  assert.equal(refusal.error, `${catalogue("en").cli.errors.ownershipConflict(command)}\n  tonedial doctor --here`);
+  assert.deepEqual([refusal.reason, refusal.commands], ["ownership-conflict", ["tonedial doctor --here"]]);
   assert.equal(readFileSync(command, "utf8"), ownCommand);
   assert.equal(existsSync(resolvePaths(env).config), false);
   assert.equal(existsSync(resolvePaths(env).tone), false);
@@ -269,7 +271,7 @@ test("native wire preserves a foreign skill and succeeds after the collision is 
   writeFileSync(join(foreign, "SKILL.md"), "# My skill\n");
   const refused = await invoke(["wire", "--here", "codex", "--auto", "--json"]);
   assert.notEqual(refused.code, 0);
-  assert.equal(JSON.parse(refused.out).error, catalogue("en").cli.errors.ownershipConflict(foreign));
+  assert.equal(JSON.parse(refused.out).error, `${catalogue("en").cli.errors.ownershipConflict(foreign)}\n  tonedial doctor --here`);
   assert.equal(readFileSync(paths.config, "utf8"), before);
   assert.equal(existsSync(paths.skill), false);
   assert.equal(existsSync(join(scratch, "project", ".codex")), false);

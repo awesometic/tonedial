@@ -185,7 +185,27 @@ export function defaultConfig(): Config {
   };
 }
 
-export class ConfigError extends Error {}
+/**
+ * The user's own file or argument talking back. A refusal also names itself with a stable
+ * `reason` and the commands a person can choose, which JSON reports beside the message.
+ */
+export class ConfigError extends Error {
+  readonly reason: string | undefined;
+  readonly commands: readonly string[];
+  constructor(message?: string, options: ErrorOptions & { reason?: string; commands?: readonly string[] } = {}) {
+    const { reason, commands, ...error } = options;
+    super(message, error);
+    this.reason = reason;
+    this.commands = commands ?? [];
+  }
+}
+
+/** A file whose recorded ownership no longer matches. The CLI adds the scoped `doctor` command. */
+export class OwnershipConflict extends ConfigError {
+  constructor(message: string) {
+    super(message, { reason: "ownership-conflict" });
+  }
+}
 
 /** An object, and not an array — `typeof [] === "object"`, which let a JSON array through. */
 const isRecord = (v: unknown): v is Record<string, unknown> =>

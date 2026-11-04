@@ -2,7 +2,7 @@
 
 import { parseArgs } from "node:util";
 
-import { ConfigError, SETTING_KEYS, isConfigV2, nearest } from "./core/config.ts";
+import { ConfigError, OwnershipConflict, SETTING_KEYS, isConfigV2, nearest } from "./core/config.ts";
 import { AXIS_ORDER } from "./core/anchors.ts";
 import { compile } from "./core/compile.ts";
 import { toCompileInput } from "./core/resolve.ts";
@@ -612,6 +612,8 @@ export async function run(
     return fail(asJson, say.recovery.invalidOptions, 2, uiErr);
   }
 
+  // The invocation's scope, once resolved, names the diagnosis an ownership refusal ends with.
+  let scope: AgentPaths | null = null;
   try {
     const connection = CONNECTION_COMMANDS.includes(name);
     const scopeExplicit = flags.global || flags.here === true || flags.project !== null;
@@ -619,9 +621,10 @@ export async function run(
     const paths = resolvePaths(env);
     const t = messages(paths.config, env);
     const ctx: Ctx = { paths, cwd, flags, ui, agent, env, t, asJson, canPrompt: !asJson && interactive(), scopeExplicit };
+    scope = agent;
     // Init and doctor own recovery-first diagnosis before enforcing ordinary write intent.
     if (connection && name !== "doctor" && name !== "init" && flags.auto && !flags.dryRun && !scopeExplicit) {
-      throw new ConfigError(t.errors.scopeRequired);
+      throw new ConfigError(t.errors.scopeRequired, { reason: "scope-required" });
     }
     const scopeLabel = name === "doctor"
       ? (agent.live ? t.doctor.scopeGlobal : t.doctor.scope)
@@ -677,7 +680,12 @@ export async function run(
     // and nothing else. Anything else is a defect and keeps its stack.
     // A RegionError is someone else's file talking back — a marker they moved or duplicated —
     // which is the user's situation to fix and not a defect in this tool.
-    if (cause instanceof ConfigError || cause instanceof RangeError || cause instanceof RegionError || cause instanceof OperationError) {
+    if (cause instanceof OwnershipConflict && scope !== null) {
+      const doctor = `tonedial doctor ${connectionScopeFlag(scope, cwd)}`;
+      return fail(asJson, `${cause.message}\n  ${doctor}`, 1, uiErr, { reason: cause.reason, commands: [doctor] });
+    }
+    if (cause instanceof ConfigError) return fail(asJson, cause.message, 1, uiErr, cause);
+    if (cause instanceof RangeError || cause instanceof RegionError || cause instanceof OperationError) {
       return fail(asJson, (cause as Error).message, 1, uiErr);
     }
     throw cause;
@@ -699,10 +707,13 @@ function notice(message: string, ui: Palette): string {
     .join("\n") + "\n";
 }
 
-function fail(asJson: boolean, message: string, code: number, ui: Palette): number {
+/** A named refusal adds its `reason` and the commands it offers; other failures carry neither. */
+function fail(asJson: boolean, message: string, code: number, ui: Palette,
+  refusal: { reason: string | undefined; commands: readonly string[] } = { reason: undefined, commands: [] }): number {
   if (asJson) {
+    const named = refusal.reason === undefined ? {} : { reason: refusal.reason, commands: refusal.commands };
     process.stdout.write(
-      `${JSON.stringify({ schema: JSON_SCHEMA, ok: false, error: message, warnings: [] }, null, 2)}\n`,
+      `${JSON.stringify({ schema: JSON_SCHEMA, ok: false, error: message, ...named, warnings: [] }, null, 2)}\n`,
     );
   } else {
     // A standalone path is a copy target, not prose to split into unusable fragments.

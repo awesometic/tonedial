@@ -9,7 +9,7 @@ import { runAppRebuild } from "./rebuild.ts";
 import { runRebuildNative } from "./wire.ts";
 import { projectIsHome } from "../wiring/scopes.ts";
 import { activationStep } from "./test.ts";
-import { ConfigError, defaultConfig, requireConfigV2, safewordRejection, serializeConfig } from "../core/config.ts";
+import { ConfigError, OwnershipConflict, defaultConfig, requireConfigV2, safewordRejection, serializeConfig } from "../core/config.ts";
 import { compile, measure } from "../core/compile.ts";
 import { toCompileInput } from "../core/resolve.ts";
 import { catalogue, configLanguage, detectLanguage, isLanguage, LANGUAGES, type Language } from "../core/i18n.ts";
@@ -31,7 +31,8 @@ import { contentHash, recordFileChange, resourceKey } from "../wiring/ownership.
 
 export async function runInit(entry: Ctx, _args: string[]): Promise<CommandResult> {
   if (projectIsHome(entry.agent, entry.env)) {
-    throw new ConfigError(entry.t.wiring.projectIsHome(`tonedial init${entry.flags.tools ? ` --tools ${entry.flags.tools}` : ""} --global`));
+    const global = `tonedial init${entry.flags.tools ? ` --tools ${entry.flags.tools}` : ""} --global`;
+    throw new ConfigError(entry.t.wiring.projectIsHome(global), { reason: "home-directory", commands: [global] });
   }
   const operations = inspectOperations(entry.paths);
   const pending = operations.lock.state !== "none" || operations.journals.some(({ state }) => state === "pending" || state === "invalid");
@@ -46,13 +47,13 @@ export async function runInit(entry: Ctx, _args: string[]): Promise<CommandResul
     throw new ConfigError(entry.t.doctor.recoveryPending);
   }
   const scopeExplicit = entry.scopeExplicit ?? (entry.flags.global || entry.flags.here === true || entry.flags.project !== null);
-  if (entry.flags.auto && !entry.flags.dryRun && !scopeExplicit) throw new ConfigError(entry.t.errors.scopeRequired);
+  if (entry.flags.auto && !entry.flags.dryRun && !scopeExplicit) throw new ConfigError(entry.t.errors.scopeRequired, { reason: "scope-required" });
   // Everything down to `chooseLanguage` speaks `entry.t`, which came from the config or, when
   // there is no config yet, from the machine's locale. That is correct here and only here:
   // these refusals happen before `--lang` has been read, let alone validated.
   const selection = entry.flags.tools === null ? null : parseToolSelection(entry.flags.tools, true, entry.t);
   if (selection === null && (entry.flags.auto || !entry.canPrompt)) {
-    throw new ConfigError(entry.t.errors.toolsRequired);
+    throw new ConfigError(entry.t.errors.toolsRequired, { reason: "tools-required" });
   }
   if (entry.flags.commands && selection !== null && !selection.includes("claude")) {
     throw new ConfigError(entry.t.errors.commandsNeedClaude);
@@ -159,7 +160,7 @@ export async function runInit(entry: Ctx, _args: string[]): Promise<CommandResul
     const recorded = config.wiring.resources[resourceKey(commandChange.realPath, "command")];
     if (commandChange.snapshot.symbolicLink || (commandChange.before !== null
       && (recorded?.expected.type !== "file" || recorded.expected.sha256 !== contentHash(commandChange.before)))) {
-      throw new ConfigError(ctx.t.errors.ownershipConflict(commandChange.path));
+      throw new OwnershipConflict(ctx.t.errors.ownershipConflict(commandChange.path));
     }
     changes.push(commandChange);
   }
@@ -295,7 +296,7 @@ function scopeIntroduction(ctx: Ctx, heading: string): string[] {
 async function rebuildExisting(entry: Ctx): Promise<CommandResult> {
   const scopeExplicit = entry.scopeExplicit ?? (entry.flags.global || entry.flags.here === true || entry.flags.project !== null);
   const selection = entry.flags.tools === null ? null : parseToolSelection(entry.flags.tools, true, entry.t);
-  if (selection === null && (entry.flags.auto || !entry.canPrompt)) throw new ConfigError(entry.t.errors.toolsRequired);
+  if (selection === null && (entry.flags.auto || !entry.canPrompt)) throw new ConfigError(entry.t.errors.toolsRequired, { reason: "tools-required" });
   const language = chooseLanguage(entry);
   const copy = catalogue(language);
   const ctx: Ctx = { ...entry, t: copy.cli };
