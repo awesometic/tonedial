@@ -332,6 +332,7 @@ const messages: Messages = {
     toneMatches: "config.json と一致",
     toneNotWritten: "未書き込み",
     toneDisagrees: "config.json と不一致 · 直接編集か書き込み中断",
+    toneEarlierVersion: "以前の ToneDial で生成 · 設定は config.json と同じ",
     seedsHeading: "同梱ファイル",
     checkHeading: { context: "コンテキストファイル", reader: "リーダー", pathLine: "シェルのPATH行", onPath: "PATH上の tonedial", install: "インストール", claudeContext: "Claude Code のコンテキスト", skills: "スキル", skill: (label) => `${label} スキル` },
     fullDetails: "詳細を確認：",

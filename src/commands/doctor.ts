@@ -16,6 +16,7 @@ import { AGENT_TOOLS, CONTEXT_ARTIFACT_FILENAME, CONTEXT_GUIDE_FILENAME, UPDATE_
 import { SKILL_NAME } from "../core/skill.ts";
 import { GUIDE_FORMAT_MARKER } from "../core/reader.ts";
 import { DELIVERY_OFF_MARKER } from "../core/anchors.ts";
+import { recoverLegacyTone } from "../core/legacy-tone.ts";
 import { inspect as inspectSkill, skillPath } from "../wiring/skill.ts";
 import { candidateRcPaths, pathLineState, rcPath, withPathLine } from "../wiring/shell.ts";
 import {
@@ -551,6 +552,12 @@ function diagnoseNative(
   };
 }
 
+/** An earlier compiler's artifact for exactly these settings: a package update, not an edit. */
+function earlierVersionTone(onDisk: string, expected: string, t: Ctx["t"]): boolean {
+  const decoded = recoverLegacyTone(onDisk, t);
+  return decoded !== null && compile(toCompileInput(decoded.config)) === expected;
+}
+
 function failedContext(cause: ContextLayoutInspection["cause"] = "inspection"): ContextLayoutInspection {
   return {
     kind: "conflict",
@@ -818,7 +825,7 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true): Promise<Comm
           : {
               name: "TONE.md",
               state: "problem",
-              detail: ctx.t.doctor.toneDisagrees,
+              detail: earlierVersionTone(onDisk, expected, ctx.t) ? ctx.t.doctor.toneEarlierVersion : ctx.t.doctor.toneDisagrees,
               repair: repairCommand(ctx, "doctor --fix"),
             },
     );

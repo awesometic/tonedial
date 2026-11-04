@@ -332,6 +332,7 @@ const messages: Messages = {
     toneMatches: "与 config.json 一致",
     toneNotWritten: "未写入",
     toneDisagrees: "与 config.json 不同 · 可能被直接编辑或写入中断",
+    toneEarlierVersion: "由旧版 ToneDial 生成 · 设置与 config.json 相同",
     seedsHeading: "内置文件",
     checkHeading: { context: "上下文文件", reader: "读取器", pathLine: "Shell PATH 行", onPath: "PATH 中的 tonedial", install: "安装方式", claudeContext: "Claude Code 上下文", skills: "技能", skill: (label) => `${label} 技能` },
     fullDetails: "查看完整详情：",
