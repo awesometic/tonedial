@@ -9,13 +9,13 @@ import { toCompileInput } from "./core/resolve.ts";
 import { inspectContextLayout } from "./core/seeds.ts";
 import { OperationError } from "./core/operations.ts";
 import { RegionError } from "./wiring/region.ts";
-import { connectionScopeFlag, installShape, resolveAgentPaths, resolvePaths, type AgentPaths } from "./core/paths.ts";
+import { connectionScopeFlag, installShape, resolveAgentPaths, resolvePaths, shellQuote, type AgentPaths } from "./core/paths.ts";
 import { catalogue, configLanguage, detectLanguage, messages, type Catalogue, type Messages } from "./core/i18n.ts";
 import { isColourMode, palette, type Palette } from "./ui/style.ts";
 import { cells, maxCells, resolveBudget, wrap } from "./ui/width.ts";
 import { interactive } from "./ui/prompt.ts";
 import { humanText, isCopyableLine } from "./ui/format.ts";
-import type { Change } from "./wiring/apply.ts";
+import { ApprovalRequired, type Change } from "./wiring/apply.ts";
 
 import { planConfig, runCompile } from "./commands/compile.ts";
 import { runExport, runImport } from "./commands/transfer.ts";
@@ -138,6 +138,8 @@ export type Ctx = {
   canPrompt: boolean;
   /** User intent, distinct from the effective global default and an isolation override. */
   scopeExplicit?: boolean;
+  /** This invocation as a command to rerun, offered when approval was needed and nobody could give it. */
+  rerun?: string;
   /** Read-only context evidence revalidated with the command's eventual writes. */
   contextChecks?: readonly Change[];
 };
@@ -612,16 +614,16 @@ export async function run(
     return fail(asJson, say.recovery.invalidOptions, 2, uiErr);
   }
 
-  // The invocation's scope, once resolved, names the diagnosis an ownership refusal ends with.
-  let scope: AgentPaths | null = null;
+  // Once resolved, the invocation names what an ownership or approval refusal ends with.
+  let ctx: Ctx | null = null;
   try {
     const connection = CONNECTION_COMMANDS.includes(name);
     const scopeExplicit = flags.global || flags.here === true || flags.project !== null;
     const agent = resolveAgentPaths({ ...flags, global: flags.global || (connection && !scopeExplicit) }, env, cwd);
     const paths = resolvePaths(env);
     const t = messages(paths.config, env);
-    const ctx: Ctx = { paths, cwd, flags, ui, agent, env, t, asJson, canPrompt: !asJson && interactive(), scopeExplicit };
-    scope = agent;
+    ctx = { paths, cwd, flags, ui, agent, env, t, asJson, canPrompt: !asJson && interactive(), scopeExplicit,
+      rerun: rerunCommand(name, rest, flags, connection && flags.rollback === null ? connectionScopeFlag(agent, cwd) : null) };
     // Init and doctor own recovery-first diagnosis before enforcing ordinary write intent.
     if (connection && name !== "doctor" && name !== "init" && flags.auto && !flags.dryRun && !scopeExplicit) {
       throw new ConfigError(t.errors.scopeRequired, { reason: "scope-required" });
@@ -680,9 +682,13 @@ export async function run(
     // and nothing else. Anything else is a defect and keeps its stack.
     // A RegionError is someone else's file talking back — a marker they moved or duplicated —
     // which is the user's situation to fix and not a defect in this tool.
-    if (cause instanceof OwnershipConflict && scope !== null) {
-      const doctor = `tonedial doctor ${connectionScopeFlag(scope, cwd)}`;
+    if (cause instanceof OwnershipConflict && ctx !== null) {
+      const doctor = `tonedial doctor ${connectionScopeFlag(ctx.agent, cwd)}`;
       return fail(asJson, `${cause.message}\n  ${doctor}`, 1, uiErr, { reason: cause.reason, commands: [doctor] });
+    }
+    if (cause instanceof ApprovalRequired && ctx?.rerun !== undefined) {
+      const commands = [ctx.rerun, `${ctx.rerun} --dry-run`, `${ctx.rerun} --auto`];
+      return fail(asJson, cause.t.wiring.needsApproval(ctx.rerun), 1, uiErr, { reason: cause.reason, commands });
     }
     if (cause instanceof ConfigError) return fail(asJson, cause.message, 1, uiErr, cause);
     if (cause instanceof RangeError || cause instanceof RegionError || cause instanceof OperationError) {
@@ -705,6 +711,20 @@ function notice(message: string, ui: Palette): string {
   return folded
     .map((line, i) => (i === 0 ? `${ui.warn(MARKER)}${line}` : `${CONTINUATION}${line}`))
     .join("\n") + "\n";
+}
+
+/**
+ * The command a person reruns to repeat this invocation: its arguments and options, the
+ * effective `scope` spelled out (an unattended rerun needs it), and no approval or dry-run mode.
+ */
+function rerunCommand(name: string, args: string[], flags: Flags, scope: string | null): string {
+  const quote = (value: string) => /^[\w@%+=:,./-]+$/.test(value) ? value : `"${shellQuote(value)}"`;
+  const options = FLAG_NAMES.flatMap((flag) => {
+    if (flag === "auto" || flag === "dryRun" || scope !== null && (flag === "global" || flag === "here" || flag === "project")) return [];
+    const value = flags[flag];
+    return value === true ? [`--${FLAG_SPELLING[flag]}`] : typeof value === "string" ? [`--${FLAG_SPELLING[flag]} ${quote(value)}`] : [];
+  });
+  return ["tonedial", name, ...args.map(quote), ...options, ...(scope === null ? [] : [scope])].join(" ");
 }
 
 /** A named refusal adds its `reason` and the commands it offers; other failures carry neither. */

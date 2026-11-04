@@ -300,8 +300,7 @@ const messages: Messages = {
     projectFiles: (files) => `プロジェクトに書き込んだファイル：${files.join(", ")}\nフックにはこのマシンのパスが含まれます。バージョン管理から除外する（例：.git/info/exclude）か、意図する場合にのみコミットしてください。`,
     projectIsHome: (command) => `このフォルダーはホームディレクトリなので、プロジェクト接続はグローバルと同じファイルを使います。代わりにグローバル範囲で実行してください：\n  ${command}`,
     damaged: (path, reason) => `${path}: ${reason}。余分なマーカーを削除して eject を再実行してください。`,
-    needsApproval:
-      "ファイル変更には承認が必要です。ターミナルで実行するか、--dry-run で確認してから --auto で再実行してください。",
+    needsApproval: (command) => `ファイルの変更には承認が必要です。変更は適用していません。変更を確認して承認するには、ターミナルで再実行してください：\n  ${command}\nまたは、プレビューしてから確認なしで承認するには：\n  ${command} --dry-run\n  ${command} --auto`,
     projectExclude: ".gitignore を変えずにバージョン管理から除外するには：",
     newFile: "（新規ファイル）",
     newFileLines: (count) => `${count}行`,

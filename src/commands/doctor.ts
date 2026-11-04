@@ -30,7 +30,7 @@ import {
 import { toCompileInput } from "../core/resolve.ts";
 import { artifactSize, claudeContextCap, humanText, nextStep, offNotice, receiptLines, recoveryRollbackLines, section } from "../ui/format.ts";
 import { wrap } from "../ui/width.ts";
-import { applyRollback, assertFresh, planChange, previewRollback, type Change } from "../wiring/apply.ts";
+import { ApprovalRequired, applyRollback, assertFresh, planChange, previewRollback, type Change } from "../wiring/apply.ts";
 import { confirm } from "../ui/prompt.ts";
 import { RegionError, find } from "../wiring/region.ts";
 import { TARGETS, exactDelivery, inspectContextConsumers, orderedFingerprint, orderedHook, projectDuplicates, recordedHook, regionContent, wiredAt, type DeliveryDuplicate, type WiredAt } from "../wiring/targets.ts";
@@ -681,8 +681,7 @@ export async function runDoctor(ctx: Ctx, _args: string[]): Promise<CommandResul
     json: { ...app.json, root: ctx.agent.root, stateRoot: ctx.paths.root, agentRoot: ctx.agent.root,
       live: ctx.agent.live, fixed: false, appHealthy: false },
   };
-  const native = await runRebuildNative(ctx, app.legacy, undefined,
-    repairCommand(ctx, `doctor --fix${ctx.flags.tools !== null ? ` --tools ${ctx.flags.tools}` : ""}`));
+  const native = await runRebuildNative(ctx, app.legacy);
   const rollbackLines = recoveryRollbackLines(ctx.t, app.json.operationId, native.json.operationId);
   const report = await doctorReport(ctx, rollbackLines.length === 0);
   return {
@@ -1020,7 +1019,7 @@ async function runRollback(ctx: Ctx, operationId: string): Promise<CommandResult
     return { lines, json: { fixed: false, reason: ctx.flags.dryRun ? "dry-run" : preview.status, rollback: json } };
   }
   if (!ctx.flags.auto) {
-    if (!ctx.canPrompt) throw new ConfigError(ctx.t.wiring.needsApproval);
+    if (!ctx.canPrompt) throw new ApprovalRequired(ctx.t);
     process.stdout.write(`${lines.join("\n")}\n`);
     lines.length = 0;
     if (await confirm(`  ${ctx.t.doctor.rollbackQuestion}`) !== "yes") {

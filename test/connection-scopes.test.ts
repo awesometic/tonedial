@@ -558,3 +558,27 @@ test("JSON refusals name their reason and the commands they print", async () => 
   assert.equal(text.code, 1);
   assert.match(text.errors, /\n {2}tonedial doctor --global\n$/);
 });
+
+test("approval without a terminal names the exact rerun commands for each command", async () => {
+  const offered = (rerun: string) => [rerun, `${rerun} --dry-run`, `${rerun} --auto`];
+  const refusedWith = async (args: string[], rerun: string) => {
+    const text = await human(args);
+    assert.equal(text.code, 1, `${args.join(" ")}: ${text.errors}`);
+    for (const command of offered(rerun)) assert.match(text.errors, new RegExp(`^ {2}${command.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "m"), args.join(" "));
+    const machine = await invoke(args);
+    assert.equal(machine.code, 1, args.join(" "));
+    assert.deepEqual([machine.value.reason, machine.value.commands], ["approval-required", offered(rerun)], args.join(" "));
+  };
+  await refusedWith(["init", "--tools", "none", "--lang", "en"], "tonedial init --lang en --tools none --global");
+  assert.equal((await invoke(["init", "--tools", "none", "--global", "--auto"])).code, 0);
+  // The default scope is spelled out, since the unattended rerun needs it.
+  await refusedWith(["wire", "codex"], "tonedial wire codex --global");
+  await refusedWith(["wire", "--tools", "codex,claude", "--here"], "tonedial wire --tools codex,claude --here");
+  await refusedWith(["create", "Night Owl", "warmth=4"], 'tonedial create "Night Owl" warmth=4');
+  await refusedWith(["init", "--tools", "codex", "--global"], "tonedial init --tools codex --global");
+  assert.equal((await invoke(["wire", "codex", "--here", "--auto"])).code, 0);
+  await refusedWith(["unwire", "codex", "--here"], "tonedial unwire codex --here");
+  await refusedWith(["eject", "--project", project], "tonedial eject --here");
+  rmSync(resolvePaths(env).agents);
+  await refusedWith(["doctor", "--fix", "--here"], "tonedial doctor --fix --here");
+});

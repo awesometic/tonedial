@@ -2599,7 +2599,7 @@ export async function gate(changes: Change[], opts: GateOptions): Promise<GateRe
     if (!canAsk) {
       // Silence is not consent. A pipe cannot see the diff above, so assuming approval here
       // would make the unattended case the one with the least oversight.
-      throw new ApprovalRequired(opts.t.wiring.needsApproval);
+      throw new ApprovalRequired(opts.t);
     }
     const answer = await (opts.ask ?? confirm)(`  ${opts.t.wiring.applyQuestion(real.length + operationActions.length + finalReal.length)}`);
     if (answer === "no") return { applied: false, lines, reason: "declined", diff };
@@ -2753,10 +2753,15 @@ export async function gate(changes: Change[], opts: GateOptions): Promise<GateRe
 
 const defaultOut = (text: string) => process.stdout.write(text);
 
-/** Approval was needed and nobody could give it: nothing is wrong with the files. */
+/**
+ * Approval was needed and nobody could give it: nothing is wrong with the files. The CLI words
+ * it with the commands that rerun this invocation, in the catalogue `t` the plan was made in.
+ */
 export class ApprovalRequired extends ConfigError {
-  constructor(message: string, commands: readonly string[] = []) {
-    super(message, { reason: "approval-required", commands });
+  readonly t: Messages;
+  constructor(t: Messages) {
+    super("approval required", { reason: "approval-required" });
+    this.t = t;
   }
 }
 // The structured diff is unpainted: escape sequences are for a terminal, and a consumer reading

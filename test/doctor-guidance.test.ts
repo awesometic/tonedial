@@ -265,8 +265,8 @@ test("approval reruns keep the agent selection and options the user asked for", 
   assert.match(fixed.out, /^ {2,}tonedial doctor --fix --tools codex --global --auto$/m);
 
   const setup = await human(["init", "--tools", "claude", "--commands", "--global"]);
-  assert.match(setup.out, /^ {2,}tonedial init --tools claude --commands --global$/m, setup.out + setup.err);
-  assert.match(setup.out, /^ {2,}tonedial init --tools claude --commands --global --auto$/m);
+  assert.match(setup.out, /^ {2,}tonedial init --commands --tools claude --global$/m, setup.out + setup.err);
+  assert.match(setup.out, /^ {2,}tonedial init --commands --tools claude --global --auto$/m);
 });
 
 test("a hook left after a damaged config is restored is reported, then adopted exactly by doctor --fix --tools", async () => {

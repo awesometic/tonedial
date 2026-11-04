@@ -277,6 +277,11 @@ test("an unreadable operation record is quarantined through the repair gate and 
   assert.equal(inspectOperations(paths).journals.find(entry => entry.operationId === operationId)?.state, "quarantined");
   assert.notDeepEqual(readFileSync(path), original);
 
+  // Without a terminal the rollback waits for approval and offers its exact, unscoped reruns.
+  const rerun = `tonedial doctor --fix --rollback ${repaired.value.operationId}`;
+  const unapproved = await invoke(["doctor", "--fix", "--rollback", String(repaired.value.operationId)]);
+  assert.equal(unapproved.code, 1, unapproved.output);
+  assert.deepEqual([unapproved.value.reason, unapproved.value.commands], ["approval-required", [rerun, `${rerun} --dry-run`, `${rerun} --auto`]]);
   const rollback = await invoke(["doctor", "--fix", "--rollback", String(repaired.value.operationId), "--auto"]);
   assert.equal(rollback.code, 0, rollback.output);
   assert.deepEqual(readFileSync(path), original, "rollback did not restore the unreadable record bytes");

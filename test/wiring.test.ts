@@ -2194,7 +2194,7 @@ test("a live destination needs approval, and refuses when there is no terminal t
   // will not take. It holds at every destination now; the home is the one with the most at stake.
   err = [];
   assert.equal(await liveCli("init", "--lang", "en", "--tools", "none", "--global"), 1);
-  assert.ok(collapsed(stderr()).includes(collapsed(EN.wiring.needsApproval)));
+  assert.ok(collapsed(stderr()).includes(collapsed(EN.wiring.needsApproval("tonedial init --lang en --tools none --global"))));
   assert.equal(existsSync(liveHome(".claude")), false, "and it wrote nothing on the way to refusing");
 });
 

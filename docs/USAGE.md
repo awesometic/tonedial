@@ -401,6 +401,8 @@ tonedial doctor --here
 
 The plan writes nothing and launches no provider.
 Review proposed file changes before approving; `--verbose` includes the diff and `--auto` supplies approval without hiding the plan.
+Without a terminal to approve in, a command writes nothing and prints the commands that rerun it with the same agents, options and scope:
+in a terminal, with `--dry-run`, and with `--auto`; JSON reports them in `commands` with `reason: "approval-required"`.
 The preview names each path with its direction, such as `new file`, `modified`, `removed`, `new skill link` or `skill link removed`,
 and collapses three or more new files in one directory into a single block.
 The receipt then groups each agent's status, hook file and its own enablement step.

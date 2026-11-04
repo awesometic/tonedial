@@ -300,8 +300,7 @@ const messages: Messages = {
     projectFiles: (files) => `已写入项目的文件：${files.join(", ")}\n钩子中包含本机路径。请将其排除在版本管理之外（例如 .git/info/exclude），或仅在确有需要时提交。`,
     projectIsHome: (command) => `此文件夹是主目录，项目连接会使用与全局相同的文件。请改用全局范围：\n  ${command}`,
     damaged: (path, reason) => `${path}：${reason}。请移除多余标记后重新运行 eject。`,
-    needsApproval:
-      "文件变更需要批准。请在终端运行，或先用 --dry-run 检查，再用 --auto 重新运行。",
+    needsApproval: (command) => `文件更改需要批准，尚未应用。要查看并批准更改，请在终端中重新运行：\n  ${command}\n或者先预览，再不经询问直接批准：\n  ${command} --dry-run\n  ${command} --auto`,
     projectExclude: "若要在不修改 .gitignore 的情况下排除版本管理：",
     newFile: "（新文件）",
     newFileLines: (count) => `${count} 行`,

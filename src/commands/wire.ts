@@ -88,8 +88,7 @@ class NativeOperationPending extends Error {
 }
 
 /** The new data owner does not infer permission to alter an external consumer. */
-/** `rerun` is the caller's command line, offered when approval was needed and nobody could give it. */
-export async function runRebuildNative(ctx: Ctx, legacy: LegacyOwnershipEvidence | null = null, previewConfig?: ConfigV2, rerun?: string): Promise<CommandResult> {
+export async function runRebuildNative(ctx: Ctx, legacy: LegacyOwnershipEvidence | null = null, previewConfig?: ConfigV2): Promise<CommandResult> {
   let tools: AgentTool[] = [];
   const explicitTools = ctx.flags.tools !== null;
   const pendingLines = receiptLines(ctx.t.recovery.nativePending, ctx.ui.width - 2).map(line => `  ${ctx.ui.warn(line)}`);
@@ -131,8 +130,8 @@ export async function runRebuildNative(ctx: Ctx, legacy: LegacyOwnershipEvidence
       : cause instanceof ApprovalRequired ? "approval-required"
       : cause instanceof ConfigError ? "protected-native-resource" : "native-phase-failed";
     return {
-      lines: reason === "approval-required" && rerun !== undefined
-        ? receiptLines(ctx.t.recovery.nativeApproval(rerun), ctx.ui.width - 2).map(line => `  ${line}`) : pendingLines,
+      lines: reason === "approval-required" && ctx.rerun !== undefined
+        ? receiptLines(ctx.t.recovery.nativeApproval(ctx.rerun), ctx.ui.width - 2).map(line => `  ${line}`) : pendingLines,
       json: { nativeRepair: "attention", applied: false, reason, tools,
         attention: true, issues: [{ tool: null, reason }], activation: "unverified",
         ...(cause instanceof NativeOperationPending ? { operationId: cause.operationId } : {}) },

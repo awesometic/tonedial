@@ -368,7 +368,7 @@ export type Messages = {
     projectFiles: (files: string[]) => string;
     projectIsHome: (command: string) => string;
     damaged: (path: string, reason: string) => string;
-    needsApproval: string;
+    needsApproval: (command: string) => string;
     projectExclude: string;
     newFile: string;
     modifiedFile: string;
@@ -973,8 +973,7 @@ const enMessages: Messages = {
     projectFiles: (files) => `Project files written: ${files.join(", ")}\nTheir hooks run ToneDial with paths from this machine. Keep them out of version control (for example with .git/info/exclude), or commit them only if you mean to.`,
     projectIsHome: (command) => `This folder is your home directory, so a project connection here would use the global files. Use the global scope instead:\n  ${command}`,
     damaged: (path, reason) => `${path}: ${reason}. Remove the stray marker, then run eject again.`,
-    needsApproval:
-      "File changes require approval. Run in a terminal, or review with --dry-run before rerunning with --auto.",
+    needsApproval: (command) => `File changes not applied · approval required. To review and approve them, rerun in a terminal:\n  ${command}\nOr preview them, then approve without prompting:\n  ${command} --dry-run\n  ${command} --auto`,
     projectExclude: "to keep it out of version control without touching .gitignore:",
     newFile: "(new file)",
     newFileLines: (count) => `${count} line${count === 1 ? "" : "s"}`,
@@ -1759,8 +1758,7 @@ const koMessages: Messages = {
     projectFiles: (files) => `프로젝트에 기록한 파일: ${files.join(", ")}\n훅에는 이 컴퓨터의 경로가 들어 있습니다. 버전 관리에서 제외하거나(예: .git/info/exclude), 의도한 경우에만 커밋하세요.`,
     projectIsHome: (command) => `이 폴더는 홈 디렉터리라서 프로젝트 연결이 전역 연결과 같은 파일을 씁니다. 대신 전역 범위로 실행하세요:\n  ${command}`,
     damaged: (path, reason) => `${path}: ${reason}. 남은 마커를 지운 뒤 eject를 다시 실행해 주세요`,
-    needsApproval:
-      "파일을 바꾸려면 승인이 필요합니다. 터미널에서 실행하거나 --dry-run으로 변경 내용을 확인한 뒤 --auto로 다시 실행해 주세요",
+    needsApproval: (command) => `파일 변경은 승인이 필요해 적용하지 않았습니다. 변경 내용을 확인하고 승인하려면 터미널에서 다시 실행하세요:\n  ${command}\n또는 미리 본 다음 묻지 않고 승인하세요:\n  ${command} --dry-run\n  ${command} --auto`,
     projectExclude: ".gitignore를 건드리지 않고 버전 관리에서 빼려면:",
     newFile: "(새 파일)",
     newFileLines: (count) => `${count}줄`,
