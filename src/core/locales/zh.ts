@@ -298,7 +298,7 @@ const messages: Messages = {
     deleteYourself: "如需同时删除状态，请自行删除此目录",
     nothingWired: "此范围内无连接 · 无需断开",
     projectFiles: (files) => `已写入项目的文件：${files.join(", ")}\n钩子中包含本机路径。请将其排除在版本管理之外（例如 .git/info/exclude），或仅在确有需要时提交。`,
-    projectIsHome: (command) => `此文件夹是主目录，项目连接会使用与全局相同的文件。请改为全局连接：\n  ${command}`,
+    projectIsHome: (command) => `此文件夹是主目录，项目连接会使用与全局相同的文件。请改用全局范围：\n  ${command}`,
     damaged: (path, reason) => `${path}：${reason}。请移除多余标记后重新运行 eject。`,
     needsApproval:
       "文件变更需要批准。请在终端运行，或先用 --dry-run 检查，再用 --auto 重新运行。",

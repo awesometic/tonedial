@@ -238,6 +238,12 @@ test("bare unwire outside a terminal refuses with an example and leaves eject as
   }
   assert.equal(readFileSync(paths.config, "utf8"), config);
   assert.equal(existsSync(join(env.HOME!, ".codex", "hooks.json")), true);
+  // In a folder with its own connection, the example names that agent here.
+  assert.equal((await invoke(["wire", "claude", "--here", "--auto"])).code, 0);
+  const folder = await invoke(["unwire"]);
+  assert.equal(folder.code, 1, JSON.stringify(folder.value));
+  assert.deepEqual(folder.value.commands, ["tonedial unwire claude --here", "tonedial eject --here"]);
+  assert.equal((await invoke(["unwire", "--global"])).value.commands[0], "tonedial unwire codex --global", "an explicit scope keeps its own");
   const ejected = await invoke(["eject", "--global", "--auto"]);
   assert.equal(ejected.code, 0, JSON.stringify(ejected.value));
   assert.equal(existsSync(join(env.HOME!, ".codex", "hooks.json")), false);
@@ -284,20 +290,30 @@ test("project wiring names the files it wrote and the version-control choice; gl
   assert.doesNotMatch(global.output, /Project files written|paths from this machine/);
 });
 
-test("project wiring in the home directory explains that it is the global destination", async () => {
+test("a project scope in the home directory refuses for every connection command and names the global one", async () => {
   const home = env.HOME!;
   assert.equal((await invoke(["init", "--global", "--tools", "codex", "--auto"])).code, 0);
   const paths = resolvePaths(env);
   const config = readFileSync(paths.config, "utf8");
-  for (const [args, cwd] of [[["wire", "codex", "--here", "--auto"], home], [["wire", "claude", "--here", "--dry-run"], home],
-    [["wire", "claude", "--project", home, "--auto"], project]] as const) {
+  const hook = readFileSync(join(home, ".codex", "hooks.json"), "utf8");
+  for (const [args, cwd, global] of [
+    [["wire", "codex", "--here", "--auto"], home, "tonedial wire codex --global"],
+    [["wire", "claude", "--here", "--dry-run"], home, "tonedial wire claude --global"],
+    [["wire", "claude", "--project", home, "--auto"], project, "tonedial wire claude --global"],
+    // Disconnecting there would otherwise report "already disconnected" beside a live global hook.
+    [["unwire", "codex", "--here", "--auto"], home, "tonedial unwire codex --global"],
+    [["unwire", "--here"], home, "tonedial unwire --global"],
+    [["eject", "--here", "--dry-run"], home, "tonedial eject --global"],
+    [["eject", "--project", home, "--auto"], project, "tonedial eject --global"],
+  ] as const) {
     const refused = await human([...args], {}, cwd);
     assert.equal(refused.code, 1, args.join(" "));
-    assert.doesNotMatch(refused.errors, /Ownership is unknown/);
+    assert.doesNotMatch(refused.errors, /Ownership is unknown|already disconnected/);
     assert.match(refused.errors, /home directory/);
-    assert.match(refused.errors, new RegExp(`^  tonedial wire ${args[1]} --global$`, "m"));
+    assert.match(refused.errors, new RegExp(`^  ${global}$`, "m"), args.join(" "));
   }
   assert.equal(readFileSync(paths.config, "utf8"), config);
+  assert.equal(readFileSync(join(home, ".codex", "hooks.json"), "utf8"), hook);
   assert.equal(existsSync(join(home, ".claude")), false);
 });
 

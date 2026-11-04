@@ -156,7 +156,9 @@ test("the traits reference leaves host reply styles to the compiled mixing rule"
 
 test("the skill names the disconnect routes and the unscoped unwire and eject refusal", () => {
   assert.match(SKILL_MD, /`unwire <tool>` disconnects one agent; `eject` disconnects every agent in a scope/);
-  assert.match(SKILL_MD, /`unwire <tool>` and `eject` refuse in a folder that has its own project\s+connections/);
+  assert.match(SKILL_MD, /`unwire <tool>` refuses in a folder that has its own connection for that\s+agent, and `eject` in a folder with any project connection of its own/);
+  assert.match(SKILL_MD, /Otherwise a dry run still refuses wherever the real run would/);
+  assert.match(SKILL_MD, /A project scope in the home directory refuses and offers\s+the `--global` command/);
   assert.match(SKILL_MD, /`show --json` lists every recorded connection's `target`, `scope` and `destination`/);
 });
 

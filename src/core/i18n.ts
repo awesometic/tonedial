@@ -971,7 +971,7 @@ const enMessages: Messages = {
     deleteYourself: "to remove state too, delete this directory yourself",
     nothingWired: "No connections in this scope · nothing to disconnect",
     projectFiles: (files) => `Project files written: ${files.join(", ")}\nTheir hooks run ToneDial with paths from this machine. Keep them out of version control (for example with .git/info/exclude), or commit them only if you mean to.`,
-    projectIsHome: (command) => `This folder is your home directory, so a project connection here would use the global files. Connect globally instead:\n  ${command}`,
+    projectIsHome: (command) => `This folder is your home directory, so a project connection here would use the global files. Use the global scope instead:\n  ${command}`,
     damaged: (path, reason) => `${path}: ${reason}. Remove the stray marker, then run eject again.`,
     needsApproval:
       "File changes require approval. Run in a terminal, or review with --dry-run before rerunning with --auto.",
@@ -1757,7 +1757,7 @@ const koMessages: Messages = {
     deleteYourself: "상태까지 지우려면 이 디렉터리를 직접 삭제해 주세요",
     nothingWired: "이 범위에 연결된 항목 없음 · 해제할 것 없음",
     projectFiles: (files) => `프로젝트에 기록한 파일: ${files.join(", ")}\n훅에는 이 컴퓨터의 경로가 들어 있습니다. 버전 관리에서 제외하거나(예: .git/info/exclude), 의도한 경우에만 커밋하세요.`,
-    projectIsHome: (command) => `이 폴더는 홈 디렉터리라서 프로젝트 연결이 전역 연결과 같은 파일을 씁니다. 전역으로 연결하세요:\n  ${command}`,
+    projectIsHome: (command) => `이 폴더는 홈 디렉터리라서 프로젝트 연결이 전역 연결과 같은 파일을 씁니다. 대신 전역 범위로 실행하세요:\n  ${command}`,
     damaged: (path, reason) => `${path}: ${reason}. 남은 마커를 지운 뒤 eject를 다시 실행해 주세요`,
     needsApproval:
       "파일을 바꾸려면 승인이 필요합니다. 터미널에서 실행하거나 --dry-run으로 변경 내용을 확인한 뒤 --auto로 다시 실행해 주세요",

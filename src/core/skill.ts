@@ -219,12 +219,15 @@ A global connection already serves every folder: \`wire <tool> --here\` beside i
 marks that agent \`covered: true\`. To keep the tone in one project only, offer \`unwire <tool> --global\`,
 then \`wire <tool> --here\` in that project. \`unwire <tool> --global\` also removes project connections an
 earlier version recorded on the global hook; its JSON lists them in \`alsoDisconnected\`.
-Without a scope flag, \`unwire <tool>\` and \`eject\` refuse in a folder that has its own project
-connections, so pass the scope the user chose rather than retrying with \`--global\`.
+Without a scope flag, \`unwire <tool>\` refuses in a folder that has its own connection for that
+agent, and \`eject\` in a folder with any project connection of its own; pass the scope the user
+chose rather than retrying with \`--global\`. A project scope in the home directory refuses and offers
+the \`--global\` command, since it names the global files.
 
 Ordinary unattended connection writes require an explicit scope with \`--auto\`.
 Read-only diagnosis, \`--dry-run\`, and \`doctor --fix --rollback <id>\` are exceptions:
 rollback selects the recorded operation's paths, not whichever project is current.
+Otherwise a dry run still refuses wherever the real run would.
 Use the same CLI environment throughout, especially when \`TONEDIAL_HOME\` is set.
 
 When a mutation or reload is blocked, report its read-only diagnosis.

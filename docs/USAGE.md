@@ -417,11 +417,13 @@ Use the same scope for `init`, `wire`, `doctor`, `unwire` and `eject`.
 After a project `wire`, the receipt names the project files it wrote.
 Their hooks run ToneDial with paths from this machine, so keep them out of version control
 (for example with `.git/info/exclude`), or commit them only if you mean to.
-In your home directory a project scope would use the global files, so `wire --here` and `init --here` there stop and show the `--global` command.
+In your home directory a project scope would use the global files,
+so `init`, `wire`, `unwire` and `eject` with `--here` there stop and show the `--global` command.
 Hosts load global hooks and skills in every folder.
 Beside a global connection for the same agent, `wire <tool> --here` and `init --here` write and record nothing for it,
 and show the two commands that keep the tone in this project only; JSON marks that agent `covered: true`.
-In a folder with its own connections, `unwire <tool>` and `eject` without a scope flag stop and show the `--here` and `--global` commands.
+Without a scope flag, `unwire <tool>` stops in a folder with its own connection for that agent,
+and `eject` in a folder with any connection of its own; both show the `--here` and `--global` commands.
 The scope chooses wiring destinations, not another tone or profile library.
 `use --project` instead exports `.tonedial/TONE.md`; `test --project` selects a conversation folder.
 
@@ -437,7 +439,8 @@ tonedial show --json
 
 With delivery on and no agent connected, `init`, `use` and `create` end with `tonedial test` for an installed Claude Code or Codex, otherwise with `tonedial wire`.
 Unattended setup needs explicit tools; ordinary unattended connection writes also need explicit scope, including state-only init and `doctor --fix`.
-Read-only doctor, dry runs and operation-ID rollback retain their scope exceptions.
+Read-only doctor, dry runs and operation-ID rollback need no explicit scope under `--auto`.
+Otherwise a dry run stops wherever the real run would, such as an unscoped `unwire <tool>` in a folder with its own connection for that agent.
 `--auto` never chooses tools by detection; JSON never prompts.
 
 ### Native routes
@@ -524,8 +527,9 @@ tonedial eject --here
 ```
 
 `unwire <tool>` disconnects one agent and `eject` every agent in the scope.
-`unwire` without a tool shows the same picker as `wire` in a terminal; without a terminal it stops and shows an example.
-Without a scope flag, `unwire <tool>` stops in a folder that has its own project connections
+`unwire` without a tool shows the same picker as `wire` in a terminal;
+without a terminal it stops and shows an example, with `--here` in a folder that has its own connections.
+Without a scope flag, `unwire <tool>` stops in a folder that has its own connection for that agent
 and shows the `--here` and `--global` commands; elsewhere it disconnects the global connection.
 Removal preserves shared state, profiles, CLI, shell PATH, other scopes/consumers and changed or ambiguous foreign resources.
 Versions before 0.1.14 recorded a project connected beside a global one on the global hook.

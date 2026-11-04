@@ -298,7 +298,7 @@ const messages: Messages = {
     deleteYourself: "Para eliminar también el estado, borra este directorio manualmente",
     nothingWired: "No hay conexiones en este ámbito · nada que desconectar",
     projectFiles: (files) => `Archivos escritos en el proyecto: ${files.join(", ")}\nSus hooks ejecutan ToneDial con rutas de esta máquina. Exclúyelos del control de versiones (por ejemplo con .git/info/exclude) o confírmalos solo si es lo que quieres.`,
-    projectIsHome: (command) => `Esta carpeta es tu directorio personal, así que una conexión de proyecto usaría los mismos archivos que la global. Conecta de forma global:\n  ${command}`,
+    projectIsHome: (command) => `Esta carpeta es tu directorio personal, así que una conexión de proyecto usaría los mismos archivos que la global. Usa el ámbito global:\n  ${command}`,
     damaged: (path, reason) => `${path}: ${reason}. Elimina el marcador suelto y vuelve a ejecutar eject.`,
     needsApproval:
       "Los cambios de archivos requieren aprobación. Ejecuta en un terminal o revisa con --dry-run antes de repetir con --auto.",

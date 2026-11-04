@@ -28,7 +28,7 @@ import { assertRecordedTextAccess, assertRegisteredFileChange, contentHash, deta
 import { pathLineState, rcPath, withPathLine } from "../wiring/shell.ts";
 import { humanText, nativeSetup, receiptLines } from "../ui/format.ts";
 import { pickTools } from "../ui/prompt.ts";
-import { connectionsInScope, globalCover, refuseHomeProject, refuseUnscopedDisconnect, riders, type Connection } from "../wiring/scopes.ts";
+import { connectionsInScope, folderConnections, globalCover, refuseHomeProject, refuseUnscopedDisconnect, riders, type Connection } from "../wiring/scopes.ts";
 import { planConfig } from "./compile.ts";
 
 /** The positional form names one target; lists belong to --tools. */
@@ -364,12 +364,16 @@ async function wireSelected(ctx: Ctx, requested: AgentTool[], rebuilding?: Nativ
  */
 export async function runUnwire(ctx: Ctx, args: string[]): Promise<CommandResult> {
   const named = args[0] !== undefined ? selectTool(ctx, args[0]) : null;
+  refuseHomeProject(ctx.agent, ctx.env, `tonedial unwire${named ? ` ${named[0]}` : ""} --global`, ctx.t);
+  const explicit = ctx.scopeExplicit ?? (ctx.flags.global || ctx.flags.here === true || ctx.flags.project !== null);
   if (named === null && (ctx.flags.auto || !ctx.canPrompt)) {
-    const flag = connectionScopeFlag(ctx.agent, ctx.cwd);
-    const commands = [`tonedial unwire codex ${flag}`, `tonedial eject ${flag}`];
+    // Without a scope flag, a folder with its own connections is the one the example names.
+    const own = explicit ? [] : folderConnections(planConfig(ctx).config, ctx.cwd);
+    const flag = own.length ? "--here" : connectionScopeFlag(ctx.agent, ctx.cwd);
+    const commands = [`tonedial unwire ${own[0]?.target ?? "codex"} ${flag}`, `tonedial eject ${flag}`];
     throw new ConfigError(ctx.t.errors.unwireToolsRequired(commands[0]!, commands[1]!, ctx.flags.auto), { reason: "tools-required", commands });
   }
-  if (!(ctx.scopeExplicit ?? (ctx.flags.global || ctx.flags.here === true || ctx.flags.project !== null))) {
+  if (!explicit) {
     refuseUnscopedDisconnect(planConfig(ctx).config, ctx.cwd, `tonedial unwire${named ? ` ${named[0]}` : ""}`, ctx.t, named ?? undefined);
   }
   return disconnect(ctx, named ?? await askTools(ctx, ctx.t.errors.unwireToolsPrompt));
