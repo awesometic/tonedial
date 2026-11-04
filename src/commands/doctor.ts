@@ -896,6 +896,9 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true): Promise<Comm
     name: "reader",
     state: reader.state === "missing" || reader.state === "unrunnable" ? "problem" : "note",
     detail: [ctx.t.doctor.readerState[reader.state], readerReason].filter(Boolean).join(" "),
+    // The same bundled-file causes that seedCheck() repairs; a probe failure is retried instead.
+    ...(reader.reason === "missing" || reader.reason === "stale" || reader.reason === "modified"
+      ? { repair: repairCommand(ctx, "doctor --fix") } : {}),
   });
   for (const tool of AGENT_TOOLS) {
     if (!isConfigV2(config) || !config.wiring.registrations[registrationKey(tool, scope, destination)]) continue;

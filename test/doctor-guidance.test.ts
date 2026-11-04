@@ -131,6 +131,25 @@ test("a TONE.md an earlier version wrote from the same settings says so, not tha
   assert.equal(interrupted.at(-1), "tonedial doctor --fix --global");
 });
 
+test("a reader an update left behind ends with the doctor --fix that refreshes it", async () => {
+  assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
+  // A bundled reader recorded at an earlier seed version, as an older package left it.
+  const config = join(home, ".tonedial", "config.json");
+  const saved = JSON.parse(readFileSync(config, "utf8"));
+  saved.managedSeeds.reader.version -= 1;
+  writeFileSync(config, JSON.stringify(saved));
+
+  const reader = block((await human(["doctor", "--global"])).out, "Reader");
+  assert.match(reader.join(" "), /Reader self-test failed\. Bundled file update available/);
+  assert.equal(reader.at(-1), "tonedial doctor --fix --global");
+  const check = (await json(["doctor", "--global"])).value.checks.find((row: { name: string }) => row.name === "reader");
+  assert.equal(check.repair, "tonedial doctor --fix --global");
+
+  assert.equal((await human(["doctor", "--fix", "--global", "--auto"])).code, 0);
+  const after = (await json(["doctor", "--global"])).value.checks.find((row: { name: string }) => row.name === "reader");
+  assert.deepEqual([after.state, after.repair], ["note", null]);
+});
+
 test("a connected agent shows one state: connected, with enablement that files cannot show", async () => {
   mkdirSync(join(home, ".claude"));
   assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
