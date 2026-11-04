@@ -8,6 +8,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { run } from "../src/cli.ts";
+import { addLegacyRider } from "./support/legacy-fixture.ts";
 
 let scratch: string;
 let home: string;
@@ -171,9 +172,9 @@ test("doctor reports a project hook that duplicates the global one, in both scop
   }
 });
 
-test("a project that inherits the global hook is not reported as a duplicate", async () => {
+test("a project recorded on the global hook is not reported as a duplicate", async () => {
   assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
-  assert.equal((await human(["wire", "codex", "--here", "--auto"], project)).code, 0);
+  await addLegacyRider(env, "codex", project);
   for (const [args, cwd] of [[["doctor", "--global"], home], [["doctor", "--here"], project]] as const) {
     const machine = await json([...args], cwd);
     assert.deepEqual(machine.value.integrations.find((row: { tool: string }) => row.tool === "codex").duplicates, []);

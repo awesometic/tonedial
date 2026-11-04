@@ -246,7 +246,7 @@ test("a fresh init composes every line in the language it was asked for", async 
 });
 
 for (const language of LANGUAGES) {
-  test(`native receipts show inherited configuration and the Codex action in ${language}`, async () => {
+  test(`native receipts show the global cover and the Codex action in ${language}`, async () => {
     mkdirSync(join(home, "project"));
     assert.equal(await cli("init", "--global", "--tools", "codex", "--lang", language, "--auto"), 0, err.join(""));
     const global = out.join("");
@@ -257,12 +257,11 @@ for (const language of LANGUAGES) {
     assert.equal(await cli("wire", "--here", "codex", "--auto"), 0, err.join(""));
     const inherited = out.join("");
     const localized = catalogue(language).cli;
-    const [inheritedBefore, inheritedAfter] = localized.wiring.hookInherited("Codex CLI", "__path__").split("__path__");
-    const flattened = inherited.replace(/\s+/g, " ");
-    assert.ok(flattened.includes(inheritedBefore!.trim()));
-    assert.ok(flattened.includes(inheritedAfter!.trim()));
-    assert.match(flattened, /\/hooks → SessionStart → ToneDial/);
-    assert.doesNotMatch(flattened, /App activation is unverified|앱 활성화는 확인하지 않았습니다/);
+    const joined = inherited.replace(/\s+/g, "");
+    assert.ok(joined.includes(localized.wiring.globalCovers("Codex CLI").replace(/\s+/g, "")), inherited);
+    assert.ok(joined.includes(localized.wiring.keepProjectOnly(true).replace(/\s+/g, "")), inherited);
+    assert.match(inherited, /^ {2}tonedial unwire codex --global\n {2}tonedial wire codex --here$/m);
+    assert.doesNotMatch(inherited, /App activation is unverified|앱 활성화는 확인하지 않았습니다/);
     const receipt = inherited.slice(inherited.indexOf("  Codex CLI:"));
     for (const line of receipt.split("\n")) assert.ok(cells(line) <= UNKNOWN_WIDTH || isUnbreakable(line), line);
     out = [];
@@ -270,6 +269,7 @@ for (const language of LANGUAGES) {
     const json = JSON.parse(out.join(""));
     assert.equal(json.root, join(home, "project"));
     assert.equal(json.tools[0].inherited, true);
+    assert.equal(json.tools[0].covered, true);
     assert.equal(json.tools[0].path, join(home, ".codex", "hooks.json"));
     assert.equal(json.tools[0].activation, "unverified");
     assert.equal(json.tools[0].configuration, "configured");
@@ -305,12 +305,13 @@ for (const language of LANGUAGES) {
     const sharedTrust = localized.wiring.claudeTrust(true);
     // Folding may break CJK prose without a space, so compare with whitespace removed.
     const flat = (text: string) => text.replace(/\s+/g, "");
-    assert.equal(await cli("init", "--global", "--tools", "claude", "--lang", language, "--auto"), 0, err.join(""));
+    // Project first: a project beside an existing global connection gets nothing to trust.
+    assert.equal(await cli("init", "--here", "--tools", "claude", "--lang", language, "--auto"), 0, err.join(""));
+    assert.ok(flat(out.join("")).includes(flat(projectTrust!)), `${language}: project receipt lost its trust step`);
+    out = [];
+    assert.equal(await cli("wire", "--global", "claude", "--auto"), 0, err.join(""));
     assert.ok(flat(out.join("")).includes(flat(sharedTrust!)), `${language}: global receipt lost the trust rule`);
     assert.ok(!flat(out.join("")).includes(flat(projectTrust!)), `${language}: global receipt named one project`);
-    out = [];
-    assert.equal(await cli("wire", "--here", "claude", "--auto"), 0, err.join(""));
-    assert.ok(flat(out.join("")).includes(flat(projectTrust!)), `${language}: project receipt lost its trust step`);
   });
 }
 
@@ -1207,8 +1208,7 @@ for (const language of LANGUAGES) {
     };
     // Only init takes the language; every later command reads it back from the saved state.
     assert.equal(await collect("init", "--global", "--tools", "codex", "--lang", language, "--auto"), 0, err.join(""));
-    // A project reached through a long path: the inherited receipt, the duplicate report, and
-    // doctor's own rows all name it.
+    // A project reached through a long path: the covered receipt and doctor's own rows name it.
     assert.equal(await collect("wire", "codex", "--project", deep, "--auto"), 0, err.join(""));
     assert.equal(await collect("doctor", "--project", deep), 0, err.join(""));
     assert.equal(await collect("unwire", "codex", "--project", deep, "--auto"), 0, err.join(""));

@@ -255,7 +255,10 @@ const messages: Messages = {
     finalNewlineRemoved: "(salto de línea final eliminado)",
     previewMore: "Diferencias completas: --verbose",
     hookConfigured: (tool, path) => `${tool}: hook configurado\n${path}`,
-    hookInherited: (tool, path) => `${tool}: usa el hook global; no se añadió uno al proyecto\n${path}`,
+    globalCovers: (tools) => `${tools}: esta carpeta ya recibe el tono por la conexión global · no se añadió nada`,
+    keepProjectOnly: (here) => here
+      ? "Para conectar solo este proyecto, desconecta primero la conexión global y luego conecta esta carpeta:"
+      : "Para conectar solo ese proyecto, desconecta primero la conexión global y luego ejecuta esto dentro de esa carpeta:",
     hookDuplicate: (tool, destination, stale) => `${tool}: el proyecto también configura el tono y existen ambos hooks${stale ? ". El hook del proyecto apunta a un entorno antiguo" : ""}:\n${destination}\nPara usar solo el global, ejecuta desde ese directorio:\ntonedial unwire ${tool} --here`,
     migrationRollback: (operationId) => `Restaura los archivos y ajustes registrados en esta migración:\ntonedial doctor --fix --rollback ${operationId}`,
     migrationQuestion: "¿Apruebas esta migración con los ajustes guardados en una operación recuperable?",

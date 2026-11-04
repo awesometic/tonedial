@@ -255,7 +255,10 @@ const messages: Messages = {
     finalNewlineRemoved: "（末尾改行を削除）",
     previewMore: "差分全体：--verbose",
     hookConfigured: (tool, path) => `${tool}: フックを設定しました\n${path}`,
-    hookInherited: (tool, path) => `${tool}: グローバルフックを使用、プロジェクト用は追加しません\n${path}`,
+    globalCovers: (tools) => `${tools}: このフォルダーにはグローバル接続ですでに口調が届いています、追加なし`,
+    keepProjectOnly: (here) => here
+      ? "このプロジェクトだけに接続するには、先にグローバル接続を解除してから、このフォルダーを接続してください："
+      : "そのプロジェクトだけに接続するには、先にグローバル接続を解除してから、そのフォルダー内で実行してください：",
     hookDuplicate: (tool, destination, stale) => `${tool}: このプロジェクトにも口調配信の設定があり、両方のフックが存在します${stale ? "。プロジェクト側は古いランタイムを参照しています" : ""}：\n${destination}\nグローバルフックのみを使うには、このディレクトリで実行してください：\ntonedial unwire ${tool} --here`,
     migrationRollback: (operationId) => `この移行で記録したファイルと設定を復元：\ntonedial doctor --fix --rollback ${operationId}`,
     migrationQuestion: "保存済み設定を使い、復元可能な1回の操作として旧形式を移行しますか？",

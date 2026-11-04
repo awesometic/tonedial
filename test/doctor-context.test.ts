@@ -658,7 +658,7 @@ test("native doctor refreshes an owned runtime but preserves an edited handler",
   const oldRuntime = join(scratch, "old runtime", "node");
   let config = parseConfig(readFileSync(paths.config, "utf8"), t);
   assert.ok(isConfigV2(config));
-  const planned = planOrderedDelivery(paths, agent, "claude", config.wiring, env, t, oldRuntime);
+  const planned = planOrderedDelivery(paths, agent, "claude", config.wiring, t, oldRuntime);
   config.wiring = planned.wiring;
   const configChange = planChange(paths.config, (before) => before, t);
   const applied = await gate([...planned.checks, planned.change], {

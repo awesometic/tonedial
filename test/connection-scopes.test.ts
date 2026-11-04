@@ -9,6 +9,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { run } from "../src/cli.ts";
 import { isConfigV2, parseConfig } from "../src/core/config.ts";
 import { resolvePaths } from "../src/core/paths.ts";
+import { addLegacyRider } from "./support/legacy-fixture.ts";
 
 let scratch: string;
 let project: string;
@@ -170,9 +171,10 @@ async function human(args: string[], extra: NodeJS.ProcessEnv = {}, cwd = projec
 test("show lists every connection with its scope and directory, keeping two projects apart", async () => {
   const other = join(scratch, "other");
   mkdirSync(other);
-  assert.equal((await invoke(["init", "--global", "--tools", "codex", "--auto"])).code, 0);
-  assert.equal((await invoke(["wire", "codex", "--here", "--auto"])).code, 0);
+  // Projects first: a project beside the global connection would record nothing of its own.
+  assert.equal((await invoke(["init", "--here", "--tools", "codex", "--auto"])).code, 0);
   assert.equal((await invoke(["wire", "codex", "--project", other, "--auto"])).code, 0);
+  assert.equal((await invoke(["wire", "codex", "--global", "--auto"])).code, 0);
   const home = realpathSync(env.HOME!);
   const shown = await invoke(["show"]);
   assert.equal(shown.code, 0, JSON.stringify(shown.value));
@@ -196,8 +198,8 @@ test("unwire without a scope refuses in a folder with its own connections and na
   const other = join(scratch, "other");
   mkdirSync(other);
   const paths = resolvePaths(env);
-  assert.equal((await invoke(["init", "--global", "--tools", "codex", "--auto"])).code, 0);
-  assert.equal((await invoke(["wire", "codex", "--here", "--auto"])).code, 0);
+  assert.equal((await invoke(["init", "--here", "--tools", "codex", "--auto"])).code, 0);
+  assert.equal((await invoke(["wire", "codex", "--global", "--auto"])).code, 0);
   const config = readFileSync(paths.config, "utf8");
   const refused = await invoke(["unwire", "codex", "--dry-run"]);
   assert.equal(refused.code, 1, JSON.stringify(refused.value));
@@ -211,8 +213,7 @@ test("unwire without a scope refuses in a folder with its own connections and na
   assert.equal(text.code, 1);
   assert.match(text.errors, /tonedial unwire codex --here/);
   assert.equal(readFileSync(paths.config, "utf8"), config);
-  // A project Codex connection inherits the global hook, so its own resource is the skill link.
-  assert.equal(existsSync(join(project, ".agents", "skills", "tonedial")), true);
+  assert.equal(existsSync(join(project, ".codex", "hooks.json")), true);
   assert.equal(existsSync(join(env.HOME!, ".codex", "hooks.json")), true);
 
   // Elsewhere the default stays global, and an explicit scope is never refused.
@@ -300,9 +301,9 @@ test("project wiring in the home directory explains that it is the global destin
   assert.equal(existsSync(join(home, ".claude")), false);
 });
 
-test("rewiring global does not report a project that inherits the global hook as a duplicate", async () => {
+test("rewiring global does not report a project recorded on the global hook as a duplicate", async () => {
   assert.equal((await invoke(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
-  assert.equal((await invoke(["wire", "codex", "--here", "--auto"])).code, 0);
+  await addLegacyRider(env, "codex", project);
   const rewired = await invoke(["wire", "codex", "--global", "--auto"]);
   assert.equal(rewired.code, 0, JSON.stringify(rewired.value));
   assert.deepEqual(rewired.value.tools[0].duplicates, []);
@@ -310,8 +311,8 @@ test("rewiring global does not report a project that inherits the global hook as
 
 test("eject without a scope refuses in a folder with its own connections and names both commands", async () => {
   const paths = resolvePaths(env);
-  assert.equal((await invoke(["init", "--global", "--tools", "codex", "--auto"])).code, 0);
-  assert.equal((await invoke(["wire", "codex", "--here", "--auto"])).code, 0);
+  assert.equal((await invoke(["init", "--here", "--tools", "codex", "--auto"])).code, 0);
+  assert.equal((await invoke(["wire", "codex", "--global", "--auto"])).code, 0);
   const config = readFileSync(paths.config, "utf8");
   const refused = await invoke(["eject", "--dry-run"]);
   assert.equal(refused.code, 1, JSON.stringify(refused.value));
@@ -365,4 +366,71 @@ test("a skill record from before 0.1.14 prunes only the folder it recorded creat
   assert.equal((await invoke(["unwire", "codex", "--here", "--auto"])).code, 0);
   assert.equal(existsSync(join(project, ".agents")), true);
   assert.deepEqual(readdirSync(join(project, ".agents")), []);
+});
+
+test("a project wire beside the global connection writes and records nothing and names the two commands", async () => {
+  const paths = resolvePaths(env);
+  assert.equal((await invoke(["init", "--global", "--tools", "codex", "--auto"])).code, 0);
+  const config = readFileSync(paths.config, "utf8");
+  const hook = join(env.HOME!, ".codex", "hooks.json");
+  const hookBytes = readFileSync(hook, "utf8");
+
+  const shown = await human(["wire", "codex", "--here", "--auto"]);
+  assert.equal(shown.code, 0, shown.errors);
+  assert.match(shown.output.replace(/\s+/g, " "), /already gets the tone through the global connection/);
+  const keepOnly = shown.output.split("\n").map((line) => line.trim());
+  assert.ok(keepOnly.indexOf("tonedial unwire codex --global") >= 0, shown.output);
+  assert.equal(keepOnly[keepOnly.indexOf("tonedial unwire codex --global") + 1], "tonedial wire codex --here");
+  assert.doesNotMatch(shown.output, /Project files written|Changes:/);
+
+  for (const args of [["wire", "codex", "--here", "--auto"], ["init", "--here", "--tools", "codex", "--auto"]]) {
+    const machine = await invoke(args);
+    assert.equal(machine.code, 0, JSON.stringify(machine.value));
+    const route = (args[0] === "wire" ? machine.value.tools : machine.value.integrations)[0];
+    assert.deepEqual([route.tool, route.covered, route.inherited, route.path], ["codex", true, true, hook]);
+  }
+  assert.deepEqual(readdirSync(project), []);
+  assert.equal(readFileSync(paths.config, "utf8"), config, "no project connection is recorded");
+  assert.equal(readFileSync(hook, "utf8"), hookBytes);
+
+  // The global connection was the only one, so disconnecting it leaves nothing ToneDial wrote.
+  assert.equal((await invoke(["unwire", "codex", "--global", "--auto"])).code, 0);
+  assert.equal(existsSync(hook), false);
+  assert.deepEqual((await invoke(["show"])).value.connections, []);
+});
+
+test("a project connected before the global one keeps its own hook until it is disconnected", async () => {
+  const globalHook = join(env.HOME!, ".codex", "hooks.json");
+  const projectHook = join(project, ".codex", "hooks.json");
+  assert.equal((await invoke(["wire", "codex", "--here", "--auto"])).code, 1, "wire needs init first");
+  assert.equal((await invoke(["init", "--here", "--tools", "codex", "--auto"])).code, 0);
+  assert.equal((await invoke(["wire", "codex", "--global", "--auto"])).code, 0);
+  const projectBytes = readFileSync(projectHook, "utf8");
+
+  assert.equal((await invoke(["unwire", "codex", "--global", "--auto"])).code, 0);
+  assert.equal(existsSync(globalHook), false);
+  assert.equal(readFileSync(projectHook, "utf8"), projectBytes);
+
+  // Reconnected globally and disconnected here, the folder is covered and gets nothing new.
+  assert.equal((await invoke(["wire", "codex", "--global", "--auto"])).code, 0);
+  assert.equal((await invoke(["unwire", "codex", "--here", "--auto"])).code, 0);
+  const covered = await invoke(["wire", "codex", "--here", "--auto"]);
+  assert.equal(covered.code, 0, JSON.stringify(covered.value));
+  assert.equal(covered.value.tools[0].covered, true);
+  assert.deepEqual(readdirSync(project), []);
+});
+
+test("a folder recorded on the global hook by an earlier version is covered and keeps its records", async () => {
+  const paths = resolvePaths(env);
+  assert.equal((await invoke(["init", "--global", "--tools", "codex", "--auto"])).code, 0);
+  await addLegacyRider(env, "codex", project);
+  const config = readFileSync(paths.config, "utf8");
+  for (const args of [["wire", "codex", "--here", "--auto"], ["doctor", "--fix", "--here", "--auto"]]) {
+    const machine = await invoke(args);
+    assert.equal(machine.code, 0, JSON.stringify(machine.value));
+    const tools = args[0] === "wire" ? machine.value.tools : machine.value.native.tools;
+    assert.deepEqual(tools.map((route: { covered?: boolean }) => route.covered), [true], args.join(" "));
+  }
+  assert.equal(readFileSync(paths.config, "utf8"), config);
+  assert.equal(existsSync(join(project, ".codex")), false);
 });

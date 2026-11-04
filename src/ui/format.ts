@@ -88,22 +88,21 @@ export function nativeSetup(
   routes: readonly {
     tool: AgentTool;
     path: string;
-    inherited: boolean;
     duplicates?: readonly { destination: string; state: "duplicate" | "stale-duplicate" }[];
   }[],
   global: boolean,
   guidance = true,
 ): string[] {
-  const groups = routes.map(({ tool, path, inherited, duplicates }) => {
+  const groups = routes.map(({ tool, path, duplicates }) => {
     const label = TARGETS[tool].label;
-    const lines = [inherited ? t.wiring.hookInherited(label, humanText(path)) : t.wiring.hookConfigured(label, humanText(path))];
+    const lines = [t.wiring.hookConfigured(label, humanText(path))];
     // A project wired earlier keeps delivering after this one. Reported next to the route it
     // doubles, with the scope that owns it, because clearing it is that scope's decision.
     for (const { destination, state } of duplicates ?? []) {
       lines.push(t.wiring.hookDuplicate(tool, humanText(destination), state === "stale-duplicate"));
     }
     if (guidance) {
-      if (tool === "codex") lines.push(t.wiring.codexTrust(global || inherited));
+      if (tool === "codex") lines.push(t.wiring.codexTrust(global));
       else if (tool === "claude") lines.push(t.wiring.claudeTrust(global));
       else lines.push(t.doctor.hookGuidance[tool]);
     }

@@ -418,6 +418,9 @@ After a project `wire`, the receipt names the project files it wrote.
 Their hooks run ToneDial with paths from this machine, so keep them out of version control
 (for example with `.git/info/exclude`), or commit them only if you mean to.
 In your home directory a project scope would use the global files, so `wire --here` and `init --here` there stop and show the `--global` command.
+Hosts load global hooks and skills in every folder.
+Beside a global connection for the same agent, `wire <tool> --here` and `init --here` write and record nothing for it,
+and show the two commands that keep the tone in this project only; JSON marks that agent `covered: true`.
 In a folder with its own connections, `unwire <tool>` and `eject` without a scope flag stop and show the `--here` and `--global` commands.
 The scope chooses wiring destinations, not another tone or profile library.
 `use --project` instead exports `.tonedial/TONE.md`; `test --project` selects a conversation folder.
@@ -450,7 +453,7 @@ Claude Code replaces hook context over 10,000 characters with a short preview.
 When Claude Code is connected and the guide and an enabled tone exceed that, tone-changing commands and `doctor` show a notice; the change is still saved.
 For Codex, ToneDial writes the pair as JSON `additionalContext` with `additionalContextLimit: 0` on `SessionStart` and `UserPromptSubmit`.
 Codex then skips its default preview of hook context over about 2,500 tokens (observed on Codex 0.164.0).
-Hooks written by earlier versions keep that preview until `doctor --fix` or `init` rewrites them; a project inheriting a global hook needs `doctor --fix --global`.
+Hooks written by earlier versions keep that preview until `doctor --fix` or `init` rewrites them; a project the global hook serves needs `doctor --fix --global`.
 Codex keys hook trust to the definition, so review a rewritten hook again in `/hooks`.
 Tone changes regenerate the artifact without rewriting the guide.
 Setup merges owned entries and preserves unrelated handlers; no home instruction-file import is added.
@@ -534,6 +537,7 @@ tonedial wire codex --here
 
 Only this folder gets the hook and skill link.
 The receipt lists the files and the version-control choice.
+With a global Codex connection the folder already gets the tone, so this writes nothing and shows the commands for the next recipe.
 
 **Connect globally**
 
@@ -552,6 +556,16 @@ tonedial wire codex --global
 ```
 
 Disconnect the project first; otherwise the agent loads the tone from both hooks.
+
+**Move from global to one project**
+
+```bash
+tonedial unwire codex --global
+cd ~/work/app
+tonedial wire codex --here
+```
+
+Every other folder stops getting the tone; only this one keeps it.
 
 **Disconnect one agent**
 

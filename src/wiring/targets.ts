@@ -181,7 +181,6 @@ export function planOrderedDelivery(
   agent: AgentPaths,
   tool: AgentTool,
   wiring: WiringV2,
-  env: NodeJS.ProcessEnv,
   t: Messages,
   runtime = process.execPath,
   legacy?: Change,
@@ -191,47 +190,14 @@ export function planOrderedDelivery(
   const id = registrationKey(tool, scope, destination);
   const selected = wiring.registrations[id];
   const existing = selected?.resourceIds.map((key) => wiring.resources[key]!).find((resource) => resource.kind === "hook");
-  let desired = orderedHook(tool, paths.root, runtime);
-  let path = agent.hookFile(tool);
-  let ownerId = id;
-  let prior = existing;
-  let reuseInherited = false;
+  const desired = orderedHook(tool, paths.root, runtime);
+  // A project the global hook already serves is never planned here; callers check `globalCover`.
+  const path = existing ? existing.accessPaths?.[id]?.path ?? existing.path : agent.hookFile(tool);
+  const ownerId = id;
+  const prior = existing;
   const checks: Change[] = [];
-  // Hosts merge scopes. Reuse the exact recorded global command without changing its display fields.
-  if (!agent.live && !existing) {
-    const global = resolveAgentPaths({ global: true, project: null }, { ...env, TONEDIAL_AGENT_HOME: undefined }, agent.root);
-    const globalId = registrationKey(tool, "global", canonicalDestination(global.root));
-    const inherited = wiring.registrations[globalId]?.resourceIds.map((key) => wiring.resources[key]!)
-      .find((resource) => resource.kind === "hook");
-    if (inherited) {
-      const installed = recordedHook(inherited, globalId);
-      if (!sameDeliveryCommand(installed, desired)) {
-        throw new ConfigError(t.errors.ownershipConflict(inherited.path));
-      }
-      const local = planChange(path, (before) => before, t);
-      const localOwned = ownedHook(local.before, desired, path, t);
-      if (tool === "antigravity" && local.before?.trim() && Object.hasOwn(JSON.parse(local.before), "tonedial")) {
-        throw new ConfigError(t.errors.ownershipConflict(path));
-      }
-      if (localOwned !== null || ownedHook(local.before, installed!, path, t) !== null) {
-        throw new ConfigError(t.errors.ownershipConflict(path));
-      }
-      checks.push(local);
-      path = inherited.accessPaths?.[globalId]?.path ?? inherited.path;
-      prior = inherited;
-      ownerId = globalId;
-      desired = installed!;
-      reuseInherited = true;
-    }
-  }
-  if (existing) path = existing.accessPaths?.[id]?.path ?? existing.path;
   const previous = prior ? recordedHook(prior, ownerId) : null;
   if (prior && previous === null) throw new ConfigError(t.errors.ownershipConflict(path));
-  // Repeated project setup inherits display-only changes too; it must not relabel a global hook.
-  if (!agent.live && path !== agent.hookFile(tool) && sameDeliveryCommand(previous, desired)) {
-    desired = previous!;
-    reuseInherited = true;
-  }
   const planned = planChange(path, (before) => before, t);
   const replacesLegacy = legacy !== undefined && legacy.realPath === planned.realPath;
   if (replacesLegacy && (legacy.before !== planned.before ||
@@ -262,9 +228,8 @@ export function planOrderedDelivery(
   const descriptionBefore = tool === "antigravity" ? undefined : hookDocumentDescription(remaining, path, t);
   const ownsDescription = (desired.documentDescription !== undefined && descriptionBefore === undefined) ||
     (previousDescription !== undefined && descriptionBefore === previousDescription);
-  if (reuseInherited && before === null) throw new ConfigError(t.errors.ownershipConflict(path));
-  let after = reuseInherited ? before! : withHook(remaining, desired, path, t);
-  if (tool === "antigravity" && !reuseInherited && previous && before !== null) {
+  let after = withHook(remaining, desired, path, t);
+  if (tool === "antigravity" && previous && before !== null) {
     const enabled = JSON.parse(before).tonedial?.enabled;
     if (enabled !== undefined) {
       const document = JSON.parse(after);
@@ -332,7 +297,6 @@ export function planOrderedDelivery(
     checks,
     replacesLegacy,
     wiring: next,
-    inherited: !agent.live && path !== agent.hookFile(tool),
     duplicates: projectDuplicates(next, tool, id, desired, paths.root, agent.live),
   };
 }

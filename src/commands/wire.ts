@@ -27,7 +27,7 @@ import { assertRecordedTextAccess, assertRegisteredFileChange, contentHash, deta
 import { pathLineState, rcPath, withPathLine } from "../wiring/shell.ts";
 import { humanText, nativeSetup, receiptLines } from "../ui/format.ts";
 import { pickTools } from "../ui/prompt.ts";
-import { connectionsInScope, folderConnections, projectIsHome } from "../wiring/scopes.ts";
+import { connectionsInScope, folderConnections, globalCover, projectIsHome } from "../wiring/scopes.ts";
 import { planConfig } from "./compile.ts";
 
 /** The positional form names one target; lists belong to --tools. */
@@ -192,13 +192,29 @@ function rebuildLegacyDelivery(ctx: Ctx, tool: AgentTool, wiring: WiringV2, expl
   return { change: change.before === change.after ? null : { ...change, created: false, createdDir: false }, wiring };
 }
 
-async function wireSelected(ctx: Ctx, tools: AgentTool[], rebuilding?: NativeRebuildOptions): Promise<CommandResult> {
+async function wireSelected(ctx: Ctx, requested: AgentTool[], rebuilding?: NativeRebuildOptions): Promise<CommandResult> {
   const artifactChange = rebuilding?.preview ? null : artifact(ctx);
   // Keep the per-tool planning immediately after the bounded artifact probe so an unsafe
   // artifact still fails before any
   // config, host, or seed planning, and never takes an interim legacy route.
   const configChange = rebuilding?.configRead ?? planChange(ctx.paths.config, (before) => before, ctx.t, undefined, ctx.paths.root);
   const config = rebuilding?.config ?? requireConfigV2(configChange.before === null ? defaultConfig() : parseConfig(configChange.before, ctx.t), ctx.t);
+  // A folder the global connection already serves gets nothing written or recorded for that agent.
+  const covered = new Map(requested.flatMap((tool) => {
+    const path = globalCover(config, ctx.agent, tool, ctx.env);
+    return path === null ? [] : [[tool, path] as const];
+  }));
+  const tools = requested.filter((tool) => !covered.has(tool));
+  const coveredRoutes = (configured: boolean) => requested.filter((tool) => covered.has(tool)).map((tool) => ({
+    tool, path: covered.get(tool)!, inherited: true, duplicates: [], covered: true,
+    delivery: "hook", configuration: configured ? "configured" : "not-applied", activation: "unverified",
+  }));
+  if (tools.length === 0 && covered.size > 0 && !rebuilding?.shell) {
+    return {
+      lines: coveredLines(ctx, [...covered.keys()]),
+      json: { root: ctx.agent.root, live: ctx.agent.live, applied: false, reason: "nothing", diff: [], skills: [], tools: coveredRoutes(true) },
+    };
+  }
   const removals: Change[] = [];
   const plans = tools.map((tool) => {
     if (rebuilding) {
@@ -216,8 +232,7 @@ async function wireSelected(ctx: Ctx, tools: AgentTool[], rebuilding?: NativeReb
     const legacy = rebuilding ? rebuildLegacyDelivery(ctx, tool, config.wiring, rebuilding.explicitTools) : null;
     if (legacy) config.wiring = legacy.wiring;
     const combinedLegacy = legacy?.change && legacy.change.before !== legacy.change.after ? legacy.change : undefined;
-    const plan = planOrderedDelivery(ctx.paths, ctx.agent, tool, config.wiring, ctx.env, ctx.t, process.execPath, combinedLegacy);
-    if (rebuilding && plan.inherited && plan.change.before !== plan.change.after) throw new ConfigError(ctx.t.errors.ownershipConflict(plan.change.path));
+    const plan = planOrderedDelivery(ctx.paths, ctx.agent, tool, config.wiring, ctx.t, process.execPath, combinedLegacy);
     if (combinedLegacy && !plan.replacesLegacy) removals.push(combinedLegacy);
     config.wiring = plan.wiring;
     return plan;
@@ -300,7 +315,6 @@ async function wireSelected(ctx: Ctx, tools: AgentTool[], rebuilding?: NativeReb
   const routes = tools.map((tool, index) => ({
     tool,
     path: plans[index]!.change.path,
-    inherited: plans[index]!.inherited,
     duplicates: plans[index]!.duplicates,
   }));
 
@@ -317,9 +331,11 @@ async function wireSelected(ctx: Ctx, tools: AgentTool[], rebuilding?: NativeReb
   if (projectFiles.length) setup.push("", ...receiptLines(ctx.t.wiring.projectFiles(projectFiles.map(humanText)), ctx.ui.width - 2).map((line) => `  ${line}`));
   const headline = tools.length ? summary(ctx, result.reason, tools) :
     configured && shellChange ? [`  ${ctx.t.doctor.pathLineAt(humanText(shellChange.path))}`] : [];
+  const coveredBlock = coveredLines(ctx, [...covered.keys()]);
+  const body = [...headline, ...(headline.length && setup.length ? [""] : []), ...setup];
   return {
-    lines: [...result.lines, ...(result.lines.length ? [""] : []), ...headline,
-      ...(headline.length && setup.length ? [""] : []), ...setup],
+    lines: [...result.lines, ...(result.lines.length ? [""] : []), ...body,
+      ...(body.length && coveredBlock.length ? [""] : []), ...coveredBlock],
     json: {
       root: ctx.agent.root,
       live: ctx.agent.live,
@@ -329,12 +345,13 @@ async function wireSelected(ctx: Ctx, tools: AgentTool[], rebuilding?: NativeReb
       ...(rebuilding && result.operationId ? { operationId: result.operationId } : {}),
       skills,
       ...(rebuilding && shellChange ? { shell: { path: shellChange.path, configuration: configured ? "configured" : "not-applied" } } : {}),
-      tools: routes.map((route) => ({
+      tools: [...routes.map((route) => ({
         ...route,
+        inherited: false,
         delivery: "hook",
         configuration: configured ? "configured" : "not-applied",
         activation: "unverified",
-      })),
+      })), ...coveredRoutes(configured)],
     },
   };
 }
@@ -512,6 +529,23 @@ export function withRecordedOwnership(
   record: { created: boolean; createdDir?: boolean } | undefined,
 ): Change {
   return { ...change, created: record?.created === true, createdDir: record?.createdDir === true };
+}
+
+/**
+ * What a covered folder already has, then the two commands that keep the tone in it alone. The
+ * project command says `--here`, run from inside the folder, so it stays copyable at any path length.
+ */
+function coveredLines(ctx: Ctx, tools: AgentTool[]): string[] {
+  if (tools.length === 0) return [];
+  const here = ctx.flags.here === true || canonicalDestination(ctx.cwd) === canonicalDestination(ctx.agent.root);
+  return [
+    ...receiptLines(ctx.t.wiring.globalCovers(tools.map((tool) => TARGETS[tool].label).join(", ")), ctx.ui.width - 2)
+      .map((line) => `  ${ctx.ui.bold(line)}`),
+    ...receiptLines(ctx.t.wiring.keepProjectOnly(here), ctx.ui.width - 2).map((line) => `  ${line}`),
+    ...[...tools.map((tool) => `tonedial unwire ${tool} --global`),
+      tools.length === 1 ? `tonedial wire ${tools[0]} --here` : `tonedial wire --tools ${tools.join(",")} --here`]
+      .map((command) => `  ${ctx.ui.accent(humanText(command))}`),
+  ];
 }
 
 function summary(ctx: Ctx, reason: string, tools: AgentTool[], action: "connect" | "disconnect" = "connect"): string[] {

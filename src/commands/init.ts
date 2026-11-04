@@ -129,9 +129,9 @@ export async function runInit(entry: Ctx, _args: string[]): Promise<CommandResul
   }
   // Keep each tool's capture with its ownership record, independent of seed-array positions.
   const perTool = tools.map((tool) => {
-    const plan = planOrderedDelivery(ctx.paths, ctx.agent, tool, config.wiring, ctx.env, ctx.t);
+    const plan = planOrderedDelivery(ctx.paths, ctx.agent, tool, config.wiring, ctx.t);
     config.wiring = plan.wiring;
-    return { tool, change: plan.change, checks: plan.checks, inherited: plan.inherited, duplicates: plan.duplicates };
+    return { tool, change: plan.change, checks: plan.checks, duplicates: plan.duplicates };
   });
   assertDistinctHookTargets(perTool, ctx.t);
   const changes: ReturnType<typeof planChange>[] = seeds.changes.concat(perTool.flatMap((w) => [...w.checks, w.change]));
@@ -219,7 +219,7 @@ export async function runInit(entry: Ctx, _args: string[]): Promise<CommandResul
     if (commandFile) addReceipt(ctx.t.wiring.commandInstalled(humanText(commandFile)));
   }
   if (applied) {
-    const routes = perTool.map(({ tool, change, inherited, duplicates }) => ({ tool, path: change.path, inherited, duplicates }));
+    const routes = perTool.map(({ tool, change, duplicates }) => ({ tool, path: change.path, duplicates }));
     // Host groups are separated by an empty message; keep that row truly blank.
     for (const message of nativeSetup(copy.cli, routes, ctx.agent.live)) {
       if (message === "") lines.push("");
@@ -254,7 +254,7 @@ export async function runInit(entry: Ctx, _args: string[]): Promise<CommandResul
       safeword: config.safeword,
       seeded: seeds.labels,
       tools,
-      integrations: perTool.map(({ tool, change, inherited, duplicates }) => ({ tool, path: change.path, inherited, duplicates, configuration: applied ? "configured" : "not-applied", activation: "unverified" })),
+      integrations: perTool.map(({ tool, change, duplicates }) => ({ tool, path: change.path, inherited: false, duplicates, configuration: applied ? "configured" : "not-applied", activation: "unverified" })),
       root: ctx.paths.root,
       agentRoot: ctx.agent.root,
       live: ctx.agent.live,

@@ -210,6 +210,9 @@ const SETUP_MD = `## Connection scope and application recovery
 Do not combine scope flags. \`use --project <path>\` remains an artifact export, not setup.
 \`show --json\` lists every recorded connection's \`target\`, \`scope\` and \`destination\` in
 \`connections\`. \`unwire <tool>\` disconnects one agent; \`eject\` disconnects every agent in a scope.
+A global connection already serves every folder: \`wire <tool> --here\` beside it writes nothing and JSON
+marks that agent \`covered: true\`. To keep the tone in one project only, offer \`unwire <tool> --global\`,
+then \`wire <tool> --here\` in that project.
 Without a scope flag, \`unwire <tool>\` and \`eject\` refuse in a folder that has its own project
 connections, so pass the scope the user chose rather than retrying with \`--global\`.
 

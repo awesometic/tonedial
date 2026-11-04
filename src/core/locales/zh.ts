@@ -255,7 +255,10 @@ const messages: Messages = {
     finalNewlineRemoved: "（已移除末尾换行）",
     previewMore: "完整差异：--verbose",
     hookConfigured: (tool, path) => `${tool}：钩子已配置\n${path}`,
-    hookInherited: (tool, path) => `${tool}：使用全局钩子，未添加项目钩子\n${path}`,
+    globalCovers: (tools) => `${tools}：此文件夹已通过全局连接获得语气，未添加任何内容`,
+    keepProjectOnly: (here) => here
+      ? "若只想连接此项目，请先断开全局连接，再连接此文件夹："
+      : "若只想连接该项目，请先断开全局连接，再在该文件夹中运行：",
     hookDuplicate: (tool, destination, stale) => `${tool}：此项目也配置了语气注入，因此两个钩子均存在${stale ? "。项目钩子指向旧版运行时" : ""}：\n${destination}\n若只使用全局钩子，请在该目录运行：\ntonedial unwire ${tool} --here`,
     migrationRollback: (operationId) => `恢复本次迁移记录的文件和设置：\ntonedial doctor --fix --rollback ${operationId}`,
     migrationQuestion: "是否使用已保存的设置，将旧版迁移作为一次可恢复操作执行？",

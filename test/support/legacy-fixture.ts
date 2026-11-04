@@ -1,15 +1,15 @@
-import { mkdirSync } from "node:fs";
+import { mkdirSync, readFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 
 import { compile } from "../../src/core/compile.ts";
-import { defaultConfig, serializeConfig, type ConfigV2 } from "../../src/core/config.ts";
+import { defaultConfig, isConfigV2, parseConfig, serializeConfig, type ConfigV2 } from "../../src/core/config.ts";
 import { toCompileInput } from "../../src/core/resolve.ts";
 import { LEGACY_CONTEXT_ARTIFACT_FILENAME, canonicalDestination, resolveAgentPaths, resolvePaths, type AgentTool, type Paths } from "../../src/core/paths.ts";
 import { seedFiles, seedRecord, SEED_VERSION } from "../../src/core/seeds.ts";
 import { SKILL_NAME } from "../../src/core/skill.ts";
 import { catalogue, type Messages } from "../../src/core/i18n.ts";
 import { gate, planChange, type Change, type PlannedOperationAction } from "../../src/wiring/apply.ts";
-import { contentHash, recordFileChange } from "../../src/wiring/ownership.ts";
+import { contentHash, recordFileChange, registrationKey } from "../../src/wiring/ownership.ts";
 import { planSelectedSkills } from "../../src/wiring/skill.ts";
 import { TARGETS, wiredAt, type WiredAt } from "../../src/wiring/targets.ts";
 import { hookCommand, withHook } from "../../src/wiring/hooks.ts";
@@ -142,4 +142,35 @@ export async function createLegacyFixture(options: LegacyFixtureOptions): Promis
     throw new Error(`legacy fixture setup did not apply: ${result.reason}`);
   }
   return { paths, config };
+}
+
+/**
+ * A project connection as 0.1.13 and earlier recorded it beside a global one: the project rides
+ * the global hook's resource as a second consumer and owns only its skill link.
+ */
+export async function addLegacyRider(env: NodeJS.ProcessEnv, tool: AgentTool, dir: string): Promise<void> {
+  const t = catalogue("en").cli;
+  const paths = resolvePaths(env);
+  const config = parseConfig(readFileSync(paths.config, "utf8"));
+  if (!isConfigV2(config)) throw new Error("a legacy rider needs a schema-2 config");
+  const scoped = { ...env, TONEDIAL_AGENT_HOME: undefined };
+  const globalId = registrationKey(tool, "global", canonicalDestination(resolveAgentPaths({ global: true, project: null }, scoped).root));
+  const projectId = registrationKey(tool, "project", canonicalDestination(dir));
+  const hookId = config.wiring.registrations[globalId]!.resourceIds.find((id) => config.wiring.resources[id]!.kind === "hook")!;
+  const skills = planSelectedSkills(resolveAgentPaths({ global: false, project: dir }, scoped, dir), [tool],
+    join(paths.skill, SKILL_NAME), config.wiring, {}, t);
+  const wiring = skills.wiring;
+  wiring.registrations[projectId]!.context = "pair";
+  wiring.registrations[projectId]!.resourceIds.push(hookId);
+  const hook = wiring.resources[hookId]!;
+  hook.consumers.push(projectId);
+  hook.accessPaths![projectId] = { ...hook.accessPaths![globalId]! };
+  hook.managedByRegistration![projectId] = structuredClone(hook.managedByRegistration![globalId]!);
+  config.wiring = wiring;
+  const configChange = planChange(paths.config, (before) => before, t, undefined, paths.root);
+  const result = await gate([], {
+    paths, operationActions: skills.actions, finalChanges: [{ ...configChange, after: serializeConfig(config) }],
+    auto: true, dryRun: false, t, ui: palette("never", {}, false), out: () => {},
+  });
+  if (!result.applied) throw new Error(`legacy rider setup did not apply: ${result.reason}`);
 }
