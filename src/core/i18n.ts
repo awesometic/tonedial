@@ -959,7 +959,7 @@ const enMessages: Messages = {
     stateKept: (root) => `Presets and settings stay in:\n${root}`,
     deleteYourself: "to remove state too, delete this directory yourself",
     nothingWired: "No connections in this scope · nothing to disconnect",
-    projectFiles: (files) => `Project files written: ${files.join(", ")}\nTheir hooks run ToneDial with paths from this machine. Keep them out of version control (for example with .git/info/exclude), or commit them knowingly.`,
+    projectFiles: (files) => `Project files written: ${files.join(", ")}\nTheir hooks run ToneDial with paths from this machine. Keep them out of version control (for example with .git/info/exclude), or commit them only if you mean to.`,
     projectIsHome: (command) => `This folder is your home directory, so a project connection here would use the global files. Connect globally instead:\n  ${command}`,
     damaged: (path, reason) => `${path}: ${reason}. Remove the stray marker, then run eject again.`,
     needsApproval:
@@ -1737,7 +1737,7 @@ const koMessages: Messages = {
     stateKept: (root) => `프리셋과 설정은 이곳에 그대로 남습니다:\n${root}`,
     deleteYourself: "상태까지 지우려면 이 디렉터리를 직접 삭제해 주세요",
     nothingWired: "이 범위에 연결된 항목 없음 · 해제할 것 없음",
-    projectFiles: (files) => `프로젝트에 쓴 파일: ${files.join(", ")}\n훅에는 이 컴퓨터의 경로가 들어 있습니다. 버전 관리에서 제외하거나(예: .git/info/exclude) 이 점을 알고 커밋하세요.`,
+    projectFiles: (files) => `프로젝트에 기록한 파일: ${files.join(", ")}\n훅에는 이 컴퓨터의 경로가 들어 있습니다. 버전 관리에서 제외하거나(예: .git/info/exclude), 의도한 경우에만 커밋하세요.`,
     projectIsHome: (command) => `이 폴더는 홈 디렉터리라서 프로젝트 연결이 전역 연결과 같은 파일을 씁니다. 전역으로 연결하세요:\n  ${command}`,
     damaged: (path, reason) => `${path}: ${reason}. 남은 마커를 지운 뒤 eject를 다시 실행해 주세요`,
     needsApproval:
@@ -1969,8 +1969,8 @@ const koMessages: Messages = {
       compile: "TONE.md 재생성 · 말투를 바꾸면 자동 처리",
       export: "호칭·역할을 포함한 프로필을 JSON으로 백업",
       import: "JSON에서 프로필 가져오기 · use로 적용",
-      wire: "선택한 범위에 에이전트 연결 · 인자 없으면 질문",
-      unwire: "에이전트 연결 해제 · 인자 없으면 질문",
+      wire: "선택한 범위에 에이전트 연결 · 인자 없으면 직접 선택",
+      unwire: "에이전트 연결 해제 · 인자 없으면 직접 선택",
       doctor: "연결 점검 · 복구는 --fix",
       update: "현재 설치 업데이트",
       eject: "선택한 범위의 모든 에이전트 연결 해제 · 프리셋 유지",

@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=1357; endsWithNewline=true]
+--- stdout --- [bytes=1367; endsWithNewline=true]
 ToneDial · wire
 
   Connection scope: project
@@ -47,7 +47,7 @@ ToneDial · wire
 
   Project files written: .codex/hooks.json, .agents/skills/tonedial
   Their hooks run ToneDial with paths from this machine. Keep them out of
-  version control (for example with .git/info/exclude), or commit them
-  knowingly.
+  version control (for example with .git/info/exclude), or commit them only if
+  you mean to.
 --- stderr --- [bytes=0; endsWithNewline=false]
 

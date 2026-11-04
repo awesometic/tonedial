@@ -292,7 +292,7 @@ const messages: Messages = {
     stateKept: (root) => `预设和设置仍保留在：\n${root}`,
     deleteYourself: "如需同时删除状态，请自行删除此目录",
     nothingWired: "此范围内无连接 · 无需断开",
-    projectFiles: (files) => `已写入项目的文件：${files.join(", ")}\n钩子中包含本机路径。请将其排除在版本管理之外（例如 .git/info/exclude），或在知情的情况下提交。`,
+    projectFiles: (files) => `已写入项目的文件：${files.join(", ")}\n钩子中包含本机路径。请将其排除在版本管理之外（例如 .git/info/exclude），或仅在确有需要时提交。`,
     projectIsHome: (command) => `此文件夹是主目录，项目连接会使用与全局相同的文件。请改为全局连接：\n  ${command}`,
     damaged: (path, reason) => `${path}：${reason}。请移除多余标记后重新运行 eject。`,
     needsApproval:

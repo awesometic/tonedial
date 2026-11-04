@@ -416,7 +416,7 @@ Scope flags are mutually exclusive.
 Use the same scope for `init`, `wire`, `doctor`, `unwire` and `eject`.
 After a project `wire`, the receipt names the project files it wrote.
 Their hooks run ToneDial with paths from this machine, so keep them out of version control
-(for example with `.git/info/exclude`) or commit them knowingly.
+(for example with `.git/info/exclude`), or commit them only if you mean to.
 In your home directory a project scope would use the global files, so `wire --here` and `init --here` there stop and show the `--global` command.
 In a folder with its own connections, `unwire <tool>` and `eject` without a scope flag stop and show the `--here` and `--global` commands.
 The scope chooses wiring destinations, not another tone or profile library.
