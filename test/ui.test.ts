@@ -370,6 +370,27 @@ test("hosts without Claude Code get no Claude context cap notice", async () => {
   assert.ok(!JSON.parse(out.join("")).checks.some((check: { name: string }) => check.name === "Claude Code context"));
 });
 
+test("short receipts start with their result; plan commands and the full view keep a title", async () => {
+  mkdirSync(join(home, "project"));
+  await initializeState();
+  for (const argv of [["set", "verbosity=2"], ["get"], ["get", "verbosity"], ["off"], ["on"], ["use", "bratty-kid"],
+    ["reset"], ["list"], ["persona", "A patient mentor", "A new developer"], ["address", "your mentor", "friend"], ["compile"], ["export", "caring-brother"]]) {
+    out = [];
+    assert.equal(await cli(...argv), 0, `${argv.join(" ")}: ${err.join("")}`);
+    const screen = out.join("");
+    assert.ok(!screen.includes("ToneDial · "), `${argv.join(" ")} printed a title:\n${screen}`);
+    assert.ok(!screen.startsWith("\n"), `${argv.join(" ")} starts with a blank line:\n${screen}`);
+  }
+  for (const argv of [["wire", "codex", "--here", "--dry-run"], ["doctor", "--here"], ["init", "--here", "--tools", "none", "--auto"]]) {
+    out = [];
+    assert.equal(await cli(...argv), 0, `${argv.join(" ")}: ${err.join("")}`);
+    assert.ok(out.join("").startsWith(`ToneDial · ${argv[0]}\n\n`), `${argv.join(" ")} lost its title`);
+  }
+  out = [];
+  assert.equal(await cli("show"), 0, err.join(""));
+  assert.ok(out.join("").startsWith("ToneDial · show"), "show lost its title");
+});
+
 test("a refused connection command writes no title or scope to stdout", async () => {
   mkdirSync(join(home, "project"));
   await initializeState();

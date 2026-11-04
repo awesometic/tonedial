@@ -1,7 +1,5 @@
 status: 0
---- stdout --- [bytes=1128; endsWithNewline=true]
-ToneDial · list
-
+--- stdout --- [bytes=1110; endsWithNewline=true]
   * Caring Brother active
     caring-brother · An attentive older brother who looks out for you, his
     younger sibling.

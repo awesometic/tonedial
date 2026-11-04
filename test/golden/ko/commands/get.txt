@@ -1,7 +1,5 @@
 status: 0
---- stdout --- [bytes=782; endsWithNewline=true]
-ToneDial · get
-
+--- stdout --- [bytes=765; endsWithNewline=true]
   formality          1
   verbosity          4
   profanity          2

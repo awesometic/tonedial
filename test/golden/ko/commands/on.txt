@@ -1,7 +1,5 @@
 status: 0
---- stdout --- [bytes=58; endsWithNewline=true]
-ToneDial · on
-
+--- stdout --- [bytes=42; endsWithNewline=true]
   ToneDial 켜짐 · 말투 전달 재개
 --- stderr --- [bytes=0; endsWithNewline=false]
 

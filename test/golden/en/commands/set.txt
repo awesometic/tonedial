@@ -1,7 +1,5 @@
 status: 0
---- stdout --- [bytes=56; endsWithNewline=true]
-ToneDial · set
-
+--- stdout --- [bytes=39; endsWithNewline=true]
   Settings unchanged
   TONE.md current
 --- stderr --- [bytes=0; endsWithNewline=false]

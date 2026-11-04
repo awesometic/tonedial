@@ -1,7 +1,5 @@
 status: 0
---- stdout --- [bytes=1296; endsWithNewline=true]
-ToneDial · list
-
+--- stdout --- [bytes=1278; endsWithNewline=true]
   * Caring Brother 적용됨
     caring-brother · 사용자는 동생, 에이전트는 고민을 다정하게 챙겨 주는
     든든한 형입니다.

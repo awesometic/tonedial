@@ -1,7 +1,5 @@
 status: 0
---- stdout --- [bytes=153; endsWithNewline=true]
-ToneDial · compile
-
+--- stdout --- [bytes=132; endsWithNewline=true]
   TONE.md current
   <ROOT>/state/TONE.md
   Size from saved settings: 4,918 characters

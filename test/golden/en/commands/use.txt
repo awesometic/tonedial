@@ -1,7 +1,5 @@
 status: 0
---- stdout --- [bytes=125; endsWithNewline=true]
-ToneDial · use
-
+--- stdout --- [bytes=108; endsWithNewline=true]
   Ego Sword active
   TONE.md generated
 

@@ -1,7 +1,5 @@
 status: 0
---- stdout --- [bytes=154; endsWithNewline=true]
-ToneDial · compile
-
+--- stdout --- [bytes=133; endsWithNewline=true]
   TONE.md 최신
   <ROOT>/state/TONE.md
   저장된 설정 기준 크기: 4,769자

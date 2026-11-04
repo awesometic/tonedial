@@ -176,6 +176,8 @@ const COMMANDS: Record<
 };
 
 const CONNECTION_COMMANDS = ["init", "wire", "doctor", "unwire", "eject"];
+/** Commands that present a plan or ask for approval carry a title; short receipts start with their result. */
+const TITLED_COMMANDS = [...CONNECTION_COMMANDS, "update", "create", "save", "import", "edit", "test"];
 
 /**
  * Every command this CLI dispatches. Exported so the help screen can be held to covering them:
@@ -653,9 +655,9 @@ export async function run(
       ctx.contextChecks = layout.checks;
     }
     // The title and scope precede the command's first output, so a refusal on stderr has neither.
-    // The dial draws its own live title; the receipt after it gets this one.
+    // The dial draws its own live title; the receipt after it gets this one. `show` titles itself.
     const dial = name === "set" && rest.length === 0;
-    const header = [...(!asJson && !["export", "show"].includes(name) ? [ui.bold(`ToneDial · ${name}`), ""] : []), ...introduction];
+    const header = [...(!asJson && (TITLED_COMMANDS.includes(name) || dial) ? [ui.bold(`ToneDial · ${name}`), ""] : []), ...introduction];
     const write = process.stdout.write;
     let pending = header.length > 0;
     const flush = () => {

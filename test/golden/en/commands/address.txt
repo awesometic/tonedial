@@ -1,7 +1,5 @@
 status: 0
---- stdout --- [bytes=150; endsWithNewline=true]
-ToneDial · address
-
+--- stdout --- [bytes=129; endsWithNewline=true]
   Settings updated
   persona.self_ref  your big brother → self
   persona.user_ref  little sibling → user
