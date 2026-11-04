@@ -306,3 +306,28 @@ test("rewiring global does not report a project that inherits the global hook as
   assert.equal(rewired.code, 0, JSON.stringify(rewired.value));
   assert.deepEqual(rewired.value.tools[0].duplicates, []);
 });
+
+test("eject without a scope refuses in a folder with its own connections and names both commands", async () => {
+  const paths = resolvePaths(env);
+  assert.equal((await invoke(["init", "--global", "--tools", "codex", "--auto"])).code, 0);
+  assert.equal((await invoke(["wire", "codex", "--here", "--auto"])).code, 0);
+  const config = readFileSync(paths.config, "utf8");
+  const refused = await invoke(["eject", "--dry-run"]);
+  assert.equal(refused.code, 1, JSON.stringify(refused.value));
+  assert.match(refused.value.error, /^ {2}tonedial eject --here$/m);
+  assert.match(refused.value.error, /^ {2}tonedial eject --global$/m);
+  assert.equal(readFileSync(paths.config, "utf8"), config);
+  assert.equal((await invoke(["eject", "--here", "--dry-run"])).code, 0);
+});
+
+test("init --here in the home directory refuses like wire --here and names the global command", async () => {
+  const home = env.HOME!;
+  for (const args of [["init", "--here", "--tools", "codex", "--auto"], ["init", "--here", "--tools", "codex", "--dry-run"]]) {
+    const refused = await human(args, {}, home);
+    assert.equal(refused.code, 1, args.join(" "));
+    assert.match(refused.errors, /home directory/);
+    assert.match(refused.errors, /^ {2}tonedial init --tools codex --global$/m);
+  }
+  assert.equal(existsSync(join(home, ".codex")), false);
+  assert.equal(existsSync(resolvePaths(env).config), false);
+});

@@ -349,12 +349,16 @@ export async function runUnwire(ctx: Ctx, args: string[]): Promise<CommandResult
     const flag = connectionScopeFlag(ctx.agent, ctx.flags.here === true);
     throw new ConfigError(ctx.t.errors.unwireToolsRequired(`tonedial unwire codex ${flag}`, `tonedial eject ${flag}`, ctx.flags.auto));
   }
+  requireDisconnectScope(ctx, `tonedial unwire${named ? ` ${named[0]}` : ""}`);
+  return disconnect(ctx, named ?? await askTools(ctx, ctx.t.errors.unwireToolsPrompt));
+}
+
+/** Without a scope flag, a disconnect in a folder with its own connections names both scopes. */
+export function requireDisconnectScope(ctx: Ctx, command: string): void {
   const scopeExplicit = ctx.scopeExplicit ?? (ctx.flags.global || ctx.flags.here === true || ctx.flags.project !== null);
   if (!scopeExplicit && connectionsAt(planConfig(ctx).config, "project", ctx.cwd).length > 0) {
-    const command = `tonedial unwire${named ? ` ${named[0]}` : ""}`;
     throw new ConfigError(ctx.t.errors.unwireScopeRequired(`${command} --here`, `${command} --global`));
   }
-  return disconnect(ctx, named ?? await askTools(ctx, ctx.t.errors.unwireToolsPrompt));
 }
 
 /** `all` is eject's every-agent removal, which reports an empty scope as such. */

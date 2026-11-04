@@ -2,11 +2,12 @@
 // setup, or guess ownership of a project export from its filename.
 
 import type { CommandResult, Ctx } from "../cli.ts";
-import { disconnect } from "./wire.ts";
+import { disconnect, requireDisconnectScope } from "./wire.ts";
 import { AGENT_TOOLS } from "../core/paths.ts";
 import { humanText, receiptLines } from "../ui/format.ts";
 
 export async function runEject(ctx: Ctx, _args: string[]): Promise<CommandResult> {
+  requireDisconnectScope(ctx, "tonedial eject");
   const result = await disconnect(ctx, [...AGENT_TOOLS], true);
   const diff = result.json.diff as { path: string }[];
   return {

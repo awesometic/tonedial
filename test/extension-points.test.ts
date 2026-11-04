@@ -154,8 +154,8 @@ test("the traits reference leaves host reply styles to the compiled mixing rule"
   assert.match(SKILL_TRAITS_MD, /model_verbosity[^\n]*not visible to the model as text/);
 });
 
-test("the skill names the disconnect routes and the unscoped unwire refusal", () => {
+test("the skill names the disconnect routes and the unscoped unwire and eject refusal", () => {
   assert.match(SKILL_MD, /`unwire <tool>` disconnects one agent; `eject` disconnects every agent in a scope/);
-  assert.match(SKILL_MD, /`unwire <tool>` refuses in a folder that has its own project connections/);
+  assert.match(SKILL_MD, /`unwire <tool>` and `eject` refuse in a folder that has its own project\s+connections/);
   assert.match(SKILL_MD, /`show --json` lists every recorded connection's `target`, `scope` and `destination`/);
 });
