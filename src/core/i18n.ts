@@ -438,8 +438,7 @@ export type Messages = {
     hookGroupHeading: string;
     hookGroupUnknown: (tools: readonly string[]) => string;
     hookNotConnected: string;
-    hookNeedsInspection: string;
-    hookGuidance: Record<"claude" | "codex" | "antigravity", string>;
+    hookGuidance: Record<"claude" | "antigravity", string>;
     nativeMissing: (path: string, event: "SessionStart" | "PreInvocation") => string;
     nativeStale: string;
     nativeForeign: string;
@@ -1040,27 +1039,25 @@ const enMessages: Messages = {
     imported: "import connected",
     hookPresent: (event) => `${event} hook · configured to read TONE.md each session`,
     nativeConfigured: (event) => `${event} hook · configured to read AGENTS.md, then TONE.md`,
-    nativeConfiguredCompact: (event) => `${event} · AGENTS.md → TONE.md`,
+    nativeConfiguredCompact: (event) => `Connected · ${event} · AGENTS.md → TONE.md`,
     hookSettingState: {
-      enabled: "Hook enabled in the registered settings file",
-      disabled: "Hook disabled in the registered settings file",
-      unknown: "Hook enablement unknown in the registered settings file",
+      enabled: "Hook enabled in its settings file",
+      disabled: "Hook disabled in its settings file",
+      unknown: "Enablement can't be checked from files",
     },
     hookSettingScope: "Hook states above come from the inspected settings files only; host overrides and session delivery are unverified.",
     hookGroupHeading: "Agent hooks",
     hookGroupUnknown: (tools) => `Not connected: ${tools.join(", ")}.`,
     hookNotConnected: "No managed ToneDial hook to inspect. To connect, run init with this agent selected in the same scope.",
-    hookNeedsInspection: "Resolve the reported hook settings or program issue before checking enablement in the app.",
     hookGuidance: {
       claude: "/hooks → SessionStart: check the ToneDial command and settings source. If hooks are off, set disableAllHooks to false and check workspace trust.",
-      codex: "/hooks → SessionStart → ToneDial: review the command and enable the hook. If asked, review and trust the project first.",
       antigravity: "Antigravity IDE agent panel … → Customizations → Hooks (or Desktop Settings → Customizations → Hooks): check the ToneDial PreInvocation command and enable it.",
     },
     nativeMissing: (path, event) => `No ToneDial ${event} hook · ${path}`,
     nativeStale: "ToneDial hook uses an older reader or runtime configuration.",
     nativeForeign: "Settings changed outside ToneDial. Preserve the file and review it before repair.",
     nativeInherited: (path, event) => `Using the global ${event} hook · ${path} · no project hook needed`,
-    nativeInheritedCompact: (path, event) => `Global ${event} hook\n${path}`,
+    nativeInheritedCompact: (path, event) => `Connected through the global ${event} hook\n${path}`,
     legacyRepairWithheld: "This connection method is no longer set up. Reconnect with init for hook delivery.",
     nativeRuntimeUnusable: (path) => `Hook program is unusable: ${path}`,
     codexHookDisabled: "Codex setting: hook disabled. Enable it in /hooks → SessionStart → ToneDial.",
@@ -1815,27 +1812,25 @@ const koMessages: Messages = {
     imported: "import 연결됨",
     hookPresent: (event) => `${event} 훅 · 매 세션 TONE.md를 읽도록 설정됨`,
     nativeConfigured: (event) => `${event} 훅 · AGENTS.md 다음 TONE.md를 읽도록 설정됨`,
-    nativeConfiguredCompact: (event) => `${event} · AGENTS.md → TONE.md`,
+    nativeConfiguredCompact: (event) => `연결됨 · ${event} · AGENTS.md → TONE.md`,
     hookSettingState: {
-      enabled: "등록된 설정 파일에서 훅이 켜져 있음",
-      disabled: "등록된 설정 파일에서 훅이 꺼져 있음",
-      unknown: "등록된 설정 파일에서 훅 활성화 여부를 확인할 수 없음",
+      enabled: "설정 파일에서 훅 켜짐",
+      disabled: "설정 파일에서 훅 꺼짐",
+      unknown: "활성화 여부는 파일로 확인할 수 없음",
     },
     hookSettingScope: "위 훅 상태는 검사한 설정 파일만 보고 판단한 것입니다. 앱에서 덮어쓴 설정이나 실제 세션 전달 여부는 확인하지 않았습니다.",
     hookGroupHeading: "에이전트 훅",
     hookGroupUnknown: (tools) => `연결 안 됨: ${tools.join(", ")}`,
     hookNotConnected: "검사할 ToneDial 관리 훅이 없습니다. 연결하려면 같은 범위에서 init을 실행하고 이 에이전트를 선택해 주세요.",
-    hookNeedsInspection: "위에 나온 훅 설정이나 실행 프로그램 문제를 먼저 확인한 뒤 앱에서 활성화 여부를 확인해 주세요.",
     hookGuidance: {
       claude: "/hooks → SessionStart에서 ToneDial 실행 명령과 설정 출처를 확인하세요. 훅이 꺼져 있으면 disableAllHooks를 false로 바꾸고 프로젝트 신뢰 설정도 확인하세요.",
-      codex: "/hooks → SessionStart → ToneDial에서 실행 명령을 확인하고 훅을 켜세요. 프로젝트 신뢰를 요청하면 먼저 내용을 확인하고 승인해 주세요.",
       antigravity: "Antigravity IDE 에이전트 패널 … → Customizations → Hooks(또는 데스크톱 Settings → Customizations → Hooks)에서 ToneDial PreInvocation 명령을 확인하고 켜세요.",
     },
     nativeMissing: (path, event) => `ToneDial ${event} 훅 없음 · ${path}`,
     nativeStale: "ToneDial 훅이 이전 전달 스크립트나 런타임 설정을 사용합니다.",
     nativeForeign: "ToneDial 밖에서 설정이 바뀌었습니다. 파일을 보존하고 복구 전에 확인해 주세요.",
     nativeInherited: (path, event) => `전역 ${event} 훅 사용 · ${path} · 프로젝트 훅은 필요 없음`,
-    nativeInheritedCompact: (path, event) => `전역 ${event} 훅\n${path}`,
+    nativeInheritedCompact: (path, event) => `전역 ${event} 훅으로 연결됨\n${path}`,
     legacyRepairWithheld: "더는 이 방식으로 연결하지 않습니다. init으로 다시 연결하면 훅으로 전달합니다.",
     nativeRuntimeUnusable: (path) => `훅 실행 프로그램을 사용할 수 없습니다: ${path}`,
     codexHookDisabled: "Codex 설정: 훅 꺼짐. /hooks → SessionStart → ToneDial에서 켜세요.",

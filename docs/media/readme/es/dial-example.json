@@ -23,13 +23,13 @@
     "src/ui/prompt.ts": "caa537c24bce28b8d7041e33e87149c2554c38861232eed54bd96f17f2d83ccd",
     "src/ui/style.ts": "2dc560ebc69677d391ec8ab39817c3a89545d6b8b603c080a7f6d09a75450a8e",
     "src/ui/width.ts": "eb1013f8511ccfc8b9eca78e3d74433cfcf30096b7faf71ba118a5cd42163acd",
-    "src/core/i18n.ts": "2e279d61f90b4b99d5645becd4f012e3081c4e47f128a56c3be11b9f1ec1c166",
+    "src/core/i18n.ts": "3d8f64a2ce4765c8bf99636dd7c9f13a37fda31e3c0f7a314dad101172baae40",
     "src/core/anchors.ts": "8d342289ba5c52bb26be193bc4bf7bbbb38c5d2c5bc74b735b698eaea3ce573a",
     "src/core/presets.ts": "fca9c7e372d2ad8ee8ef2cfe8254af0438f9b37f390205924bb53ee42ccb215d",
     "scripts/dial-svg.ts": "eb81cde392f472ea8df8b251150afccfcf02e5adf936221a174ab17d965e13a4",
-    "src/core/locales/ja.ts": "d6ad70a4e8407bd53051a8f96769d294644441f4b1282f15a8418556df3b939e",
-    "src/core/locales/zh.ts": "c17a7d42fd444836e0c3191c37ab0e158d0eca76153ec8ff81d5d90e067a29d2",
-    "src/core/locales/es.ts": "2f23acc6ffbdcb0cee4b7dad914817975bc7d0ad895b31dcdf45e62cd3feaea0"
+    "src/core/locales/ja.ts": "81d12681af1c16ca9945a46e557891e9add1aa920e2856af51609395fe3117a2",
+    "src/core/locales/zh.ts": "766fc25703058bf3ef1cc7df7c2b5dd2c9214e01fcb697517942f717fc82f0e2",
+    "src/core/locales/es.ts": "d682e879064ad4f9485df08f7ccb00fbc9e0924089a9db4c0b6a298e457b7d8e"
   },
   "svgRecipe": [
     "scripts/dial-svg.ts",

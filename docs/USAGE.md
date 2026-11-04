@@ -485,6 +485,8 @@ Use [actual-host trials](./TESTING.md#actual-host-and-one-day-trial) for deliver
 
 Human diagnosis always shows the selected scope/directory, without needing `--verbose`.
 Each finding appears once and ends with the command that fixes it; `tonedial doctor --fix` with the same scope when `--fix` repairs it.
+A connected agent reads as connected, then whether its settings file shows the hook enabled, then the step that enables it in the app.
+The Codex project-trust step appears only for project connections.
 When delivery is paused it suggests `tonedial on`; when no agent is connected it ends with `tonedial wire` for that scope.
 Other registered connections are grouped by scope/directory and shared file status.
 Missing files mean some or all recorded files were absent, not that no connection was registered.

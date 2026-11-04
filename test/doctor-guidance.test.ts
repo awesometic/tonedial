@@ -105,3 +105,28 @@ test("an edited TONE.md is one finding with the doctor --fix command", async () 
   assert.doesNotMatch(shown.out, /Context files/);
   assert.equal(block(shown.out, "TONE.md").at(-1), "tonedial doctor --fix --global");
 });
+
+test("a connected agent shows one state: connected, with enablement that files cannot show", async () => {
+  mkdirSync(join(home, ".claude"));
+  assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
+  const global = await human(["doctor", "--global"]);
+  const codex = block(global.out, "Codex CLI");
+  assert.equal(codex[0], "ok Codex CLI");
+  assert.match(codex[1]!, /^Connected · SessionStart/);
+  assert.match(codex.join(" "), /can't be checked from files/);
+  assert.doesNotMatch(codex.join(" "), /unknown|[Tt]rust/);
+  // An installed agent that was never connected is simply not connected.
+  assert.match(block(global.out, "Agent hooks").join(" "), /Not connected: Claude Code, Antigravity IDE\/Desktop\./);
+  assert.doesNotMatch(global.out, /no longer set up/);
+
+  rmSync(join(home, ".codex", "hooks.json"));
+  const missing = block((await human(["doctor", "--global"])).out, "Codex CLI");
+  assert.deepEqual(missing.slice(-1), ["tonedial doctor --fix --global"]);
+  assert.doesNotMatch(missing.join(" "), /[Ee]nablement|Resolve the reported/);
+});
+
+test("the project trust step appears only for a project connection", async () => {
+  assert.equal((await human(["init", "--tools", "codex", "--here", "--auto"], project)).code, 0);
+  const here = block((await human(["doctor", "--here"], project)).out, "Codex CLI");
+  assert.match(here.join(" "), /Trust this project in Codex/);
+});

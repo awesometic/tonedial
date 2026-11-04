@@ -509,11 +509,14 @@ test("state-only doctor refuses an unavailable native wire repair, including a r
     const claude = check(report, "Claude Code");
     assert.equal(claude.state, "note");
     assert.equal(claude.repair, null);
-    assert.equal(claude.detail, catalogue("en").cli.doctor.legacyRepairWithheld);
+    // Only a recorded connection has a legacy repair to withhold; otherwise the agent is not connected.
+    const expected = retained ? catalogue("en").cli.doctor.legacyRepairWithheld : catalogue("en").cli.doctor.hookNotConnected;
+    assert.equal(claude.detail, expected);
     for (const flags of [[], ["--verbose"]]) {
       const human = await invokeHuman(["doctor", "--here", ...flags]);
       assert.equal(human.code, 0, human.output + human.error);
-      assert.ok(containsWrapped(human.output, catalogue("en").cli.doctor.legacyRepairWithheld), "grouping concealed the withheld legacy diagnosis");
+      if (retained) assert.ok(containsWrapped(human.output, expected), "grouping concealed the withheld legacy diagnosis");
+      else assert.ok(!containsWrapped(human.output, catalogue("en").cli.doctor.legacyRepairWithheld), human.output);
     }
     assert.doesNotMatch(report.output, /tonedial wire claude/);
     assert.equal(existsSync(join(project, ".claude", "CLAUDE.md")), false);
@@ -609,7 +612,7 @@ test("doctor shares hook setting states and guidance across agents and locales",
     const human = await invokeHuman(["doctor", "--global"]);
     const t = catalogue(language).cli.doctor;
     assert.ok(containsWrapped(human.output, t.hookSettingState.enabled), human.output);
-    assert.ok(containsWrapped(human.output, t.hookGuidance.codex), human.output);
+    assert.ok(containsWrapped(human.output, catalogue(language).cli.wiring.codexTrust(true)), human.output);
     assert.ok(containsWrapped(human.output, t.hookGuidance.antigravity), human.output);
     assert.ok(containsWrapped(human.output, t.hookGuidance.claude), human.output);
     assert.equal(human.output.split("/hooks").length - 1, 2, human.output);

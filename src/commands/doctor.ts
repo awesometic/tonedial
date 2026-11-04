@@ -804,22 +804,25 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true): Promise<Comm
       continue;
     }
 
-    const check = wiringCheck(ctx, tool, shownPath);
+    const check = wiringCheck(ctx, tool, shownPath, isConfigV2(config)
+      ? config.wiring.registrations[registrationKey(tool, scope, destination)] !== undefined
+      : Object.hasOwn(config.wiring, tool));
     checks.push(check);
     hookSettings.push({ tool, state: "unknown", basis: "unverified", path: null });
   }
+  // One state per agent: what is wrong and its fix, or that it is connected and how to enable it
+  // in the app. Enablement is only worth a line once the hook itself is in place.
   for (const setting of hookSettings) {
     const check = checks.find(check => check.name === TARGETS[setting.tool].label)!;
     const integration = integrations.find(integration => integration.tool === setting.tool);
-    const guidance = integration === undefined && TARGETS[setting.tool].delivery === null ? ""
-      : integration === undefined ? ctx.t.doctor.hookNotConnected
-      : integration.configuration !== "configured" || integration.runtime.state !== "available"
-        ? ctx.t.doctor.hookNeedsInspection
-      : ctx.t.doctor.hookGuidance[setting.tool];
     const detail = check.humanDetail ?? [check.detail];
-    const state = ctx.t.doctor.hookSettingState[setting.state];
-    check.humanDetail = [...(check.state === "problem" ? [...detail, state] : [state, ...detail]),
-      ...(guidance === "" ? [] : [guidance])];
+    if (integration === undefined || (check.state === "problem" && setting.state !== "disabled")) {
+      check.humanDetail = detail;
+      continue;
+    }
+    const guidance = setting.tool === "codex" ? ctx.t.wiring.codexTrust(ctx.agent.live || integration.inherited)
+      : ctx.t.doctor.hookGuidance[setting.tool];
+    check.humanDetail = [...detail, ctx.t.doctor.hookSettingState[setting.state], guidance];
   }
 
   // Measured from the files on disk; Claude Code's own truncation is not observed here.
@@ -1121,7 +1124,7 @@ function pathCheck(ctx: Ctx, shape: InstallShape): Check {
 }
 
 /** One tool's region: absent, present and current, present and stale, present and damaged. */
-function wiringCheck(ctx: Ctx, tool: AgentTool, shownPath: WiredAt): Check {
+function wiringCheck(ctx: Ctx, tool: AgentTool, shownPath: WiredAt, registered: boolean): Check {
   const target = TARGETS[tool];
   const name = target.label;
   // A native target has no legacy region. An unregistered Antigravity hooks file is not evidence
@@ -1130,7 +1133,9 @@ function wiringCheck(ctx: Ctx, tool: AgentTool, shownPath: WiredAt): Check {
     return { name, state: "note", detail: ctx.t.doctor.hookNotConnected };
   }
   const path = ctx.agent.wiredFile(tool);
-  // Legacy delivery is inspected only; new setup uses the native pair route.
+  // Legacy delivery is inspected only; new setup uses the native pair route. Without a recorded
+  // connection there is nothing to withhold: the agent is simply not connected.
+  const withheld = registered ? ctx.t.doctor.legacyRepairWithheld : ctx.t.doctor.hookNotConnected;
 
   // Use the shared bounded planner even for inspection. It rejects a directory, FIFO, device,
   // dangling link, invalid text, or replacement race before a command-level read can hang or
@@ -1143,7 +1148,7 @@ function wiringCheck(ctx: Ctx, tool: AgentTool, shownPath: WiredAt): Check {
 
   if (text === null) {
     if (!existsSync(ctx.agent.home(tool))) return { name, state: "absent", detail: ctx.t.doctor.notInstalled };
-    return { name, state: "note", detail: ctx.t.doctor.legacyRepairWithheld };
+    return { name, state: "note", detail: withheld };
   }
 
   // **The hook is asked about as a hook.** Its file is JSON with no marker to find, and the
@@ -1174,7 +1179,7 @@ function wiringCheck(ctx: Ctx, tool: AgentTool, shownPath: WiredAt): Check {
             repair: "tonedial compile",
           };
     }
-    return { name, state: "note", detail: ctx.t.doctor.legacyRepairWithheld };
+    return { name, state: "note", detail: withheld };
   }
 
   const content = regionContent(shownPath.tonePath);
@@ -1193,7 +1198,7 @@ function wiringCheck(ctx: Ctx, tool: AgentTool, shownPath: WiredAt): Check {
   }
 
   if (!found) {
-    return { name, state: "note", detail: ctx.t.doctor.legacyRepairWithheld };
+    return { name, state: "note", detail: withheld };
   }
   if (found.content === content) return { name, state: "ok", detail: ctx.t.doctor.imported };
 
