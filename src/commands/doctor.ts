@@ -33,8 +33,8 @@ import { wrap } from "../ui/width.ts";
 import { applyRollback, assertFresh, planChange, previewRollback, type Change } from "../wiring/apply.ts";
 import { confirm } from "../ui/prompt.ts";
 import { RegionError, find } from "../wiring/region.ts";
-import { TARGETS, inspectContextConsumers, orderedFingerprint, orderedHook, recordedHook, regionContent, wiredAt, type WiredAt } from "../wiring/targets.ts";
-import { connections, connectionsInScope } from "../wiring/scopes.ts";
+import { TARGETS, inspectContextConsumers, orderedFingerprint, orderedHook, projectDuplicates, recordedHook, regionContent, wiredAt, type DeliveryDuplicate, type WiredAt } from "../wiring/targets.ts";
+import { connections, connectionsAt, connectionsInScope } from "../wiring/scopes.ts";
 import { hasHook, hookCommand, ownedHook } from "../wiring/hooks.ts";
 import { codexHookTrust, type CodexTrust } from "../wiring/codex-trust.ts";
 import { assertRecordedTextAccess, contentHash, registrationKey, resourceKey } from "../wiring/ownership.ts";
@@ -104,6 +104,8 @@ type NativeIntegration = {
   /** Codex's separate trust record; an enabled setting does not prove trust or delivery. */
   trust: CodexTrust;
   activation: "unverified";
+  /** Project hooks that deliver this pair a second time beside the global hook. */
+  duplicates: DeliveryDuplicate[];
 };
 
 type HookSetting = {
@@ -352,9 +354,24 @@ function nativeRoute(ctx: Ctx, config: Config, tool: AgentTool): NativeRoute | n
   };
 }
 
+/**
+ * Project hooks that repeat the global hook for this tool. Global inspection reports every one;
+ * project inspection reports its own folder. A project that inherits the global file is not one.
+ */
+function duplicateHooks(ctx: Ctx, config: Config, tool: AgentTool): DeliveryDuplicate[] {
+  if (!isConfigV2(config)) return [];
+  const global = connections(config).find((connection) => connection.target === tool && connection.scope === "global");
+  const globalId = global && registrationKey(tool, "global", global.destination!);
+  if (globalId === undefined || nativeResource(config, globalId) === undefined) return [];
+  const here = canonicalDestination(ctx.agent.root);
+  return projectDuplicates(config.wiring, tool, globalId, orderedHook(tool, ctx.paths.root, process.execPath), ctx.paths.root, true)
+    .filter((duplicate) => ctx.agent.live || duplicate.destination === here);
+}
+
 /** Diagnose one native route from a bounded settings snapshot. */
 function diagnoseNative(
   ctx: Ctx,
+  config: Config,
   route: NativeRoute,
   reader: ReaderHealth,
 ): NativeDiagnosis {
@@ -486,6 +503,7 @@ function diagnoseNative(
     reader: nativeReader,
     trust,
     activation: "unverified",
+    duplicates: duplicateHooks(ctx, config, route.tool),
   };
   // A recorded off switch is a configuration problem. Unknown trust remains a separate
   // host-review observation, never approval or activation evidence.
@@ -797,7 +815,7 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true): Promise<Comm
   for (const tool of AGENT_TOOLS) {
     const route = nativeRoute(ctx, config, tool);
     if (route !== null) {
-      const diagnosed = diagnoseNative(ctx, route, reader);
+      const diagnosed = diagnoseNative(ctx, config, route, reader);
       integrations.push(diagnosed.integration);
       hookSettings.push(diagnosed.hookSetting);
       checks.push(diagnosed.check);
@@ -822,7 +840,9 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true): Promise<Comm
     }
     const guidance = setting.tool === "codex" ? ctx.t.wiring.codexTrust(ctx.agent.live || integration.inherited)
       : ctx.t.doctor.hookGuidance[setting.tool];
-    check.humanDetail = [...detail, ctx.t.doctor.hookSettingState[setting.state], guidance];
+    check.humanDetail = [...detail, ctx.t.doctor.hookSettingState[setting.state], guidance,
+      ...integration.duplicates.map(({ destination, state }) =>
+        ctx.t.wiring.hookDuplicate(setting.tool, humanText(destination), state === "stale-duplicate"))];
   }
 
   // Measured from the files on disk; Claude Code's own truncation is not observed here.
@@ -879,6 +899,9 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true): Promise<Comm
       integration.configuration !== "configured" || integration.runtime.state !== "available" ||
       integration.trust === "disabled") || hookSettings.some(setting => setting.state === "disabled");
   const elsewhere = wiredElsewhere(config, ctx.agent);
+  // Inspecting global from a folder with its own connections: say so and name `doctor --here`.
+  const folder = ctx.agent.live
+    ? connectionsAt(config, "project", ctx.cwd).filter(({ target }) => (AGENT_TOOLS as readonly string[]).includes(target)) : [];
   const nativeCheckNames = new Set(hookSettings.map(({ tool }) => TARGETS[tool].label));
   // One finding per cause. Before setup, the missing guide and artifact restate the context
   // check; after it, a guide or artifact finding names the file the context summary points to.
@@ -895,10 +918,13 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true): Promise<Comm
   const lines: string[] = [
     summaryLine(ctx, findings.filter((check) => check.state === "problem").length,
       // Agents that are simply not connected are grouped into one row and are not a notice.
-      findings.filter((check) => check.state === "note" && check.detail !== ctx.t.doctor.hookNotConnected).length),
+      findings.filter((check) => check.state === "note" && check.detail !== ctx.t.doctor.hookNotConnected).length +
+      integrations.reduce((count, integration) => count + integration.duplicates.length, 0) + (folder.length ? 1 : 0)),
     `  ${ctx.ui.bold((appHealthy ? ctx.ui.success : ctx.ui.warn)(ctx.t.doctor.applicationHealth(appHealthy)))}`,
     // A healthy setup sends no tone while paused; that is the first thing to know.
     ...offNotice(config.enabled, ctx.t, ctx.ui),
+    ...(folder.length ? ["", ...receiptLines(ctx.t.doctor.folderConnections(folder.map(({ target }) => target), "tonedial doctor --here"),
+      ctx.ui.width - 2).map((line) => `  ${line}`)] : []),
     ...(integrations.length || nativeAttention ? [
       ...section(ctx.t.doctor.connectionsHeading, ctx.ui),
       ...wrap(ctx.t.doctor.connectionHealth(nativeAttention), ctx.ui.width - 2).map((line) =>
@@ -1282,7 +1308,9 @@ function elsewhereReport(rows: Elsewhere[], ctx: Ctx): string[] {
         .map(line => `    ${state === "ok" ? line : ctx.ui.warn(line)}`));
     }
     if (group.some(row => row.state !== "ok")) {
-      const scopeFlag = scope === "global" ? "--global" : `--project "${shellQuote(destination)}"`;
+      // The current folder's own scope is the one `--here` names.
+      const scopeFlag = scope === "global" ? "--global"
+        : destination === canonicalDestination(ctx.cwd) ? "--here" : `--project "${shellQuote(destination)}"`;
       lines.push(...wrap(ctx.t.doctor.inspectScope, ctx.ui.width - 4).map(line => `    ${line}`),
         `    ${ctx.ui.accent(humanText(`tonedial doctor ${scopeFlag}`))}`,
         ...wrap(ctx.t.doctor.disconnectScope, ctx.ui.width - 4).map(line => `    ${line}`),

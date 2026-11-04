@@ -391,6 +391,8 @@ export type Messages = {
     scopeGlobal: string;
     /** Registrations outside the scope being inspected. Reported, never repaired. */
     wiredElsewhere: string;
+    /** Global inspection from a folder with its own connections; `command` inspects them. */
+    folderConnections: (targets: readonly string[], command: string) => string;
     destinationGone: string;
     destinationUnwired: string;
     destinationPresent: string;
@@ -973,6 +975,7 @@ const enMessages: Messages = {
     healthy: "No problems found",
     scopeGlobal: "Inspection scope: global",
     wiredElsewhere: "Registered connections outside this inspection scope",
+    folderConnections: (targets, command) => `This folder has its own connections (${targets.join(", ")}). To check them instead of the global ones:\n${command}`,
     destinationGone: "registered directory not found or inaccessible",
     destinationUnwired: "some or all registered connection files were not found",
     destinationPresent: "registered connection files found",
@@ -1746,6 +1749,7 @@ const koMessages: Messages = {
     healthy: "문제 없음",
     scopeGlobal: "검사 범위: 전역",
     wiredElsewhere: "이번 검사 범위 밖에 등록된 연결",
+    folderConnections: (targets, command) => `이 폴더에는 따로 등록된 연결(${targets.join(", ")})이 있습니다. 전역 연결 대신 이 폴더의 연결을 점검하려면:\n${command}`,
     destinationGone: "등록된 디렉토리를 찾을 수 없거나 접근할 수 없음",
     destinationUnwired: "등록된 연결 파일 중 일부 또는 전부를 찾을 수 없음",
     destinationPresent: "등록된 연결 파일이 있음",

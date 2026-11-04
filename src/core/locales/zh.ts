@@ -315,6 +315,7 @@ const messages: Messages = {
     healthy: "未发现问题",
     scopeGlobal: "检查范围：全局",
     wiredElsewhere: "检查范围外的已注册连接",
+    folderConnections: (targets, command) => `此文件夹有自己的连接（${targets.join(", ")}）。要检查这些连接而不是全局连接：\n${command}`,
     destinationGone: "注册目录不存在或无法访问",
     destinationUnwired: "部分或全部已注册连接文件未找到",
     destinationPresent: "已找到注册的连接文件",

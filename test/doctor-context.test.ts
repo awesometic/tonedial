@@ -555,6 +555,7 @@ test("native doctor reports independent runtime and reader health and repairs a 
     // Only Codex answers anything else here.
     trust: "unknown",
     activation: "unverified",
+    duplicates: [],
   });
   assert.equal(check(current, "Claude Code").state, "ok", current.output);
   assert.match(check(current, "Claude Code").detail, /AGENTS\.md.*TONE\.md/i);
@@ -745,6 +746,7 @@ test("project doctor reports a managed global native hook without creating a pro
     // Only Codex answers anything else here.
     trust: "unknown",
     activation: "unverified",
+    duplicates: [],
   });
   assert.equal(check(report, "Claude Code").state, "ok", report.output);
   assert.match(check(report, "Claude Code").detail, /global SessionStart hook/i);
@@ -1125,10 +1127,13 @@ for (const language of ["en", "ko"] as const) {
     }
     for (const destination of [project, other].map(canonicalDestination)) {
       assert.equal(section.split("\n").filter(line => line.trim() === destination).length, 1, section);
+      // The current folder's commands name it with --here; another folder needs its path.
+      const flag = destination === canonicalDestination(project) ? "--here" : `--project "${destination}"`;
       for (const command of ["doctor", "eject"]) {
-        assert.equal(section.split(`tonedial ${command} --project "${destination}"`).length - 1, 1, section);
+        assert.equal(section.split(`tonedial ${command} ${flag}`).length - 1, 1, section);
       }
     }
+    assert.ok(containsWrapped(mixed.output, copy.folderConnections(["antigravity", "claude", "codex"], "tonedial doctor --here")), mixed.output);
     // The full scoped commands above stay copyable; their long paths use terminal soft wrapping.
     const prose = (output: string) => output.split("\n").filter(line => !/^tonedial (doctor|eject) /.test(line.trim())).join("\n");
     assertHumanWidth(prose(mixed.output), language, 60);

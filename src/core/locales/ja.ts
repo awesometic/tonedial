@@ -315,6 +315,7 @@ const messages: Messages = {
     healthy: "問題は見つかりませんでした",
     scopeGlobal: "確認範囲：グローバル",
     wiredElsewhere: "確認範囲外の登録済み接続",
+    folderConnections: (targets, command) => `このフォルダーには独自の接続（${targets.join(", ")}）があります。グローバルの接続ではなくこちらを確認するには：\n${command}`,
     destinationGone: "登録ディレクトリが見つからないかアクセスできません",
     destinationUnwired: "登録済み接続ファイルの一部または全部が見つかりません",
     destinationPresent: "登録済み接続ファイルを確認しました",

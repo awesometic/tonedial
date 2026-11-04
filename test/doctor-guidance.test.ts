@@ -145,3 +145,37 @@ test("the report opens with a count of problems and notices", async () => {
   env.PATH = bin;
   assert.equal(lead((await human(["doctor", "--global"])).out), "No problems found");
 });
+
+test("plain doctor in a folder with its own connections points to doctor --here", async () => {
+  assert.equal((await human(["init", "--tools", "codex", "--here", "--auto"], project)).code, 0);
+  const shown = await human(["doctor"], project);
+  assert.match(shown.out, /This folder has its own connections \(codex\)/);
+  assert.match(shown.out, /^ {2}tonedial doctor --here$/m);
+  assert.match(shown.out.split("\n").filter((line) => line.trim())[3]!, /1 notice/);
+  const machine = await json(["doctor"], project);
+  assert.equal(machine.value.wiredElsewhere.length, 1, "JSON keeps every registration outside the scope");
+});
+
+test("doctor reports a project hook that duplicates the global one, in both scopes", async () => {
+  assert.equal((await human(["init", "--tools", "codex", "--here", "--auto"], project)).code, 0);
+  assert.equal((await human(["wire", "codex", "--global", "--auto"])).code, 0);
+  for (const [args, cwd] of [[["doctor", "--global"], home], [["doctor", "--here"], project]] as const) {
+    const codex = block((await human([...args], cwd)).out, "Codex CLI");
+    assert.ok(codex.includes(project), codex.join("\n"));
+    assert.match(codex.join(" "), /both hooks are present/);
+    assert.equal(codex.at(-1), "tonedial unwire codex --here");
+    const machine = await json([...args], cwd);
+    const integration = machine.value.integrations.find((row: { tool: string }) => row.tool === "codex");
+    assert.deepEqual(integration.duplicates.map((row: { destination: string }) => row.destination), [project]);
+  }
+});
+
+test("a project that inherits the global hook is not reported as a duplicate", async () => {
+  assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
+  assert.equal((await human(["wire", "codex", "--here", "--auto"], project)).code, 0);
+  for (const [args, cwd] of [[["doctor", "--global"], home], [["doctor", "--here"], project]] as const) {
+    const machine = await json([...args], cwd);
+    assert.deepEqual(machine.value.integrations.find((row: { tool: string }) => row.tool === "codex").duplicates, []);
+    assert.doesNotMatch((await human([...args], cwd)).out, /both hooks are present/);
+  }
+});

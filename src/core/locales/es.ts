@@ -315,6 +315,7 @@ const messages: Messages = {
     healthy: "No se encontraron problemas",
     scopeGlobal: "Ámbito de inspección: global",
     wiredElsewhere: "Conexiones registradas fuera de este ámbito",
+    folderConnections: (targets, command) => `Esta carpeta tiene sus propias conexiones (${targets.join(", ")}). Para revisarlas en lugar de las globales:\n${command}`,
     destinationGone: "directorio registrado inexistente o inaccesible",
     destinationUnwired: "faltan algunos o todos los archivos de conexión registrados",
     destinationPresent: "archivos de conexión registrados encontrados",

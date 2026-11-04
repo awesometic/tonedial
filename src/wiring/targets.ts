@@ -351,7 +351,7 @@ export function planOrderedDelivery(
  * recorded against an older runtime path; anything else is a different delivery, not a second
  * copy of this one.
  */
-function projectDuplicates(
+export function projectDuplicates(
   wiring: WiringV2,
   tool: AgentTool,
   selfId: string,

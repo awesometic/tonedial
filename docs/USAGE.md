@@ -490,6 +490,8 @@ A connected agent reads as connected, then whether its settings file shows the h
 The Codex project-trust step appears only for project connections.
 When delivery is paused it suggests `tonedial on`; when no agent is connected it ends with `tonedial wire` for that scope.
 Other registered connections are grouped by scope/directory and shared file status.
+Inspecting global from a folder with its own connections says so and gives `tonedial doctor --here`; that folder's listed commands also use `--here`.
+A project hook that repeats the global hook for the same agent is reported in both scopes, with the `unwire --here` command that keeps only the global one; JSON lists it in `integrations[].duplicates`.
 Missing files mean some or all recorded files were absent, not that no connection was registered.
 These are presence checks; `--fix` leaves other scopes alone.
 Use the displayed read-only `doctor` command to inspect them, or `eject` if no longer needed.
