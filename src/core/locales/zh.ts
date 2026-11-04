@@ -136,6 +136,7 @@ const messages: Messages = {
     rebuilt: "应用已恢复",
     unchanged: "应用文件已是最新",
     nativePending: "代理连接需要单独检查；设置和预设仍可使用。",
+    otherScopes: "其他范围的连接需要分别修复：",
     nativeApproval: (command) => `代理连接需要批准，尚未修复。要查看并批准更改，请在终端中重新运行：\n  ${command}\n或者先预览，再不经询问直接批准：\n  ${command} --dry-run\n  ${command} --auto`,
     rollback: (id) => `要恢复之前的文件：\ntonedial doctor --fix --rollback ${id}`,
     rollbackOrder: "请先恢复连接，再恢复应用文件：",

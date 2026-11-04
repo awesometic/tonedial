@@ -218,6 +218,7 @@ export type Messages = {
     nativePending: string;
     /** Native repair needed approval that no terminal could give; `command` reruns it. */
     nativeApproval: (command: string) => string;
+    otherScopes: string;
     rollback: (id: string) => string;
     rollbackOrder: string;
     noSnapshot: (id: string) => string;
@@ -809,6 +810,7 @@ const enMessages: Messages = {
     rebuilt: "Application restored",
     unchanged: "Application files current",
     nativePending: "Agent connections need separate attention; settings and presets remain usable.",
+    otherScopes: "Connections in other scopes need their own repair:",
     nativeApproval: (command) => `Agent connections not repaired · approval required. To review and approve the changes, rerun in a terminal:\n  ${command}\nOr preview them, then approve without prompting:\n  ${command} --dry-run\n  ${command} --auto`,
     rollback: (id) => `To restore the previous files:\ntonedial doctor --fix --rollback ${id}`,
     rollbackOrder: "Restore connections first, then application files:",
@@ -1592,6 +1594,7 @@ const koMessages: Messages = {
     rebuilt: "앱 복구 완료",
     unchanged: "앱 최신 상태",
     nativePending: "에이전트 연결은 따로 확인해 주세요. 설정과 프리셋은 계속 쓸 수 있습니다.",
+    otherScopes: "다른 범위의 연결은 따로 복구해야 합니다:",
     nativeApproval: (command) => `에이전트 연결은 승인이 필요해 복구하지 않았습니다. 변경 내용을 확인하고 승인하려면 터미널에서 다시 실행하세요:\n  ${command}\n또는 미리 본 다음 묻지 않고 승인하세요:\n  ${command} --dry-run\n  ${command} --auto`,
     rollback: (id) => `이전 파일로 되돌리려면:\ntonedial doctor --fix --rollback ${id}`,
     rollbackOrder: "연결 파일을 먼저 되돌린 뒤 앱 파일을 되돌리세요:",

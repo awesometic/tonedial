@@ -337,3 +337,44 @@ test("doctor names a global hook only an earlier version's project record keeps,
   assert.equal(existsSync(hook), false);
   assert.equal((await json(["doctor", "--global"])).value.checks.find((row: { name: string }) => row.name === "Codex CLI").state, "note");
 });
+
+test("a repair here leaves healthy connections elsewhere alone and names each scope that needs its own", async () => {
+  assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
+  assert.equal((await human(["wire", "claude", "--here", "--auto"], project)).code, 0);
+  const other = join(scratch, "other");
+  mkdirSync(other);
+  assert.equal((await human(["wire", "claude", "--project", other, "--auto"])).code, 0);
+
+  const healthy = await human(["doctor", "--fix", "--global", "--auto"], project);
+  assert.equal(healthy.code, 0, healthy.err);
+  assert.doesNotMatch(healthy.out, /need separate attention|need their own repair/);
+  const machine = await json(["doctor", "--fix", "--global", "--auto"], project);
+  assert.deepEqual([machine.value.native.nativeRepair, machine.value.native.issues], ["complete", []]);
+
+  rmSync(join(project, ".claude", "settings.json"));
+  rmSync(join(other, ".claude", "settings.json"));
+  const broken = await human(["doctor", "--fix", "--global", "--auto"], project);
+  assert.equal(broken.code, 0, broken.err);
+  assert.doesNotMatch(broken.out, /need separate attention/);
+  assert.match(broken.out.replace(/\s+/g, " "), /Connections in other scopes need their own repair/);
+  // The current folder is `--here`; another folder keeps its path.
+  assert.match(broken.out, /^ {2}tonedial doctor --fix --here$/m);
+  assert.match(broken.out, new RegExp(`^ {2}tonedial doctor --fix --project "${other.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"$`, "m"));
+  const issues = (await json(["doctor", "--fix", "--global", "--auto"], project)).value.native.issues;
+  assert.deepEqual(issues, [{ tool: null, reason: "unselected-scopes" }]);
+});
+
+test("a repair blocked by an edited hook says which file and why, not only that connections need attention", async () => {
+  assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
+  const hook = join(home, ".codex", "hooks.json");
+  writeFileSync(hook, readFileSync(hook, "utf8").replace(/"command": "/, '"command": "edited '));
+  for (const args of [["doctor", "--fix", "--global", "--auto"], ["init", "--tools", "codex", "--global", "--auto"]]) {
+    const shown = await human(args);
+    assert.equal(shown.code, 0, shown.err);
+    assert.doesNotMatch(shown.out, /need separate attention/, args.join(" "));
+    assert.match(shown.out, /Ownership is unknown, or managed content or file type changed/, args.join(" "));
+    assert.ok(shown.out.split("\n").some((line) => line.trim() === hook), shown.out);
+    // doctor's own report follows its repair; init names the diagnosis that shows the guidance.
+    if (args[0] === "init") assert.match(shown.out, /^ {2}tonedial doctor --global$/m);
+  }
+});

@@ -28,7 +28,7 @@ import { assertRecordedTextAccess, assertRegisteredFileChange, contentHash, deta
 import { pathLineState, rcPath, withPathLine } from "../wiring/shell.ts";
 import { humanText, nativeSetup, receiptLines } from "../ui/format.ts";
 import { pickTools } from "../ui/prompt.ts";
-import { connectionsInScope, folderConnections, globalCover, refuseHomeProject, refuseUnscopedDisconnect, riders, type Connection } from "../wiring/scopes.ts";
+import { connectionsInScope, folderConnections, globalCover, refuseHomeProject, refuseUnscopedDisconnect, riders, wiredElsewhere, type Connection } from "../wiring/scopes.ts";
 import { planConfig } from "./compile.ts";
 
 /** The positional form names one target; lists belong to --tools. */
@@ -105,12 +105,19 @@ export async function runRebuildNative(ctx: Ctx, legacy: LegacyOwnershipEvidence
       config.wiring.registrations[registrationKey(tool, scope, destination)]?.context === "pair");
     const attention: { tool: AgentTool | null; reason: string }[] = [];
     if (legacy && Object.keys(legacy.wiring).length > 0) attention.push({ tool: null, reason: explicitTools ? "unscoped-legacy-history" : "legacy-selection-required" });
-    if (Object.values(config.wiring.registrations).some((registration) => registration.target !== "shell" &&
-        (registration.scope !== scope || registration.destination !== destination))) attention.push({ tool: null, reason: "unselected-scopes" });
+    // Another scope needs its own repair when its folder is there and recorded files are not. A
+    // missing folder is doctor's to report: repairing it would recreate a folder the user removed.
+    const elsewhere = [...new Set(wiredElsewhere(config, ctx.agent).filter(({ state }) => state === "unwired")
+      .map(({ scope, destination }) => connectionScopeFlag({ live: scope === "global", root: destination }, ctx.cwd)))];
+    if (elsewhere.length) attention.push({ tool: null, reason: "unselected-scopes" });
+    const attentionLines = [...(attention.some(({ reason }) => reason !== "unselected-scopes") ? pendingLines : []), ...(elsewhere.length ? [
+      ...receiptLines(ctx.t.recovery.otherScopes, ctx.ui.width - 2).map(line => `  ${ctx.ui.warn(line)}`),
+      ...elsewhere.map((flag) => `  ${ctx.ui.accent(humanText(`tonedial doctor --fix ${flag}`))}`),
+    ] : [])];
     if (ctx.flags.commands && !tools.includes("claude")) throw new ConfigError(ctx.t.errors.commandsNeedClaude);
     const shell = selectedShell(ctx, config.wiring, tools, explicitTools);
     if (tools.length === 0 && shell === null) return {
-      lines: attention.length ? pendingLines : [],
+      lines: attentionLines,
       json: { nativeRepair: attention.length ? "attention" : "not-selected", applied: false, reason: "not-selected", tools: [], attention: attention.length > 0, issues: attention, activation: "unverified" },
     };
     const scopeExplicit = ctx.scopeExplicit ?? (ctx.flags.global || ctx.flags.here === true || ctx.flags.project !== null);
@@ -119,7 +126,7 @@ export async function runRebuildNative(ctx: Ctx, legacy: LegacyOwnershipEvidence
     const configured = result.json.applied === true || result.json.reason === "nothing";
     return {
       ...result,
-      lines: [...result.lines, ...(attention.length ? pendingLines : [])],
+      lines: [...result.lines, ...attentionLines],
       json: { ...result.json, nativeRepair: attention.length ? "attention" : configured ? "complete" : "not-applied", attention: attention.length > 0, issues: attention, activation: "unverified" },
     };
   } catch (cause) {
@@ -130,8 +137,11 @@ export async function runRebuildNative(ctx: Ctx, legacy: LegacyOwnershipEvidence
       : cause instanceof ApprovalRequired ? "approval-required"
       : cause instanceof ConfigError ? "protected-native-resource" : "native-phase-failed";
     return {
+      // An ownership refusal is catalogue text and a path, so it says which file and why.
       lines: reason === "approval-required" && ctx.rerun !== undefined
-        ? receiptLines(ctx.t.recovery.nativeApproval(ctx.rerun), ctx.ui.width - 2).map(line => `  ${line}`) : pendingLines,
+        ? receiptLines(ctx.t.recovery.nativeApproval(ctx.rerun), ctx.ui.width - 2).map(line => `  ${line}`)
+        : cause instanceof OwnershipConflict
+          ? receiptLines(cause.message, ctx.ui.width - 2).map(line => `  ${ctx.ui.warn(humanText(line))}`) : pendingLines,
       json: { nativeRepair: "attention", applied: false, reason, tools,
         attention: true, issues: [{ tool: null, reason }], activation: "unverified",
         ...(cause instanceof NativeOperationPending ? { operationId: cause.operationId } : {}) },

@@ -742,6 +742,10 @@ The file-change preview still requires separate approval after selection.
 | Other values | Disclosed defaults |
 
 Review native attention separately; explicitly select tools (`--tools <list>`) when adding or reconciling a route during `doctor --fix`.
+`doctor --fix` and a repeat `init` repair one scope.
+When another scope's folder is there but its connection files are missing, they name that scope's `doctor --fix` command, and JSON lists `unselected-scopes` in `native.issues`;
+healthy connections elsewhere and missing folders are left to doctor's report of other scopes.
+A file whose ToneDial entries changed outside ToneDial is named with the reason it was preserved.
 A rebuilt config records no connections, so the hooks it no longer records keep delivering the tone and `doctor` reports them.
 `doctor --fix --tools <tool>` with the same scope records entries that are exactly what ToneDial writes, after the usual preview and without changing the file.
 Keep rollback IDs and originals.
