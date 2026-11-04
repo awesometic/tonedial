@@ -27,7 +27,7 @@ import { assertRecordedTextAccess, assertRegisteredFileChange, contentHash, deta
 import { pathLineState, rcPath, withPathLine } from "../wiring/shell.ts";
 import { humanText, nativeSetup, receiptLines } from "../ui/format.ts";
 import { pickTools } from "../ui/prompt.ts";
-import { connectionsInScope, folderConnections, globalCover, projectIsHome } from "../wiring/scopes.ts";
+import { connectionsInScope, folderConnections, globalCover, projectIsHome, riders, type Connection } from "../wiring/scopes.ts";
 import { planConfig } from "./compile.ts";
 
 /** The positional form names one target; lists belong to --tools. */
@@ -401,76 +401,88 @@ export async function disconnect(ctx: Ctx, tools: AgentTool[], all = false): Pro
   // the escape is already per-tool: `unwire <tool>` clears the ones that are still recognisable
   // and leaves the damaged one for a person to look at.
   const disconnected: AgentTool[] = [];
+  // Project connections an earlier version recorded on a global hook go with that hook.
+  const alsoDisconnected: Connection[] = [];
   for (const tool of tools) {
     const beforeActions = operationActions.length;
     const beforeChanges = changes.length;
-    const registrationId = registrationKey(tool, scope, destination);
-    const registration = isConfigV2(config) ? config.wiring.registrations[registrationId] : undefined;
-    const resources = registration && isConfigV2(config)
-      ? registration.resourceIds.map((id) => ({ id, resource: config.wiring.resources[id]! }))
-      : [];
-    for (const { id, resource } of resources) {
-      if (resource.kind === "skill" && isConfigV2(config)) {
-        if (resource.consumers.some((consumer) => consumer !== registrationId)) continue;
-        const skill = planSkillRemoval(resource.path, resource.expected.linkTarget ?? join(ctx.paths.skill, SKILL_NAME),
-          registrationId, config.wiring, { boundary: ctx.agent.root }, ctx.t);
-        if (skill.action) {
-          operationActions.push(skill.action);
-          unlinked.push(resource.path);
+    const riding = ctx.agent.live ? riders(config, tool, ctx.env, ctx.cwd) : [];
+    alsoDisconnected.push(...riding);
+    const owners = [{ registrationId: registrationKey(tool, scope, destination), boundary: ctx.agent.root },
+      // shortcut: a rider's boundary is its canonical directory; one recorded through a symlinked
+      // path refuses its skill link here. Upgrade if that is ever reported.
+      ...riding.map(({ destination }) => ({ registrationId: registrationKey(tool, "project", destination!), boundary: destination! }))];
+    let registered = false;
+    for (const { registrationId, boundary } of owners) {
+      const registration = isConfigV2(config) ? config.wiring.registrations[registrationId] : undefined;
+      if (!registration || !isConfigV2(config)) continue;
+      registered = true;
+      for (const id of registration.resourceIds) {
+        const resource = config.wiring.resources[id]!;
+        if (resource.kind === "skill") {
+          if (resource.consumers.some((consumer) => consumer !== registrationId)) continue;
+          const skill = planSkillRemoval(resource.path, resource.expected.linkTarget ?? join(ctx.paths.skill, SKILL_NAME),
+            registrationId, config.wiring, { boundary }, ctx.t);
+          if (skill.action) {
+            operationActions.push(skill.action);
+            unlinked.push(resource.path);
+          }
+          delete config.wiring.resources[id];
+          continue;
         }
-        delete config.wiring.resources[id];
-        continue;
-      }
-      // Unknown retained resources are not removal authority.
-      if (resource.kind !== "hook" && resource.kind !== "command") continue;
-      const access = resource.accessPaths?.[registrationId];
-      const path = access?.path ?? resource.path;
-      if (aliasesState(ctx.paths, path)) throw new ConfigError(ctx.t.errors.stateOverlap(path));
-      const change = planChange(path, (before) => {
-        if (before === null) return null;
-        if (resource.kind === "command") {
-          if (contentHash(before) !== resource.expected.sha256) throw new ConfigError(ctx.t.errors.ownershipConflict(path));
-          return resource.created ? null : before;
-        }
-        const native = recordedHook(resource, registrationId);
-        if (native) {
-          const owned = ownedHook(before, native, path, ctx.t);
-          const managed = resource.managedByRegistration?.[registrationId] ?? resource.managed;
-          if (owned === null || contentHash(owned) !== managed.handlerSha256) {
+        // Unknown retained resources are not removal authority.
+        if (resource.kind !== "hook" && resource.kind !== "command") continue;
+        const access = resource.accessPaths?.[registrationId];
+        const path = access?.path ?? resource.path;
+        if (aliasesState(ctx.paths, path)) throw new ConfigError(ctx.t.errors.stateOverlap(path));
+        const change = planChange(path, (before) => {
+          if (before === null) return null;
+          if (resource.kind === "command") {
+            if (contentHash(before) !== resource.expected.sha256) throw new ConfigError(ctx.t.errors.ownershipConflict(path));
+            return resource.created ? null : before;
+          }
+          const native = recordedHook(resource, registrationId);
+          if (native) {
+            const owned = ownedHook(before, native, path, ctx.t);
+            const managed = resource.managedByRegistration?.[registrationId] ?? resource.managed;
+            if (owned === null || contentHash(owned) !== managed.handlerSha256) {
+              throw new ConfigError(ctx.t.errors.ownershipConflict(path));
+            }
+            const sharedHandler = resource.consumers.some((consumer) => consumer !== registrationId
+              && sameDelivery(recordedHook(resource, consumer), native));
+            const ownsFile = resource.created && contentHash(before) === resource.expected.sha256;
+            const removal = { ...native };
+            if (resource.consumers.some(consumer => consumer !== registrationId)) delete removal.documentDescription;
+            return sharedHandler ? before : withoutHook(before, removal, path, ctx.t, ownsFile ? "content" : "document");
+          }
+          const owned = shownPaths.map((where) => ownedDelivery(TARGETS[tool], before, where, path, ctx.t))
+            .find((delivery) => delivery !== null) ?? null;
+          if (owned !== null && contentHash(owned) !== resource.managed.handlerSha256) {
             throw new ConfigError(ctx.t.errors.ownershipConflict(path));
           }
-          const sharedHandler = resource.consumers.some((consumer) => consumer !== registrationId
-            && sameDelivery(recordedHook(resource, consumer), native));
-          const ownsFile = resource.created && contentHash(before) === resource.expected.sha256;
-          const removal = { ...native };
-          if (resource.consumers.some(consumer => consumer !== registrationId)) delete removal.documentDescription;
-          return sharedHandler ? before : withoutHook(before, removal, path, ctx.t, ownsFile ? "content" : "document");
-        }
-        const owned = shownPaths.map((where) => ownedDelivery(TARGETS[tool], before, where, path, ctx.t))
-          .find((delivery) => delivery !== null) ?? null;
-        if (owned !== null && contentHash(owned) !== resource.managed.handlerSha256) {
-          throw new ConfigError(ctx.t.errors.ownershipConflict(path));
-        }
-        return removeDelivery(tool, before, path);
-      }, ctx.t);
-      assertRecordedTextAccess(change, resource, access, ctx.t, true);
-      // A shared physical file may carry more than one registration. Validate this registration's
-      // lexical witness above, then leave the bytes alone while another consumer still owns the
-      // physical resource.
-      const shared = resource.consumers.some((consumer) => consumer !== registrationId);
-      if (shared && !recordedHook(resource, registrationId)) continue;
-      changes.push(withRecordedOwnership(change, {
-        created: resource.created && change.before !== null && contentHash(change.before) === resource.expected.sha256,
-        createdDir: resource.createdDir,
-      }));
-      if (isConfigV2(config)) {
+          return removeDelivery(tool, before, path);
+        }, ctx.t);
+        assertRecordedTextAccess(change, resource, access, ctx.t, true);
+        // A shared physical file may carry more than one registration. Validate this registration's
+        // lexical witness above, then leave the bytes alone while another consumer still owns the
+        // physical resource.
+        const shared = resource.consumers.some((consumer) => consumer !== registrationId);
+        if (shared && !recordedHook(resource, registrationId)) continue;
+        // The last of several owners removed together plans the file's final bytes; each plan
+        // read the same file, because the ones before it left the shared handler in place.
+        const planned = withRecordedOwnership(change, {
+          created: resource.created && change.before !== null && contentHash(change.before) === resource.expected.sha256,
+          createdDir: resource.createdDir,
+        });
+        const earlier = changes.findIndex((other) => other.realPath === planned.realPath);
+        if (earlier >= beforeChanges) changes[earlier] = planned;
+        else changes.push(planned);
         if (shared) resource.expected.sha256 = contentHash(change.after ?? "");
         else delete config.wiring.resources[id];
       }
-    }
-    if (registration && isConfigV2(config)) {
       config.wiring = detachRegistration(config.wiring, registrationId);
-    } else {
+    }
+    if (!registered) {
       // Legacy cleanup has no destination provenance. Remove only positively matched content
       // and preserve the container and old state root without silently migrating its config.
       const path = ctx.agent.wiredFile(tool);
@@ -479,7 +491,7 @@ export async function disconnect(ctx: Ctx, tools: AgentTool[], all = false): Pro
         planChange(path, (before) => removeDelivery(tool, before, path), ctx.t), undefined,
       ));
     }
-    const touched = Boolean(registration && isConfigV2(config))
+    const touched = registered
       || operationActions.length > beforeActions
       || changes.slice(beforeChanges).some((change) => change.before !== change.after);
     if (touched) disconnected.push(tool);
@@ -502,6 +514,11 @@ export async function disconnect(ctx: Ctx, tools: AgentTool[], all = false): Pro
     auto: ctx.flags.auto,
     verbose: ctx.flags.verbose,
     ui: ctx.ui,
+    notice: tools.flatMap((tool) => {
+      const directories = alsoDisconnected.filter(({ target }) => target === tool).map(({ destination }) => humanText(destination!));
+      return directories.length === 0 ? [] : ["", ...receiptLines(ctx.t.wiring.alsoDisconnects(TARGETS[tool].label, directories),
+        ctx.ui.width - 2).map((line) => `  ${line}`)];
+    }),
   });
 
   const reason = result.reason === "written" && !disconnected.length ? "nothing" : result.reason;
@@ -519,6 +536,7 @@ export async function disconnect(ctx: Ctx, tools: AgentTool[], all = false): Pro
       reason: result.reason,
       diff: result.diff,
       tools,
+      alsoDisconnected,
     },
   };
 }

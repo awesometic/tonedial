@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync } from "node:fs";
+import { mkdirSync, readFileSync, rmSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 
 import { compile } from "../../src/core/compile.ts";
@@ -9,7 +9,7 @@ import { seedFiles, seedRecord, SEED_VERSION } from "../../src/core/seeds.ts";
 import { SKILL_NAME } from "../../src/core/skill.ts";
 import { catalogue, type Messages } from "../../src/core/i18n.ts";
 import { gate, planChange, type Change, type PlannedOperationAction } from "../../src/wiring/apply.ts";
-import { contentHash, recordFileChange, registrationKey } from "../../src/wiring/ownership.ts";
+import { contentHash, detachRegistration, recordFileChange, registrationKey } from "../../src/wiring/ownership.ts";
 import { planSelectedSkills } from "../../src/wiring/skill.ts";
 import { TARGETS, wiredAt, type WiredAt } from "../../src/wiring/targets.ts";
 import { hookCommand, withHook } from "../../src/wiring/hooks.ts";
@@ -146,9 +146,10 @@ export async function createLegacyFixture(options: LegacyFixtureOptions): Promis
 
 /**
  * A project connection as 0.1.13 and earlier recorded it beside a global one: the project rides
- * the global hook's resource as a second consumer and owns only its skill link.
+ * the global hook's resource as a second consumer and owns only its skill link. `orphaned` then
+ * removes the global record the way those versions' `unwire --global` did, leaving the hook.
  */
-export async function addLegacyRider(env: NodeJS.ProcessEnv, tool: AgentTool, dir: string): Promise<void> {
+export async function addLegacyRider(env: NodeJS.ProcessEnv, tool: AgentTool, dir: string, orphaned = false): Promise<void> {
   const t = catalogue("en").cli;
   const paths = resolvePaths(env);
   const config = parseConfig(readFileSync(paths.config, "utf8"));
@@ -166,7 +167,15 @@ export async function addLegacyRider(env: NodeJS.ProcessEnv, tool: AgentTool, di
   hook.consumers.push(projectId);
   hook.accessPaths![projectId] = { ...hook.accessPaths![globalId]! };
   hook.managedByRegistration![projectId] = structuredClone(hook.managedByRegistration![globalId]!);
-  config.wiring = wiring;
+  if (orphaned) {
+    for (const id of wiring.registrations[globalId]!.resourceIds) {
+      const resource = wiring.resources[id]!;
+      if (resource.kind !== "skill" || resource.consumers.length !== 1) continue;
+      rmSync(resource.path, { force: true });
+      delete wiring.resources[id];
+    }
+  }
+  config.wiring = orphaned ? detachRegistration(wiring, globalId) : wiring;
   const configChange = planChange(paths.config, (before) => before, t, undefined, paths.root);
   const result = await gate([], {
     paths, operationActions: skills.actions, finalChanges: [{ ...configChange, after: serializeConfig(config) }],

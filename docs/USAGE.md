@@ -524,6 +524,9 @@ tonedial eject --here
 Without a scope flag, `unwire <tool>` stops in a folder that has its own project connections
 and shows the `--here` and `--global` commands; elsewhere it disconnects the global connection.
 Removal preserves shared state, profiles, CLI, shell PATH, other scopes/consumers and changed or ambiguous foreign resources.
+Versions before 0.1.14 recorded a project connected beside a global one on the global hook.
+`unwire <tool> --global` and `eject --global` remove those project connections with the hook, as `unwire --here` would;
+the preview names each directory and JSON lists them in `alsoDisconnected`.
 Use `off` instead when the connections should remain installed and only delivery should pause.
 
 ### Connection recipes
@@ -575,6 +578,8 @@ tonedial unwire codex --global    # the shared connection
 ```
 
 `eject --here` or `eject --global` disconnects every agent in that scope instead.
+After `unwire codex --global`, nothing ToneDial wrote for Codex stays in `~/.codex/hooks.json`,
+including entries an earlier version kept there for a project.
 Disconnecting removes the skill folders setup created, such as `.agents/skills`, once they are empty; folders that existed before setup stay.
 
 **See what is connected where**

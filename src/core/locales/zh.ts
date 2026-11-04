@@ -259,6 +259,7 @@ const messages: Messages = {
     keepProjectOnly: (here) => here
       ? "若只想连接此项目，请先断开全局连接，再连接此文件夹："
       : "若只想连接该项目，请先断开全局连接，再在该文件夹中运行：",
+    alsoDisconnects: (tool, directories) => `同时断开以下项目中由旧版本记录在全局钩子上的 ${tool} 连接：\n${directories.join("\n")}`,
     hookDuplicate: (tool, destination, stale) => `${tool}：此项目也配置了语气注入，因此两个钩子均存在${stale ? "。项目钩子指向旧版运行时" : ""}：\n${destination}\n若只使用全局钩子，请在该目录运行：\ntonedial unwire ${tool} --here`,
     migrationRollback: (operationId) => `恢复本次迁移记录的文件和设置：\ntonedial doctor --fix --rollback ${operationId}`,
     migrationQuestion: "是否使用已保存的设置，将旧版迁移作为一次可恢复操作执行？",

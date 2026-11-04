@@ -259,6 +259,7 @@ const messages: Messages = {
     keepProjectOnly: (here) => here
       ? "Para conectar solo este proyecto, desconecta primero la conexión global y luego conecta esta carpeta:"
       : "Para conectar solo ese proyecto, desconecta primero la conexión global y luego ejecuta esto dentro de esa carpeta:",
+    alsoDisconnects: (tool, directories) => `También desconecta ${tool} en estos proyectos, que una versión anterior registró en el hook global:\n${directories.join("\n")}`,
     hookDuplicate: (tool, destination, stale) => `${tool}: el proyecto también configura el tono y existen ambos hooks${stale ? ". El hook del proyecto apunta a un entorno antiguo" : ""}:\n${destination}\nPara usar solo el global, ejecuta desde ese directorio:\ntonedial unwire ${tool} --here`,
     migrationRollback: (operationId) => `Restaura los archivos y ajustes registrados en esta migración:\ntonedial doctor --fix --rollback ${operationId}`,
     migrationQuestion: "¿Apruebas esta migración con los ajustes guardados en una operación recuperable?",

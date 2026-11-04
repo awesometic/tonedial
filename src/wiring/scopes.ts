@@ -72,3 +72,11 @@ export function globalCover(config: Config, agent: AgentPaths, tool: AgentTool, 
   const cover = hookAccess(config, registrationKey(tool, "global", canonicalDestination(global.root)));
   return own === null ? cover : null;
 }
+
+/** Project connections recorded on this home's global hook file of `tool`, as before 0.1.14. */
+export function riders(config: Config, tool: AgentTool, env: NodeJS.ProcessEnv, cwd: string): Connection[] {
+  if (!isConfigV2(config)) return [];
+  const hookFile = globalAgent(env, cwd).hookFile(tool);
+  return connections(config).filter((connection) => connection.target === tool && connection.scope === "project" &&
+    hookAccess(config, registrationKey(tool, "project", connection.destination!)) === hookFile);
+}

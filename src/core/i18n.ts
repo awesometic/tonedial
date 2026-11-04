@@ -330,6 +330,7 @@ export type Messages = {
     hookConfigured: (tool: string, path: string) => string;
     globalCovers: (tools: string) => string;
     keepProjectOnly: (here: boolean) => string;
+    alsoDisconnects: (tool: string, directories: readonly string[]) => string;
     hookDuplicate: (tool: string, destination: string, stale: boolean) => string;
     migrationRollback: (operationId: string) => string;
     migrationQuestion: string;
@@ -927,6 +928,7 @@ const enMessages: Messages = {
     keepProjectOnly: (here) => here
       ? "To connect only this project, disconnect the global connection first, then connect this folder:"
       : "To connect only that project, disconnect the global connection first, then run this from inside it:",
+    alsoDisconnects: (tool, directories) => `Also disconnects ${tool} in these projects, which an earlier version recorded on the global hook:\n${directories.join("\n")}`,
     hookDuplicate: (tool, destination, stale) => `${tool}: this project also configures tone delivery, so both hooks are present${stale ? ". The project hook points to an older runtime" : ""}:\n${destination}\nTo use only the global hook, run from that directory:\ntonedial unwire ${tool} --here`,
     migrationRollback: (operationId) => `Restore this migration's recorded files and settings with:\ntonedial doctor --fix --rollback ${operationId}`,
     migrationQuestion: "Approve this legacy migration with the saved settings and one recoverable operation?",
@@ -1708,6 +1710,7 @@ const koMessages: Messages = {
     keepProjectOnly: (here) => here
       ? "이 프로젝트에만 연결하려면 먼저 전역 연결을 해제한 뒤 이 폴더를 연결하세요:"
       : "그 프로젝트에만 연결하려면 먼저 전역 연결을 해제한 뒤 그 폴더 안에서 실행하세요:",
+    alsoDisconnects: (tool, directories) => `이전 버전이 전역 훅에 기록한 다음 프로젝트의 ${tool} 연결도 함께 해제합니다:\n${directories.join("\n")}`,
     hookDuplicate: (tool, destination, stale) => `${tool}: 이 프로젝트에도 톤 전달 훅이 있어 설정이 중복됩니다${stale ? ". 프로젝트 훅은 이전 런타임 경로를 가리킵니다" : ""}:\n${destination}\n전역 훅만 쓰려면 위 프로젝트 위치에서 실행하세요:\ntonedial unwire ${tool} --here`,
     migrationRollback: (operationId) => `이 작업에 기록된 파일과 설정을 복구하려면 실행하세요:\ntonedial doctor --fix --rollback ${operationId}`,
     migrationQuestion: "저장된 설정을 유지하고 복구 가능한 작업 하나로 이전 상태를 옮길까요?",

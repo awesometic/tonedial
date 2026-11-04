@@ -259,6 +259,7 @@ const messages: Messages = {
     keepProjectOnly: (here) => here
       ? "このプロジェクトだけに接続するには、先にグローバル接続を解除してから、このフォルダーを接続してください："
       : "そのプロジェクトだけに接続するには、先にグローバル接続を解除してから、そのフォルダー内で実行してください：",
+    alsoDisconnects: (tool, directories) => `以前のバージョンがグローバルフックに記録した次のプロジェクトの ${tool} 接続も解除します：\n${directories.join("\n")}`,
     hookDuplicate: (tool, destination, stale) => `${tool}: このプロジェクトにも口調配信の設定があり、両方のフックが存在します${stale ? "。プロジェクト側は古いランタイムを参照しています" : ""}：\n${destination}\nグローバルフックのみを使うには、このディレクトリで実行してください：\ntonedial unwire ${tool} --here`,
     migrationRollback: (operationId) => `この移行で記録したファイルと設定を復元：\ntonedial doctor --fix --rollback ${operationId}`,
     migrationQuestion: "保存済み設定を使い、復元可能な1回の操作として旧形式を移行しますか？",

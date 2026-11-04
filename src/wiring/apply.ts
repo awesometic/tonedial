@@ -2487,6 +2487,8 @@ export type GateOptions = {
   t: Messages;
   /** Human phase title, shown with the same preview before its approval. */
   heading?: string;
+  /** Lines the preview shows after its change count, before the approval they inform. */
+  notice?: string[];
   /** Where the diff goes. It is written before the question, never returned to be printed after. */
   out?: ((text: string) => void) | undefined;
   /** Injected so tests can drive the gate without a terminal. */
@@ -2562,6 +2564,7 @@ export async function gate(changes: Change[], opts: GateOptions): Promise<GateRe
   const renderHuman = opts.verbose === true ? renderVerboseDiff : renderSummary;
   if (opts.heading === undefined) lines.push(...section(opts.t.wiring.planHeading, opts.ui));
   lines.push(`  ${opts.t.wiring.changeCount(real.length + operationActions.length + finalReal.length)}`);
+  lines.push(...opts.notice ?? []);
   if (typeof opts.recoveryPresentation === "object") lines.push(...(opts.recoveryPresentation.lines ?? []));
   const renderChanges = (list: Change[]) => {
     if (opts.recoveryPresentation) {

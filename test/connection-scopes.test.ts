@@ -434,3 +434,58 @@ test("a folder recorded on the global hook by an earlier version is covered and 
   assert.equal(readFileSync(paths.config, "utf8"), config);
   assert.equal(existsSync(join(project, ".codex")), false);
 });
+
+test("unwire --global names and removes the project connections an earlier version recorded on its hook", async () => {
+  const other = join(scratch, "other");
+  mkdirSync(other);
+  const hook = join(env.HOME!, ".codex", "hooks.json");
+  assert.equal((await invoke(["init", "--global", "--tools", "codex", "--auto"])).code, 0);
+  await addLegacyRider(env, "codex", project);
+  await addLegacyRider(env, "codex", other);
+  assert.equal(existsSync(join(project, ".agents", "skills", "tonedial")), true);
+
+  const preview = await human(["unwire", "codex", "--global", "--dry-run"]);
+  assert.equal(preview.code, 0, preview.errors);
+  assert.match(preview.output.replace(/\s+/g, " "), /Also disconnects Codex CLI in these projects/);
+  const rows = preview.output.split("\n").map((line) => line.trim());
+  assert.ok(rows.includes(realpathSync(project)) && rows.includes(realpathSync(other)), preview.output);
+  assert.ok(rows.indexOf(realpathSync(project)) < rows.findIndex((row) => row.startsWith("--dry-run")), "named before the result");
+
+  const removed = await invoke(["unwire", "codex", "--global", "--auto"]);
+  assert.equal(removed.code, 0, JSON.stringify(removed.value));
+  assert.deepEqual(removed.value.alsoDisconnected, [
+    { target: "codex", scope: "project", destination: realpathSync(other) },
+    { target: "codex", scope: "project", destination: realpathSync(project) },
+  ]);
+  assert.equal(existsSync(hook), false, "nothing ToneDial wrote stays in the global hook file");
+  assert.deepEqual(readdirSync(project), [], "each project's skill link goes as a project unwire removes it");
+  assert.deepEqual(readdirSync(other), []);
+  assert.deepEqual((await invoke(["show"])).value.connections, []);
+});
+
+test("unwire --global clears a global hook that only an earlier version's project record kept", async () => {
+  const hook = join(env.HOME!, ".codex", "hooks.json");
+  assert.equal((await invoke(["init", "--global", "--tools", "codex", "--auto"])).code, 0);
+  await addLegacyRider(env, "codex", project, true);
+  assert.equal(existsSync(hook), true);
+  // The folder rides that hook, so it is covered too and gets nothing new.
+  assert.equal((await invoke(["wire", "codex", "--here", "--auto"])).value.tools[0].covered, true);
+
+  const removed = await invoke(["unwire", "codex", "--global", "--auto"]);
+  assert.equal(removed.code, 0, JSON.stringify(removed.value));
+  assert.deepEqual(removed.value.alsoDisconnected.map((row: { destination: string }) => row.destination), [realpathSync(project)]);
+  assert.equal(existsSync(hook), false);
+  assert.deepEqual(readdirSync(project), []);
+  assert.deepEqual((await invoke(["show"])).value.connections, []);
+});
+
+test("eject --global removes earlier-version project records with the global hooks", async () => {
+  assert.equal((await invoke(["init", "--global", "--tools", "codex,claude", "--auto"])).code, 0);
+  await addLegacyRider(env, "claude", project);
+  const ejected = await invoke(["eject", "--global", "--auto"]);
+  assert.equal(ejected.code, 0, JSON.stringify(ejected.value));
+  assert.deepEqual(ejected.value.alsoDisconnected.map((row: { target: string }) => row.target), ["claude"]);
+  assert.equal(existsSync(join(env.HOME!, ".claude", "settings.json")), false);
+  assert.deepEqual(readdirSync(project), []);
+  assert.deepEqual((await invoke(["show"])).value.connections, []);
+});
