@@ -226,3 +226,15 @@ test("a missing hook's path sits on its own line", async () => {
   const codex = block((await human(["doctor", "--global"])).out, "Codex CLI");
   assert.deepEqual(codex.slice(1, 3), ["No ToneDial SessionStart hook", hook]);
 });
+
+test("a duplicate hook stays visible and counted when that agent also has a problem", async () => {
+  assert.equal((await human(["init", "--tools", "codex", "--here", "--auto"], project)).code, 0);
+  assert.equal((await human(["wire", "codex", "--global", "--auto"])).code, 0);
+  const hooks = join(home, ".codex", "hooks.json");
+  writeFileSync(hooks, readFileSync(hooks, "utf8").replace("tonedial", "tonedial-edited"));
+  const shown = await human(["doctor", "--global"]);
+  const codex = block(shown.out, "Codex CLI").join(" ");
+  assert.match(codex, /both hooks are present/);
+  const machine = await json(["doctor", "--global"]);
+  assert.equal(machine.value.integrations.find((row: { tool: string }) => row.tool === "codex").duplicates.length, 1);
+});

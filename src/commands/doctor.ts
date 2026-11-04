@@ -853,15 +853,16 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true): Promise<Comm
     const check = checks.find(check => check.name === TARGETS[setting.tool].label)!;
     const integration = integrations.find(integration => integration.tool === setting.tool);
     const detail = check.humanDetail ?? [check.detail];
+    // The summary counts every duplicate, so each one is shown whatever the agent's state.
+    const duplicates = (integration?.duplicates ?? []).map(({ destination, state }) =>
+      ctx.t.wiring.hookDuplicate(setting.tool, humanText(destination), state === "stale-duplicate"));
     if (integration === undefined || (check.state === "problem" && setting.state !== "disabled")) {
-      check.humanDetail = detail;
+      check.humanDetail = [...detail, ...duplicates];
       continue;
     }
     const guidance = setting.tool === "codex" ? ctx.t.wiring.codexTrust(ctx.agent.live || integration.inherited)
       : ctx.t.doctor.hookGuidance[setting.tool];
-    check.humanDetail = [...detail, ctx.t.doctor.hookSettingState[setting.state], guidance,
-      ...integration.duplicates.map(({ destination, state }) =>
-        ctx.t.wiring.hookDuplicate(setting.tool, humanText(destination), state === "stale-duplicate"))];
+    check.humanDetail = [...detail, ctx.t.doctor.hookSettingState[setting.state], guidance, ...duplicates];
   }
 
   // Measured from the files on disk; Claude Code's own truncation is not observed here.
