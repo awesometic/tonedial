@@ -544,7 +544,13 @@ test("JSON refusals name their reason and the commands they print", async () => 
   assert.deepEqual(await refusal(["wire", "--global"]), { reason: "tools-required", commands: ["tonedial wire codex --global"] });
   assert.deepEqual(await refusal(["unwire", "--global"]),
     { reason: "tools-required", commands: ["tonedial unwire codex --global", "tonedial eject --global"] });
-  assert.equal((await refusal(["wire", "codex", "--auto"])).reason, "scope-required");
+  assert.deepEqual(await refusal(["wire", "codex", "--auto"]),
+    { reason: "scope-required", commands: ["tonedial wire codex --global --auto", "tonedial wire codex --here --auto"] });
+  assert.deepEqual(await refusal(["doctor", "--fix", "--auto"]),
+    { reason: "scope-required", commands: ["tonedial doctor --fix --global --auto", "tonedial doctor --fix --here --auto"] });
+  // In the home directory a project scope would refuse, so only the global command is offered.
+  assert.deepEqual(await refusal(["wire", "codex", "--auto"], home),
+    { reason: "scope-required", commands: ["tonedial wire codex --global --auto"] });
   assert.equal((await refusal(["wire", "claude", "--global"])).reason, "approval-required");
 
   assert.equal((await invoke(["unwire", "codex", "--global", "--auto"])).code, 0);

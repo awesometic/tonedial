@@ -16,6 +16,7 @@ import { cells, maxCells, resolveBudget, wrap } from "./ui/width.ts";
 import { interactive } from "./ui/prompt.ts";
 import { humanText, isCopyableLine, nextStep } from "./ui/format.ts";
 import { ApprovalRequired, type Change } from "./wiring/apply.ts";
+import { ScopeRequired, projectIsHome } from "./wiring/scopes.ts";
 
 import { planConfig, runCompile } from "./commands/compile.ts";
 import { runExport, runImport } from "./commands/transfer.ts";
@@ -630,7 +631,7 @@ export async function run(
       rerun: rerunCommand(name, rest, flags, connection && flags.rollback === null ? connectionScopeFlag(agent, cwd) : null) };
     // Init and doctor own recovery-first diagnosis before enforcing ordinary write intent.
     if (connection && name !== "doctor" && name !== "init" && flags.auto && !flags.dryRun && !scopeExplicit) {
-      throw new ConfigError(t.errors.scopeRequired, { reason: "scope-required" });
+      throw new ScopeRequired(t);
     }
     const scopeLabel = name === "doctor"
       ? (agent.live ? t.doctor.scopeGlobal : t.doctor.scope)
@@ -709,6 +710,12 @@ export async function run(
     if (cause instanceof OwnershipConflict && ctx !== null) {
       const doctor = `tonedial doctor ${connectionScopeFlag(ctx.agent, cwd)}`;
       return fail(asJson, `${cause.message}\n  ${doctor}`, 1, uiErr, { reason: cause.reason, commands: [doctor] });
+    }
+    if (cause instanceof ScopeRequired && ctx !== null) {
+      // A project scope in the home directory would refuse, so only the global one is offered there.
+      const here = projectIsHome(resolveAgentPaths({ global: false, project: null, here: true }, env, cwd), env);
+      const commands = (here ? ["--global"] : ["--global", "--here"]).map((scope) => `${rerunCommand(name, rest, flags, scope)} --auto`);
+      return fail(asJson, cause.t.errors.scopeRequired(commands), 1, uiErr, { reason: cause.reason, commands });
     }
     if (cause instanceof ApprovalRequired && ctx?.rerun !== undefined) {
       const commands = [ctx.rerun, `${ctx.rerun} --dry-run`, `${ctx.rerun} --auto`];

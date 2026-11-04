@@ -597,7 +597,7 @@ const messages: Messages = {
     colourMode: (given) => `--color=${given}：应为 auto、always 或 never`,
     twoDestinations: "只能选择一个范围：--global、--here 或 --project PATH。",
     projectPathRequired: "--project 需要非空目录路径。当前项目请使用 --here。",
-    scopeRequired: "无人值守连接写入必须明确 --global、--here 或 --project PATH。请指定目标范围后重试；--dry-run 仅预览默认全局计划，不写入。",
+    scopeRequired: (commands) => `无人值守连接写入必须明确范围；--dry-run 仅预览默认全局计划，不写入。请指定目标范围后重试，或使用 --project PATH：\n${commands.map((command) => `  ${command}`).join("\n")}`,
     migrationFresh: "--migrate-legacy 仅适用于已有且受支持的状态。首次设置请运行不带此选项的 init。",
     migrationApprovalRequired: (command) => `此旧状态需要明确批准迁移。预览：\n${command} --dry-run\n应用检查后的计划：\n${command} --auto\n交互式 init 会询问迁移批准。`,
     contextInspectionFailure: (path, reason) => `无法完成检查：\n${path}\n${reason === "invalid-provider-json" ? "服务商设置不是有效 JSON，或钩子结构不受支持。请保留文件，修复后重试。" : reason === "invalid-legacy-region" ? "无法验证旧版指令区块。请保留文件，检查其 ToneDial 标记后重试。" : "无法安全读取文件。重试前请检查文件类型、链接和访问权限。"}`,

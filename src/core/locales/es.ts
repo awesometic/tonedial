@@ -597,7 +597,7 @@ const messages: Messages = {
     colourMode: (given) => `--color=${given}: se esperaba auto, always o never`,
     twoDestinations: "Usa un solo ámbito: --global, --here o --project PATH.",
     projectPathRequired: "--project necesita una ruta de directorio no vacía. Usa --here para el proyecto actual.",
-    scopeRequired: "Las escrituras de conexión sin interacción requieren --global, --here o --project PATH. Añade el ámbito y repite; --dry-run previsualiza el global sin escribir.",
+    scopeRequired: (commands) => `Las escrituras de conexión sin interacción requieren un ámbito explícito; --dry-run previsualiza el global sin escribir. Repite con el ámbito que quieras, o con --project PATH:\n${commands.map((command) => `  ${command}`).join("\n")}`,
     migrationFresh: "--migrate-legacy solo sirve para estados antiguos compatibles. Para empezar, ejecuta init sin esta opción.",
     migrationApprovalRequired: (command) => `Este estado antiguo necesita aprobación explícita. Previsualiza con:\n${command} --dry-run\nAplica el plan revisado con:\n${command} --auto\nEl init interactivo pide aprobar la migración.`,
     contextInspectionFailure: (path, reason) => `No se puede terminar la inspección:\n${path}\n${reason === "invalid-provider-json" ? "Los ajustes del proveedor no son JSON válido o su estructura de hooks no es compatible. Conserva y repara el archivo antes de reintentar." : reason === "invalid-legacy-region" ? "No se puede verificar la región de instrucciones antigua. Conserva el archivo y revisa sus marcadores de ToneDial." : "No se pudo leer el archivo con seguridad. Revisa su tipo, enlaces y permisos antes de reintentar."}`,

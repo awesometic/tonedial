@@ -608,7 +608,8 @@ export type Messages = {
     /** Two destination flags name two destinations. Discarding one silently is the worse answer. */
     twoDestinations: string;
     projectPathRequired: string;
-    scopeRequired: string;
+    /** An unattended connection write without a scope flag, with the commands for each scope. */
+    scopeRequired: (commands: readonly string[]) => string;
     migrationFresh: string;
     migrationApprovalRequired: (command: string) => string;
     legacyMigrationBlocked: (reason: string, path: string, doctorCommand: string) => string;
@@ -1288,7 +1289,7 @@ const enMessages: Messages = {
     colourMode: (given) => `--color=${given}: expected auto, always, or never`,
     twoDestinations: "Use one scope: --global, --here, or --project PATH.",
     projectPathRequired: "--project requires a non-empty directory path. Use --here for the current project.",
-    scopeRequired: "Unattended connection writes require an explicit scope: --global, --here, or --project PATH. Add the intended scope and rerun; --dry-run previews the global default without writing.",
+    scopeRequired: (commands) => `Unattended connection writes need an explicit scope. --dry-run previews the global default without writing. Rerun with the scope you mean, or with --project PATH:\n${commands.map((command) => `  ${command}`).join("\n")}`,
     migrationFresh: "--migrate-legacy applies only to existing supported state. Run init without this flag for first setup.",
     migrationApprovalRequired: (command) => `This older state needs explicit migration approval. Preview with:\n${command} --dry-run\nApply the reviewed plan with:\n${command} --auto\nInteractive init asks for migration approval.`,
     contextInspectionFailure: (path, reason) => `Cannot finish inspection:\n${path}\n${
@@ -2084,7 +2085,7 @@ const koMessages: Messages = {
     colourMode: (given) => `--color=${given}: auto, always, never 중 하나만 쓸 수 있습니다`,
     twoDestinations: "--global, --here, --project PATH 중 범위 하나만 선택해 주세요.",
     projectPathRequired: "--project에는 디렉터리 경로가 필요합니다. 현재 프로젝트는 --here로 선택해 주세요.",
-    scopeRequired: "질문 없이 연결을 바꾸려면 --global, --here, --project PATH 중 범위를 직접 선택해 주세요. 원하는 범위를 붙여 다시 실행하세요. --dry-run은 기본 전역 범위의 변경을 미리 보여주며 파일을 쓰지 않습니다.",
+    scopeRequired: (commands) => `질문 없이 연결을 바꾸려면 범위를 직접 지정해야 합니다. --dry-run은 기본 전역 범위의 변경을 미리 보여주며 파일을 쓰지 않습니다. 원하는 범위를 붙여 다시 실행하거나 --project PATH를 지정하세요:\n${commands.map((command) => `  ${command}`).join("\n")}`,
     migrationFresh: "--migrate-legacy는 지원하는 이전 상태에만 씁니다. 처음 설정한다면 이 플래그 없이 init을 실행해 주세요.",
     migrationApprovalRequired: (command) => `이전 상태를 옮기려면 직접 승인해 주세요. 변경을 미리 확인하려면 실행하세요:\n${command} --dry-run\n확인한 변경을 적용하려면 실행하세요:\n${command} --auto\n대화형 init은 옮기기 전에 승인을 묻습니다.`,
     contextInspectionFailure: (path, reason) => `검사를 끝내지 못했습니다:\n${path}\n${

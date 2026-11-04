@@ -81,9 +81,21 @@ export function wiredElsewhere(config: Config, agent: AgentPaths): Elsewhere[] {
 }
 
 /** A project scope in the home directory names the files the global scope already owns. */
-function projectIsHome(agent: AgentPaths, env: NodeJS.ProcessEnv): boolean {
+export function projectIsHome(agent: AgentPaths, env: NodeJS.ProcessEnv): boolean {
   if (agent.live || env.TONEDIAL_AGENT_HOME?.trim()) return false;
   return canonicalDestination(agent.root) === canonicalDestination(env.HOME?.trim() || homedir());
+}
+
+/**
+ * An unattended write without a scope flag. Nothing is wrong with the files: the CLI words it
+ * with this invocation in each scope it can run in, in the catalogue `t` the command chose.
+ */
+export class ScopeRequired extends ConfigError {
+  readonly t: Messages;
+  constructor(t: Messages) {
+    super("scope required", { reason: "scope-required" });
+    this.t = t;
+  }
 }
 
 /** Connection commands refuse a project scope in the home directory and offer `global` instead. */

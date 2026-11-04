@@ -28,7 +28,7 @@ import { assertRecordedTextAccess, assertRegisteredFileChange, contentHash, deta
 import { pathLineState, rcPath, withPathLine } from "../wiring/shell.ts";
 import { humanText, nativeSetup, receiptLines } from "../ui/format.ts";
 import { pickTools } from "../ui/prompt.ts";
-import { connectionsInScope, folderConnections, globalCover, refuseHomeProject, refuseUnscopedDisconnect, riders, wiredElsewhere, type Connection } from "../wiring/scopes.ts";
+import { ScopeRequired, connectionsInScope, folderConnections, globalCover, refuseHomeProject, refuseUnscopedDisconnect, riders, wiredElsewhere, type Connection } from "../wiring/scopes.ts";
 import { planConfig } from "./compile.ts";
 
 /** The positional form names one target; lists belong to --tools. */
@@ -121,7 +121,7 @@ export async function runRebuildNative(ctx: Ctx, legacy: LegacyOwnershipEvidence
       json: { nativeRepair: attention.length ? "attention" : "not-selected", applied: false, reason: "not-selected", tools: [], attention: attention.length > 0, issues: attention, activation: "unverified" },
     };
     const scopeExplicit = ctx.scopeExplicit ?? (ctx.flags.global || ctx.flags.here === true || ctx.flags.project !== null);
-    if (ctx.flags.auto && !ctx.flags.dryRun && !scopeExplicit) throw new ConfigError(ctx.t.errors.scopeRequired, { reason: "scope-required" });
+    if (ctx.flags.auto && !ctx.flags.dryRun && !scopeExplicit) throw new ScopeRequired(ctx.t);
     const result = await wireSelected({ ...ctx, contextChecks: [configRead] }, tools, { explicitTools, preview, shell, config, configCapture, configRead });
     const configured = result.json.applied === true || result.json.reason === "nothing";
     return {

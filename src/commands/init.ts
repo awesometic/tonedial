@@ -8,7 +8,7 @@ import type { CommandResult, Ctx } from "../cli.ts";
 import { runAppRebuild } from "./rebuild.ts";
 import { runRebuildNative } from "./wire.ts";
 import { recoveryPendingError } from "./doctor.ts";
-import { refuseHomeProject } from "../wiring/scopes.ts";
+import { ScopeRequired, refuseHomeProject } from "../wiring/scopes.ts";
 import { activationStep } from "./test.ts";
 import { ConfigError, OwnershipConflict, defaultConfig, requireConfigV2, safewordRejection, serializeConfig } from "../core/config.ts";
 import { compile, measure } from "../core/compile.ts";
@@ -44,7 +44,7 @@ export async function runInit(entry: Ctx, _args: string[]): Promise<CommandResul
   if (existing) return rebuildExisting(entry);
   if (pending) throw recovery();
   const scopeExplicit = entry.scopeExplicit ?? (entry.flags.global || entry.flags.here === true || entry.flags.project !== null);
-  if (entry.flags.auto && !entry.flags.dryRun && !scopeExplicit) throw new ConfigError(entry.t.errors.scopeRequired, { reason: "scope-required" });
+  if (entry.flags.auto && !entry.flags.dryRun && !scopeExplicit) throw new ScopeRequired(entry.t);
   // Everything down to `chooseLanguage` speaks `entry.t`, which came from the config or, when
   // there is no config yet, from the machine's locale. That is correct here and only here:
   // these refusals happen before `--lang` has been read, let alone validated.

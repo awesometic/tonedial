@@ -597,7 +597,7 @@ const messages: Messages = {
     colourMode: (given) => `--color=${given}: auto、always、never を指定してください`,
     twoDestinations: "範囲は --global、--here、--project PATH の1つだけ指定してください。",
     projectPathRequired: "--project には空でないディレクトリパスが必要です。現在の場所には --here を使ってください。",
-    scopeRequired: "無人の接続書き込みには --global、--here、--project PATH の明示が必要です。意図した範囲を付けて再実行してください。--dry-run はグローバルの既定計画を表示するだけです。",
+    scopeRequired: (commands) => `無人の接続書き込みには範囲の明示が必要です。--dry-run はグローバルの既定計画を表示するだけです。意図した範囲を付けて再実行するか、--project PATH を指定してください：\n${commands.map((command) => `  ${command}`).join("\n")}`,
     migrationFresh: "--migrate-legacy は既存の対応状態にのみ使えます。初回はこのフラグなしで init を実行してください。",
     migrationApprovalRequired: (command) => `旧状態の移行には明示的な承認が必要です。確認：\n${command} --dry-run\n確認済み計画の適用：\n${command} --auto\n対話型 init でも移行の承認を求めます。`,
     contextInspectionFailure: (path, reason) => `確認を完了できません：\n${path}\n${reason === "invalid-provider-json" ? "プロバイダー設定のJSONかフック構造が無効です。ファイルを保持し、修復後に再試行してください。" : reason === "invalid-legacy-region" ? "旧指示領域を検証できません。ファイルを保持し、ToneDialマーカーを確認してください。" : "安全に読み取れません。種類、リンク、アクセス権限を確認してください。"}`,

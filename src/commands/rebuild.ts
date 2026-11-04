@@ -32,6 +32,7 @@ import {
 import { confirm } from "../ui/prompt.ts";
 import { wrap } from "../ui/width.ts";
 import { parseToolSelection } from "../wiring/targets.ts";
+import { ScopeRequired } from "../wiring/scopes.ts";
 import { receiptLines, riskWarnings } from "../ui/format.ts";
 
 export type AppRebuildResult = CommandResult & ({
@@ -296,7 +297,7 @@ export async function runAppRebuild(ctx: Ctx, heading = ctx.t.recovery.heading):
     throw new ConfigError(t.doctor.recoveryPending);
   }
   const scopeExplicit = ctx.scopeExplicit ?? (ctx.flags.global || ctx.flags.here === true || ctx.flags.project !== null);
-  if (ctx.flags.auto && !ctx.flags.dryRun && !scopeExplicit) throw new ConfigError(t.errors.scopeRequired, { reason: "scope-required" });
+  if (ctx.flags.auto && !ctx.flags.dryRun && !scopeExplicit) throw new ScopeRequired(t);
   if (ctx.flags.tools !== null) parseToolSelection(ctx.flags.tools, true, t);
   if (quarantined !== null && invalid.length > 1) {
     return quarantineOneOperation(ctx, quarantined, invalid.filter(entry => entry !== quarantined).map(entry => entry.operationId));
