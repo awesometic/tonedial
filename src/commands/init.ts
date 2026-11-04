@@ -68,7 +68,7 @@ export async function runInit(entry: Ctx, _args: string[]): Promise<CommandResul
   // for `ctx.t` to have read the language out of. `--lang ko` on a new machine printed its
   // seed list, its skill line, and its scope line in English.
   const ctx: Ctx = { ...entry, t: copy.cli };
-  const doctorCommand = `tonedial doctor ${connectionScopeFlag(ctx.agent)} --json`;
+  const doctorCommand = `tonedial doctor ${connectionScopeFlag(ctx.agent, ctx.cwd)} --json`;
   const lines: string[] = [];
   const addReceipt = (text: string, paint = (line: string) => line) => {
     lines.push(...receiptLines(text, ctx.ui.width - 2).map((line) => `  ${paint(line)}`));
@@ -330,13 +330,13 @@ async function rebuildExisting(entry: Ctx): Promise<CommandResult> {
   if (ctx.flags.commands && !tools.includes("claude")) throw new ConfigError(ctx.t.errors.commandsNeedClaude);
   const scoped: Ctx = { ...ctx, flags: { ...ctx.flags, tools: tools.length ? tools.join(",") : "none" } };
   const native = await runRebuildNative(scoped, app.legacy, undefined,
-    `tonedial init --tools ${tools.length ? tools.join(",") : "none"}${ctx.flags.commands ? " --commands" : ""} ${connectionScopeFlag(ctx.agent, ctx.flags.here === true)}`);
+    `tonedial init --tools ${tools.length ? tools.join(",") : "none"}${ctx.flags.commands ? " --commands" : ""} ${connectionScopeFlag(ctx.agent, ctx.cwd)}`);
   const after = hostHandoff(scoped, native.json.applied === true || native.json.reason === "nothing", tools);
   return {
     lines: [...(ctx.canPrompt ? [] : introduction), ...resultHeading, ...app.lines, ...native.lines,
       // A protected connection file is diagnosed, with its manual routes, by the scoped doctor.
       ...(native.json.reason === "protected-native-resource"
-        ? nextStep(`tonedial doctor ${connectionScopeFlag(ctx.agent, ctx.flags.here === true)}`, ctx.ui) : []),
+        ? nextStep(`tonedial doctor ${connectionScopeFlag(ctx.agent, ctx.cwd)}`, ctx.ui) : []),
       ...recoveryRollbackLines(ctx.t, app.json.operationId, native.json.operationId)],
     ...(after ? { after } : {}),
     json: {

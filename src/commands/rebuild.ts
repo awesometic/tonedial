@@ -236,7 +236,7 @@ async function quarantineOneOperation(
     heading: ctx.t.recovery.heading, interactive: () => ctx.canPrompt, ...(ctx.canPrompt ? {} : { out: () => {} }),
     recoveryPresentation: { lines: presentation,
       failureMessage: (id: string, phase: RecoveryPhase, path: string | null, code: string) =>
-        `${ctx.t.recovery.failure(id, phase, path, code)}\ntonedial doctor ${connectionScopeFlag(ctx.agent)} --json` },
+        `${ctx.t.recovery.failure(id, phase, path, code)}\ntonedial doctor ${connectionScopeFlag(ctx.agent, ctx.cwd)} --json` },
     verify: () => {
       const state = inspectOperations(ctx.paths).journals.find(({ operationId }) => operationId === entry.operationId)?.state;
       if (state !== "quarantined") throw new ConfigError(ctx.t.recovery.sourceInvalid);
@@ -254,7 +254,7 @@ async function quarantineOneOperation(
       appRebuilt: false, applied: result.applied, reason: result.reason, operationId: result.operationId ?? null,
       root: ctx.paths.root, quarantinedOperation: entry.operationId, remainingInvalidOperations: [...remaining],
       next: result.applied && remaining.length > 0
-        ? `tonedial doctor --fix --quarantine-operation ${remaining[0]} ${connectionScopeFlag(ctx.agent)}` : null,
+        ? `tonedial doctor --fix --quarantine-operation ${remaining[0]} ${connectionScopeFlag(ctx.agent, ctx.cwd)}` : null,
       nativeAttention: false, activationVerified: false, diff: result.diff,
     },
     rebuiltConfig: null,
@@ -289,7 +289,7 @@ export async function runAppRebuild(ctx: Ctx, heading = ctx.t.recovery.heading):
   }
   if (invalid.length > 0 && quarantined === null) {
     const candidate = invalid[0]!;
-    const command = `tonedial doctor --fix --quarantine-operation ${candidate.operationId} ${connectionScopeFlag(ctx.agent)}`;
+    const command = `tonedial doctor --fix --quarantine-operation ${candidate.operationId} ${connectionScopeFlag(ctx.agent, ctx.cwd)}`;
     throw new ConfigError(t.recovery.quarantineRequired(candidate.operationId, command));
   }
   if (quarantined !== null && (operations.lock.state !== "none" || pending.length > 0)) {
@@ -487,7 +487,7 @@ export async function runAppRebuild(ctx: Ctx, heading = ctx.t.recovery.heading):
     ...(damagedFields.includes("guards") ? [`  ${t.recovery.obsoleteGuardsDiscarded}`] : []),
     ...(missingFields.length ? [`  ${t.recovery.missing(missingFields)}`] : []),
     ...(copies.length ? [`  ${t.recovery.copies(copies)}`] : []),
-    ...(nativeAttention ? [`  ${t.recovery.nativePending}\ntonedial doctor ${connectionScopeFlag(ctx.agent, ctx.flags.here === true)}`] : []),
+    ...(nativeAttention ? [`  ${t.recovery.nativePending}\ntonedial doctor ${connectionScopeFlag(ctx.agent, ctx.cwd)}`] : []),
     ...(quarantined ? [`  ${t.recovery.quarantine(quarantined.operationId)}`] : []),
     ...(retirementId ? [`  ${t.recovery.retire(retirementId)}`] : []),
   ].flatMap(line => receiptLines(line.trimStart(), ctx.ui.width - 2).map(part => `  ${part}`));
@@ -498,7 +498,7 @@ export async function runAppRebuild(ctx: Ctx, heading = ctx.t.recovery.heading):
     interactive: () => ctx.canPrompt, ...(ctx.canPrompt ? {} : { out: () => {} }),
     recoveryPresentation: { lines: presentation,
       failureMessage: (id: string, phase: RecoveryPhase, path: string | null, code: string) =>
-        `${t.recovery.failure(id, phase, path, code)}\ntonedial doctor ${connectionScopeFlag(ctx.agent)} --json` },
+        `${t.recovery.failure(id, phase, path, code)}\ntonedial doctor ${connectionScopeFlag(ctx.agent, ctx.cwd)} --json` },
     verify: () => {
       let verificationPath = ctx.paths.config;
       const mismatch = () => new ConfigError(t.recovery.sourceInvalid, { cause: { code: "VERIFY_MISMATCH", path: verificationPath } });

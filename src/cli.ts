@@ -649,7 +649,7 @@ export async function run(
       if (layout.cause === "operation") throw new ConfigError(t.doctor.recoveryPending);
       if (layout.kind === "legacy" || layout.kind === "conflict" ||
           layout.kind === "fresh") {
-        throw new ConfigError(t.errors.contextLayout(layout.kind, paths.root, `tonedial doctor ${connectionScopeFlag(agent)} --json`));
+        throw new ConfigError(t.errors.contextLayout(layout.kind, paths.root, `tonedial doctor ${connectionScopeFlag(agent, cwd)} --json`));
       }
       ctx.contextChecks = layout.checks;
     }

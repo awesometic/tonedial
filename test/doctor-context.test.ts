@@ -784,8 +784,8 @@ test("pair registration without a hook resource stays native and does not fall b
   const claude = check(report, "Claude Code");
   assert.equal(claude.state, "problem");
   assert.match(claude.detail, /No ToneDial SessionStart hook/i);
-  assert.equal(claude.repair, `tonedial doctor --fix --project "${project}"`,
-    "the scoped repair, which also restores missing reader/skill seeds");
+  assert.equal(claude.repair, "tonedial doctor --fix --here",
+    "the scoped repair, which also restores missing reader/skill seeds, named as the folder it runs in");
   const repaired = await invoke(["doctor", "--fix", "--project", project, "--auto"]);
   assert.equal((repaired.value.integrations as Array<Record<string, any>>)
     .find((entry) => entry.tool === "claude")?.configuration, "configured", repaired.output);
@@ -879,7 +879,7 @@ test("doctor does not probe a missing retained reader", async () => {
     scope: "cli-runtime",
   });
   assert.equal(check(report, "reader").state, "problem");
-  assert.equal(check(report, "seeds").repair, `tonedial doctor --fix --project "${join(scratch, "project")}"`);
+  assert.equal(check(report, "seeds").repair, "tonedial doctor --fix --here");
 });
 
 test("doctor does not probe a stale retained reader", async () => {

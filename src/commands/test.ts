@@ -31,7 +31,7 @@ function connected(config: Config): boolean {
 
 /** Connections default to global; only a scope the user named carries over. */
 function wireStep(ctx: Ctx): string {
-  return `tonedial wire ${ctx.scopeExplicit ? connectionScopeFlag(ctx.agent, ctx.flags.here === true) : "--global"}`;
+  return `tonedial wire ${ctx.scopeExplicit ? connectionScopeFlag(ctx.agent, ctx.cwd) : "--global"}`;
 }
 
 /**

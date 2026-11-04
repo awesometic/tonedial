@@ -977,7 +977,7 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true): Promise<Comm
 
   // Nothing connected anywhere: the one step that lets a conversation receive this tone.
   if (config.enabled && diagnosis.layout.kind === "current" && integrations.length === 0 && !nativeAttention && !unownedFound && elsewhere.length === 0) {
-    lines.push(...nextStep(`tonedial wire ${connectionScopeFlag(ctx.agent, ctx.flags.here === true)}`, ctx.ui));
+    lines.push(...nextStep(`tonedial wire ${connectionScopeFlag(ctx.agent, ctx.cwd)}`, ctx.ui));
   }
 
   return {
@@ -1091,7 +1091,7 @@ function skillCheck(ctx: Ctx, tool: AgentTool): Check {
 function commandCheck(ctx: Ctx, shape: InstallShape): Check | null {
   if (shape !== "curl") return null;
   const path = ctx.paths.command;
-  const repair = `curl -fsSL https://raw.githubusercontent.com/awesometic/tonedial/main/install.sh | TONEDIAL_HOME="${shellQuote(ctx.paths.root)}" sh -s -- --repair ${connectionScopeFlag(ctx.agent)}`;
+  const repair = `curl -fsSL https://raw.githubusercontent.com/awesometic/tonedial/main/install.sh | TONEDIAL_HOME="${shellQuote(ctx.paths.root)}" sh -s -- --repair ${connectionScopeFlag(ctx.agent, ctx.cwd)}`;
   const expected = shimScript(ctx.paths.lib, ctx.paths.root);
   // Planning performs the lstat/open/fstat/read with O_NONBLOCK and rejects directories, devices,
   // FIFOs, and races before any bytes are consumed. The same planned change supplies the mode
@@ -1300,7 +1300,7 @@ function wiringCheck(ctx: Ctx, tool: AgentTool, shownPath: WiredAt, registered: 
 /** A repair a user can paste. Under `--global` it has to carry the flag, or running it
  *  repairs a destination it was not pointed at, and leaves the diagnosed one as it was. */
 function repairCommand(ctx: Ctx, rest: string): string {
-  return `tonedial ${rest} ${connectionScopeFlag(ctx.agent)}`;
+  return `tonedial ${rest} ${connectionScopeFlag(ctx.agent, ctx.cwd)}`;
 }
 
 /** The report's first line: what needs fixing and what is worth reading, before the details. */
@@ -1375,9 +1375,7 @@ function elsewhereReport(rows: Elsewhere[], ctx: Ctx): string[] {
         .map(line => `    ${state === "ok" ? line : ctx.ui.warn(line)}`));
     }
     if (group.some(row => row.state !== "ok")) {
-      // The current folder's own scope is the one `--here` names.
-      const scopeFlag = scope === "global" ? "--global"
-        : destination === canonicalDestination(ctx.cwd) ? "--here" : `--project "${shellQuote(destination)}"`;
+      const scopeFlag = connectionScopeFlag({ live: scope === "global", root: destination }, ctx.cwd);
       lines.push(...wrap(ctx.t.doctor.inspectScope, ctx.ui.width - 4).map(line => `    ${line}`),
         `    ${ctx.ui.accent(humanText(`tonedial doctor ${scopeFlag}`))}`,
         ...wrap(ctx.t.doctor.disconnectScope, ctx.ui.width - 4).map(line => `    ${line}`),

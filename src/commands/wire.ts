@@ -52,7 +52,7 @@ export async function runWire(ctx: Ctx, args: string[]): Promise<CommandResult> 
   }
   if (selection === null) {
     if (ctx.flags.auto || !ctx.canPrompt) {
-      throw new ConfigError(ctx.t.errors.wireToolsRequired(`tonedial wire codex ${connectionScopeFlag(ctx.agent, ctx.flags.here === true)}`, ctx.flags.auto));
+      throw new ConfigError(ctx.t.errors.wireToolsRequired(`tonedial wire codex ${connectionScopeFlag(ctx.agent, ctx.cwd)}`, ctx.flags.auto));
     }
     return wireSelected(ctx, await askTools(ctx, ctx.t.errors.toolsPrompt));
   }
@@ -365,7 +365,7 @@ async function wireSelected(ctx: Ctx, requested: AgentTool[], rebuilding?: Nativ
 export async function runUnwire(ctx: Ctx, args: string[]): Promise<CommandResult> {
   const named = args[0] !== undefined ? selectTool(ctx, args[0]) : null;
   if (named === null && (ctx.flags.auto || !ctx.canPrompt)) {
-    const flag = connectionScopeFlag(ctx.agent, ctx.flags.here === true);
+    const flag = connectionScopeFlag(ctx.agent, ctx.cwd);
     throw new ConfigError(ctx.t.errors.unwireToolsRequired(`tonedial unwire codex ${flag}`, `tonedial eject ${flag}`, ctx.flags.auto));
   }
   requireDisconnectScope(ctx, `tonedial unwire${named ? ` ${named[0]}` : ""}`, named ?? undefined);

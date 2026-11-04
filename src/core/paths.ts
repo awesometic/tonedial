@@ -202,10 +202,11 @@ export function resolveAgentPaths(
 
 /**
  * A copyable command argument names the inspected destination, including an isolation root.
- * `here` keeps the user's own `--here` when the command runs in the same folder.
+ * A project in `cwd`, where the command runs, is `--here`; any other folder keeps its path.
  */
-export function connectionScopeFlag(agent: AgentPaths, here = false): string {
-  return agent.live ? "--global" : here ? "--here" : `--project "${shellQuote(agent.root)}"`;
+export function connectionScopeFlag(scope: Pick<AgentPaths, "live" | "root">, cwd: string): string {
+  if (scope.live) return "--global";
+  return canonicalDestination(scope.root) === canonicalDestination(cwd) ? "--here" : `--project "${shellQuote(scope.root)}"`;
 }
 
 export type SkillDestination = {
