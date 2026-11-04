@@ -330,7 +330,7 @@ async function rebuildExisting(entry: Ctx): Promise<CommandResult> {
   if (ctx.flags.commands && !tools.includes("claude")) throw new ConfigError(ctx.t.errors.commandsNeedClaude);
   const scoped: Ctx = { ...ctx, flags: { ...ctx.flags, tools: tools.length ? tools.join(",") : "none" } };
   const native = await runRebuildNative(scoped, app.legacy, undefined,
-    `tonedial init --tools ${tools.length ? tools.join(",") : "none"} ${connectionScopeFlag(ctx.agent, ctx.flags.here === true)}`);
+    `tonedial init --tools ${tools.length ? tools.join(",") : "none"}${ctx.flags.commands ? " --commands" : ""} ${connectionScopeFlag(ctx.agent, ctx.flags.here === true)}`);
   const after = hostHandoff(scoped, native.json.applied === true || native.json.reason === "nothing", tools);
   return {
     lines: [...(ctx.canPrompt ? [] : introduction), ...resultHeading, ...app.lines, ...native.lines,

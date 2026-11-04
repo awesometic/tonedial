@@ -60,6 +60,7 @@ test("doctor --fix without a terminal reports approval, not a protected file, wi
   assert.doesNotMatch(shown.out, /need separate attention/);
   assert.match(shown.out, /approval required/);
   assert.match(shown.out, /^ {2,}tonedial doctor --fix --global$/m);
+  assert.match(shown.out, /^ {2,}tonedial doctor --fix --global --dry-run$/m);
   assert.match(shown.out, /^ {2,}tonedial doctor --fix --global --auto$/m);
 });
 
@@ -237,4 +238,17 @@ test("a duplicate hook stays visible and counted when that agent also has a prob
   assert.match(codex, /both hooks are present/);
   const machine = await json(["doctor", "--global"]);
   assert.equal(machine.value.integrations.find((row: { tool: string }) => row.tool === "codex").duplicates.length, 1);
+});
+
+test("approval reruns keep the agent selection and options the user asked for", async () => {
+  assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
+  mkdirSync(join(home, ".claude"));
+  rmSync(join(home, ".codex", "hooks.json"));
+  const fixed = await human(["doctor", "--fix", "--tools", "codex", "--global"]);
+  assert.match(fixed.out, /^ {2,}tonedial doctor --fix --tools codex --global$/m, fixed.out);
+  assert.match(fixed.out, /^ {2,}tonedial doctor --fix --tools codex --global --auto$/m);
+
+  const setup = await human(["init", "--tools", "claude", "--commands", "--global"]);
+  assert.match(setup.out, /^ {2,}tonedial init --tools claude --commands --global$/m, setup.out + setup.err);
+  assert.match(setup.out, /^ {2,}tonedial init --tools claude --commands --global --auto$/m);
 });

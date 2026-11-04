@@ -676,7 +676,8 @@ export async function runDoctor(ctx: Ctx, _args: string[]): Promise<CommandResul
     json: { ...app.json, root: ctx.agent.root, stateRoot: ctx.paths.root, agentRoot: ctx.agent.root,
       live: ctx.agent.live, fixed: false, appHealthy: false },
   };
-  const native = await runRebuildNative(ctx, app.legacy, undefined, repairCommand(ctx, "doctor --fix"));
+  const native = await runRebuildNative(ctx, app.legacy, undefined,
+    repairCommand(ctx, `doctor --fix${ctx.flags.tools !== null ? ` --tools ${ctx.flags.tools}` : ""}`));
   const rollbackLines = recoveryRollbackLines(ctx.t, app.json.operationId, native.json.operationId);
   const report = await doctorReport(ctx, rollbackLines.length === 0);
   return {
