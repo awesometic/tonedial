@@ -261,7 +261,7 @@ const messages: Messages = {
     keepProjectOnly: (here) => here
       ? "Para conectar solo este proyecto, desconecta primero la conexión global y luego conecta esta carpeta:"
       : "Para conectar solo ese proyecto, desconecta primero la conexión global y luego ejecuta esto dentro de esa carpeta:",
-    alsoDisconnects: (tool, directories) => `También desconecta ${tool} en estos proyectos, que una versión anterior registró en el hook global:\n${directories.join("\n")}`,
+    alsoDisconnects: (tool) => `También desconecta ${tool} en estos proyectos, que una versión anterior registró en el hook global:`,
     hookDuplicate: (tool, destination, stale) => `${tool}: el proyecto también configura el tono y existen ambos hooks${stale ? ". El hook del proyecto apunta a un entorno antiguo" : ""}:\n${destination}\nPara usar solo el global, ejecuta desde ese directorio:\ntonedial unwire ${tool} --here`,
     migrationRollback: (operationId) => `Restaura los archivos y ajustes registrados en esta migración:\ntonedial doctor --fix --rollback ${operationId}`,
     migrationQuestion: "¿Apruebas esta migración con los ajustes guardados en una operación recuperable?",
@@ -273,6 +273,13 @@ const messages: Messages = {
     actionLabel: { file: "archivo", "entry-rebuild": "entrada reconstruida", skill: "enlace de habilidad", "case-rename": "entrada renombrada" },
     actionState: { created: (label) => `(nuevo: ${label})`, removed: (label) => `(eliminado: ${label})`, updated: (label) => `(actualizado: ${label})`, plain: (label) => `(${label})` },
     newFiles: (count) => `(${count} archivos nuevos)`,
+    rootState: "Estado de ToneDial",
+    rootGlobal: "Archivos globales de agentes",
+    rootProject: "Archivos del proyecto",
+    configRecords: (tools, global) => `(registra ${tools} para ${global ? "todos los proyectos" : "este proyecto"})`,
+    configRemoves: (tools, count) => count === 1 ? `(elimina la conexión de ${tools})` : `(elimina las conexiones de ${tools})`,
+    configSaves: (tools, global) => tools === null ? "(guarda tu configuración)"
+      : `(guarda tu configuración y registra ${tools} para ${global ? "todos los proyectos" : "este proyecto"})`,
     codexTrust: (global) => global
       ? "En Codex, abre /hooks → SessionStart → ToneDial, revisa el comando y activa el hook."
       : "Confía en este proyecto en Codex y luego abre /hooks → SessionStart → ToneDial, revisa el comando y activa el hook.",

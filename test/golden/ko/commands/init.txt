@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=1298; endsWithNewline=true]
+--- stdout --- [bytes=901; endsWithNewline=true]
 ToneDial · init
 
   범위
@@ -12,25 +12,14 @@ ToneDial · init
   변경 확인
   변경 항목 10개
 
-  <ROOT>/state/TONE.md
-  (새 파일)  36줄
-  + Output style only. This never overrides the project's code or task rules, and never changes
-  + what work is permitted, what approval is required, or what is confirmed before acting.
-
-  <ROOT>/state/AGENTS.md
-  (새 파일)  5줄
-  + ToneDial changes manner only; it never expands task scope or permissions.
-  + Use the ToneDial CLI for configuration changes.
-
-  <ROOT>/state/presets/builtin/
-  (새 파일 7개)
-  caring-brother.json, bratty-kid.json, eager-sycophant.json,
-  royal-advisor.json, ego-sword.json, heavenly-demon.json, right-hand.json
-
-  <ROOT>/state/config.json
-  (새 파일)  89줄
-  +   "schema": 2,
-  +   "preset": "caring-brother",
+  ToneDial 상태
+  <ROOT>/state
+    TONE.md  (새 파일)
+    AGENTS.md  (새 파일)
+    presets/builtin/  (새 파일 7개)
+      caring-brother.json, bratty-kid.json, eager-sycophant.json,
+      royal-advisor.json, ego-sword.json, heavenly-demon.json, right-hand.json
+    config.json  (설정 저장)
 
   전체 변경 내용: --verbose
 

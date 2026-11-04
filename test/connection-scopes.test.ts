@@ -271,7 +271,7 @@ test("bare unwire in a terminal asks with the wire picker and marks installed an
   assert.match(result.stdout, /^ +1\. Claude Code \(claude\) · installed$/m);
   assert.match(result.stdout, /^ +2\. Antigravity IDE\/Desktop \(antigravity\)$/m);
   assert.match(result.stdout, /^ +3\. Codex CLI \(codex\) · connected$/m);
-  assert.match(result.stdout, new RegExp(`${join(realpathSync(project), ".codex", "hooks.json").replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\n *\\(removed\\)`));
+  assert.ok(result.stdout.includes(`\n  ${realpathSync(project)}\n    ${join(".codex", "hooks.json")}  (removed)\n`), result.stdout);
   assert.match(result.stdout, /--dry-run · nothing written/);
   assert.equal(existsSync(join(project, ".codex", "hooks.json")), true);
 });
@@ -467,6 +467,9 @@ test("unwire --global names and removes the project connections an earlier versi
   const rows = preview.output.split("\n").map((line) => line.trim());
   assert.ok(rows.includes(realpathSync(project)) && rows.includes(realpathSync(other)), preview.output);
   assert.ok(rows.indexOf(realpathSync(project)) < rows.findIndex((row) => row.startsWith("--dry-run")), "named before the result");
+  // Each folder is printed once, with the skill link it loses listed under it.
+  assert.equal(preview.output.split(realpathSync(project)).length - 1, 1, preview.output);
+  assert.equal(rows[rows.indexOf(realpathSync(project)) + 1], `${join(".agents", "skills", "tonedial")}  (skill link removed)`, preview.output);
 
   const removed = await invoke(["unwire", "codex", "--global", "--auto"]);
   assert.equal(removed.code, 0, JSON.stringify(removed.value));

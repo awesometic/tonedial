@@ -261,7 +261,7 @@ const messages: Messages = {
     keepProjectOnly: (here) => here
       ? "このプロジェクトだけに接続するには、先にグローバル接続を解除してから、このフォルダーを接続してください："
       : "そのプロジェクトだけに接続するには、先にグローバル接続を解除してから、そのフォルダー内で実行してください：",
-    alsoDisconnects: (tool, directories) => `以前のバージョンがグローバルフックに記録した次のプロジェクトの ${tool} 接続も解除します：\n${directories.join("\n")}`,
+    alsoDisconnects: (tool) => `以前のバージョンがグローバルフックに記録した次のプロジェクトの ${tool} 接続も解除します：`,
     hookDuplicate: (tool, destination, stale) => `${tool}: このプロジェクトにも口調配信の設定があり、両方のフックが存在します${stale ? "。プロジェクト側は古いランタイムを参照しています" : ""}：\n${destination}\nグローバルフックのみを使うには、このディレクトリで実行してください：\ntonedial unwire ${tool} --here`,
     migrationRollback: (operationId) => `この移行で記録したファイルと設定を復元：\ntonedial doctor --fix --rollback ${operationId}`,
     migrationQuestion: "保存済み設定を使い、復元可能な1回の操作として旧形式を移行しますか？",
@@ -273,6 +273,13 @@ const messages: Messages = {
     actionLabel: { file: "ファイル", "entry-rebuild": "再構築した項目", skill: "スキルリンク", "case-rename": "名前を変更した項目" },
     actionState: { created: (label) => `（新規${label}）`, removed: (label) => `（${label}を削除）`, updated: (label) => `（${label}を更新）`, plain: (label) => `（${label}）` },
     newFiles: (count) => `（新規ファイル ${count}件）`,
+    rootState: "ToneDialの状態",
+    rootGlobal: "グローバルのエージェントファイル",
+    rootProject: "プロジェクトのファイル",
+    configRecords: (tools, global) => `（${global ? "すべてのプロジェクト" : "このプロジェクト"}の${tools}接続を記録）`,
+    configRemoves: (tools) => `（${tools}の接続記録を削除）`,
+    configSaves: (tools, global) => tools === null ? "（設定を保存）"
+      : `（設定を保存し、${global ? "すべてのプロジェクト" : "このプロジェクト"}の${tools}接続を記録）`,
     codexTrust: (global) => global
       ? "Codexの /hooks → SessionStart → ToneDialでコマンドを確認し、フックを有効にしてください。"
       : "Codexでこのプロジェクトを信頼してから、/hooks → SessionStart → ToneDialでコマンドを確認し、フックを有効にしてください。",

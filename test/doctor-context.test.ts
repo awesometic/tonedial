@@ -1355,7 +1355,8 @@ test("doctor revalidates its classifier read-set before an interactive repair", 
   let changed = false;
   process.stdout.write = ((chunk: string) => {
     output += chunk;
-    if (!changed && chunk.includes(paths.tone)) {
+    // The approval preview lists TONE.md under the state root it lives in.
+    if (!changed && chunk.includes(`\n  ${paths.root}\n    TONE.md  `)) {
       changed = true;
       writeFileSync(paths.agents, "guide changed after approval preview\n");
     }

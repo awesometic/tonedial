@@ -312,6 +312,8 @@ async function wireSelected(ctx: Ctx, requested: AgentTool[], rebuilding?: Nativ
     auto: ctx.flags.auto,
     verbose: ctx.flags.verbose,
     ui: ctx.ui,
+    agent: ctx.agent,
+    describe: { [ctx.paths.config]: ctx.t.wiring.configRecords(tools.map((tool) => TARGETS[tool].label).join(", "), ctx.agent.live) },
     heading: ctx.t.wiring.nativeHeading,
     ...(rebuilding ? { recoveryPresentation: {
       failureMessage: (operationId: string) => { pendingOperation = operationId; return ctx.t.recovery.nativePending; },
@@ -522,10 +524,13 @@ export async function disconnect(ctx: Ctx, tools: AgentTool[], all = false): Pro
     auto: ctx.flags.auto,
     verbose: ctx.flags.verbose,
     ui: ctx.ui,
-    notice: tools.flatMap((tool) => {
-      const directories = alsoDisconnected.filter(({ target }) => target === tool).map(({ destination }) => humanText(destination!));
-      return directories.length === 0 ? [] : ["", ...receiptLines(ctx.t.wiring.alsoDisconnects(TARGETS[tool].label, directories),
-        ctx.ui.width - 2).map((line) => `  ${line}`)];
+    agent: ctx.agent,
+    ...(disconnected.length ? { describe: { [ctx.paths.config]: ctx.t.wiring.configRemoves(
+      disconnected.map((tool) => TARGETS[tool].label).join(", "), disconnected.length + alsoDisconnected.length) } } : {}),
+    roots: tools.flatMap((tool) => {
+      const directories = alsoDisconnected.filter(({ target }) => target === tool).map(({ destination }) => destination!);
+      return directories.length === 0 ? [] : [{ paths: directories,
+        heading: receiptLines(ctx.t.wiring.alsoDisconnects(TARGETS[tool].label), ctx.ui.width - 2).map((line) => `  ${line}`) }];
     }),
   });
 

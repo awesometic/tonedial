@@ -27,7 +27,7 @@ import { spawnSync } from "node:child_process";
 import { confirm, pickTools } from "../ui/prompt.ts";
 import { rcPath, withPathLine } from "../wiring/shell.ts";
 import { planSelectedSkills } from "../wiring/skill.ts";
-import { assertDistinctHookTargets, parseToolSelection, planOrderedDelivery } from "../wiring/targets.ts";
+import { TARGETS, assertDistinctHookTargets, parseToolSelection, planOrderedDelivery } from "../wiring/targets.ts";
 import { contentHash, recordFileChange, resourceKey } from "../wiring/ownership.ts";
 
 export async function runInit(entry: Ctx, _args: string[]): Promise<CommandResult> {
@@ -190,6 +190,8 @@ export async function runInit(entry: Ctx, _args: string[]): Promise<CommandResul
     auto: ctx.flags.auto,
     verbose: ctx.flags.verbose,
     ui: ctx.ui,
+    agent: ctx.agent,
+    describe: { [ctx.paths.config]: ctx.t.wiring.configSaves(tools.length ? tools.map((tool) => TARGETS[tool].label).join(", ") : null, ctx.agent.live) },
     heading: ctx.t.wiring.planHeading,
   });
 

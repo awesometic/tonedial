@@ -17,7 +17,7 @@ import { catalogue } from "../src/core/i18n.ts";
 const EN = catalogue("en").cli;
 import { cpSync, mkdtempSync, rmSync, readFileSync, writeFileSync, mkdirSync, existsSync, lstatSync, symlinkSync, chmodSync, statSync, readdirSync, readlinkSync, realpathSync, renameSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
-import { dirname, join, relative, sep } from "node:path";
+import { basename, dirname, join, relative, sep } from "node:path";
 
 import { run } from "../src/cli.ts";
 import { parseConfig, serializeConfig } from "../src/core/config.ts";
@@ -374,9 +374,9 @@ test("legacy wiring writes through a symlink instead of replacing it", async () 
   assert.equal(readFileSync(real, "utf8"), "# from my dotfiles\n", "restored byte for byte");
 });
 
-test("--dry-run shows the diff and writes nothing", async () => {
+test("--dry-run shows the change and writes nothing", async () => {
   // Native setup no longer writes this delivery shape. Exercise the generic diff contract directly:
-  // an existing host file shows its changed lines, while the gate still applies no bytes.
+  // an existing host file is named as modified, its lines are verbose-only, and no bytes land.
   const target = agentFile("claude");
   mkdirSync(dirname(target), { recursive: true });
   writeFileSync(target, "# mine\n");
@@ -393,37 +393,44 @@ test("--dry-run shows the diff and writes nothing", async () => {
     ui: palette("never", {}, false),
   });
   const preview = result.lines.join("\n");
-  assert.match(preview, /\+ <!-- tonedial:begin -->/, "a modification shows its added lines");
+  assert.ok(preview.includes(`\n  ${dirname(target)}\n    ${basename(target)}  ${EN.wiring.modifiedFile}`), preview);
   assert.equal(result.reason, "dry-run");
+  const verbose = await gate([change], { paths: gatePaths, dryRun: true, auto: true, verbose: true, t: EN, ui: palette("never", {}, false) });
+  assert.match(verbose.lines.join("\n"), /\+ <!-- tonedial:begin -->/, "a verbose modification shows its added lines");
   assert.equal(readFileSync(target, "utf8"), "# mine\n", "dry-run leaves the host untouched");
 });
 
-test("compact approval previews bound key lines while verbose shows the complete change", async () => {
+test("compact previews name each root once and list its files relative to it; verbose keeps the diff", async () => {
   const target = join(scratch, "bounded-preview.txt");
   const before = "one\ntwo\nthree\nfour\nfive\nsix\n";
   const after = "alpha\nbeta\ngamma\ndelta\nepsilon\nzeta\n";
   writeFileSync(target, before);
   const change = planChange(target, () => after, EN);
-  const second = join(scratch, "second-preview.txt");
+  const second = join(scratch, "nested", "second-preview.txt");
+  const state = planChange(join(gatePaths.root, "config.json"), () => "{}\n", EN);
   const changes = [change, planChange(second, () => "new content\n", EN)];
-  const compact = await gate(changes, {
-    paths: gatePaths,
-    dryRun: true, auto: true, t: EN, ui: palette("never", {}, false),
-  });
+  const options = { paths: gatePaths, dryRun: true, auto: true, t: EN, ui: palette("never", {}, false),
+    agent: { root: scratch, live: false }, finalChanges: [state],
+    describe: { [state.path]: "(records codex for this project)" } };
+  const compact = await gate(changes, options);
   const compactPreview = compact.lines.join("\n");
-  assert.match(compactPreview, /\+6.*-6/);
-  assert.match(compactPreview, /- one/, "compact output carries a representative removed line");
-  assert.match(compactPreview, /\+ alpha/, "compact output carries a representative added line");
+  assert.ok(compactPreview.includes(EN.wiring.changeCount(3)), "the approval scope has no change count");
+  // State lives under its own root; the agent root's own label and path cover the rest.
+  assert.ok(compactPreview.includes([
+    "", `  ${EN.wiring.rootProject}`, `  ${scratch}`,
+    `    bounded-preview.txt  ${EN.wiring.modifiedFile}`,
+    `    ${join("nested", "second-preview.txt")}  ${EN.wiring.newFile}`,
+    "", `  ${EN.wiring.rootState}`, `  ${gatePaths.root}`,
+    "    config.json  (records codex for this project)",
+  ].join("\n")), compactPreview);
+  assert.equal(compactPreview.split(scratch).length - 1, 2, "each root is printed once");
+  assert.doesNotMatch(compactPreview, /- one|\+ alpha|\+6|lines/, "excerpts and line counts are verbose-only");
   assert.match(compactPreview, new RegExp(EN.wiring.previewMore));
-  assert.doesNotMatch(compactPreview, /zeta/, "compact output is bounded");
-  assert.ok(compactPreview.includes(EN.wiring.changeCount(2)), "the approval scope has no change count");
-  assert.ok(compactPreview.includes(`\n\n  ${second}\n`), "separate files run together");
 
-  const verbose = await gate(changes, {
-    paths: gatePaths,
-    dryRun: true, auto: true, verbose: true, t: EN, ui: palette("never", {}, false),
-  });
-  assert.match(verbose.lines.join("\n"), /\+ zeta/, "verbose output carries every changed line");
+  const verbose = await gate(changes, { ...options, verbose: true });
+  const verbosePreview = verbose.lines.join("\n");
+  assert.match(verbosePreview, /\+ zeta/, "verbose output carries every changed line");
+  assert.ok(verbosePreview.includes(`\n  ${target}\n`), "verbose keeps each file's own path");
   assert.deepEqual(verbose.diff, compact.diff, "human verbosity does not alter the structured diff");
   assert.equal(readFileSync(target, "utf8"), before, "both dry runs leave the file unchanged");
 });
@@ -852,8 +859,6 @@ test("the diff is printed before the question, not after the write", async () =>
   // to something the user could not yet see: `gate` buffered its diff into the command's lines,
   // which reach stdout only after `run()` has already resolved.
   const order: string[] = [];
-  // An existing target, so what the gate prints is a real diff. A creation shows its path and a
-  // line count instead, which would make this assert on a body that is deliberately absent.
   writeFileSync(join(scratch, "TARGET.md"), "old content\n");
   const change = planChange(join(scratch, "TARGET.md"), () => "new content\n", EN);
   const result = await gate([change], {
@@ -862,7 +867,7 @@ test("the diff is printed before the question, not after the write", async () =>
     dryRun: false,
     auto: false,
     ui: palette("never", {}, false),
-    out: (text) => order.push(`diff:${text.includes("new content")}`),
+    out: (text) => order.push(`diff:${text.includes(`TARGET.md  ${EN.wiring.modifiedFile}`)}`),
     ask: async () => (order.push("ask"), "no"),
     interactive: () => true,
   });
@@ -886,7 +891,7 @@ test("a new file under a symlinked parent previews its actual destination", asyn
     t: EN, dryRun: false, auto: false, ui: palette("never", {}, false),
     out: (text) => { preview += text; },
     ask: async () => {
-      assert.ok(preview.includes(`  ${path}\n  → ${actual}\n`));
+      assert.ok(preview.includes(`  ${linkedDir}\n    hooks.json  ${EN.wiring.newFile}\n      → ${actual}\n`), preview);
       assert.equal(existsSync(actual), false, "approval must precede creation");
       return "yes";
     },
@@ -1533,9 +1538,9 @@ test("a marker in the artifact no longer reaches any legacy wired file", async (
   assert.equal(await cli("eject", "--here"), 0);
 });
 
-test("a file being created is summarized by default and expanded only when verbose", async () => {
-  // Every line in a created file is an addition. The default still needs representative evidence
-  // before approval, while verbose owns the complete body and structural wrappers add no signal.
+test("a file being created is named by default and expanded only when verbose", async () => {
+  // Every line in a created file is an addition. The default names the file under its folder;
+  // verbose owns the complete body.
   const target = agentFile("claude");
   const change = planChange(
     target,
@@ -1552,13 +1557,8 @@ test("a file being created is summarized by default and expanded only when verbo
     ui: palette("never", {}, false),
   });
   const preview = result.lines.join("\n");
-  assert.match(preview, /\(new file\)/, "it says a file is being created");
-  assert.ok(preview.includes(target), "and names where");
-  assert.match(preview, /\d+ lines/, "and how big it is");
-  assert.match(preview, /\+ @\/state\/tone\.md/, "a representative addition remains visible");
-  assert.match(preview, /\+ Tone changes style only\./, "a second meaningful addition remains visible");
-  assert.doesNotMatch(preview, /later unique instruction/, "the compact excerpt stays bounded");
-  assert.doesNotMatch(preview, /tonedial:begin/, "structural wrappers add no approval evidence");
+  assert.ok(preview.includes(`\n  ${dirname(target)}\n    ${basename(target)}  ${EN.wiring.newFile}`), preview);
+  assert.doesNotMatch(preview, /\d+ lines|^ {2}\+ /m, "line counts and excerpts are verbose-only");
   assert.equal(existsSync(target), false, "the dry-run did not create the file");
 
   const verbose = await gate([change], {
@@ -2519,7 +2519,7 @@ test("approval previews escape path and content controls before asking while str
             && character !== "\n" && character !== "\u200c" && character !== "\u200d");
           assert.deepEqual(controls, [], `${presentation}: ${visible}`);
           assert.match(visible, /\\u\{1b\}\[2J\\u\{a\}\\u\{202e\}\.md/, "the target's controls were not visibly escaped");
-          if (presentation !== "recovery") {
+          if (presentation === "verbose") {
             assert.match(visible, /new\\u\{1b\}\[2J\\u\{202e\}/, "added content was not visibly escaped");
             assert.ok(visible.includes("👩‍💻"), "preview sanitization broke an emoji joiner");
           }

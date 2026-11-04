@@ -332,7 +332,8 @@ export type Messages = {
     hookConfigured: (tool: string, path: string) => string;
     globalCovers: (tools: string) => string;
     keepProjectOnly: (here: boolean) => string;
-    alsoDisconnects: (tool: string, directories: readonly string[]) => string;
+    /** Heads the project folders an unwire --global also disconnects. */
+    alsoDisconnects: (tool: string) => string;
     hookDuplicate: (tool: string, destination: string, stale: boolean) => string;
     migrationRollback: (operationId: string) => string;
     migrationQuestion: string;
@@ -344,6 +345,14 @@ export type Messages = {
     actionLabel: Record<"file" | "entry-rebuild" | "skill" | "case-rename", string>;
     actionState: Record<"created" | "removed" | "updated" | "plain", (label: string) => string>;
     newFiles: (count: number) => string;
+    /** Preview group labels: ToneDial's own state, then this scope's agent files. */
+    rootState: string;
+    rootGlobal: string;
+    rootProject: string;
+    /** ToneDial's config.json in a preview, said in words rather than as an excerpt. */
+    configRecords: (tools: string, global: boolean) => string;
+    configRemoves: (tools: string, count: number) => string;
+    configSaves: (tools: string | null, global: boolean) => string;
     codexTrust: (global: boolean) => string;
     /** Offered after the receipt, because Codex takes the terminal when it starts. */
     codexOpen: string;
@@ -377,7 +386,7 @@ export type Messages = {
     finalNewlineAdded: string;
     finalNewlineRemoved: string;
     previewMore: string;
-    /** Compact previews show new-file line counts; verbose human previews include the body. */
+    /** A new file's line count, in the structured diff and the verbose preview. */
     newFileLines: (count: number) => string;
     scopeGlobal: string;
     seeded: (labels: string[]) => string;
@@ -938,7 +947,7 @@ const enMessages: Messages = {
     keepProjectOnly: (here) => here
       ? "To connect only this project, disconnect the global connection first, then connect this folder:"
       : "To connect only that project, disconnect the global connection first, then run this from inside it:",
-    alsoDisconnects: (tool, directories) => `Also disconnects ${tool} in these projects, which an earlier version recorded on the global hook:\n${directories.join("\n")}`,
+    alsoDisconnects: (tool) => `Also disconnects ${tool} in these projects, which an earlier version recorded on the global hook:`,
     hookDuplicate: (tool, destination, stale) => `${tool}: this project also configures tone delivery, so both hooks are present${stale ? ". The project hook points to an older runtime" : ""}:\n${destination}\nTo use only the global hook, run from that directory:\ntonedial unwire ${tool} --here`,
     migrationRollback: (operationId) => `Restore this migration's recorded files and settings with:\ntonedial doctor --fix --rollback ${operationId}`,
     migrationQuestion: "Approve this legacy migration with the saved settings and one recoverable operation?",
@@ -950,6 +959,13 @@ const enMessages: Messages = {
     actionLabel: { file: "file", "entry-rebuild": "rebuilt entry", skill: "skill link", "case-rename": "renamed entry" },
     actionState: { created: (label) => `(new ${label})`, removed: (label) => `(${label} removed)`, updated: (label) => `(${label} updated)`, plain: (label) => `(${label})` },
     newFiles: (count) => `(${count} new files)`,
+    rootState: "ToneDial state",
+    rootGlobal: "Global agent files",
+    rootProject: "Project files",
+    configRecords: (tools, global) => `(records ${tools} for ${global ? "all projects" : "this project"})`,
+    configRemoves: (tools, count) => `(removes the ${tools} connection${count === 1 ? "" : "s"})`,
+    configSaves: (tools, global) => tools === null ? "(saves your settings)"
+      : `(saves your settings and records ${tools} for ${global ? "all projects" : "this project"})`,
     codexTrust: (global) => global
       ? "In Codex, open /hooks → SessionStart → ToneDial, review the command and enable the hook."
       : "Trust this project in Codex, then open /hooks → SessionStart → ToneDial, review the command and enable the hook.",
@@ -1727,7 +1743,7 @@ const koMessages: Messages = {
     keepProjectOnly: (here) => here
       ? "이 프로젝트에만 연결하려면 먼저 전역 연결을 해제한 뒤 이 폴더를 연결하세요:"
       : "그 프로젝트에만 연결하려면 먼저 전역 연결을 해제한 뒤 그 폴더 안에서 실행하세요:",
-    alsoDisconnects: (tool, directories) => `이전 버전이 전역 훅에 기록한 다음 프로젝트의 ${tool} 연결도 함께 해제합니다:\n${directories.join("\n")}`,
+    alsoDisconnects: (tool) => `이전 버전이 전역 훅에 기록한 다음 프로젝트의 ${tool} 연결도 함께 해제합니다:`,
     hookDuplicate: (tool, destination, stale) => `${tool}: 이 프로젝트에도 톤 전달 훅이 있어 설정이 중복됩니다${stale ? ". 프로젝트 훅은 이전 런타임 경로를 가리킵니다" : ""}:\n${destination}\n전역 훅만 쓰려면 위 프로젝트 위치에서 실행하세요:\ntonedial unwire ${tool} --here`,
     migrationRollback: (operationId) => `이 작업에 기록된 파일과 설정을 복구하려면 실행하세요:\ntonedial doctor --fix --rollback ${operationId}`,
     migrationQuestion: "저장된 설정을 유지하고 복구 가능한 작업 하나로 이전 상태를 옮길까요?",
@@ -1739,6 +1755,13 @@ const koMessages: Messages = {
     actionLabel: { file: "파일", "entry-rebuild": "복구 항목", skill: "스킬 링크", "case-rename": "이름 변경 항목" },
     actionState: { created: (label) => `(새 ${label})`, removed: (label) => `(${label} 삭제)`, updated: (label) => `(${label} 갱신)`, plain: (label) => `(${label})` },
     newFiles: (count) => `(새 파일 ${count}개)`,
+    rootState: "ToneDial 상태",
+    rootGlobal: "전역 에이전트 파일",
+    rootProject: "프로젝트 파일",
+    configRecords: (tools, global) => `(${global ? "모든 프로젝트" : "이 프로젝트"}의 ${tools} 연결 기록)`,
+    configRemoves: (tools) => `(${tools} 연결 기록 삭제)`,
+    configSaves: (tools, global) => tools === null ? "(설정 저장)"
+      : `(설정 저장, ${global ? "모든 프로젝트" : "이 프로젝트"}의 ${tools} 연결 기록)`,
     codexTrust: (global) => global
       ? "Codex의 /hooks → SessionStart → ToneDial에서 실행 명령을 확인하고 훅을 켜세요."
       : "Codex에서 이 프로젝트를 신뢰한 뒤 /hooks → SessionStart → ToneDial에서 실행 명령을 확인하고 훅을 켜세요.",

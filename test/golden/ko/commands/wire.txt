@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=1414; endsWithNewline=true]
+--- stdout --- [bytes=938; endsWithNewline=true]
 ToneDial · wire
 
   연결 범위: 프로젝트
@@ -8,35 +8,17 @@ ToneDial · wire
   에이전트 연결
   변경 항목 6개
 
-  <ROOT>/state/reader.mjs
-  (새 파일)  410줄
-  + #!/usr/bin/env node
-  + import {
+  프로젝트 파일
+  <ROOT>/project
+    .codex/hooks.json  (새 파일)
+    .agents/skills/tonedial  (새 스킬 링크)
 
-  <ROOT>/state/skill/tonedial/SKILL.md
-  (새 파일)  383줄
-  + ---
-  + name: tonedial
-
-  <ROOT>/state/skill/tonedial/references/traits.md
-  (새 파일)  113줄
-  + Twelve axes, each 1 to 5. Read the live values with `tonedial get --json`; this file says what
-  + each one **owns**, which is what tells you which axis a request is actually about.
-
-  <ROOT>/project/.codex/hooks.json
-  (새 파일)  41줄
-  +   "description": "ToneDial: load saved response tone",
-  +   "hooks": {
-
-  <ROOT>/project/.agents/skills/tonedial
-  (새 스킬 링크)
-
-  <ROOT>/state/config.json
-  (수정)  +174 -51
-  -     "registrations": {},
-  -     "resources": {}
-  +     "registrations": {
-  +       "[\"codex\",\"project\",\"<ROOT>/project\"]": {
+  ToneDial 상태
+  <ROOT>/state
+    reader.mjs  (새 파일)
+    skill/tonedial/SKILL.md  (새 파일)
+    skill/tonedial/references/traits.md  (새 파일)
+    config.json  (이 프로젝트의 Codex CLI 연결 기록)
 
   전체 변경 내용: --verbose
 

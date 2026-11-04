@@ -403,8 +403,11 @@ The plan writes nothing and launches no provider.
 Review proposed file changes before approving; `--verbose` includes the diff and `--auto` supplies approval without hiding the plan.
 Without a terminal to approve in, a command writes nothing and prints the commands that rerun it with the same agents, options and scope:
 in a terminal, with `--dry-run`, and with `--auto`; JSON reports them in `commands` with `reason: "approval-required"`.
-The preview names each path with its direction, such as `new file`, `modified`, `removed`, `new skill link` or `skill link removed`,
-and collapses three or more new files in one directory into a single block.
+The preview prints each root once on its own line under a label: the scope's agent files, then ToneDial state.
+It lists each file relative to its root with the change, such as `new file`, `modified`, `removed`, `new skill link` or `skill link removed`;
+ToneDial's `config.json` says what it records instead, such as `records Codex CLI for this project`.
+Three or more new files in one folder below a root share one row.
+Excerpt lines, line counts and per-file diffs appear only with `--verbose`; JSON `diff` is the same either way.
 The receipt then groups each agent's status, hook file and its own enablement step.
 Local setup does not configure remote/cloud runtimes.
 
@@ -602,7 +605,7 @@ tonedial show --json
 
 `show` groups connections by scope and directory; JSON lists them in `connections`.
 A project connection an earlier version recorded on the global hook is labelled, and JSON marks it `sharesGlobalHook: true`;
-`unwire <tool> --global` removes it with the global hook.
+`unwire <tool> --global` removes it with the global hook, and its preview lists those project folders under their own heading.
 `tonedial doctor --here` checks one folder's files and lists the other connections.
 
 **Recover after a host or Node update**
