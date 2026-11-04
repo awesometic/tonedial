@@ -321,7 +321,7 @@ const messages: Messages = {
     inspectScope: "Para seguir usando estas conexiones, inspecciona este ámbito:",
     disconnectScope: "Si ya no se necesitan, desconecta todos los agentes de este ámbito:",
     scope: "Ámbito de inspección: proyecto",
-    toLookAt: (count) => `${count} ${count === 1 ? "comprobación requiere" : "comprobaciones requieren"} atención`,
+    summary: (problems, notices) => `${problems === 0 ? "Sin problemas" : `${problems} ${problems === 1 ? "problema" : "problemas"}`}${notices ? ` · ${notices} ${notices === 1 ? "aviso" : "avisos"}` : ""}`,
     needsAPerson: "revisión manual necesaria · consulta los detalles anteriores",
     toneMatches: "coincide con config.json",
     toneNotWritten: "sin escribir",

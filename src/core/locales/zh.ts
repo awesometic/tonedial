@@ -321,7 +321,7 @@ const messages: Messages = {
     inspectScope: "若要继续使用这些连接，请检查此范围：",
     disconnectScope: "若不再需要，请断开此范围内的所有代理：",
     scope: "检查范围：项目",
-    toLookAt: (count) => `${count} 项需要检查`,
+    summary: (problems, notices) => `${problems === 0 ? "没有问题" : `${problems} 个问题`}${notices ? ` · ${notices} 条提示` : ""}`,
     needsAPerson: "需要人工检查 · 参见上方详情",
     toneMatches: "与 config.json 一致",
     toneNotWritten: "未写入",

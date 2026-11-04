@@ -321,7 +321,7 @@ const messages: Messages = {
     inspectScope: "引き続き使う場合は、この範囲を確認してください：",
     disconnectScope: "不要なら、この範囲の全エージェントの接続を解除してください：",
     scope: "確認範囲：プロジェクト",
-    toLookAt: (count) => `確認が必要：${count}件`,
+    summary: (problems, notices) => `${problems === 0 ? "問題なし" : `問題 ${problems}件`}${notices ? ` · お知らせ ${notices}件` : ""}`,
     needsAPerson: "手動確認が必要 · 上の詳細を参照",
     toneMatches: "config.json と一致",
     toneNotWritten: "未書き込み",

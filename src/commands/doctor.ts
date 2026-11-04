@@ -726,10 +726,9 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true): Promise<Comm
   if (diagnosis.config === null || diagnosis.configChange === null || diagnosis.layout.inspectionFailure !== null) {
     const checks = [contextCheck(ctx, diagnosis)];
     const lines = [
-      ...section(ctx.t.doctor.checksHeading, ctx.ui).slice(1),
+      summaryLine(ctx, 1, 0),
+      ...section(ctx.t.doctor.checksHeading, ctx.ui),
       ...renderCheckBlocks(checks, [], [], ctx),
-      "",
-      `  ${ctx.ui.warn(ctx.t.doctor.toLookAt(1))}`,
     ];
     return {
       lines,
@@ -886,13 +885,16 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true): Promise<Comm
   const derived = diagnosis.layout.kind === "fresh" ? new Set(["AGENTS.md", "TONE.md"])
     : diagnosis.layout.kind === "current" && diagnosis.layout.cause === "repair" && fileProblem ? new Set(["context"])
       : new Set<string>();
-  const shownChecks = ctx.flags.verbose
-    ? checks
-    : checks.filter((check) => !derived.has(check.name) &&
-        (check.state === "problem" || check.repair !== undefined || nativeCheckNames.has(check.name)));
+  // The default view's findings; `--verbose` adds context but never changes the count.
+  const findings = checks.filter((check) => !derived.has(check.name) &&
+    (check.state === "problem" || check.repair !== undefined || nativeCheckNames.has(check.name)));
+  const shownChecks = ctx.flags.verbose ? checks : findings;
   const appHealthy = diagnosis.layout.kind === "current" && diagnosis.layout.cause === "none" && seeds.every(({ state }) => state === "current");
 
   const lines: string[] = [
+    summaryLine(ctx, findings.filter((check) => check.state === "problem").length,
+      // Agents that are simply not connected are grouped into one row and are not a notice.
+      findings.filter((check) => check.state === "note" && check.detail !== ctx.t.doctor.hookNotConnected).length),
     `  ${ctx.ui.bold((appHealthy ? ctx.ui.success : ctx.ui.warn)(ctx.t.doctor.applicationHealth(appHealthy)))}`,
     // A healthy setup sends no tone while paused; that is the first thing to know.
     ...offNotice(config.enabled, ctx.t, ctx.ui),
@@ -913,10 +915,6 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true): Promise<Comm
     ...elsewhereReport(elsewhere, ctx),
   ];
 
-  const shownProblems = problems.filter((check) => ctx.flags.verbose || !derived.has(check.name));
-  if (shownProblems.length) {
-    lines.push("", `  ${ctx.ui.warn(ctx.t.doctor.toLookAt(shownProblems.length))}`);
-  }
   // Nothing connected anywhere: the one step that lets a conversation receive this tone.
   if (config.enabled && diagnosis.layout.kind === "current" && integrations.length === 0 && !nativeAttention && elsewhere.length === 0) {
     lines.push(...nextStep(`tonedial wire ${connectionScopeFlag(ctx.agent, ctx.flags.here === true)}`, ctx.ui));
@@ -1209,6 +1207,12 @@ function wiringCheck(ctx: Ctx, tool: AgentTool, shownPath: WiredAt, registered: 
  *  repairs a destination it was not pointed at, and leaves the diagnosed one as it was. */
 function repairCommand(ctx: Ctx, rest: string): string {
   return `tonedial ${rest} ${connectionScopeFlag(ctx.agent)}`;
+}
+
+/** The report's first line: what needs fixing and what is worth reading, before the details. */
+function summaryLine(ctx: Ctx, problems: number, notices: number): string {
+  const text = problems + notices === 0 ? ctx.t.doctor.healthy : ctx.t.doctor.summary(problems, notices);
+  return `  ${ctx.ui.bold((problems ? ctx.ui.warn : ctx.ui.success)(text))}`;
 }
 
 const MARK: Record<State, string> = { ok: "ok", problem: "!", note: "·", absent: "·" };

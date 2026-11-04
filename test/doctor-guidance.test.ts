@@ -130,3 +130,18 @@ test("the project trust step appears only for a project connection", async () =>
   const here = block((await human(["doctor", "--here"], project)).out, "Codex CLI");
   assert.match(here.join(" "), /Trust this project in Codex/);
 });
+
+test("the report opens with a count of problems and notices", async () => {
+  assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
+  const lead = (out: string) => out.split("\n").filter((line) => line.trim() !== "")[3]!.trim();
+  const unhealthy = await human(["doctor", "--global"]);
+  assert.equal(unhealthy.code, 0, "problems keep exit status 0");
+  assert.equal(lead(unhealthy.out), "1 problem", unhealthy.out);
+  assert.doesNotMatch(unhealthy.out, /need(s)? attention\n*$/);
+
+  const bin = join(scratch, "bin");
+  mkdirSync(bin);
+  writeFileSync(join(bin, "tonedial"), "#!/bin/sh\n", { mode: 0o755 });
+  env.PATH = bin;
+  assert.equal(lead((await human(["doctor", "--global"])).out), "No problems found");
+});

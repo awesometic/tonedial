@@ -398,7 +398,8 @@ export type Messages = {
     disconnectScope: string;
     /** Which destination this report is about, and whether it reaches other projects. */
     scope: string;
-    toLookAt: (count: number) => string;
+    /** Top line: problems to fix, notices worth reading. */
+    summary: (problems: number, notices: number) => string;
     needsAPerson: string;
     toneMatches: string;
     toneNotWritten: string;
@@ -978,7 +979,7 @@ const enMessages: Messages = {
     inspectScope: "To keep using these connections, inspect this scope:",
     disconnectScope: "If no longer needed, disconnect all agents in this scope:",
     scope: "Inspection scope: project",
-    toLookAt: (count) => `${count} ${count === 1 ? "check needs" : "checks need"} attention`,
+    summary: (problems, notices) => `${problems === 0 ? "No problems" : `${problems} problem${problems === 1 ? "" : "s"}`}${notices ? ` · ${notices} notice${notices === 1 ? "" : "s"}` : ""}`,
     needsAPerson: "manual review required · see details above",
     toneMatches: "matches config.json",
     toneNotWritten: "not written",
@@ -1751,7 +1752,7 @@ const koMessages: Messages = {
     inspectScope: "계속 사용하려면 이 범위를 검사하세요:",
     disconnectScope: "더 이상 필요 없으면 이 범위의 모든 에이전트 연결을 해제하세요:",
     scope: "검사 범위: 프로젝트",
-    toLookAt: (count) => `점검 필요 ${count}건`,
+    summary: (problems, notices) => `${problems === 0 ? "문제 없음" : `문제 ${problems}건`}${notices ? ` · 알림 ${notices}건` : ""}`,
     needsAPerson: "직접 확인 필요 · 위 세부 내용을 확인해 주세요",
     toneMatches: "config.json과 일치",
     toneNotWritten: "파일 없음",
