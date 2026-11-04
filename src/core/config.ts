@@ -814,7 +814,8 @@ export function recoverSettings(text: string, t: Messages = catalogue("en").cli)
   };
   for (const key of USER_SETTING_KEYS) {
     if (key === "axes" || key === "persona") continue;
-    if (raw[key] === undefined) { defaulted.push(key); continue; }
+    // The serializer omits `enabled` while on, so its absence is the stored value.
+    if (raw[key] === undefined && key !== "enabled") { defaulted.push(key); continue; }
     const parsed = accept(key, { ...config, [key]: raw[key] } as ConfigV2);
     if (parsed !== null) {
       Object.assign(config, { [key]: parsed[key] });
