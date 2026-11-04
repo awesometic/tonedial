@@ -307,6 +307,22 @@ test("a missing hook's path sits on its own line", async () => {
   assert.deepEqual(codex.slice(1, 3), ["No ToneDial SessionStart hook", hook]);
 });
 
+test("a global wire names a project hook it would double in the preview, and once", async () => {
+  assert.equal((await human(["init", "--tools", "codex", "--here", "--auto"], project)).code, 0);
+  const preview = await human(["wire", "codex", "--global", "--dry-run"]);
+  assert.equal(preview.code, 0, preview.err);
+  const shown = preview.out.split("\n");
+  const notice = shown.findIndex((line) => /both hooks are present/.test(line));
+  assert.ok(notice >= 0, `the preview did not name the duplicate:\n${preview.out}`);
+  assert.ok(shown.includes("  tonedial unwire codex --here"), preview.out);
+  const applied = await human(["wire", "codex", "--global", "--auto"]);
+  assert.equal(applied.code, 0, applied.err);
+  assert.equal(applied.out.match(/both hooks are present/g)?.length, 1, applied.out);
+  // With nothing left to change there is no preview, so the receipt still names it.
+  const again = await human(["wire", "codex", "--global", "--auto"]);
+  assert.equal(again.out.match(/both hooks are present/g)?.length, 1, again.out);
+});
+
 test("a duplicate hook stays visible and counted when that agent also has a problem", async () => {
   assert.equal((await human(["init", "--tools", "codex", "--here", "--auto"], project)).code, 0);
   assert.equal((await human(["wire", "codex", "--global", "--auto"])).code, 0);

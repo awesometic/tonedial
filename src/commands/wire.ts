@@ -299,6 +299,10 @@ async function wireSelected(ctx: Ctx, requested: AgentTool[], rebuilding?: Nativ
   const finalChanges = rebuilding ? [] : [{ ...configChange, after: finalConfig }];
   const operationActions = [...skillPlan.actions, ...(configRebuild?.changed ? [configRebuild.action] : [])];
   let pendingOperation: string | null = null;
+  // The preview names a project hook this connection doubles; without a preview the receipt does.
+  const doubled = plans.flatMap((plan, index) => plan.duplicates.flatMap(({ destination, state }) => ["",
+    ...receiptLines(ctx.t.wiring.hookDuplicate(tools[index]!, humanText(destination), state === "stale-duplicate"), ctx.ui.width - 2)
+      .map((line) => `  ${line}`)]));
 
   const result = await gate([...(ctx.contextChecks ?? []), ...(artifactChange ? [artifactChange] : []), ...seeds.changes, ...changes, ...removals,
     ...(commandChange ? [commandChange] : []), ...(shellChange ? [shellChange] : [])], {
@@ -314,6 +318,7 @@ async function wireSelected(ctx: Ctx, requested: AgentTool[], rebuilding?: Nativ
     ui: ctx.ui,
     agent: ctx.agent,
     describe: { [ctx.paths.config]: ctx.t.wiring.configRecords(tools.map((tool) => TARGETS[tool].label).join(", "), ctx.agent.live) },
+    notice: doubled,
     heading: ctx.t.wiring.nativeHeading,
     ...(rebuilding ? { recoveryPresentation: {
       failureMessage: (operationId: string) => { pendingOperation = operationId; return ctx.t.recovery.nativePending; },
@@ -336,7 +341,8 @@ async function wireSelected(ctx: Ctx, requested: AgentTool[], rebuilding?: Nativ
   // A preview has nothing configured to report; the doctor report after a repair has its own steps.
   // In a repair receipt, an agent the repair left as it was has its one state in the headline.
   const setup = configured && !rebuilding?.preview && !(rebuilding && result.reason === "nothing")
-    ? nativeSetupLines(ctx, nativeSetup(ctx.t, routes, ctx.agent.live, !rebuilding), result.reason === "written") : [];
+    ? nativeSetupLines(ctx, nativeSetup(ctx.t, result.reason === "nothing" ? routes : routes.map(({ duplicates, ...route }) => route),
+      ctx.agent.live, !rebuilding), result.reason === "written") : [];
   // Project hooks name this machine's runtime and state paths, so committing them is a choice.
   const projectFiles = !ctx.agent.live && !rebuilding && result.reason === "written"
     ? result.diff.filter((change) => !inside(change.path, ctx.paths.root)).map((change) => relative(ctx.agent.root, change.path))
