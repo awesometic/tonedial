@@ -221,6 +221,8 @@ Use the same CLI environment throughout, especially when \`TONEDIAL_HOME\` is se
 When a mutation or reload is blocked, report its read-only diagnosis.
 ${DIAGNOSIS_MD}
 After the user asks for recovery, use \`tonedial doctor --fix\` at the same state root.
+Without a terminal it reports \`native.reason\` \`approval-required\` and leaves agent connections
+unchanged; preview with \`--dry-run\`, then rerun with \`--auto\` and the same scope once the user approves.
 It preserves validated saved settings and custom presets, and rebuilds generated application
 files only after approval. Missing old hashes or changed generated text are not reasons to
 delete the state root. New user presets live in \`presets/custom/\`; older non-bundled flat

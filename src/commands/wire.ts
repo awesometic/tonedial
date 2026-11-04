@@ -17,7 +17,7 @@ import {
   type WiringV2,
 } from "../core/config.ts";
 import { OperationError } from "../core/operations.ts";
-import { captureRawEntry, gate, planChange, planEntryRebuild, rawReadChange, rawReadCheck, type Change, type PlannedOperationAction, type RawEntryCapture } from "../wiring/apply.ts";
+import { ApprovalRequired, captureRawEntry, gate, planChange, planEntryRebuild, rawReadChange, rawReadCheck, type Change, type PlannedOperationAction, type RawEntryCapture } from "../wiring/apply.ts";
 import { SKILL_NAME, TONE_COMMAND_MD, TONE_COMMAND_VERSION } from "../core/skill.ts";
 import { planSelectedSkills, planSkillRemoval } from "../wiring/skill.ts";
 import { planSeedChanges, seedFiles, SEED_VERSION } from "../core/seeds.ts";
@@ -88,7 +88,8 @@ class NativeOperationPending extends Error {
 }
 
 /** The new data owner does not infer permission to alter an external consumer. */
-export async function runRebuildNative(ctx: Ctx, legacy: LegacyOwnershipEvidence | null = null, previewConfig?: ConfigV2): Promise<CommandResult> {
+/** `rerun` is the caller's command line, offered when approval was needed and nobody could give it. */
+export async function runRebuildNative(ctx: Ctx, legacy: LegacyOwnershipEvidence | null = null, previewConfig?: ConfigV2, rerun?: string): Promise<CommandResult> {
   let tools: AgentTool[] = [];
   const explicitTools = ctx.flags.tools !== null;
   const pendingLines = receiptLines(ctx.t.recovery.nativePending, ctx.ui.width - 2).map(line => `  ${ctx.ui.warn(line)}`);
@@ -127,9 +128,11 @@ export async function runRebuildNative(ctx: Ctx, legacy: LegacyOwnershipEvidence
     // and JSON. The ordinary wire path keeps its existing diagnostics and preview contract.
     const reason = cause instanceof NativeOperationPending ? "native-operation-pending"
       : cause instanceof OperationError ? "operation-attention"
+      : cause instanceof ApprovalRequired ? "approval-required"
       : cause instanceof ConfigError ? "protected-native-resource" : "native-phase-failed";
     return {
-      lines: pendingLines,
+      lines: reason === "approval-required" && rerun !== undefined
+        ? receiptLines(ctx.t.recovery.nativeApproval(rerun), ctx.ui.width - 2).map(line => `  ${line}`) : pendingLines,
       json: { nativeRepair: "attention", applied: false, reason, tools,
         attention: true, issues: [{ tool: null, reason }], activation: "unverified",
         ...(cause instanceof NativeOperationPending ? { operationId: cause.operationId } : {}) },

@@ -136,6 +136,7 @@ const messages: Messages = {
     rebuilt: "アプリケーションを復旧しました",
     unchanged: "アプリケーションのファイルは最新です",
     nativePending: "エージェント接続は別途確認してください。設定とプリセットは引き続き使えます。",
+    nativeApproval: (command) => `エージェント接続の承認が必要です。修復は実行していません。変更を確認して承認するには、ターミナルで再実行してください：\n  ${command}\n確認なしで承認するには：\n  ${command} --auto`,
     rollback: (id) => `以前のファイルに戻すには：\ntonedial doctor --fix --rollback ${id}`,
     rollbackOrder: "先に接続を復元し、その後アプリケーションのファイルを復元してください：",
     noSnapshot: (id) => `${id}: この状態ルート用の有効な設定スナップショットがありません`,

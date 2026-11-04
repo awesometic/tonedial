@@ -660,6 +660,8 @@ tonedial list --json
 tonedial show --json
 ```
 
+Without a terminal, `doctor --fix` writes no agent-connection change that needs approval.
+It says so and prints the two ways to rerun it: in a terminal, or with `--auto` and the same scope.
 Rebuild replaces generated files while preserving valid settings, unsaved profile changes and custom profiles.
 Healthy profiles remain listable/exportable with damaged config; one bad profile does not hide others.
 Flat user presets stay readable; conflicts receive a reported recovered copy without overwriting originals.

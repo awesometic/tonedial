@@ -216,6 +216,8 @@ export type Messages = {
     rebuilt: string;
     unchanged: string;
     nativePending: string;
+    /** Native repair needed approval that no terminal could give; `command` reruns it. */
+    nativeApproval: (command: string) => string;
     rollback: (id: string) => string;
     rollbackOrder: string;
     noSnapshot: (id: string) => string;
@@ -792,6 +794,7 @@ const enMessages: Messages = {
     rebuilt: "Application restored",
     unchanged: "Application files current",
     nativePending: "Agent connections need separate attention; settings and presets remain usable.",
+    nativeApproval: (command) => `Agent connections not repaired · approval required. To review and approve the changes, rerun in a terminal:\n  ${command}\nOr approve without prompting:\n  ${command} --auto`,
     rollback: (id) => `To restore the previous files:\ntonedial doctor --fix --rollback ${id}`,
     rollbackOrder: "Restore connections first, then application files:",
     noSnapshot: (id) => `${id}: no valid settings snapshot for this state root`,
@@ -1564,6 +1567,7 @@ const koMessages: Messages = {
     rebuilt: "앱 복구 완료",
     unchanged: "앱 최신 상태",
     nativePending: "에이전트 연결은 따로 확인해 주세요. 설정과 프리셋은 계속 쓸 수 있습니다.",
+    nativeApproval: (command) => `에이전트 연결 승인 필요 · 복구하지 않았습니다. 변경 내용을 확인하고 승인하려면 터미널에서 다시 실행하세요:\n  ${command}\n묻지 않고 승인하려면:\n  ${command} --auto`,
     rollback: (id) => `이전 파일로 되돌리려면:\ntonedial doctor --fix --rollback ${id}`,
     rollbackOrder: "연결 파일을 먼저 되돌린 뒤 앱 파일을 되돌리세요:",
     noSnapshot: (id) => `${id}: 이 상태 경로에서 쓸 수 있는 설정 기록이 없습니다`,

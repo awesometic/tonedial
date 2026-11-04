@@ -136,6 +136,7 @@ const messages: Messages = {
     rebuilt: "Aplicación restaurada",
     unchanged: "Archivos de la aplicación al día",
     nativePending: "Las conexiones de agentes necesitan atención aparte; los ajustes y preajustes siguen disponibles.",
+    nativeApproval: (command) => `Las conexiones de agentes necesitan aprobación y no se han reparado. Para revisar y aprobar los cambios, vuelve a ejecutar en una terminal:\n  ${command}\nO apruébalos sin preguntar:\n  ${command} --auto`,
     rollback: (id) => `Para restaurar los archivos anteriores:\ntonedial doctor --fix --rollback ${id}`,
     rollbackOrder: "Restaura primero las conexiones y después los archivos de la aplicación:",
     noSnapshot: (id) => `${id}: no hay una instantánea válida para este directorio de estado`,

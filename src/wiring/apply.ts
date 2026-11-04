@@ -2596,7 +2596,7 @@ export async function gate(changes: Change[], opts: GateOptions): Promise<GateRe
     if (!canAsk) {
       // Silence is not consent. A pipe cannot see the diff above, so assuming approval here
       // would make the unattended case the one with the least oversight.
-      throw new ConfigError(opts.t.wiring.needsApproval);
+      throw new ApprovalRequired(opts.t.wiring.needsApproval);
     }
     const answer = await (opts.ask ?? confirm)(`  ${opts.t.wiring.applyQuestion(real.length + operationActions.length + finalReal.length)}`);
     if (answer === "no") return { applied: false, lines, reason: "declined", diff };
@@ -2749,6 +2749,9 @@ export async function gate(changes: Change[], opts: GateOptions): Promise<GateRe
 }
 
 const defaultOut = (text: string) => process.stdout.write(text);
+
+/** Approval was needed and nobody could give it: nothing is wrong with the files. */
+export class ApprovalRequired extends ConfigError {}
 // The structured diff is unpainted: escape sequences are for a terminal, and a consumer reading
 // `--json` is not one.
 const palettePlain = () => paletteFor("never", {}, false);
