@@ -228,7 +228,8 @@ After the user asks for recovery, use \`tonedial doctor --fix\` at the same stat
 Without a terminal it reports \`native.reason\` \`approval-required\` and leaves agent connections
 unchanged; preview with \`--dry-run\`, then rerun with \`--auto\` and the same scope once the user approves.
 It preserves validated saved settings and custom presets, and rebuilds generated application
-files only after approval. Missing old hashes or changed generated text are not reasons to
+files only after approval. A rebuilt config no longer records existing hooks; doctor then reports
+their entries, and only the reported \`doctor --fix --tools <tool>\` with its scope records exact ones. Missing old hashes or changed generated text are not reasons to
 delete the state root. New user presets live in \`presets/custom/\`; older non-bundled flat
 files remain loadable, while \`presets/builtin/\` is only a generated cache.
 \`list --json\` and \`export <slug> --json\` can inspect the library even with damaged config.

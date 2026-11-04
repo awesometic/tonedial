@@ -3,7 +3,7 @@
 
 import assert from "node:assert/strict";
 import { afterEach, beforeEach, test } from "node:test";
-import { mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -267,4 +267,73 @@ test("approval reruns keep the agent selection and options the user asked for", 
   const setup = await human(["init", "--tools", "claude", "--commands", "--global"]);
   assert.match(setup.out, /^ {2,}tonedial init --tools claude --commands --global$/m, setup.out + setup.err);
   assert.match(setup.out, /^ {2,}tonedial init --tools claude --commands --global --auto$/m);
+});
+
+test("a hook left after a damaged config is restored is reported, then adopted exactly by doctor --fix --tools", async () => {
+  assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
+  const hook = join(home, ".codex", "hooks.json");
+  const bytes = readFileSync(hook, "utf8");
+  writeFileSync(join(home, ".tonedial", "config.json"), "{");
+  assert.equal((await human(["doctor", "--fix", "--global", "--from-preset", "caring-brother", "--auto"])).code, 0);
+
+  const codex = block((await human(["doctor", "--global"])).out, "Codex CLI");
+  assert.match(codex.join(" "), /no connection records them/);
+  assert.ok(codex.includes(hook), codex.join("\n"));
+  assert.equal(codex.at(-1), "tonedial doctor --fix --tools codex --global");
+  const machine = await json(["doctor", "--global"]);
+  assert.equal(machine.value.healthy, false);
+  assert.equal(machine.value.checks.find((row: { name: string }) => row.name === "Codex CLI").repair,
+    "tonedial doctor --fix --tools codex --global");
+
+  // Adoption goes through the usual preview: here it only records the connection.
+  const preview = await json(["doctor", "--fix", "--tools", "codex", "--global", "--dry-run"]);
+  assert.deepEqual(preview.value.native.diff.map((row: { path: string }) => row.path), [join(home, ".tonedial", "config.json")]);
+  const adopted = await human(["doctor", "--fix", "--tools", "codex", "--global", "--auto"]);
+  assert.equal(adopted.code, 0, adopted.err);
+  assert.equal(readFileSync(hook, "utf8"), bytes, "adoption leaves the entries byte for byte");
+  const after = await json(["doctor", "--global"]);
+  assert.equal(after.value.integrations.find((row: { tool: string }) => row.tool === "codex").configuration, "configured");
+  assert.equal(after.value.checks.find((row: { name: string }) => row.name === "Codex CLI").state, "ok");
+
+  // Recorded again, the connection disconnects completely.
+  assert.equal((await human(["unwire", "codex", "--global", "--auto"])).code, 0);
+  assert.equal(existsSync(hook), false);
+  assert.equal(existsSync(join(home, ".agents", "skills", "tonedial")), false);
+});
+
+test("an unrecorded ToneDial entry that was edited gets guidance and is never adopted", async () => {
+  assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
+  const hook = join(home, ".codex", "hooks.json");
+  writeFileSync(hook, readFileSync(hook, "utf8").replace('"additionalContextLimit": 0', '"additionalContextLimit": 5'));
+  const edited = readFileSync(hook, "utf8");
+  writeFileSync(join(home, ".tonedial", "config.json"), "{");
+  assert.equal((await human(["doctor", "--fix", "--global", "--from-preset", "caring-brother", "--auto"])).code, 0);
+
+  const codex = block((await human(["doctor", "--global"])).out, "Codex CLI");
+  assert.match(codex.join(" "), /differ from what ToneDial writes/);
+  assert.ok(codex.includes(hook), codex.join("\n"));
+  assert.equal(codex.at(-1), "tonedial wire codex --global");
+  assert.equal((await json(["doctor", "--global"])).value.checks.find((row: { name: string }) => row.name === "Codex CLI").repair, null);
+
+  assert.equal((await human(["doctor", "--fix", "--tools", "codex", "--global", "--auto"])).code, 0);
+  assert.equal(readFileSync(hook, "utf8"), edited);
+  assert.match(block((await human(["doctor", "--global"])).out, "Codex CLI").join(" "), /differ from what ToneDial writes/);
+});
+
+test("doctor names a global hook only an earlier version's project record keeps, with unwire --global", async () => {
+  assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
+  await addLegacyRider(env, "codex", project, true);
+  const hook = join(home, ".codex", "hooks.json");
+
+  const codex = block((await human(["doctor", "--global"])).out, "Codex CLI");
+  assert.match(codex.join(" "), /still sends the tone in every folder/);
+  assert.ok(codex.includes(hook) && codex.includes(project), codex.join("\n"));
+  assert.equal(codex.at(-1), "tonedial unwire codex --global");
+  const machine = await json(["doctor", "--global"]);
+  assert.equal(machine.value.checks.find((row: { name: string }) => row.name === "Codex CLI").state, "problem");
+  assert.equal(machine.value.nativeAttention, true);
+
+  assert.equal((await human(["unwire", "codex", "--global", "--auto"])).code, 0);
+  assert.equal(existsSync(hook), false);
+  assert.equal((await json(["doctor", "--global"])).value.checks.find((row: { name: string }) => row.name === "Codex CLI").state, "note");
 });

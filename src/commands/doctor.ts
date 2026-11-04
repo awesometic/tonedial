@@ -33,9 +33,9 @@ import { wrap } from "../ui/width.ts";
 import { applyRollback, assertFresh, planChange, previewRollback, type Change } from "../wiring/apply.ts";
 import { confirm } from "../ui/prompt.ts";
 import { RegionError, find } from "../wiring/region.ts";
-import { TARGETS, inspectContextConsumers, orderedFingerprint, orderedHook, projectDuplicates, recordedHook, regionContent, wiredAt, type DeliveryDuplicate, type WiredAt } from "../wiring/targets.ts";
-import { connections, connectionsInScope, folderConnections } from "../wiring/scopes.ts";
-import { hasHook, hookCommand, ownedHook, withHook } from "../wiring/hooks.ts";
+import { TARGETS, exactDelivery, inspectContextConsumers, orderedFingerprint, orderedHook, projectDuplicates, recordedHook, regionContent, wiredAt, type DeliveryDuplicate, type WiredAt } from "../wiring/targets.ts";
+import { connections, connectionsInScope, folderConnections, riders } from "../wiring/scopes.ts";
+import { hasHook, hookCommand, ownedHook, runsReader, withHook, withoutHook } from "../wiring/hooks.ts";
 import { codexHookTrust, type CodexTrust } from "../wiring/codex-trust.ts";
 import { assertRecordedTextAccess, contentHash, registrationKey, resourceKey } from "../wiring/ownership.ts";
 
@@ -837,6 +837,7 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true): Promise<Comm
       ? ctx.t.doctor.seedReason[reader.reason] : "";
   const integrations: NativeIntegration[] = [];
   const hookSettings: HookSetting[] = [];
+  let unownedFound = false;
   for (const tool of AGENT_TOOLS) {
     const route = nativeRoute(ctx, config, tool);
     if (route !== null) {
@@ -847,6 +848,13 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true): Promise<Comm
       continue;
     }
 
+    const unowned = unownedCheck(ctx, config, tool);
+    if (unowned !== null) {
+      checks.push(unowned);
+      hookSettings.push({ tool, state: "unknown", basis: "unverified", path: null });
+      unownedFound = true;
+      continue;
+    }
     const check = wiringCheck(ctx, tool, shownPath, isConfigV2(config)
       ? config.wiring.registrations[registrationKey(tool, scope, destination)] !== undefined
       : Object.hasOwn(config.wiring, tool));
@@ -968,7 +976,7 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true): Promise<Comm
   ];
 
   // Nothing connected anywhere: the one step that lets a conversation receive this tone.
-  if (config.enabled && diagnosis.layout.kind === "current" && integrations.length === 0 && !nativeAttention && elsewhere.length === 0) {
+  if (config.enabled && diagnosis.layout.kind === "current" && integrations.length === 0 && !nativeAttention && !unownedFound && elsewhere.length === 0) {
     lines.push(...nextStep(`tonedial wire ${connectionScopeFlag(ctx.agent, ctx.flags.here === true)}`, ctx.ui));
   }
 
@@ -979,7 +987,7 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true): Promise<Comm
       live: ctx.agent.live,
       healthy: problems.length === 0,
       appHealthy,
-      nativeAttention,
+      nativeAttention: nativeAttention || unownedFound,
       fixed: false,
       recovery,
       context: contextJson(diagnosis.layout),
@@ -1171,6 +1179,40 @@ function pathCheck(ctx: Ctx, shape: InstallShape): Check {
     repair: repairCommand(ctx, "doctor --fix"),
     change: repair.change,
   };
+}
+
+/**
+ * An agent this scope has no connection for whose hook file still runs this state root's reader:
+ * entries no record owns, or a global hook only earlier-version project records keep. Exact
+ * entries are adopted by `doctor --fix --tools`; edited ones get guidance only (decision D5).
+ */
+function unownedCheck(ctx: Ctx, config: Config, tool: AgentTool): Check | null {
+  const name = TARGETS[tool].label;
+  const path = ctx.agent.hookFile(tool);
+  const riding = ctx.agent.live ? riders(config, tool, ctx.env, ctx.cwd) : [];
+  if (riding.length) {
+    return { name, state: "problem", repair: `tonedial unwire ${tool} --global`,
+      detail: ctx.t.doctor.orphanedHook(path, riding.map(({ destination }) => humanText(destination!))) };
+  }
+  const inspected = boundedChange(ctx, path, (before) => before).change;
+  if (inspected === null || inspected.before === null) return null;
+  try {
+    let remaining = inspected.before;
+    for (const resource of isConfigV2(config) ? Object.values(config.wiring.resources) : []) {
+      if (resource.kind !== "hook" || resource.path !== inspected.realPath) continue;
+      for (const consumer of resource.consumers) {
+        const recorded = recordedHook(resource, consumer);
+        if (recorded) remaining = withoutHook(remaining, recorded, path, ctx.t, "document");
+      }
+    }
+    if (!runsReader(remaining, readerPath(ctx.paths.root), path, ctx.t)) return null;
+    return exactDelivery(remaining, orderedHook(tool, ctx.paths.root, process.execPath), ctx.paths.root, path, ctx.t)
+      ? { name, state: "problem", detail: ctx.t.doctor.unrecordedEntries(path), repair: repairCommand(ctx, `doctor --fix --tools ${tool}`) }
+      : { name, state: "problem", detail: ctx.t.doctor.unrecordedEdited(path, repairCommand(ctx, `wire ${tool}`)) };
+  } catch {
+    // A file that does not parse is not evidence of ours; the checks that read it report it.
+    return null;
+  }
 }
 
 /** One tool's region: absent, present and current, present and stale, present and damaged. */

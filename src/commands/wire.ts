@@ -216,6 +216,8 @@ async function wireSelected(ctx: Ctx, requested: AgentTool[], rebuilding?: Nativ
     };
   }
   const removals: Change[] = [];
+  // Naming the agent in a repair is what lets it record exact unrecorded entries as this scope's.
+  const adopt = rebuilding?.explicitTools === true;
   const plans = tools.map((tool) => {
     if (rebuilding) {
       const id = registrationKey(tool, ctx.agent.live ? "global" : "project", canonicalDestination(ctx.agent.root));
@@ -232,7 +234,7 @@ async function wireSelected(ctx: Ctx, requested: AgentTool[], rebuilding?: Nativ
     const legacy = rebuilding ? rebuildLegacyDelivery(ctx, tool, config.wiring, rebuilding.explicitTools) : null;
     if (legacy) config.wiring = legacy.wiring;
     const combinedLegacy = legacy?.change && legacy.change.before !== legacy.change.after ? legacy.change : undefined;
-    const plan = planOrderedDelivery(ctx.paths, ctx.agent, tool, config.wiring, ctx.t, process.execPath, combinedLegacy);
+    const plan = planOrderedDelivery(ctx.paths, ctx.agent, tool, config.wiring, ctx.t, process.execPath, combinedLegacy, adopt);
     if (combinedLegacy && !plan.replacesLegacy) removals.push(combinedLegacy);
     config.wiring = plan.wiring;
     return plan;
@@ -259,7 +261,7 @@ async function wireSelected(ctx: Ctx, requested: AgentTool[], rebuilding?: Nativ
         commandChange, "command", { version: TONE_COMMAND_VERSION }, ctx.t);
     }
   }
-  const skillPlan = planSelectedSkills(ctx.agent, tools, join(ctx.paths.skill, SKILL_NAME), config.wiring, seeds.skillFiles, ctx.t);
+  const skillPlan = planSelectedSkills(ctx.agent, tools, join(ctx.paths.skill, SKILL_NAME), config.wiring, seeds.skillFiles, ctx.t, adopt);
   config.wiring = skillPlan.wiring;
   let shellChange: Change | null = null;
   if (rebuilding?.shell) {

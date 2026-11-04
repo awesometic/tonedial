@@ -210,6 +210,16 @@ export function hasHook(before: string | null, selector: string | HookSpec, path
   });
 }
 
+/** Whether any handler in the document runs `reader`, recorded or not, under any event. */
+export function runsReader(before: string | null, reader: string, path: string, t: Messages): boolean {
+  const document = parse(before, path, t);
+  const runs = (handler: HookEntry) => (typeof handler.command === "string" &&
+      (handler.command.includes(reader) || handler.command.includes(shellQuote(reader)))) ||
+    (Array.isArray(handler.args) && handler.args.includes(reader));
+  return [...Object.values(document.hooks ?? {}).flatMap((blocks) => blocks.flatMap((block) => block.hooks ?? [])),
+    ...invocationHandlers(namedDefinition(document, path, t))].some(runs);
+}
+
 /** Positions of exact managed handlers in the host's unfiltered matcher/handler arrays. */
 export function ownedHookLocations(before: string | null, selector: HookSpec, path: string, t: Messages): readonly (readonly [number, number])[] {
   const primary = partsOf(selector)[0]!;

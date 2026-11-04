@@ -498,6 +498,10 @@ When delivery is paused it suggests `tonedial on`; when no agent is connected it
 Other registered connections are grouped by scope/directory and shared file status.
 Inspecting global from a folder with its own connections says so and gives `tonedial doctor --here`; that folder's listed commands also use `--here`.
 A project hook that repeats the global hook for the same agent is reported in both scopes, with the `unwire --here` command that keeps only the global one; JSON lists it in `integrations[].duplicates` with its `scope`, `destination`, `path` and `state`.
+ToneDial entries in the inspected scope's hook file that no connection records are a problem.
+When they are exactly what ToneDial writes now, the finding ends with `doctor --fix --tools <tool>` for that scope, which records them without rewriting the file;
+edited ones get guidance only: remove them by hand, then connect again.
+A global hook kept only by project connections an earlier version recorded is a problem that ends with `unwire <tool> --global`.
 Missing files mean some or all recorded files were absent, not that no connection was registered.
 These are presence checks; `--fix` leaves other scopes alone.
 Use the displayed read-only `doctor` command to inspect them, or `eject` if no longer needed.
@@ -730,6 +734,8 @@ The file-change preview still requires separate approval after selection.
 | Other values | Disclosed defaults |
 
 Review native attention separately; explicitly select tools (`--tools <list>`) when adding or reconciling a route during `doctor --fix`.
+A rebuilt config records no connections, so the hooks it no longer records keep delivering the tone and `doctor` reports them.
+`doctor --fix --tools <tool>` with the same scope records entries that are exactly what ToneDial writes, after the usual preview and without changing the file.
 Keep rollback IDs and originals.
 If both native and app phases changed files, roll back **native first, then app**, using each reported ID:
 

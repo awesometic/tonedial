@@ -87,6 +87,8 @@ export type SkillPlanOptions = {
   files: Readonly<Record<string, string>>;
   /** Canonical or lexical boundary supplied by the selected agent route. */
   boundary?: string;
+  /** Record an unrecorded link that already points at exactly this source (explicit repair only). */
+  adopt?: boolean;
 };
 
 export type SkillPlan = {
@@ -839,7 +841,8 @@ export function planSkillInstall(
   const oldFiles = previous?.expected.files ?? {};
   const trackedFiles = trackedFilesFor(previous, hashes);
   const before = captureSnapshot(lexicalDestination, trackedFiles);
-  if (previous === undefined && before.kind !== "missing") throwConflict(lexicalDestination, t);
+  const adoptable = options.adopt === true && options.mode === "link" && before.kind === "symlink" && before.linkTarget === lexicalSource;
+  if (previous === undefined && before.kind !== "missing" && !adoptable) throwConflict(lexicalDestination, t);
   if (previous !== undefined) {
     const expectedType = previous.expected.type;
     if (options.mode === "link") {
@@ -957,6 +960,7 @@ export function planSelectedSkills(
   wiring: WiringV2,
   files: Readonly<Record<string, string>>,
   t: Messages,
+  adopt = false,
 ): SelectedSkillPlan {
   let next = wiring;
   const actions: PlannedOperationAction[] = [];
@@ -986,6 +990,7 @@ export function planSelectedSkills(
         mode,
         files,
         boundary: agent.root,
+        adopt,
       }, t);
       if (!actionResources.has(plan.resourceId) && plan.action !== null) {
         actions.push(plan.action);

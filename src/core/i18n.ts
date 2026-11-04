@@ -454,6 +454,9 @@ export type Messages = {
     /** The two manual routes; `show` is null when the expected entries are listed below. */
     editedRoutes: (show: string | null, fix: string) => string;
     editedExpected: string;
+    unrecordedEntries: (path: string) => string;
+    unrecordedEdited: (path: string, wire: string) => string;
+    orphanedHook: (path: string, directories: readonly string[]) => string;
     nativeInherited: (path: string, event: "SessionStart" | "PreInvocation") => string;
     nativeInheritedCompact: (path: string, event: "SessionStart" | "PreInvocation") => string;
     legacyRepairWithheld: string;
@@ -1077,6 +1080,9 @@ const enMessages: Messages = {
     nativeEdited: (path) => `ToneDial's entries in this file were edited outside ToneDial, so ToneDial leaves the file as it is:\n${path}`,
     editedRoutes: (show, fix) => `To repair it, restore ToneDial's entries exactly as it wrote them. ${show === null ? "They are listed below." : `To see them:\n${show}`}\nOr move this file aside, let ToneDial write a new one, then copy your own entries back into it:\n${fix}`,
     editedExpected: "ToneDial wrote these entries:",
+    unrecordedEntries: (path) => `ToneDial's entries in this file still send the tone, but no connection records them:\n${path}\nTo record them as this scope's connection, leaving the file as it is:`,
+    unrecordedEdited: (path, wire) => `ToneDial's entries in this file still send the tone, but no connection records them and they differ from what ToneDial writes, so ToneDial leaves them as they are:\n${path}\nRemove them by hand, then connect again:\n${wire}`,
+    orphanedHook: (path, directories) => `This global hook still sends the tone in every folder:\n${path}\nOnly project connections recorded by an earlier version keep it:\n${directories.join("\n")}\nTo remove the hook with those connections:`,
     nativeInherited: (path, event) => `Using the global ${event} hook · ${path} · no project hook needed`,
     nativeInheritedCompact: (path, event) => `Connected through the global ${event} hook\n${path}`,
     legacyRepairWithheld: "This connection method is no longer set up. Reconnect with init for hook delivery.",
@@ -1859,6 +1865,9 @@ const koMessages: Messages = {
     nativeEdited: (path) => `이 파일의 ToneDial 항목이 ToneDial 밖에서 수정되어 파일을 그대로 두었습니다:\n${path}`,
     editedRoutes: (show, fix) => `복구하려면 ToneDial 항목을 처음 작성된 그대로 되돌려 주세요. ${show === null ? "해당 항목은 아래에 있습니다." : `항목을 보려면:\n${show}`}\n또는 이 파일을 다른 곳으로 옮기고 ToneDial이 새 파일을 쓰게 한 뒤, 직접 추가한 항목을 다시 옮겨 주세요:\n${fix}`,
     editedExpected: "ToneDial이 작성한 항목:",
+    unrecordedEntries: (path) => `이 파일의 ToneDial 항목이 여전히 말투를 전달하지만, 이를 기록한 연결이 없습니다:\n${path}\n파일은 그대로 두고 이 범위의 연결로 기록하려면:`,
+    unrecordedEdited: (path, wire) => `이 파일의 ToneDial 항목이 여전히 말투를 전달하지만, 기록한 연결이 없고 ToneDial이 쓰는 내용과도 달라 그대로 두었습니다:\n${path}\n직접 지운 뒤 다시 연결하세요:\n${wire}`,
+    orphanedHook: (path, directories) => `이 전역 훅이 여전히 모든 폴더에 말투를 전달합니다:\n${path}\n이전 버전이 기록한 다음 프로젝트 연결만 이 훅을 유지하고 있습니다:\n${directories.join("\n")}\n이 연결과 함께 훅을 제거하려면:`,
     nativeInherited: (path, event) => `전역 ${event} 훅 사용 · ${path} · 프로젝트 훅은 필요 없음`,
     nativeInheritedCompact: (path, event) => `전역 ${event} 훅으로 연결됨\n${path}`,
     legacyRepairWithheld: "더는 이 방식으로 연결하지 않습니다. init으로 다시 연결하면 훅으로 전달합니다.",

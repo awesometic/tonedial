@@ -10,7 +10,7 @@ import { AGENT_TOOLS, LEGACY_CONTEXT_ARTIFACT_FILENAME, canonicalDestination, re
 import type { ContextConsumerCheck, ContextInspectionFailure } from "../core/seeds.ts";
 import { planChange, type Change } from "./apply.ts";
 import { MARKDOWN, RegionError, find, remove, upsert } from "./region.ts";
-import { hasHook, hookCommand, hookDocumentDescription, ownedHook, withHook, withoutHook, type HookEvent, type HookEventSpec, type HookHandler, type HookSpec } from "./hooks.ts";
+import { hasHook, hookCommand, hookDocumentDescription, ownedHook, runsReader, withHook, withoutHook, type HookEvent, type HookEventSpec, type HookHandler, type HookSpec } from "./hooks.ts";
 import type { Messages } from "../core/i18n.ts";
 import { assertRecordedTextAccess, normalizeWiring, contentHash, recordFileChange, registrationKey, resourceKey } from "./ownership.ts";
 
@@ -175,7 +175,20 @@ export function orderedFingerprint(spec: HookSpec, path: string, t: Messages): s
   return contentHash(ownedHook(withHook(null, spec, path, t), spec, path, t) ?? "");
 }
 
-/** Init and wire share exact handler ownership and the same file planner. */
+/**
+ * Whether `before` runs this state root's reader only through `spec`'s entries, complete and
+ * unedited: the one shape an explicit repair may record as its own without rewriting it.
+ */
+export function exactDelivery(before: string | null, spec: HookSpec, stateRoot: string, path: string, t: Messages): boolean {
+  const owned = ownedHook(before, spec, path, t);
+  return owned !== null && contentHash(owned) === orderedFingerprint(spec, path, t) &&
+    !runsReader(withoutHook(before!, spec, path, t, "document"), readerPath(stateRoot), path, t);
+}
+
+/**
+ * Init and wire share exact handler ownership and the same file planner. `adopt` lets an
+ * explicit repair record unrecorded entries that `exactDelivery` accepts, leaving the bytes.
+ */
 export function planOrderedDelivery(
   paths: Paths,
   agent: AgentPaths,
@@ -184,6 +197,7 @@ export function planOrderedDelivery(
   t: Messages,
   runtime = process.execPath,
   legacy?: Change,
+  adopt = false,
 ) {
   const scope = agent.live ? "global" : "project";
   const destination = canonicalDestination(agent.root);
@@ -207,7 +221,8 @@ export function planOrderedDelivery(
   if (replacesLegacy) checks.push({ ...legacy, after: legacy.before });
   const before = planned.before;
   const desiredOwned = ownedHook(before, desired, path, t);
-  if (tool === "antigravity" && !prior && before?.trim() && Object.hasOwn(JSON.parse(before), "tonedial")) {
+  const adopting = adopt && !prior && !replacesLegacy && exactDelivery(before, desired, paths.root, path, t);
+  if (tool === "antigravity" && !prior && !adopting && before?.trim() && Object.hasOwn(JSON.parse(before), "tonedial")) {
     throw new ConfigError(t.errors.ownershipConflict(path));
   }
   let remaining = replacesLegacy ? legacy.after : before;
@@ -221,14 +236,15 @@ export function planOrderedDelivery(
       delete handlerOnly.documentDescription;
       remaining = withoutHook(before, handlerOnly, path, t);
     }
-  } else if (desiredOwned !== null) {
+  } else if (desiredOwned !== null && !adopting) {
     throw new ConfigError(t.errors.ownershipConflict(path));
   }
   const previousDescription = (prior ?? wiring.resources[resourceKey(planned.realPath, "hook")])?.documentDescription;
   const descriptionBefore = tool === "antigravity" ? undefined : hookDocumentDescription(remaining, path, t);
   const ownsDescription = (desired.documentDescription !== undefined && descriptionBefore === undefined) ||
-    (previousDescription !== undefined && descriptionBefore === previousDescription);
-  let after = withHook(remaining, desired, path, t);
+    (previousDescription !== undefined && descriptionBefore === previousDescription) ||
+    (adopting && descriptionBefore === desired.documentDescription);
+  let after = adopting ? before! : withHook(remaining, desired, path, t);
   if (tool === "antigravity" && previous && before !== null) {
     const enabled = JSON.parse(before).tonedial?.enabled;
     if (enabled !== undefined) {
@@ -269,6 +285,8 @@ export function planOrderedDelivery(
   const descriptionAfter = tool === "antigravity" ? undefined : hookDocumentDescription(change.after, path, t);
   if (ownsDescription && typeof descriptionAfter === "string") recorded.documentDescription = descriptionAfter;
   else delete recorded.documentDescription;
+  // A file that is exactly what setup would create is one disconnect may delete again.
+  if (adopting) recorded.created ||= before === withHook(null, desired, path, t);
   // Carry the retired record's creation fact onto the resource, not onto the `Change`.
   //
   // The two answer different questions with the same word. Ownership asks whether this tool ever
