@@ -199,13 +199,14 @@ test("unwire without a scope refuses in a folder with its own connections and na
   assert.equal((await invoke(["init", "--global", "--tools", "codex", "--auto"])).code, 0);
   assert.equal((await invoke(["wire", "codex", "--here", "--auto"])).code, 0);
   const config = readFileSync(paths.config, "utf8");
-  for (const args of [["unwire", "codex", "--dry-run"], ["unwire", "claude", "--dry-run"]]) {
-    const refused = await invoke(args);
-    assert.equal(refused.code, 1, JSON.stringify(refused.value));
-    const tool = args[1];
-    assert.match(refused.value.error, new RegExp(`^  tonedial unwire ${tool} --here$`, "m"));
-    assert.match(refused.value.error, new RegExp(`^  tonedial unwire ${tool} --global$`, "m"));
-  }
+  const refused = await invoke(["unwire", "codex", "--dry-run"]);
+  assert.equal(refused.code, 1, JSON.stringify(refused.value));
+  assert.match(refused.value.error, /^  tonedial unwire codex --here$/m);
+  assert.match(refused.value.error, /^  tonedial unwire codex --global$/m);
+  // The folder has no Claude connection of its own, so `--here` could not mean it.
+  const claude = await invoke(["unwire", "claude", "--dry-run"]);
+  assert.equal(claude.code, 0, JSON.stringify(claude.value));
+  assert.equal(claude.value.live, true);
   const text = await human(["unwire", "codex"]);
   assert.equal(text.code, 1);
   assert.match(text.errors, /tonedial unwire codex --here/);
