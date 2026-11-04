@@ -3,7 +3,8 @@
 
 import { homedir } from "node:os";
 
-import { isConfigV2, type Config, type ConfigV2, type WiringScope } from "../core/config.ts";
+import { ConfigError, isConfigV2, type Config, type ConfigV2, type WiringScope } from "../core/config.ts";
+import type { Messages } from "../core/i18n.ts";
 import { AGENT_TOOLS, canonicalDestination, resolveAgentPaths, type AgentPaths, type AgentTool } from "../core/paths.ts";
 import { registrationKey } from "./ownership.ts";
 
@@ -39,9 +40,25 @@ export function connectionsInScope(config: Config, agent: AgentPaths): Connectio
 }
 
 /** A project scope in the home directory names the files the global scope already owns. */
-export function projectIsHome(agent: AgentPaths, env: NodeJS.ProcessEnv): boolean {
+function projectIsHome(agent: AgentPaths, env: NodeJS.ProcessEnv): boolean {
   if (agent.live || env.TONEDIAL_AGENT_HOME?.trim()) return false;
   return canonicalDestination(agent.root) === canonicalDestination(env.HOME?.trim() || homedir());
+}
+
+/** Connection commands refuse a project scope in the home directory and offer `global` instead. */
+export function refuseHomeProject(agent: AgentPaths, env: NodeJS.ProcessEnv, global: string, t: Messages): void {
+  if (projectIsHome(agent, env)) throw new ConfigError(t.wiring.projectIsHome(global), { reason: "home-directory", commands: [global] });
+}
+
+/**
+ * A disconnect without a scope flag, in a folder with its own connections (of `tools`, when
+ * named), names both scopes: the global default would remove a different connection than the
+ * one in front of the user.
+ */
+export function refuseUnscopedDisconnect(config: Config, cwd: string, command: string, t: Messages, tools?: readonly string[]): void {
+  if (folderConnections(config, cwd, tools).length === 0) return;
+  const commands = [`${command} --here`, `${command} --global`];
+  throw new ConfigError(t.errors.unwireScopeRequired(commands[0]!, commands[1]!), { reason: "scope-required", commands });
 }
 
 /** The path a registration reaches its recorded hook through, or null when it records none. */

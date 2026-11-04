@@ -28,7 +28,7 @@ import { assertRecordedTextAccess, assertRegisteredFileChange, contentHash, deta
 import { pathLineState, rcPath, withPathLine } from "../wiring/shell.ts";
 import { humanText, nativeSetup, receiptLines } from "../ui/format.ts";
 import { pickTools } from "../ui/prompt.ts";
-import { connectionsInScope, folderConnections, globalCover, projectIsHome, riders, type Connection } from "../wiring/scopes.ts";
+import { connectionsInScope, globalCover, refuseHomeProject, refuseUnscopedDisconnect, riders, type Connection } from "../wiring/scopes.ts";
 import { planConfig } from "./compile.ts";
 
 /** The positional form names one target; lists belong to --tools. */
@@ -48,10 +48,7 @@ function artifact(ctx: Ctx): Change {
 export async function runWire(ctx: Ctx, args: string[]): Promise<CommandResult> {
   if (args[0] !== undefined && ctx.flags.tools !== null) throw new ConfigError(ctx.t.errors.toolsAmbiguous);
   const selection = args[0] ?? ctx.flags.tools;
-  if (projectIsHome(ctx.agent, ctx.env)) {
-    const global = `tonedial wire${args[0] ? ` ${args[0]}` : ctx.flags.tools ? ` --tools ${ctx.flags.tools}` : ""} --global`;
-    throw new ConfigError(ctx.t.wiring.projectIsHome(global), { reason: "home-directory", commands: [global] });
-  }
+  refuseHomeProject(ctx.agent, ctx.env, `tonedial wire${args[0] ? ` ${args[0]}` : ctx.flags.tools ? ` --tools ${ctx.flags.tools}` : ""} --global`, ctx.t);
   if (selection === null) {
     if (ctx.flags.auto || !ctx.canPrompt) {
       const example = `tonedial wire codex ${connectionScopeFlag(ctx.agent, ctx.cwd)}`;
@@ -372,20 +369,10 @@ export async function runUnwire(ctx: Ctx, args: string[]): Promise<CommandResult
     const commands = [`tonedial unwire codex ${flag}`, `tonedial eject ${flag}`];
     throw new ConfigError(ctx.t.errors.unwireToolsRequired(commands[0]!, commands[1]!, ctx.flags.auto), { reason: "tools-required", commands });
   }
-  requireDisconnectScope(ctx, `tonedial unwire${named ? ` ${named[0]}` : ""}`, named ?? undefined);
-  return disconnect(ctx, named ?? await askTools(ctx, ctx.t.errors.unwireToolsPrompt));
-}
-
-/**
- * Without a scope flag, a disconnect in a folder with its own connections (of `tools`, when
- * named) names both scopes.
- */
-export function requireDisconnectScope(ctx: Ctx, command: string, tools?: readonly string[]): void {
-  const scopeExplicit = ctx.scopeExplicit ?? (ctx.flags.global || ctx.flags.here === true || ctx.flags.project !== null);
-  if (!scopeExplicit && folderConnections(planConfig(ctx).config, ctx.cwd, tools).length > 0) {
-    const commands = [`${command} --here`, `${command} --global`];
-    throw new ConfigError(ctx.t.errors.unwireScopeRequired(commands[0]!, commands[1]!), { reason: "scope-required", commands });
+  if (!(ctx.scopeExplicit ?? (ctx.flags.global || ctx.flags.here === true || ctx.flags.project !== null))) {
+    refuseUnscopedDisconnect(planConfig(ctx).config, ctx.cwd, `tonedial unwire${named ? ` ${named[0]}` : ""}`, ctx.t, named ?? undefined);
   }
+  return disconnect(ctx, named ?? await askTools(ctx, ctx.t.errors.unwireToolsPrompt));
 }
 
 /** `all` is eject's every-agent removal, which reports an empty scope as such. */

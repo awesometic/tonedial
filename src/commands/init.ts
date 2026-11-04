@@ -7,7 +7,7 @@ import { lstatSync, readdirSync } from "node:fs";
 import type { CommandResult, Ctx } from "../cli.ts";
 import { runAppRebuild } from "./rebuild.ts";
 import { runRebuildNative } from "./wire.ts";
-import { projectIsHome } from "../wiring/scopes.ts";
+import { refuseHomeProject } from "../wiring/scopes.ts";
 import { activationStep } from "./test.ts";
 import { ConfigError, OwnershipConflict, defaultConfig, requireConfigV2, safewordRejection, serializeConfig } from "../core/config.ts";
 import { compile, measure } from "../core/compile.ts";
@@ -30,10 +30,7 @@ import { assertDistinctHookTargets, parseToolSelection, planOrderedDelivery } fr
 import { contentHash, recordFileChange, resourceKey } from "../wiring/ownership.ts";
 
 export async function runInit(entry: Ctx, _args: string[]): Promise<CommandResult> {
-  if (projectIsHome(entry.agent, entry.env)) {
-    const global = `tonedial init${entry.flags.tools ? ` --tools ${entry.flags.tools}` : ""} --global`;
-    throw new ConfigError(entry.t.wiring.projectIsHome(global), { reason: "home-directory", commands: [global] });
-  }
+  refuseHomeProject(entry.agent, entry.env, `tonedial init${entry.flags.tools ? ` --tools ${entry.flags.tools}` : ""} --global`, entry.t);
   const operations = inspectOperations(entry.paths);
   const pending = operations.lock.state !== "none" || operations.journals.some(({ state }) => state === "pending" || state === "invalid");
   if (pending && (entry.flags.auto || !entry.canPrompt)) throw new ConfigError(entry.t.doctor.recoveryPending);
