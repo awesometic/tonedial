@@ -808,6 +808,28 @@ test("no command emits an escape sequence when its output is not a terminal", as
   assert.doesNotMatch(out.join("") + err.join(""), /\x1b\[/);
 });
 
+test("a refusal at 60 columns leaves each command whole on a line of its own, in both locales", async () => {
+  await initializeState();
+  const env = { HOME: home, TONEDIAL_HOME: join(home, "state"), PATH: "", COLUMNS: "60" };
+  for (const language of ["en", "ko"]) {
+    assert.equal(await cli("set", `language=${language}`), 0, err.join(""));
+    for (const argv of [["set", "verbosty=2"], ["get", "verbosty"], ["reset", "verbosty"], ["address", "one"], ["persona", "one"],
+      ["use"], ["export"], ["create", "--auto"], ["edit", "preset"], ["edit"]]) {
+      out = [];
+      err = [];
+      assert.equal(await run(argv, env, join(home, "project"), false, false), 1, `${language} ${argv.join(" ")}`);
+      const lines = err.join("").split("\n");
+      const commands = lines.filter((line) => line.includes("tonedial "));
+      assert.ok(commands.length > 0 || argv[0] === "edit" && argv.length === 1, `${language} ${argv.join(" ")} offers a command`);
+      for (const line of commands) assert.match(line, /^ *tonedial /, `${language} ${argv.join(" ")}: ${line}`);
+    }
+    // The file `edit` cannot open is a copy target, so it stands alone however long it is.
+    err = [];
+    await run(["edit"], env, join(home, "project"), false, false);
+    assert.ok(err.join("").split("\n").includes(join(home, "state", "config.json")), `${language}: the config path is whole on its line`);
+  }
+});
+
 test("list rides the risk mark beside the title, flush right only on a terminal, else under the description", async () => {
   await initializeState();
   assert.equal(await cli("set", "profanity=4", "critique=4", "flattery=3", "conviction=5", "compliance=5", "refusal=2", "bravado=2"), 0, err.join(""));

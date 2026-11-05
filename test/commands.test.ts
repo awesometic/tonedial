@@ -1308,7 +1308,7 @@ test("show on a root with nothing in it names the command that works there", asy
   assert.ok(stdout().includes(EN.artifact.notSetUp));
   assert.ok(stdout().startsWith(`ToneDial · show · (${EN.artifact.notSetUpTitle})`), "a fresh root claims no unsaved changes");
   assert.equal(stdout().trimEnd().split("\n").at(-1)!.trim(), "tonedial init --tools none --global");
-  assert.equal(stdout().includes(EN.artifact.notWritten), false);
+  assert.equal(stdout().includes(EN.artifact.notWritten.split("\n")[0]!), false);
   assert.deepEqual(snapshot(paths().root), [], "and reading the state created none of it");
   err = [];
   assert.equal(await cli("compile"), 1, "compile really is refused here");
@@ -1320,8 +1320,21 @@ test("show on a root with nothing in it names the command that works there", asy
   rmSync(paths().tone);
   out = [];
   assert.equal(await cli("show"), 0, stderr());
-  assert.ok(stdout().includes(EN.artifact.notWritten));
+  const advice = stdout().split("\n").map((line) => line.trim());
+  assert.deepEqual(advice.slice(advice.indexOf(EN.artifact.notWritten.split("\n")[0]!)).slice(0, 2), EN.artifact.notWritten.split("\n"),
+    "the missing file is named, then the command that writes it on its own line");
   assert.equal(stdout().includes(EN.artifact.notSetUp), false);
+});
+
+test("compile --check on a TONE.md it cannot compare points to doctor, not to an overwrite", async () => {
+  assert.equal(await cli("init", "--here", "--tools", "none", "--auto"), 0, stderr());
+  rmSync(paths().tone);
+  symlinkSync("elsewhere", paths().tone);
+  out = [];
+  assert.equal(await cli("compile", "--check"), 0, stderr());
+  const lines = stdout().trimEnd().split("\n").map((line) => line.trim());
+  assert.ok(lines.includes(EN.artifact.uninspected), "the status says it could not be compared");
+  assert.equal(lines.at(-1), "tonedial doctor", "and the next step is the diagnosis; compile would replace what it could not read");
 });
 
 test("show directs a config-only legacy root to read-only diagnosis without changing it", async () => {

@@ -123,7 +123,9 @@ export async function runCompile(ctx: Ctx): Promise<CommandResult> {
       // compile to, which a stale file on disk does not share.
       `  ${ctx.ui.dim(ctx.t.artifact.compiledSize(num(size.chars)))}`,
       ...(check ? [`  ${ctx.ui.dim(ctx.t.artifact.checkOnly)}`] : []),
-      ...nextStep(check && !current ? "tonedial compile" : "tonedial show", ctx.ui),
+      // A file that could not be compared is for doctor to look at, not for compile to overwrite.
+      ...nextStep(status === ctx.t.artifact.uninspected ? "tonedial doctor"
+        : check && !current ? "tonedial compile" : "tonedial show", ctx.ui),
     ],
     json: { path: ctx.paths.tone, agentsPath: ctx.paths.agents, enabled: config.enabled, written: !check, ...size },
     warnings: contextCapWarnings(config, size.chars, ctx.t),

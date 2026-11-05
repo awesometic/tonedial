@@ -9,7 +9,7 @@ const messages: Messages = {
     missingConfig: "ToneDialはまだ初期設定されていません。初期設定してから、このコマンドを再実行してください：\n  tonedial init --tools none --global",
     unsupportedProvider: (provider) => `${provider}: 会話プレビューは claude または codex に対応しています。`,
     noProvider: "PATHにClaude CodeもCodexも見つかりません。",
-    providerRequired: "プロバイダーを明示的に選択してください：tonedial test claude または tonedial test codex。",
+    providerRequired: (commands) => `プロバイダーを明示的に選択してください：\n  ${commands.join("\n  ")}`,
     providerUnavailable: (provider, alternative) => `${provider} がPATHに見つかりません。` +
       (alternative ? `${alternative.label} で試すには：\n  ${alternative.command}` : ""),
     targetUnavailable: (path) => `テスト用フォルダーが利用できないか、ディレクトリではありません：\n${path}\n--project DIR で既存のフォルダーを選んでください。`,
@@ -44,25 +44,24 @@ const messages: Messages = {
   },
   axis: {
     range: (axis, given) => `${axis}: 1–5を指定してください（入力：${given}）`,
-    unknown: (name, nearest) => `${name}: 軸ではありません。${nearest ? `${nearest} のことですか？` : ""}軸の一覧：tonedial get --help`,
+    unknown: (name, nearest) => `${name}: 軸ではありません。${nearest ? `${nearest} のことですか？` : ""}\n軸の一覧：\n  tonedial get --help`,
     notSettable: (name, nearest) =>
-      `${name}: 軸でも設定項目でもありません。${nearest ? `${nearest} のことですか？ ` : ""}` +
-      "全項目：tonedial get --help",
+      `${name}: 軸でも設定項目でもありません。${nearest ? `${nearest} のことですか？` : ""}\n全項目：\n  tonedial get --help`,
     reset: (axis, level) => `${axis}: すでに既定値 ${level} です`,
     resetAll: (deselected) => deselected ? `${deselected} の選択を解除 · ペルソナとその他の設定は保持` : "ペルソナとその他の設定は保持",
     nothingChanged: "変更なし",
     settingsSaved: "設定を更新しました",
     settingsUnchanged: "設定の変更なし",
     needsPair: (given) => `${given}: <key>=<value> の形式で指定してください（例：warmth=4）`,
-    needsArgument: "set には <key>=<value> が1つ以上必要です。例：tonedial set warmth=4。ターミナルでは tonedial set だけでダイヤルが開きます。",
+    needsArgument: "set には <key>=<value> が1つ以上必要です。例：\n  tonedial set warmth=4\nターミナルでダイヤルを開くには：\n  tonedial set",
     subagentUnsupported: "サブエージェントの軸は未対応です。ユーザーの軸を設定してください",
   },
   preset: {
     activeUnknown: "保存済み設定を修復するまで、適用中のプリセットは不明です。",
     notSetUp: "まだ初期設定されていないため、適用中のプリセットはありません。初期設定するには：\ntonedial init --tools none --global",
     unavailable: (slug, reason) => `${slug}: 利用不可（${reason}）。ファイルはそのまま残しています`,
-    conflict: (slug, recoveredSlug) => `${slug}: カスタム版と旧版の定義が異なります。tonedial doctor --fix で旧版の値を ${recoveredSlug} として保持してください。`,
-    activeConflict: (slug) => `${slug}: 適用中の定義が曖昧です。保存済みの軸は保持しました。tonedial doctor --fix で定義を選んでください。`,
+    conflict: (slug, recoveredSlug) => `${slug}: カスタム版と旧版の定義が異なります。旧版の値を ${recoveredSlug} として保持するには：\n  tonedial doctor --fix`,
+    activeConflict: (slug) => `${slug}: 適用中の定義が曖昧です。保存済みの軸は保持しました。定義を選ぶには：\n  tonedial doctor --fix`,
     active: (name) => `${name} を適用中`,
     activeState: "適用中",
     unknown: (slug, known, suggestion) => `プリセット ${slug} が見つかりません。選択肢：${known.join(", ")}` +
@@ -73,14 +72,14 @@ const messages: Messages = {
     bundledSlug: (slug) => `${slug}: 組み込みプリセットです。別の名前を選んでください`,
     bundledNotEditable: (slug) =>
       `${slug}: 組み込みプリセットの編集は次回の init で失われます。` +
-      `tonedial use ${slug} を実行し、別の名前で保存してください。`,
+      `適用してから、別の名前で保存してください：\n  tonedial use ${slug}`,
     editSaved: (slug) => `${slug} を保存しました`,
     editAxesKept: (unsaved) => unsaved
       ? "現在の口調設定は保持しました。保存済みプロファイルとは異なります。"
       : "現在の口調設定は保持しました。保存済みプロファイルと一致しています。",
     slugNotEditable: (was, tried) =>
       `スラッグは編集できません。適用中のプリセットと接続記録は ${was} を参照しています。` +
-      `tonedial use ${was} を実行し、${tried} として保存してください。`,
+      `適用してから、${tried} として保存してください：\n  tonedial use ${was}`,
     noLatin: (name) => `「${name}」: スラッグに使える英字か数字がありません。--slug で指定してください（例: --slug my-tone）。`,
     nameTooLong: (given, cap) => `表示名：${given}文字 · 上限 ${cap}`,
     replaced: (slug) => `${slug}: 既存プリセットを置き換えました`,
@@ -94,7 +93,7 @@ const messages: Messages = {
     needsDisplayName: "save には表示名が必要です。英字や数字のない名前には --slug を指定してください。",
     saveSlugUnknown: (slug) => `${slug}: このスラッグでは何も保存されていません。作成するには表示名も指定してください：\ntonedial save "表示名" --slug ${slug}`,
     saveAsNew: "現在の口調は新しい名前で保存してください：\ntonedial save \"My Tone\" --slug my-tone",
-    needsSlugArg: "プリセットのスラッグが必要です。一覧：tonedial list",
+    needsSlugArg: "プリセットのスラッグが必要です。一覧：\n  tonedial list",
     invalidSlugFor: (name) => `「${name}」: 有効なスラッグを生成できません`,
     noSlug: (path) => `${path}: 有効なスラッグがありません。英小文字・数字・ハイフンを使ってください`,
     schemaMismatch: (slug, given, knows) => `プリセット ${slug}: スキーマ ${given} · 対応 ${knows}`,
@@ -115,7 +114,7 @@ const messages: Messages = {
     register: "敬語区分（auto, polite, plain, rough）",
     addressFrequency: "呼称の頻度（none, auto, rarely, frequently）",
     safeword: "合言葉",
-    needsName: "create には表示名が必要です。ターミナルで tonedial create を実行するか、名前と任意の key=value 設定を --auto とともに指定してください。",
+    needsName: "create には表示名が必要です。ターミナルでは名前なしで実行すると入力を求められます：\n  tonedial create\n名前と任意の key=value 設定を --auto とともに指定することもできます。",
     exists: (slug) => `${slug}: 既に存在します。別のスラッグを選ぶか、save で更新してください。`,
     notCreated: "プリセットは作成していません。現在の設定は変更していません。",
     descriptionCount: (count, cap) => `${count}/${cap}文字`,
@@ -172,10 +171,10 @@ const messages: Messages = {
     unknownField: (field, fields) =>
       `persona.${field}: ペルソナ項目ではありません。選択肢：${fields.join(", ")}`,
     addressNeedsPair:
-      "address には両方の呼称が必要です：tonedial address <self name> <user name>。" +
+      "address には両方の呼称が必要です：\n  tonedial address <self name> <user name>\n" +
       '各位置に空文字列を指定すると消去できます。ターミナルでは引数なしで実行すると入力できます。',
     askSelf: "エージェントは自分をどう呼びますか？",
-    rolesNeedsPair: 'persona には両方の説明が必要です: tonedial persona <エージェントの役割> <ユーザーの役割>。消す項目には "" を指定してください。端末では引数なしで対話入力できます。',
+    rolesNeedsPair: 'persona には両方の説明が必要です:\n  tonedial persona <エージェントの役割> <ユーザーの役割>\n消す項目には "" を指定してください。端末では引数なしで対話入力できます。',
     rolesIntroduction: 'エージェントの役割と、あなたの役割や背景を設定します。Enter で現在の値を維持し、"" で役割を消去します。両方の入力が終わってからまとめて適用します。',
     askUser: "あなたをどう呼びますか？",
     addressKept: (current) => `現在 ${current} · Enterで保持`,
@@ -210,7 +209,7 @@ const messages: Messages = {
     compiledSize: (chars) => `保存設定から生成されるサイズ：${chars}文字`,
     checkOnly: "--check · 書き込みなし",
     wrote: "書き込み済み",
-    notWritten: "TONE.md がありません。tonedial compile を実行してください",
+    notWritten: "TONE.md がありません。生成するには：\ntonedial compile",
     notSetUp: "まだ初期設定されていません · ToneDialの既定値を表示",
     notSetUpTitle: "初期設定前",
     movedFromDefault: "ToneDialの既定値と異なります",
@@ -247,7 +246,7 @@ const messages: Messages = {
     current: "TONE.md は最新です",
     stale: "TONE.md が保存済み設定と異なります",
     missing: "TONE.md は未生成です",
-    uninspected: "TONE.md を安全に比較できません。tonedial doctor で確認してください",
+    uninspected: "TONE.md を安全に比較できません",
     whatElseIsSettable: "set で変更できるその他の設定：",
   },
   wiring: {
@@ -307,7 +306,7 @@ const messages: Messages = {
     dryRun: "--dry-run · 書き込みなし",
     declined: "キャンセル · 書き込みなし",
     disconnected: (tools) => `${tools}: 接続を解除しました`,
-    noArtifact: "接続する TONE.md がありません。先に tonedial compile を実行してください。",
+    noArtifact: "接続する TONE.md がありません。先に生成するには：\n  tonedial compile",
     unknownTool: (given, tools) => `${given}: 未対応のツールです。選択肢：${tools.join(", ")}`,
     noneInstalled: (tools, root) =>
       `検索ルート：${root}\n${tools.join(", ")} が見つかりません。名前を指定すると接続できます。`,
@@ -493,7 +492,7 @@ const messages: Messages = {
     newer: "インストール済みのバージョンが最新リリースより新しい · 更新なし",
     checkUnavailable: "最新バージョンを確認できませんでした",
     npmMissing: "PATHにnpmがありません。このToneDialをインストールしたNode/npm環境を使用してください。",
-    npmScopeUnknown: "npmのグローバルインストール先を確認できません。npm prefix -g と npm root -g を確認して再試行してください。",
+    npmScopeUnknown: "npmのグローバルインストール先を確認できません。再試行する前に次を確認してください：\n  npm prefix -g\n  npm root -g",
     npmScopeMismatch: "このToneDialは選択したnpmが管理するグローバルパッケージではありません。対応するNode/npm環境を使用してください。更新は実行していません。",
     npmFailed: "npmの更新に失敗しました。権限とレジストリ設定を確認し、表示されたコマンドを実行してnpmの診断を確認してください。",
     npmPermissionDenied: (code, prefix) => `npmの更新に必要な書き込み権限がありません (${code})。\n${prefix}\n設定とプリセットをバックアップしてから、ユーザー所有の場所に再インストールしてください。\n復旧手順:\nhttps://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#npm-permissions`,
@@ -679,16 +678,16 @@ const messages: Messages = {
     editConflict: (path) => `エディターを開いている間に原本が変更されました。編集コピーはここに保持しました：\n${path}\n比較してから再試行してください。`,
     traitsNotOnDisk:
       "編集用の軸ファイルはありません。基準文はパッケージに組み込まれており、ホームには書き出しません。" +
-      "軸の変更には tonedial set を使ってください。",
+      "軸を変更するには：\n  tonedial set",
     editTarget: (given) => `edit は preset <slug> または引数なしで実行します（入力：${given}）`,
     editorChangedNothingUsable: (path) => `${path}: プリセットオブジェクトではありません`,
-    editNeedsSlug: "edit preset にはスラッグが必要です。一覧：tonedial list",
-    noEditor: (path) => `$EDITOR か $VISUAL を設定するか直接開いてください：${path}`,
+    editNeedsSlug: "edit preset にはスラッグが必要です。一覧：\n  tonedial list",
+    noEditor: (path) => `$EDITOR か $VISUAL を設定するか直接開いてください：\n${path}`,
     wouldOpen: (editor, path) => `起動予定 · ${editor} · ${path}`,
     editorFailed: (editor, reason) => `${editor}: 起動失敗 · ${reason}`,
     editorExited: (editor, code) => `${editor}: 終了 ${code} · 変更は再読込していません`,
     editUnchanged: "変更なし",
-    editDeleted: (path) => `${path}: 削除済み · 修復：tonedial doctor --fix`,
+    editDeleted: (path) => `編集で削除されました：\n${path}\n修復するには：\n  tonedial doctor --fix`,
     editDeletionRefused: (path) => `エディターが一時設定を削除しました。管理設定と接続記録は保持しました：\n${path}`,
     escapesRoot: (path, real, root) =>
       `${path} → ${real}: ${root} の外にあるため書き込みません。`,

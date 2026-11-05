@@ -9,7 +9,7 @@ const messages: Messages = {
     missingConfig: "ToneDial aún no está configurado. Configúralo y vuelve a ejecutar este comando:\n  tonedial init --tools none --global",
     unsupportedProvider: (provider) => `${provider}: la vista previa de conversación admite claude o codex.`,
     noProvider: "No se encontró Claude Code ni Codex en PATH.",
-    providerRequired: "Elige un proveedor: tonedial test claude o tonedial test codex.",
+    providerRequired: (commands) => `Elige un proveedor:\n  ${commands.join("\n  ")}`,
     providerUnavailable: (provider, alternative) => `No se encontró ${provider} en PATH.` +
       (alternative ? ` ${alternative.label} está disponible:\n  ${alternative.command}` : ""),
     targetUnavailable: (path) => `La carpeta de prueba no está disponible o no es un directorio:\n${path}\nElige una carpeta existente con --project DIR.`,
@@ -44,25 +44,24 @@ const messages: Messages = {
   },
   axis: {
     range: (axis, given) => `${axis}: se esperaba 1–5 (se recibió ${given})`,
-    unknown: (name, nearest) => `${name}: no es un eje.${nearest ? ` ¿Querías decir ${nearest}?` : ""} Ejes: tonedial get --help`,
+    unknown: (name, nearest) => `${name}: no es un eje.${nearest ? ` ¿Querías decir ${nearest}?` : ""}\nEjes:\n  tonedial get --help`,
     notSettable: (name, nearest) =>
-      `${name}: no es un eje ni un ajuste. ${nearest ? `¿Querías decir ${nearest}? ` : ""}` +
-      "Lista completa: tonedial get --help",
+      `${name}: no es un eje ni un ajuste.${nearest ? ` ¿Querías decir ${nearest}?` : ""}\nLista completa:\n  tonedial get --help`,
     reset: (axis, level) => `${axis} ya tiene el valor predeterminado ${level}`,
     resetAll: (deselected) => deselected ? `${deselected} deseleccionado · se conservan la personalidad y los demás ajustes` : "Se conservan la personalidad y los demás ajustes",
     nothingChanged: "sin cambios",
     settingsSaved: "Ajustes actualizados",
     settingsUnchanged: "Ajustes sin cambios",
     needsPair: (given) => `${given}: se esperaba <key>=<value>, por ejemplo warmth=4`,
-    needsArgument: "set necesita al menos un <key>=<value>, por ejemplo: tonedial set warmth=4. En un terminal, tonedial set sin más abre el dial.",
+    needsArgument: "set necesita al menos un <key>=<value>, por ejemplo:\n  tonedial set warmth=4\nEn un terminal, esto abre el dial:\n  tonedial set",
     subagentUnsupported: "Los ejes de subagentes aún no están disponibles. Ajusta los ejes del usuario",
   },
   preset: {
     activeUnknown: "El preajuste activo es desconocido hasta reparar los ajustes guardados.",
     notSetUp: "ToneDial aún no está configurado, así que no hay ningún preajuste activo. Configúralo con:\ntonedial init --tools none --global",
     unavailable: (slug, reason) => `${slug}: no disponible (${reason}); el archivo se dejó tal cual`,
-    conflict: (slug, recoveredSlug) => `${slug}: las definiciones personalizada y antigua difieren. Ejecuta tonedial doctor --fix para conservar los valores antiguos como ${recoveredSlug}.`,
-    activeConflict: (slug) => `${slug}: la definición activa es ambigua; se conservaron los ejes. Elige la definición con tonedial doctor --fix.`,
+    conflict: (slug, recoveredSlug) => `${slug}: las definiciones personalizada y antigua difieren. Para conservar los valores antiguos como ${recoveredSlug}:\n  tonedial doctor --fix`,
+    activeConflict: (slug) => `${slug}: la definición activa es ambigua; se conservaron los ejes. Para elegir la definición:\n  tonedial doctor --fix`,
     active: (name) => `${name} activo`,
     activeState: "activo",
     unknown: (slug, known, suggestion) => `No se encontró el preajuste ${slug}. Disponibles: ${known.join(", ")}` +
@@ -73,14 +72,14 @@ const messages: Messages = {
     bundledSlug: (slug) => `${slug}: preajuste incluido. Elige otro nombre`,
     bundledNotEditable: (slug) =>
       `${slug}: preajuste incluido; el próximo init descarta las modificaciones. ` +
-      `Ejecuta tonedial use ${slug} y guárdalo con otro nombre.`,
+      `Aplícalo y guárdalo con otro nombre:\n  tonedial use ${slug}`,
     editSaved: (slug) => `${slug} guardado`,
     editAxesKept: (unsaved) => unsaved
       ? "Se conserva el tono actual; difiere del perfil guardado."
       : "Se conserva el tono actual; coincide con el perfil guardado.",
     slugNotEditable: (was, tried) =>
       `No se puede editar el identificador. El preajuste activo y la conexión apuntan a ${was}. ` +
-      `Ejecuta tonedial use ${was} y guárdalo como ${tried}.`,
+      `Aplícalo y guárdalo como ${tried}:\n  tonedial use ${was}`,
     noLatin: (name) => `«${name}»: no contiene letras latinas ni dígitos para el identificador. Elige uno con --slug, por ejemplo --slug mi-tono`,
     nameTooLong: (given, cap) => `Nombre visible: ${given} caracteres · máximo ${cap}`,
     replaced: (slug) => `${slug}: se reemplazó el preajuste existente`,
@@ -94,7 +93,7 @@ const messages: Messages = {
     needsDisplayName: "save necesita un nombre visible. Usa --slug si el nombre no tiene letras latinas ni dígitos.",
     saveSlugUnknown: (slug) => `${slug}: no hay nada guardado con este identificador. Para crearlo, añade un nombre visible:\ntonedial save "Nombre visible" --slug ${slug}`,
     saveAsNew: "Guarda el tono actual con un nombre nuevo:\ntonedial save \"Mi tono\" --slug mi-tono",
-    needsSlugArg: "Se necesita el identificador del preajuste. Lista: tonedial list",
+    needsSlugArg: "Se necesita el identificador del preajuste. Lista:\n  tonedial list",
     invalidSlugFor: (name) => `«${name}»: no se puede crear un identificador válido`,
     noSlug: (path) => `${path}: identificador no válido. Usa letras minúsculas, dígitos y guiones`,
     schemaMismatch: (slug, given, knows) => `Preajuste ${slug}: esquema ${given} · compatible ${knows}`,
@@ -115,7 +114,7 @@ const messages: Messages = {
     register: "Registro (auto, polite, plain, rough)",
     addressFrequency: "Frecuencia del nombre o tratamiento (none, auto, rarely, frequently)",
     safeword: "Palabra clave",
-    needsName: "create necesita un nombre visible. Ejecuta tonedial create en un terminal o indica un nombre y ajustes key=value opcionales con --auto.",
+    needsName: "create necesita un nombre visible. En un terminal, ejecútalo sin nombre para que te lo pida:\n  tonedial create\nO indica un nombre y ajustes key=value opcionales con --auto.",
     exists: (slug) => `${slug}: ya existe un preajuste. Elige otro identificador o actualízalo con save.`,
     notCreated: "No se creó ningún preajuste; los ajustes actuales no cambian.",
     descriptionCount: (count, cap) => `${count}/${cap} caracteres`,
@@ -172,10 +171,10 @@ const messages: Messages = {
     unknownField: (field, fields) =>
       `persona.${field}: no es un campo de personalidad. Disponibles: ${fields.join(", ")}`,
     addressNeedsPair:
-      "address necesita ambos nombres: tonedial address <self name> <user name>. " +
+      "address necesita ambos nombres:\n  tonedial address <self name> <user name>\n" +
       'Usa una cadena vacía en cada posición para borrarla. Sin argumentos en un terminal, se te preguntará.',
     askSelf: "¿Cómo debe llamarse el agente a sí mismo?",
-    rolesNeedsPair: 'persona necesita ambas descripciones: tonedial persona <rol del agente> <rol del usuario>. Usa "" para borrar una descripción o ejecútalo sin argumentos en una terminal.',
+    rolesNeedsPair: 'persona necesita ambas descripciones:\n  tonedial persona <rol del agente> <rol del usuario>\nUsa "" para borrar una descripción o ejecútalo sin argumentos en una terminal.',
     rolesIntroduction: 'Define el rol del agente y tu rol o contexto. Enter conserva el valor actual; "" borra el rol. Los cambios se aplican al terminar ambas respuestas.',
     askUser: "¿Cómo debe llamarte?",
     addressKept: (current) => `actual ${current} · Enter lo conserva`,
@@ -210,7 +209,7 @@ const messages: Messages = {
     compiledSize: (chars) => `Tamaño según los ajustes guardados: ${chars} caracteres`,
     checkOnly: "--check · no se escribió nada",
     wrote: "escrito",
-    notWritten: "Falta TONE.md. Ejecuta tonedial compile",
+    notWritten: "Falta TONE.md. Para generarlo:\ntonedial compile",
     notSetUp: "Aún sin configurar · se muestran los valores predeterminados de ToneDial",
     notSetUpTitle: "sin configurar",
     movedFromDefault: "difiere del valor predeterminado de ToneDial",
@@ -247,7 +246,7 @@ const messages: Messages = {
     current: "TONE.md al día",
     stale: "TONE.md difiere de los ajustes guardados",
     missing: "TONE.md no se ha generado",
-    uninspected: "No se pudo comparar TONE.md con seguridad; revisa con tonedial doctor",
+    uninspected: "No se pudo comparar TONE.md con seguridad",
     whatElseIsSettable: "Otros ajustes admitidos por set:",
   },
   wiring: {
@@ -307,7 +306,7 @@ const messages: Messages = {
     dryRun: "--dry-run · no se escribió nada",
     declined: "cancelado · no se escribió nada",
     disconnected: (tools) => `${tools}: desconectados`,
-    noArtifact: "No hay TONE.md para conectar. Ejecuta primero tonedial compile.",
+    noArtifact: "No hay TONE.md para conectar. Para generarlo primero:\n  tonedial compile",
     unknownTool: (given, tools) => `${given}: herramienta no admitida. Disponibles: ${tools.join(", ")}`,
     noneInstalled: (tools, root) =>
       `Raíz de búsqueda: ${root}\nNo se encontró ${tools.join(", ")}. Indica la herramienta para conectarla de todos modos.`,
@@ -493,7 +492,7 @@ const messages: Messages = {
     newer: "la versión instalada es más reciente que la última publicada · nada que actualizar",
     checkUnavailable: "no se pudo consultar la última versión",
     npmMissing: "No se encontró npm en PATH. Usa la instalación de Node/npm que gestiona esta copia de ToneDial.",
-    npmScopeUnknown: "No se puede verificar el directorio global de npm. Comprueba npm prefix -g y npm root -g antes de reintentar.",
+    npmScopeUnknown: "No se puede verificar el directorio global de npm. Comprueba esto antes de reintentar:\n  npm prefix -g\n  npm root -g",
     npmScopeMismatch: "Esta copia de ToneDial no es el paquete global gestionado por el npm seleccionado. Usa la instalación de Node/npm correspondiente. No se ejecutó la actualización.",
     npmFailed: "La actualización de npm falló. Comprueba los permisos y el registro, y ejecuta el comando mostrado para ver el diagnóstico de npm.",
     npmPermissionDenied: (code, prefix) => `La actualización de npm necesita permiso de escritura (${code}).\n${prefix}\nHaz una copia de seguridad de los ajustes y preajustes, y reinstala en un directorio de tu usuario.\nPasos de recuperación:\nhttps://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#npm-permissions`,
@@ -679,16 +678,16 @@ const messages: Messages = {
     editConflict: (path) => `El original cambió mientras el editor estaba abierto. Tu copia se conserva en:\n${path}\nCompara los archivos antes de reintentar.`,
     traitsNotOnDisk:
       "No hay archivos de rasgos que editar. Los criterios se incluyen en el paquete, no se escriben en " +
-      "el directorio personal. Usa tonedial set para cambiar un eje.",
+      "el directorio personal. Para cambiar un eje:\n  tonedial set",
     editTarget: (given) => `edit acepta preset <slug> o ningún argumento (se recibió ${given})`,
     editorChangedNothingUsable: (path) => `${path}: no es un objeto de preajuste`,
-    editNeedsSlug: "edit preset necesita un identificador. Lista: tonedial list",
-    noEditor: (path) => `Define $EDITOR o $VISUAL, o abre directamente: ${path}`,
+    editNeedsSlug: "edit preset necesita un identificador. Lista:\n  tonedial list",
+    noEditor: (path) => `Define $EDITOR o $VISUAL, o abre directamente:\n${path}`,
     wouldOpen: (editor, path) => `se abriría · ${editor} · ${path}`,
     editorFailed: (editor, reason) => `${editor}: no se pudo ejecutar · ${reason}`,
     editorExited: (editor, code) => `${editor}: salida ${code} · no se releyeron los cambios`,
     editUnchanged: "sin cambios",
-    editDeleted: (path) => `${path}: eliminado · reparar: tonedial doctor --fix`,
+    editDeleted: (path) => `Eliminado por la edición:\n${path}\nPara repararlo:\n  tonedial doctor --fix`,
     editDeletionRefused: (path) => `El editor eliminó los ajustes temporales. Se conservaron los ajustes gestionados y las conexiones:\n${path}`,
     escapesRoot: (path, real, root) =>
       `${path} → ${real}: fuera de ${root}; no se escribirá.`,

@@ -92,7 +92,10 @@ export async function runTest(ctx: Ctx, args: string[]): Promise<CommandResult> 
     }));
   }
   if (installed.length === 0) throw new ConfigError(copy.noProvider);
-  if (selected === undefined && installed.length > 1 && planOnly) throw new ConfigError(copy.providerRequired);
+  if (selected === undefined && installed.length > 1 && planOnly) {
+    // A dry run stays one; --json is added by whoever runs a chosen command.
+    throw new ConfigError(copy.providerRequired(installed.map(({ provider }) => `${rerun(provider)}${ctx.flags.dryRun ? " --dry-run" : ""}`)));
+  }
 
   const usageLines = [copy.cost, copy.interpretationCaveat, copy.history, copy.protection, copy.automationCaveat, copy.driftCaveat]
     .flatMap((notice, index) => wrap(notice, ctx.ui.width - 4).map((line, continuation) =>

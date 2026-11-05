@@ -9,7 +9,7 @@ const messages: Messages = {
     missingConfig: "ToneDial 尚未初始化。请先完成初始化，然后重新运行此命令：\n  tonedial init --tools none --global",
     unsupportedProvider: (provider) => `${provider}：对话预览支持 claude 或 codex。`,
     noProvider: "PATH 中未找到 Claude Code 或 Codex。",
-    providerRequired: "请明确选择：tonedial test claude 或 tonedial test codex。",
+    providerRequired: (commands) => `请明确选择：\n  ${commands.join("\n  ")}`,
     providerUnavailable: (provider, alternative) => `PATH 中未找到 ${provider}。` +
       (alternative ? `可改用 ${alternative.label}：\n  ${alternative.command}` : ""),
     targetUnavailable: (path) => `测试目录不可用，或该路径不是目录：\n${path}\n请用 --project DIR 选择现有目录。`,
@@ -44,25 +44,24 @@ const messages: Messages = {
   },
   axis: {
     range: (axis, given) => `${axis}：应为 1–5（收到 ${given}）`,
-    unknown: (name, nearest) => `${name}：不是语气轴。${nearest ? `是否想输入 ${nearest}？` : ""}语气轴列表：tonedial get --help`,
+    unknown: (name, nearest) => `${name}：不是语气轴。${nearest ? `是否想输入 ${nearest}？` : ""}\n语气轴列表：\n  tonedial get --help`,
     notSettable: (name, nearest) =>
-      `${name}：不是语气轴或设置项。${nearest ? `是否想输入 ${nearest}？ ` : ""}` +
-      "完整列表：tonedial get --help",
+      `${name}：不是语气轴或设置项。${nearest ? `是否想输入 ${nearest}？` : ""}\n完整列表：\n  tonedial get --help`,
     reset: (axis, level) => `${axis}：已是默认值 ${level}`,
     resetAll: (deselected) => deselected ? `已取消选择 ${deselected} · 保留人设和其他设置` : "保留人设和其他设置",
     nothingChanged: "无变更",
     settingsSaved: "设置已更新",
     settingsUnchanged: "设置未变更",
     needsPair: (given) => `${given}：应使用 <key>=<value> 格式（例如 warmth=4）`,
-    needsArgument: "set 至少需要一个 <key>=<value>，例如：tonedial set warmth=4。在终端中只输入 tonedial set 即可打开调节面板。",
+    needsArgument: "set 至少需要一个 <key>=<value>，例如：\n  tonedial set warmth=4\n在终端中打开调节面板：\n  tonedial set",
     subagentUnsupported: "暂不支持子代理语气轴，请设置用户语气轴",
   },
   preset: {
     activeUnknown: "修复已保存的设置前，无法确定当前预设。",
     notSetUp: "尚未初始化，因此没有正在使用的预设。初始化：\ntonedial init --tools none --global",
     unavailable: (slug, reason) => `${slug}：不可用（${reason}）；文件保持原样`,
-    conflict: (slug, recoveredSlug) => `${slug}：自定义版本与旧版本定义不同。请运行 tonedial doctor --fix，将旧值保留为 ${recoveredSlug}。`,
-    activeConflict: (slug) => `${slug}：当前定义不明确，已保留保存的语气轴。请运行 tonedial doctor --fix 选择定义。`,
+    conflict: (slug, recoveredSlug) => `${slug}：自定义版本与旧版本定义不同。若要将旧值保留为 ${recoveredSlug}：\n  tonedial doctor --fix`,
+    activeConflict: (slug) => `${slug}：当前定义不明确，已保留保存的语气轴。若要选择定义：\n  tonedial doctor --fix`,
     active: (name) => `${name} 已启用`,
     activeState: "已启用",
     unknown: (slug, known, suggestion) => `未找到预设 ${slug}。可选：${known.join(", ")}` +
@@ -73,14 +72,14 @@ const messages: Messages = {
     bundledSlug: (slug) => `${slug}：内置预设，请选择其他名称`,
     bundledNotEditable: (slug) =>
       `${slug}：内置预设，下次 init 会丢弃编辑。` +
-      `请运行 tonedial use ${slug}，然后另存为新名称。`,
+      `请先应用，然后另存为新名称：\n  tonedial use ${slug}`,
     editSaved: (slug) => `${slug} 已保存`,
     editAxesKept: (unsaved) => unsaved
       ? "已保留当前语气设置；与保存的配置不同。"
       : "已保留当前语气设置；与保存的配置一致。",
     slugNotEditable: (was, tried) =>
       `不能编辑标识名；当前预设和连接记录指向 ${was}。` +
-      `请运行 tonedial use ${was}，然后另存为 ${tried}。`,
+      `请先应用，然后另存为 ${tried}：\n  tonedial use ${was}`,
     noLatin: (name) => `“${name}”：没有可用于标识名的拉丁字母或数字。请用 --slug 指定，例如 --slug my-tone`,
     nameTooLong: (given, cap) => `显示名称：${given} 字符 · 上限 ${cap}`,
     replaced: (slug) => `${slug}：已替换现有预设`,
@@ -94,7 +93,7 @@ const messages: Messages = {
     needsDisplayName: "save 需要显示名称。名称不含拉丁字母或数字时，请指定 --slug。",
     saveSlugUnknown: (slug) => `${slug}：此标识名下没有已保存的内容。要创建，请同时指定显示名称：\ntonedial save "显示名称" --slug ${slug}`,
     saveAsNew: "请用新名称保存当前语气：\ntonedial save \"My Tone\" --slug my-tone",
-    needsSlugArg: "需要预设标识名。列表：tonedial list",
+    needsSlugArg: "需要预设标识名。列表：\n  tonedial list",
     invalidSlugFor: (name) => `“${name}”：无法生成有效标识名`,
     noSlug: (path) => `${path}：没有有效标识名，请使用小写拉丁字母、数字和连字符`,
     schemaMismatch: (slug, given, knows) => `预设 ${slug}：结构版本 ${given} · 支持 ${knows}`,
@@ -115,7 +114,7 @@ const messages: Messages = {
     register: "敬语形式（auto, polite, plain, rough）",
     addressFrequency: "称呼频率（none, auto, rarely, frequently）",
     safeword: "安全词",
-    needsName: "create 需要显示名称。请在终端运行 tonedial create，或提供名称、可选的 key=value 设置及 --auto。",
+    needsName: "create 需要显示名称。在终端中不带名称运行会提示输入：\n  tonedial create\n也可以提供名称、可选的 key=value 设置及 --auto。",
     exists: (slug) => `${slug}：预设已存在。请选择其他标识名，或用 save 更新。`,
     notCreated: "未创建预设，当前设置未变更。",
     descriptionCount: (count, cap) => `${count}/${cap} 字符`,
@@ -172,10 +171,10 @@ const messages: Messages = {
     unknownField: (field, fields) =>
       `persona.${field}：不是人设字段。可选：${fields.join(", ")}`,
     addressNeedsPair:
-      "address 需要两个称呼：tonedial address <self name> <user name>。" +
+      "address 需要两个称呼：\n  tonedial address <self name> <user name>\n" +
       '每个位置使用空字符串即可清空。在终端不带参数运行可交互输入。',
     askSelf: "代理如何自称？",
-    rolesNeedsPair: 'persona 需要两项描述：tonedial persona <代理角色> <用户角色>。用 "" 清除对应描述，也可在终端中不带参数交互输入。',
+    rolesNeedsPair: 'persona 需要两项描述：\n  tonedial persona <代理角色> <用户角色>\n用 "" 清除对应描述，也可在终端中不带参数交互输入。',
     rolesIntroduction: '设置代理的角色，以及你的角色或背景。按 Enter 保留当前值，输入 "" 清除该角色。两项输入完成后统一应用。',
     askUser: "代理该如何称呼你？",
     addressKept: (current) => `当前 ${current} · Enter 保留`,
@@ -210,7 +209,7 @@ const messages: Messages = {
     compiledSize: (chars) => `按已保存设置生成的大小：${chars} 字符`,
     checkOnly: "--check · 未写入任何内容",
     wrote: "已写入",
-    notWritten: "缺少 TONE.md，请运行 tonedial compile",
+    notWritten: "缺少 TONE.md。若要生成：\ntonedial compile",
     notSetUp: "尚未初始化 · 显示 ToneDial 默认值",
     notSetUpTitle: "未初始化",
     movedFromDefault: "与 ToneDial 默认值不同",
@@ -247,7 +246,7 @@ const messages: Messages = {
     current: "TONE.md 已是最新",
     stale: "TONE.md 与保存的设置不同",
     missing: "尚未生成 TONE.md",
-    uninspected: "无法安全比较 TONE.md，请运行 tonedial doctor 检查",
+    uninspected: "无法安全比较 TONE.md",
     whatElseIsSettable: "set 支持的其他设置：",
   },
   wiring: {
@@ -307,7 +306,7 @@ const messages: Messages = {
     dryRun: "--dry-run · 未写入任何内容",
     declined: "已取消 · 未写入任何内容",
     disconnected: (tools) => `${tools}：已断开连接`,
-    noArtifact: "没有可连接的 TONE.md，请先运行 tonedial compile。",
+    noArtifact: "没有可连接的 TONE.md。请先生成：\n  tonedial compile",
     unknownTool: (given, tools) => `${given}：不支持的工具。可选：${tools.join(", ")}`,
     noneInstalled: (tools, root) =>
       `搜索根目录：${root}\n未找到 ${tools.join(", ")}。仍可指定工具名称进行连接。`,
@@ -493,7 +492,7 @@ const messages: Messages = {
     newer: "已安装版本比最新发布版本更新 · 无需更新",
     checkUnavailable: "无法检查最新版本",
     npmMissing: "PATH 中未找到 npm。请使用安装此 ToneDial 的 Node/npm 环境。",
-    npmScopeUnknown: "无法确认 npm 的全局安装目录。请检查 npm prefix -g 和 npm root -g 后重试。",
+    npmScopeUnknown: "无法确认 npm 的全局安装目录。重试前请检查：\n  npm prefix -g\n  npm root -g",
     npmScopeMismatch: "当前 ToneDial 不是所选 npm 管理的全局软件包。请使用对应的 Node/npm 环境。未执行更新。",
     npmFailed: "npm 更新失败。请检查权限和镜像设置，并直接运行显示的命令查看 npm 的诊断信息。",
     npmPermissionDenied: (code, prefix) => `npm 更新缺少写入权限 (${code})。\n${prefix}\n请先备份设置和预设，再重新安装到用户拥有的目录。\n恢复步骤：\nhttps://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#npm-permissions`,
@@ -679,16 +678,16 @@ const messages: Messages = {
     editConflict: (path) => `编辑器打开期间原文件发生变化。编辑副本保留于：\n${path}\n请比较文件后重试。`,
     traitsNotOnDisk:
       "没有可编辑的特征文件。基准文编译在包内，不写入主目录。" +
-      "请用 tonedial set 修改语气轴。",
+      "若要修改语气轴：\n  tonedial set",
     editTarget: (given) => `edit 接受 preset <slug> 或无参数（收到 ${given}）`,
     editorChangedNothingUsable: (path) => `${path}：不是预设对象`,
-    editNeedsSlug: "edit preset 需要标识名。列表：tonedial list",
-    noEditor: (path) => `请设置 $EDITOR 或 $VISUAL，或直接打开：${path}`,
+    editNeedsSlug: "edit preset 需要标识名。列表：\n  tonedial list",
+    noEditor: (path) => `请设置 $EDITOR 或 $VISUAL，或直接打开：\n${path}`,
     wouldOpen: (editor, path) => `将打开 · ${editor} · ${path}`,
     editorFailed: (editor, reason) => `${editor}：运行失败 · ${reason}`,
     editorExited: (editor, code) => `${editor}：退出码 ${code} · 未重新读取变更`,
     editUnchanged: "无变更",
-    editDeleted: (path) => `${path}：已删除 · 修复：tonedial doctor --fix`,
+    editDeleted: (path) => `已被此次编辑删除：\n${path}\n若要修复：\n  tonedial doctor --fix`,
     editDeletionRefused: (path) => `编辑器删除了临时配置。已保留受管理设置及连接记录：\n${path}`,
     escapesRoot: (path, real, root) =>
       `${path} → ${real}：位于 ${root} 之外，因此不会写入。`,
