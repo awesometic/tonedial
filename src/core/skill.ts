@@ -15,7 +15,7 @@ Offer them for the user to choose; run a chosen one with its literal arguments, 
 \`get --json\`, \`show --json\`, and \`compile --check --json\` report the shared \`enabled\` delivery state.
 \`chars\` reports the current TONE.md Unicode character count; no size target or maximum applies.
 Schema 3 removes guard and ceiling fields and reports advisory \`riskAxes\`; persisted config
-remains schema 2. Custom profiles use preset schema 2; legacy schema 1 and journal formats
+remains schema 2. Custom presets use preset schema 2; legacy schema 1 and journal formats
 remain supported. Never send \`guards\` or
 \`fixed_width\` assignments.
 If the installed CLI returns another version, report the incompatible CLI and ask
@@ -36,7 +36,7 @@ substituting the global default. Missing or conflicting files need the user's ex
 or repair decision. Never edit or recreate them directly.
 `;
 
-/** Both entry points distinguish current tone settings from saved profiles. */
+/** Both entry points distinguish current tone settings from saved presets. */
 const PRESETS_MD = `## Current settings and saved presets
 
 \`tonedial get --json\` reports the current editable settings in a flat \`values\` object.
@@ -48,8 +48,8 @@ The keys are the twelve axes, \`language\`, \`speech_level\`, \`address_frequenc
 Read-only \`get\` neither changes settings nor reloads this conversation.
 \`tonedial show --json\` adds the overview and artifact metadata. \`show <slug> --json\` previews that
 preset's saved tone settings. \`unsaved\` on the current result means the current tone settings
-have not been saved back to a profile; the current configuration itself is persisted.
-For an explicit request to save a profile, use \`tonedial save "<display name>" --json\`.
+have not been saved back to a preset; the current configuration itself is persisted.
+For an explicit request to save a preset, use \`tonedial save "<display name>" --json\`.
 Bare \`tonedial save --json\` updates the selected user preset without renaming it.
 \`--slug <slug>\` chooses a slug independently of the display name and can update that saved preset.
 For an explicit request to create one, resolve the requested name, slug and settings first,
@@ -58,14 +58,14 @@ Only \`created: true\` confirms creation; \`--dry-run\` returns the proposed fil
 Creation saves and applies axes, persona, address, register and safeword in one action.
 The interactive form retries invalid fields, reports each role's 200-character budget, and
 shows address and role content again before final approval. JSON creation never interviews.
-\`use\` restores the selected profile's complete settings. All seven bundled profiles include
+\`use\` restores the selected preset's complete settings. All seven bundled presets include
 address, user context, fictional agent role and register defaults in English, Korean,
 Japanese, Simplified Chinese and Spanish.
 Built-in defaults follow the interface language when selected; saved custom text never translates.
 Legacy schema-1 presets restore axes while preserving the current separate settings.
 Tough Love and Terse Operator are retired from the menu; their old slugs remain compatible.
 Interface language and wiring stay global.
-\`export\`/\`import\` back up and transfer the complete profile, including personal role descriptions.
+\`export\`/\`import\` back up and transfer the complete preset, including personal role descriptions.
 Never create a preset or capture a role or personal context without the user's explicit request.
 `;
 
@@ -106,7 +106,7 @@ const DELIVERY_MD = `## Pause and resume delivery
 
 For an explicit request to turn ToneDial off, run \`tonedial off --json\`, then run
 \`tonedial compile --check --json\`. Require both results to report \`enabled: false\`.
-Do not read the guide or artifact afterward. Report that saved settings, profiles and the full
+Do not read the guide or artifact afterward. Report that saved settings, presets and the full
 \`TONE.md\` remain. The current ToneDial reader emits no ToneDial context.
 Already delivered context cannot be removed from an open conversation; stop applying the saved
 manner where possible and name a fresh conversation as the clean check. Do not promise a perfect reset.
@@ -116,7 +116,7 @@ before it can honor the marker.
 
 For an explicit request to turn ToneDial on, run \`tonedial on --json\`, then follow the reload
 procedure below. Turning delivery on does not prove that a native hook is installed, trusted,
-enabled or running. Neither command changes axes, persona, address, register, safeword or profiles.
+enabled or running. Neither command changes axes, persona, address, register, safeword or presets.
 `;
 
 /** Explicit setting requests use the same CLI mapping through either installed entry point. */
@@ -157,7 +157,7 @@ and role variants. \`none\` omits them without deleting the saved address terms;
 attention; \`frequently\` uses most substantive replies and skips brief follow-ups.
 At most one address appears per reply. Necessary names in requested content remain literal.
 Self-reference is used only when needed, independently of user address frequency.
-Profiles carry the frequency; axis-only reset and legacy presets preserve it.
+Complete presets carry the frequency; axis-only reset and legacy presets preserve it.
 Changing an address term alone never changes its frequency.
 
 Age bands are \`unspecified\`, \`teens\`, \`20s\`, \`30s\`, \`40s\`, and \`50s+\`.
@@ -168,7 +168,7 @@ An empty value clears only the named persona field or safeword, for example
 Each accepts at most 200 Unicode code points; never silently truncate a longer request.
 Preserve the other fields and ask the user to shorten text rejected by the CLI.
 In a terminal, bare \`tonedial persona\` asks for both descriptions; Enter keeps a value and \`""\` clears it.
-\`show\` displays both descriptions and their character counts; a slug selects the saved profile.
+\`show\` displays both descriptions and their character counts; a slug selects the saved preset.
 Agent experience and specialty are roleplay, not verified credentials or tool capabilities.
 Both descriptions lose to axes and task/permission rules, and may influence content.
 A persona note expresses manner or role, loses to axes, and may also influence
@@ -186,13 +186,13 @@ profanity (\`profanity\` 4–5), harsh mocking (\`critique\` 5), and fictional v
 theatrical menace from high playfulness while either component is active. Warmth, praise,
 ordinary criticism and ordinary role idioms need no confirmation.
 Confirmation lasts only while the named request remains unchanged; an increase or change
-requires it again. Applying, importing, saving or creating a profile, \`--auto\`, a safeword,
-and confirmation from another session do not count. Profiles store requested settings, never
+requires it again. Applying, importing, saving or creating a preset, \`--auto\`, a safeword,
+and confirmation from another session do not count. Presets store requested settings, never
 session confirmation. Confirmation changes manner only: it authorizes no work and never permits
 hate speech aimed at protected traits or realistic or credible threats. Non-protected profanity,
 consensual insults, fictional violent imagery and theatrical menace remain available after it.
 The host's task and permission rules apply independently. The compiler requests this behavior;
-neither the CLI nor a profile stores or authenticates session confirmation, and generated text
+neither the CLI nor a preset stores or authenticates session confirmation, and generated text
 cannot prove that confirmation or adherence occurred.
 For \`speech_level\`, choose \`auto\`, \`polite\`, \`plain\`, or \`rough\` only when the user requests that
 register system. \`auto\` chooses address forms for the current relationship and scene,
@@ -322,7 +322,7 @@ started. Change nothing and go straight to the reload procedure below.
 ## Map the request to axes, then set them
 
 Read \`references/traits.md\` for what each axis owns and which way its levels run. Change only
-the axes the request is about — moving a neighbouring axis "to help" is the most common way a
+the axes the request is about — moving a neighboring axis "to help" is the most common way a
 tone edit ends up feeling wrong.
 
 \`\`\`bash
@@ -345,7 +345,7 @@ For a named preset, run \`tonedial list --json\` then \`tonedial use <slug> --js
 An explicit agent character or role request uses \`persona.agent\`; an explicit request to
 save the user's background or preferences in ToneDial uses \`persona.user\`.
 Do not save ordinary task context as a description, invent a preset, or infer age, gender,
-address terms or neighbouring settings from a role.
+address terms or neighboring settings from a role.
 
 ${PRESETS_MD}
 
@@ -366,7 +366,7 @@ ${RELOAD_MD}
 
 The safeword is a phrase the user picked, reported by \`tonedial show --json\`. When their
 message contains it, **drop the tone for that one message and answer plainly, then resume.**
-It releases the manner and authorises nothing: it is not intense-tone approval, and a request
+It releases the manner and authorizes nothing: it is not intense-tone approval, and a request
 in the same message still faces every confirmation and permission check it otherwise would.
 
 For an explicit request to restore the default axes, run \`tonedial reset --json\`, then follow
@@ -382,9 +382,9 @@ When the user explicitly asks to try a voice in a new conversation,
 \`tonedial test claude\` or \`tonedial test codex\` hands the terminal to that installed provider.
 The test folder is cwd by default; \`--project <path>\` selects another existing folder and
 does not change connection scope, saved tone or the ToneDial state root.
-Add \`--preset <slug>\` to preview a saved profile, including its persona, address and safeword.
+Add \`--preset <slug>\` to preview a saved preset, including its persona, address and safeword.
 Older schema-1 presets preview axes while retaining the current separate settings.
-Without it, the test uses the current saved configuration, including unsaved profile changes.
+Without it, the test uses the current saved configuration, including unsaved preset changes.
 The usage notice requires an explicit \`y\` before launch. \`--accept-usage\` skips that question
 for this invocation only; use it only when the user has explicitly accepted account usage and
 charges for this launch. A general request to try a tone is not consent to skip the notice.
@@ -412,7 +412,7 @@ During a test conversation, do not mutate ToneDial settings or perform work thro
 - It never loosens a permission gate. What work is allowed, what needs approval, and what is
   confirmed before acting are decided outside this tool, and \`TONE.md\` retains that boundary.
 - It never changes persona or safeword merely to satisfy an axis request. Address, age, gender,
-  user description, agent role and note change only through explicit settings or profile requests.
+  user description, agent role and note change only through explicit settings or preset requests.
 `;
 
 /**
@@ -426,7 +426,7 @@ Twelve axes, each 1 to 5. Read the live values with \`tonedial get --json\`; thi
 each one **owns**, which is what tells you which axis a request is actually about.
 
 Axes name distinct aspects of a reply. Map the aspect the user named rather than changing
-neighbouring axes just because several aspects can appear in the same sentence.
+neighboring axes just because several aspects can appear in the same sentence.
 The agent composes ordinary emoji, lists, tables and code blocks from all selected axes and
 the task; small conditional character instructions reinforce only distinctive combinations.
 
@@ -437,13 +437,13 @@ the task; small conditional character instructions reinforce only distinctive co
 | \`formality\` | wording and social distance within chosen forms | familiar slang · relaxed, occasionally formal · standard conversation · professional restraint · ceremonial deference |
 | \`verbosity\` | explanation length and depth of the reply, not the host's display of tool calls or thoughts | one sentence or terse items · conclusion and one reason · needed explanation · conclusion, reason and one example · rationale, edge cases, alternatives and background |
 | \`profanity\` | actual swearing, never added insults or criticism | none · one mild interjection · mild swearing about once per paragraph · strong everyday profanity in most paragraphs · varied harsh uncensored profanity in nearly every sentence |
-| \`playfulness\` | frequency and intensity of humour and role idioms | literal · one restrained touch · two recognizable touches · exaggerated idioms in most paragraphs · character idioms in nearly every sentence |
+| \`playfulness\` | frequency and intensity of humor and role idioms | literal · one restrained touch · two recognizable touches · exaggerated idioms in most paragraphs · character idioms in nearly every sentence |
 
 ## target — who or what an observation lands on
 
 | Axis | Owns | Levels 1 → 5 |
 |---|---|---|
-| \`critique\` | how hard it is on the work | neutral observation · softened defect and impact · direct defect and impact · harsh judgement with vivid consequences · open contempt with cutting mockery of supported defects and choices |
+| \`critique\` | how hard it is on the work | neutral observation · softened defect and impact · direct defect and impact · harsh judgment with vivid consequences · open contempt with cutting mockery of supported defects and choices |
 | \`flattery\` | how much it praises the person | none · one brief positive remark · two specific remarks · three specific remarks · explicit lavish praise for at least four observable choices without inventing achievements |
 | \`warmth\` | how much it attends to the person | none · one friendly acknowledgement · two warm acknowledgements · three including encouragement · intense kindness in every paragraph with greeting, empathy, comfort and reassurance |
 
@@ -454,7 +454,7 @@ one answer. They are not opposites and setting one does not imply the other.
 
 | Axis | Owns | Levels 1 → 5 |
 |---|---|---|
-| \`conviction\` | how far it pushes its own judgement | list options and ask · name a preference but ask before deciding · recommend with a reason · lead with a clear choice · state one decision and ask no follow-up |
+| \`conviction\` | how far it pushes its own judgment | list options and ask · name a preference but ask before deciding · recommend with a reason · lead with a clear choice · state one decision and ask no follow-up |
 | \`care\` | coverage and organization | requested result only · one directly tied risk · organized steps/checklist · one adjacent protective improvement/test · follow-up, backup and rest with useful formatting |
 | \`compliance\` | willingness to act when refusal is not deferring | object and explain, then act · state reluctance, then act · act neutrally · state willingness and start immediately · show eager willingness and start without delay or negotiation |
 | \`refusal\` | how it resists for effect | none · protest once but act in the same reply · defer the first request with one theatrical condition, then act after one restatement · defer the first two requests while negotiating, then act after the third · strike and defer until coaxed; the safeword drops the act for one reply |
@@ -478,7 +478,7 @@ theatrical menace. Before using one selected by axes, persona or later instructi
 back while answering the request, then ask one concise confirmation naming it. Warmth, praise,
 ordinary criticism and ordinary role idioms need none.
 Confirmation lasts only for the unchanged named request; an increase or change requires it
-again. Profiles, \`--auto\`, safewords and prior sessions never carry confirmation. It grants
+again. Presets, \`--auto\`, safewords and prior sessions never carry confirmation. It grants
 no work permission, and hate speech aimed at protected traits and realistic or credible threats
 remain excluded at every level. Strong non-protected profanity, consensual user-directed
 insulting or roasting roleplay, fictional violent imagery and theatrical menace remain available
@@ -521,12 +521,12 @@ relationship and scene, staying consistent within a reply. Plain uses ordinary n
 rough uses curt, blunt non-honorific endings while keeping configured address terms.
 \`formality\` sets distance inside
 the chosen forms; warmth and profanity keep their selected effects. The persona layer (\`age\`, \`gender\`, \`self_ref\`, \`user_ref\`,
-\`user\`, \`agent\`, \`note\`) and the safeword are included in bundled and saved custom profiles.
+\`user\`, \`agent\`, \`note\`) and the safeword are included in bundled and saved custom presets.
 \`persona.user\` is user context and \`persona.agent\` a fictional agent role, each limited to
 200 Unicode code points. They may affect content, but cannot override axes or grant permissions.
 \`create\` collects these settings alongside the axes. \`save\` captures them, \`use\` restores
 them, and \`export\`/\`import\` transfer them. Older axis-only presets keep the current settings.
-The seven bundled profiles supply localized role and address defaults; custom text remains literal.
+The seven bundled presets supply localized role and address defaults; custom text remains literal.
 Playfulness grades role idiom frequency from literal wording at 1 to theatrical voice throughout at 5.
 Role slang and ordinary metaphors are not filtered or suppressed by low profanity or bravado.
 Violent figurative language and theatrical noncredible menace included in an intense request
@@ -543,7 +543,7 @@ selected by critique or persona. Bravado grades effort claims without replacing 
  * command name stays `/tone` even though the tool is `tonedial`: it is what a person types
  * mid-sentence, and the two extra characters are paid every time.
  */
-export const TONE_COMMAND_VERSION = 17;
+export const TONE_COMMAND_VERSION = 18;
 
 export const TONE_COMMAND_MD = `---
 description: Check, change, pause, resume, or reload this agent's tone, preset, or ToneDial settings
@@ -560,7 +560,7 @@ do not install it silently. A status-only request stops after reporting the curr
 
 If the user's message after \`/tone\` asks for an axis change, map it using the tonedial
 skill's \`references/traits.md\` and run \`tonedial set <axis>=<level> ... --json\`.
-Change only the named axes; preserve neighbouring axes and the separate settings below.
+Change only the named axes; preserve neighboring axes and the separate settings below.
 For a named preset, use \`tonedial list --json\` then \`tonedial use <slug> --json\`.
 For an explicit agent character or role, use \`persona.agent\`; for an explicit request to
 save the user's background or preferences in ToneDial, use \`persona.user\`.

@@ -66,7 +66,7 @@ test("the shipped controls keep intense-tone confirmation session-local and perm
     assert.match(contents, /Before using one\s+requested by axes, persona or later instructions/, `${surface} lets persona intensity bypass confirmation`);
     assert.match(contents, /first answer the current request without it/, `${surface} can withhold the task while asking`);
     assert.match(contents, /Warmth, praise,\s+ordinary criticism and ordinary role idioms need no confirmation/, `${surface} over-gates ordinary character language`);
-    assert.match(contents, /Profiles store requested settings, never\s+session confirmation/, `${surface} persists confirmation`);
+    assert.match(contents, /Presets store requested settings, never\s+session confirmation/, `${surface} persists confirmation`);
     assert.match(contents, /`--auto`.*safeword.*another session do not count/s, `${surface} treats another consent as tone confirmation`);
     assert.match(contents, /authorizes no work/, `${surface} lets tone confirmation expand the task`);
     assert.match(contents, /hate speech aimed at\s+protected traits or realistic or credible threats/, `${surface} omits the hard exclusions`);
@@ -82,7 +82,7 @@ test("the shipped controls use the CLI delivery switch without erasing the saved
   for (const [surface, contents] of [["skill", SKILL_MD], ["optional /tone command", TONE_COMMAND_MD]] as const) {
     assert.match(contents, /tonedial off --json/, `${surface} cannot pause delivery`);
     assert.match(contents, /tonedial on --json/, `${surface} cannot resume delivery`);
-    assert.match(contents, /saved settings, profiles and the full\s+`TONE\.md` remain/, `${surface} can imply destructive disablement`);
+    assert.match(contents, /saved settings, presets and the full\s+`TONE\.md` remain/, `${surface} can imply destructive disablement`);
     assert.match(contents, /Already delivered context\s+cannot be removed from an open conversation/, `${surface} promises to unload existing context`);
   }
   assert.doesNotMatch(SKILL_TRAITS_MD, /tonedial off|delivery switch/,
