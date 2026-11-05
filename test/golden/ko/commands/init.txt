@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=901; endsWithNewline=true]
+--- stdout --- [bytes=894; endsWithNewline=true]
 ToneDial · init
 
   범위
@@ -10,7 +10,7 @@ ToneDial · init
   프리셋 caring-brother · 에이전트 연결 없음
 
   변경 확인
-  변경 항목 10개
+  변경 10건
 
   ToneDial 상태
   <ROOT>/state

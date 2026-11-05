@@ -1,10 +1,10 @@
 status: 0
---- stdout --- [bytes=4067; endsWithNewline=true]
+--- stdout --- [bytes=4064; endsWithNewline=true]
 tonedial — 코딩 에이전트에 캐릭터를 더하고 모든 프로젝트에서 유지합니다
 
 tonedial <command> [options]
 
-처음이라면 초기 설정, 미리 보기, 말투 조정, 에이전트 연결 순서로 진행하세요:
+처음이라면 초기 설정, 미리보기, 말투 조정, 에이전트 연결 순서로 진행하세요:
   tonedial init --tools none --global
   tonedial test
   tonedial set
@@ -12,13 +12,13 @@ tonedial <command> [options]
 
 말투
   set <key>=<value>...  축·역할·설정 변경 · 인자 없으면 다이얼
-  show [slug]           현재 설정 표시 · 슬러그 지정 시 프리셋 미리 보기
+  show [slug]           현재 설정 표시 · 슬러그 지정 시 프리셋 미리보기
   get [key]             현재 설정값 조회 · 키를 지정하면 의미와 선택지도 표시
   reset [axis]          축 하나를 기본값으로 · 인자 없으면 전체 축
   address [self user]   에이전트 자칭과 사용자 호칭 · 인자 없으면 질문 ·
                         빈도: set address_frequency=rarely
   persona [agent user]  에이전트·사용자 역할 · 인자 없으면 질문
-  test [claude|codex]   새 대화에서 현재 말투나 프리셋 미리 보기
+  test [claude|codex]   새 대화에서 현재 말투나 프리셋 미리보기
   off                   말투 전달 일시 중지 · 설정·TONE.md 유지
   on                    저장한 말투 전달 재개
 

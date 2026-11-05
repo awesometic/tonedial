@@ -1,12 +1,12 @@
 status: 0
---- stdout --- [bytes=452; endsWithNewline=true]
+--- stdout --- [bytes=445; endsWithNewline=true]
 ToneDial · eject
 
   연결 범위: 프로젝트
   <ROOT>/project
 
   변경 확인
-  변경 항목 3개
+  변경 3건
 
   프로젝트 파일
   <ROOT>/project

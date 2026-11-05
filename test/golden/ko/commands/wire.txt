@@ -1,12 +1,12 @@
 status: 0
---- stdout --- [bytes=938; endsWithNewline=true]
+--- stdout --- [bytes=931; endsWithNewline=true]
 ToneDial · wire
 
   연결 범위: 프로젝트
   <ROOT>/project
 
   에이전트 연결
-  변경 항목 6개
+  변경 6건
 
   프로젝트 파일
   <ROOT>/project
