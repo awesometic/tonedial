@@ -265,6 +265,7 @@ tonedial on                        # resume delivery
 ```
 
 `reset` preserves persona, safeword and other settings, and its receipt lists each moved axis like `set`.
+A full `reset` deselects the preset and ends with `tonedial use <slug>` to return to its saved definition; it says when unsaved edits cannot be restored that way.
 It neither disables delivery nor unloads context.
 `off` adds a delivery marker while retaining the complete compiled tone;
 the current managed reader emits no ToneDial context until `on` removes it.

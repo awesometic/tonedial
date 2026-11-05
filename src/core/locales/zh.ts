@@ -49,6 +49,8 @@ const messages: Messages = {
       `${name}：不是语气轴或设置项。${nearest ? `是否想输入 ${nearest}？` : ""}\n完整列表：\n  tonedial get --help`,
     reset: (axis, level) => `${axis}：已是默认值 ${level}`,
     resetAll: (deselected) => deselected ? `已取消选择 ${deselected} · 保留人设和其他设置` : "保留人设和其他设置",
+    resetRestore: "要回到已保存的预设：",
+    resetRestoreUnsaved: "未保存的编辑无法恢复。要回到已保存的预设：",
     nothingChanged: "无变更",
     settingsSaved: "设置已更新",
     settingsUnchanged: "设置未变更",

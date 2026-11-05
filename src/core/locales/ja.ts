@@ -49,6 +49,8 @@ const messages: Messages = {
       `${name}: 軸でも設定項目でもありません。${nearest ? `${nearest} のことですか？` : ""}\n全項目：\n  tonedial get --help`,
     reset: (axis, level) => `${axis}: すでに既定値 ${level} です`,
     resetAll: (deselected) => deselected ? `${deselected} の選択を解除 · ペルソナとその他の設定は保持` : "ペルソナとその他の設定は保持",
+    resetRestore: "保存済みのプリセットに戻すには：",
+    resetRestoreUnsaved: "未保存の編集は元に戻せません。保存済みのプリセットに戻すには：",
     nothingChanged: "変更なし",
     settingsSaved: "設定を更新しました",
     settingsUnchanged: "設定の変更なし",

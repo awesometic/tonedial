@@ -49,6 +49,8 @@ const messages: Messages = {
       `${name}: no es un eje ni un ajuste.${nearest ? ` ¿Querías decir ${nearest}?` : ""}\nLista completa:\n  tonedial get --help`,
     reset: (axis, level) => `${axis} ya tiene el valor predeterminado ${level}`,
     resetAll: (deselected) => deselected ? `${deselected} deseleccionado · se conservan la personalidad y los demás ajustes` : "Se conservan la personalidad y los demás ajustes",
+    resetRestore: "Para volver al preajuste guardado:",
+    resetRestoreUnsaved: "Las ediciones sin guardar no se pueden recuperar. Para volver al preajuste guardado:",
     nothingChanged: "sin cambios",
     settingsSaved: "Ajustes actualizados",
     settingsUnchanged: "Ajustes sin cambios",

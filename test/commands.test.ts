@@ -664,6 +664,49 @@ test("use says what it replaced when the tone had unsaved edits, and how to keep
     ["axes", "chars", "displayName", "notice", "ok", "preset", "project", "riskAxes", "safeword", "schema", "warnings"]);
 });
 
+test("a full reset ends with the way back to the saved preset and says what that cannot restore", async () => {
+  const lines = () => stdout().split("\n").map((row) => row.trim()).filter(Boolean);
+  assert.equal(await cli("init", "--here", "--tools", "none", "--auto"), 0, stderr());
+
+  // Nothing was edited: the saved preset is exactly what the reset replaced.
+  out = [];
+  assert.equal(await cli("reset"), 0, stderr());
+  let rows = lines();
+  assert.deepEqual(rows.slice(-2), [EN.axis.resetRestore, "tonedial use caring-brother"], stdout());
+
+  // With edits on top of the saved preset, the way back does not bring them back.
+  assert.equal(await cli("use", "caring-brother"), 0, stderr());
+  assert.equal(await cli("set", "warmth=2"), 0, stderr());
+  out = [];
+  assert.equal(await cli("reset"), 0, stderr());
+  rows = lines();
+  assert.deepEqual(rows.slice(-2), [EN.axis.resetRestoreUnsaved, "tonedial use caring-brother"], stdout());
+
+  // No preset is selected any more, so there is nothing to return to; one axis keeps the selection.
+  out = [];
+  assert.equal(await cli("reset"), 0, stderr());
+  assert.doesNotMatch(stdout(), /tonedial use|return to the saved preset/);
+  assert.equal(await cli("use", "ego-sword"), 0, stderr());
+  out = [];
+  assert.equal(await cli("reset", "warmth"), 0, stderr());
+  assert.doesNotMatch(stdout(), /tonedial use|return to the saved preset/);
+
+  // While delivery is paused its notice stays the last thing, after the way back.
+  assert.equal(await cli("use", "ego-sword"), 0, stderr());
+  assert.equal(await cli("off"), 0, stderr());
+  out = [];
+  assert.equal(await cli("reset"), 0, stderr());
+  rows = lines();
+  assert.equal(rows.at(-1), "tonedial on");
+  assert.ok(rows.indexOf("tonedial use ego-sword") > 0 && rows.indexOf("tonedial use ego-sword") < rows.indexOf("tonedial on"), stdout());
+
+  out = [];
+  assert.equal(await cli("use", "ego-sword"), 0, stderr());
+  out = [];
+  assert.equal(await cli("reset", "--json"), 0, stderr());
+  assert.deepEqual(Object.keys(JSON.parse(stdout())).sort(), ["chars", "ok", "reset", "schema", "warnings"]);
+});
+
 test("the interface language is settable after init, not only during it", async () => {
   await initializeState();
   // It used to be reachable through `init --lang` alone, so changing your mind about it meant

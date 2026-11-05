@@ -133,6 +133,9 @@ export type Messages = {
     notSettable: (name: string, nearest: string | null) => string;
     reset: (axis: string, level: number) => string;
     resetAll: (deselected: string | null) => string;
+    /** The way back after a full reset deselected a preset, and what that way cannot bring back. */
+    resetRestore: string;
+    resetRestoreUnsaved: string;
     nothingChanged: string;
     settingsSaved: string;
     settingsUnchanged: string;
@@ -750,6 +753,8 @@ const enMessages: Messages = {
       `${name}: not an axis or setting.${nearest ? ` Did you mean ${nearest}?` : ""}\nFull list:\n  tonedial get --help`,
     reset: (axis, level) => `${axis} already at default ${level}`,
     resetAll: (deselected) => deselected ? `${deselected} deselected · persona and other settings kept` : "Persona and other settings kept",
+    resetRestore: "To return to the saved preset:",
+    resetRestoreUnsaved: "Unsaved edits cannot be restored. To return to the saved preset:",
     nothingChanged: "no changes",
     settingsSaved: "Settings updated",
     settingsUnchanged: "Settings unchanged",
@@ -1560,6 +1565,8 @@ const koMessages: Messages = {
       `${name}: 축도 설정도 아닙니다.${nearest ? ` 비슷한 키: ${nearest}` : ""}\n전체 목록:\n  tonedial get --help`,
     reset: (axis, level) => `${axis}: 이미 기본값(${level})입니다`,
     resetAll: (deselected) => deselected ? `${deselected} 선택 해제 · 페르소나와 다른 설정은 유지` : "페르소나와 다른 설정은 유지",
+    resetRestore: "저장된 프리셋으로 돌아가려면:",
+    resetRestoreUnsaved: "저장하지 않은 편집은 복원할 수 없습니다. 저장된 프리셋으로 돌아가려면:",
     nothingChanged: "변경 없음",
     settingsSaved: "설정 변경됨",
     settingsUnchanged: "설정 변경 없음",
