@@ -2218,14 +2218,14 @@ test("wire without an agent outside a terminal gives a runnable example", async 
   assert.ok(stderr().endsWith("\n  tonedial eject --global\n"), `the commands come last:\n${stderr()}`);
 });
 
-test("a risk warning on stderr carries one marker while JSON keeps the notice text", async () => {
+test("a risk warning on stderr keeps the notice's own mark while JSON keeps the notice text", async () => {
   await initializeState();
   assert.equal(await cli("use", "ego-sword"), 0, stderr());
   err = [];
   assert.equal(await cli("set", "warmth=4"), 0, stderr());
   const risk = EN.notice.riskAxes(["critique"]);
-  assert.ok(stderr().includes(`⚠ ${risk.replace(/^! /, "")}`), stderr());
-  assert.doesNotMatch(stderr(), /⚠ !/);
+  assert.ok(stderr().includes(`  ${risk}`), stderr());
+  assert.doesNotMatch(stderr(), /⚠|! !/, "one mark, and not the warning sign other notices carry");
   out = [];
   assert.equal(await cli("set", "warmth=3", "--json"), 0, stderr());
   assert.ok(JSON.parse(stdout()).warnings.includes(risk), "JSON warnings are unchanged");

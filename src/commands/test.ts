@@ -16,7 +16,7 @@ import { AGENT_TOOLS, connectionScopeFlag, onPath, shellQuote } from "../core/pa
 import { toCompileInput } from "../core/resolve.ts";
 import { confirm, guardTerminal } from "../ui/prompt.ts";
 import { wrap } from "../ui/width.ts";
-import { humanText, nextStep, riskWarnings } from "../ui/format.ts";
+import { humanText, nextStep, riskNotice, riskWarnings } from "../ui/format.ts";
 import { planConfig } from "./compile.ts";
 
 const PROVIDERS = ["claude", "codex"] as const;
@@ -170,7 +170,7 @@ export async function runTest(ctx: Ctx, args: string[]): Promise<CommandResult> 
   lines.splice(1, 0, ...wrap(preview ? copy.previewTone(toneName) : copy.savedTone(toneName), ctx.ui.width - 2)
     .map((line) => `  ${ctx.ui.bold(line)}`));
   lines.push(...riskWarnings(input.axes, ctx.t).flatMap((notice) => wrap(notice, ctx.ui.width - 2)
-    .map((line) => `  ${ctx.ui.risk(line)}`)));
+    .map((line) => `  ${riskNotice(line, ctx.ui)}`)));
   // A plan ends with the command that would open it.
   if (planOnly) {
     lines.push(...nextStep(rerun(provider), ctx.ui));

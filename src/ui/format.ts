@@ -38,6 +38,29 @@ export function riskWarnings(axes: Axes, t: Messages): string[] {
   return risks.length ? [t.notice.riskAxes(risks)] : [];
 }
 
+/**
+ * The mark every risk line leads with. The catalogue text and JSON keep it, so a person and a
+ * program read the same bytes; this module is the only place that decides how it is shown.
+ */
+const RISK_MARK = "! ";
+
+export function isRiskNotice(message: string): boolean {
+  return message.startsWith(RISK_MARK);
+}
+
+/** The short form for a row without room for the explanation: the mark and the axis ids. */
+export function riskAxesShort(axes: readonly string[]): string {
+  return `${RISK_MARK}${axes.join(", ")}`;
+}
+
+/**
+ * Tone risk is advisory, so a risk line is yellow like every other warning on either stream;
+ * red stays for failures. One line at a time: callers fold first, then paint.
+ */
+export function riskNotice(line: string, ui: Palette): string {
+  return ui.warn(line);
+}
+
 /** Two retained phases restore their shared config in reverse order, with copyable IDs. */
 export function recoveryRollbackLines(t: Messages, appId: unknown, nativeId: unknown): string[] {
   const ids = [nativeId, appId].filter((id): id is string => typeof id === "string" && /^[0-9a-f]{32}$/.test(id));

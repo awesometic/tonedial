@@ -808,6 +808,27 @@ test("no command emits an escape sequence when its output is not a terminal", as
   assert.doesNotMatch(out.join("") + err.join(""), /\x1b\[/);
 });
 
+test("a risk notice is yellow on stdout and stderr and never the red of a failure", async () => {
+  await initializeState();
+  mkdirSync(join(home, "project"));
+  const bin = join(home, "bin");
+  mkdirSync(bin);
+  writeFileSync(join(bin, "codex"), "#!/bin/sh\n", { mode: 0o755 });
+  const env = { HOME: home, TONEDIAL_HOME: join(home, "state"), PATH: bin };
+  // Each command shows the notice where it always has: three receipts on stdout, `set` on stderr.
+  for (const [argv, stream] of [
+    [["use", "ego-sword"], "out"], [["create", "Risky One", "critique=5", "--auto"], "out"],
+    [["test", "codex", "--dry-run"], "out"], [["set", "critique=5"], "err"],
+  ] as const) {
+    out = [];
+    err = [];
+    assert.equal(await run([...argv, "--color=always"], env, join(home, "project"), false, false), 0, `${argv[0]}: ${err.join("")}`);
+    const shown = (stream === "out" ? out : err).join("");
+    assert.match(shown, /\x1b\[33m! critique/, `${argv[0]}: the notice is yellow and keeps its mark`);
+    assert.doesNotMatch(shown, /\x1b\[31m! /, `${argv[0]}: and is not painted like a failure`);
+  }
+});
+
 /**
  * Every human-facing line every command emits, under the worst case the state can reach:
  * a Korean safeword, a Korean address, a note at its cap, and axes at their extremes.
@@ -1028,8 +1049,7 @@ test("normal setup stays quiet and --explain describes advisory risk in every la
     out = [];
     err = [];
     assert.equal(await cli("show"), 0);
-    // stderr renders the warning marker in place of the notice's own "!".
-    assert.ok(flatten(err.join("")).includes(flatten(copy.cli.notice.riskAxes(["flattery", "refusal"]).replace(/^! /, ""))), `${language}: selected risky axes missing`);
+    assert.ok(flatten(err.join("")).includes(flatten(copy.cli.notice.riskAxes(["flattery", "refusal"]))), `${language}: selected risky axes missing`);
     out = [];
     err = [];
     assert.equal(await cli("list"), 0);

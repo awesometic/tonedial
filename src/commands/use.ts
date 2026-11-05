@@ -12,7 +12,7 @@ import { withPreset, assertPresetSelection, inspectPresetLibrary, resolvePreset 
 import { applyPlanned, contextCapWarnings, planArtifact, planConfig } from "./compile.ts";
 import { activationStep } from "./test.ts";
 import { planChange, rawReadCheck } from "../wiring/apply.ts";
-import { artifactSize, combination, humanText, nextStep, offNotice } from "../ui/format.ts";
+import { artifactSize, combination, humanText, nextStep, offNotice, riskNotice } from "../ui/format.ts";
 import { truncate, wrap } from "../ui/width.ts";
 
 /**
@@ -89,7 +89,7 @@ export async function runUse(ctx: Ctx, args: string[]): Promise<CommandResult> {
     // Folded here rather than at the printer: `lines` are laid out by the command that built
     // them, and a printer that reflowed them would break every column in the gauge block.
     "",
-    ...notices.flatMap((n) => wrap(humanText(n), ui.width - 2).map((folded) => `  ${n === notice.riskAxes ? ui.risk(folded) : folded}`)),
+    ...notices.flatMap((n) => wrap(humanText(n), ui.width - 2).map((folded) => `  ${n === notice.riskAxes ? riskNotice(folded, ui) : folded}`)),
     ...project,
     ...(config.enabled ? nextStep(activationStep(ctx, config) ?? "tonedial show", ui) : offNotice(false, ctx.t, ui)),
   ];

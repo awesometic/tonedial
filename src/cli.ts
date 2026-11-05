@@ -14,7 +14,7 @@ import { catalogue, configLanguage, detectLanguage, messages, type Catalogue, ty
 import { isColourMode, palette, type Palette } from "./ui/style.ts";
 import { cells, maxCells, resolveBudget, wrap } from "./ui/width.ts";
 import { interactive } from "./ui/prompt.ts";
-import { humanText, isCopyableLine, nextStep } from "./ui/format.ts";
+import { humanText, isCopyableLine, isRiskNotice, nextStep, riskNotice } from "./ui/format.ts";
 import { ApprovalRequired, type Change } from "./wiring/apply.ts";
 import { ScopeRequired, projectIsHome } from "./wiring/scopes.ts";
 
@@ -740,13 +740,16 @@ const CONTINUATION = "    ";
 
 /** Fold warning prose without reflowing copyable paths or commands. */
 function notice(message: string, ui: Palette): string {
-  // A risk notice leads with "!" for stdout rows; here the warning marker stands in for it.
-  const folded = message.replace(/^! /, "").split("\n").flatMap(line => {
+  // A risk notice keeps the "!" its text leads with, as it does on stdout; other warnings get the sign.
+  const risk = isRiskNotice(message);
+  const folded = message.split("\n").flatMap(line => {
     const safe = humanText(line);
     return isCopyableLine(safe) ? [safe] : wrap(safe, ui.width - cells(MARKER));
   });
   return folded
-    .map((line, i) => (i === 0 ? `${ui.warn(MARKER)}${line}` : `${CONTINUATION}${line}`))
+    .map((line, i) => risk
+      ? `${i === 0 ? "  " : CONTINUATION}${riskNotice(line, ui)}`
+      : i === 0 ? `${ui.warn(MARKER)}${line}` : `${CONTINUATION}${line}`)
     .join("\n") + "\n";
 }
 

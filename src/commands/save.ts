@@ -4,7 +4,7 @@ import type { CommandResult, Ctx } from "../cli.ts";
 import { AXIS_DEFAULT, AXIS_ORDER, riskyAxes, type Axes, type Level } from "../core/anchors.ts";
 import { ConfigError, serializeConfig } from "../core/config.ts";
 import { BUNDLED, PRESET_SCHEMA, SLUG_PATTERN, preparePresetWrite, presetSettings, resolvePreset, slugify, type Preset, type PresetEntry } from "../core/presets.ts";
-import { artifactSize, humanText, nextStep } from "../ui/format.ts";
+import { artifactSize, humanText, nextStep, riskAxesShort, riskNotice } from "../ui/format.ts";
 import { cells, truncate, wrap } from "../ui/width.ts";
 import { PERSONA_DESCRIPTION_MAX } from "../core/combos.ts";
 import { applyPlanned, contextCapWarnings, planArtifact, planConfig } from "./compile.ts";
@@ -82,7 +82,7 @@ export async function savePreset(
     for (const detail of details.filter(Boolean)) review.push(...wrap(detail, ctx.ui.width - 2).map((line) => `  ${line}`));
     // Risky levels are visible before approval, not only in the notice after the write.
     const risks = riskyAxes(config.axes);
-    review.push(`  ${ctx.t.preset.nonDefault(Object.keys(values).length)}${risks.length ? ` · ${ctx.ui.risk(`! ${risks.join(", ")}`)}` : ""}`);
+    review.push(`  ${ctx.t.preset.nonDefault(Object.keys(values).length)}${risks.length ? ` · ${riskNotice(riskAxesShort(risks), ctx.ui)}` : ""}`);
     // What is being saved leads; the file changes that carry it follow, then the approval.
     process.stdout.write(`${review.join("\n")}\n`);
   }
