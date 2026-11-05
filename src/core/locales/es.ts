@@ -406,6 +406,7 @@ const messages: Messages = {
     hookSettingScope: "Los estados de hooks anteriores provienen solo de los archivos de ajustes inspeccionados; no se verifican las anulaciones del cliente ni la entrega a la sesión.",
     hookGroupHeading: "Hooks de agentes",
     hookGroupUnknown: (tools) => `Sin conectar: ${tools.join(", ")}.`,
+    hookGroupElsewhere: (tools) => `Sin conectar en este ámbito: ${tools.join(", ")}.`,
     hookNotConnected: "No hay un hook gestionado que inspeccionar. Para conectar, ejecuta wire con este agente en el mismo ámbito.",
     hookGuidance: {
       claude: "/hooks → SessionStart: revisa el comando ToneDial y su origen. Si los hooks están desactivados, pon disableAllHooks en false y revisa la confianza del espacio.",

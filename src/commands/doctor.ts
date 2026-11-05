@@ -991,7 +991,7 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true): Promise<Comm
         ctx.ui.width - 2, ctx).map((line) => `  ${line}`) : []),
     ] : []),
     ...section(ctx.t.doctor.checksHeading, ctx.ui),
-    ...renderCheckBlocks(shownChecks, ctx.flags.verbose ? [] : hookSettings, integrations, ctx),
+    ...renderCheckBlocks(shownChecks, ctx.flags.verbose ? [] : hookSettings, integrations, ctx, new Set(elsewhere.map(({ target }) => target))),
     // A repair receipt presents its new IDs once in native→app order. Completed operations are
     // history: verbose diagnosis lists their rollback commands, and JSON keeps `recovery`.
     ...(showRollbackCommands && ctx.flags.verbose ? inspected.journals.flatMap(({ operationId, state, journal }) =>
@@ -1475,6 +1475,7 @@ function renderCheckBlocks(
   settings: readonly HookSetting[],
   integrations: readonly NativeIntegration[],
   ctx: Ctx,
+  elsewhereTools: ReadonlySet<string> = new Set(),
 ): string[] {
   const unconnected = settings.filter((setting) => {
     const check = checks.find(({ name }) => name === TARGETS[setting.tool].label);
@@ -1492,16 +1493,20 @@ function renderCheckBlocks(
       blocks.push(report(check, ctx));
     }
     if (index === lastAgentIndex && unconnected.length) {
-      blocks.push(unconnectedReport(unconnected, ctx));
+      blocks.push(unconnectedReport(unconnected, elsewhereTools, ctx));
     }
   }
   return blocks.flatMap((block, index) => index === 0 ? block : ["", ...block]);
 }
 
-function unconnectedReport(settings: readonly HookSetting[], ctx: Ctx): string[] {
-  const tools = settings.map(({ tool }) => TARGETS[tool].label);
+/** An agent that is connected in another scope is not connected in this one, and says so. */
+function unconnectedReport(settings: readonly HookSetting[], elsewhereTools: ReadonlySet<string>, ctx: Ctx): string[] {
+  const labels = (registered: boolean) => settings.filter(({ tool }) => elsewhereTools.has(tool) === registered).map(({ tool }) => TARGETS[tool].label);
+  const nowhere = labels(false);
+  const elsewhere = labels(true);
   return [
     `  ${ctx.ui.dim(MARK.note)} ${ctx.ui.bold(ctx.t.doctor.hookGroupHeading)}`,
-    ...wrap(ctx.t.doctor.hookGroupUnknown(tools), ctx.ui.width - 4).map(line => `    ${line}`),
+    ...[...nowhere.length ? [ctx.t.doctor.hookGroupUnknown(nowhere)] : [], ...elsewhere.length ? [ctx.t.doctor.hookGroupElsewhere(elsewhere)] : []]
+      .flatMap(text => wrap(text, ctx.ui.width - 4)).map(line => `    ${line}`),
   ];
 }

@@ -457,6 +457,8 @@ export type Messages = {
     hookSettingScope: string;
     hookGroupHeading: string;
     hookGroupUnknown: (tools: readonly string[]) => string;
+    /** Agents with no connection in the inspected scope but one registered in another. */
+    hookGroupElsewhere: (tools: readonly string[]) => string;
     hookNotConnected: string;
     hookGuidance: Record<"claude" | "antigravity", string>;
     nativeMissing: (path: string, event: "SessionStart" | "PreInvocation") => string;
@@ -1097,6 +1099,7 @@ const enMessages: Messages = {
     hookSettingScope: "Hook states above come from the inspected settings files only; host overrides and session delivery are unverified.",
     hookGroupHeading: "Agent hooks",
     hookGroupUnknown: (tools) => `Not connected: ${tools.join(", ")}.`,
+    hookGroupElsewhere: (tools) => `Not connected in this scope: ${tools.join(", ")}.`,
     hookNotConnected: "No managed ToneDial hook to inspect. To connect, run wire with this agent in the same scope.",
     hookGuidance: {
       claude: "/hooks → SessionStart: check the ToneDial command and settings source. If hooks are off, set disableAllHooks to false and check workspace trust.",
@@ -1896,6 +1899,7 @@ const koMessages: Messages = {
     hookSettingScope: "위 훅 상태는 검사한 설정 파일만 보고 판단한 것입니다. 앱에서 덮어쓴 설정이나 실제 세션 전달 여부는 확인하지 않았습니다.",
     hookGroupHeading: "에이전트 훅",
     hookGroupUnknown: (tools) => `연결 안 됨: ${tools.join(", ")}`,
+    hookGroupElsewhere: (tools) => `이 범위에서는 연결 안 됨: ${tools.join(", ")}`,
     hookNotConnected: "검사할 ToneDial 관리 훅이 없습니다. 연결하려면 같은 범위에서 이 에이전트로 wire를 실행해 주세요.",
     hookGuidance: {
       claude: "/hooks → SessionStart에서 ToneDial 실행 명령과 설정 출처를 확인하세요. 훅이 꺼져 있으면 disableAllHooks를 false로 바꾸고 프로젝트 신뢰 설정도 확인하세요.",

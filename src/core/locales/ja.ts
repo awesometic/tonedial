@@ -406,6 +406,7 @@ const messages: Messages = {
     hookSettingScope: "上記のフック状態は確認した設定ファイルのみに基づきます。ホスト側の上書きとセッションへの配信は未検証です。",
     hookGroupHeading: "エージェントのフック",
     hookGroupUnknown: (tools) => `未接続：${tools.join(", ")}`,
+    hookGroupElsewhere: (tools) => `この範囲では未接続：${tools.join(", ")}`,
     hookNotConnected: "確認する管理対象フックがありません。接続するには同じ範囲でこのエージェントを指定して wire を実行してください。",
     hookGuidance: {
       claude: "/hooks → SessionStart：ToneDialのコマンドと設定元を確認してください。無効なら disableAllHooks を false にし、ワークスペースの信頼も確認してください。",

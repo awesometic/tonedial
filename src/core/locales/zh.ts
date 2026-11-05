@@ -406,6 +406,7 @@ const messages: Messages = {
     hookSettingScope: "以上钩子状态仅基于所检查的设置文件；主机覆盖项和会话注入尚未验证。",
     hookGroupHeading: "代理钩子",
     hookGroupUnknown: (tools) => `未连接：${tools.join(", ")}`,
+    hookGroupElsewhere: (tools) => `此范围内未连接：${tools.join(", ")}`,
     hookNotConnected: "没有可检查的受管理钩子。要连接，请在同一范围对此代理运行 wire。",
     hookGuidance: {
       claude: "/hooks → SessionStart：检查 ToneDial 命令和设置来源。若钩子已关闭，请将 disableAllHooks 设为 false 并检查工作区信任。",

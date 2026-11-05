@@ -203,6 +203,14 @@ test("plain doctor in a folder with its own connections points to doctor --here"
   assert.match(shown.out.split("\n").filter((line) => line.trim())[3]!, /1 notice/);
   const machine = await json(["doctor"], project);
   assert.equal(machine.value.wiredElsewhere.length, 1, "JSON keeps every registration outside the scope");
+
+  // The agent this folder connects is not "not connected": it is not connected in this scope. Any
+  // folder that inspects the global scope sees the same, because the project is still registered.
+  for (const cwd of [project, home]) {
+    const group = block((await human(["doctor"], cwd)).out, "Agent hooks").join(" ");
+    assert.match(group, /Not connected: Claude Code, Antigravity IDE\/Desktop\./, group);
+    assert.match(group, /Not connected in this scope: Codex CLI\./, group);
+  }
 });
 
 test("doctor reports a project hook that duplicates the global one, in both scopes", async () => {
