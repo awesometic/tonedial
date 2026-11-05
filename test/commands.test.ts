@@ -656,6 +656,16 @@ test("use says what it replaced when the tone had unsaved edits, and how to keep
   assert.ok(again.includes(EN.preset.replacedUnsaved("Mine")), "choosing the same preset again discards the edits too");
   assert.equal(again[again.indexOf(EN.preset.saveFirst) + 1], "tonedial save");
 
+  // A legacy axis-only preset leaves a separate persona edit intact.
+  assert.equal(await cli("use", "tough-love"), 0, stderr());
+  assert.equal(await cli("set", "persona.agent=Fictional reviewer"), 0, stderr());
+  const before = config();
+  out = [];
+  assert.equal(await cli("use", "tough-love"), 0, stderr());
+  assert.deepEqual(config().axes, before.axes);
+  assert.deepEqual(config().persona, before.persona);
+  assert.doesNotMatch(stdout(), /Replaced unsaved|save first/);
+
   // Machine output has no new field for it.
   assert.equal(await cli("set", "care=2"), 0, stderr());
   out = [];
