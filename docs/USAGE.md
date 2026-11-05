@@ -100,7 +100,7 @@ tonedial save                         # also update the selected user preset
 `persona` sets both descriptions together, agent first and user second, with at most 200 Unicode code points each.
 In the guided `persona` form, Enter keeps the current value and `""` clears it; invalid descriptions are retried before either role is applied.
 To clear saved addresses, run `tonedial address "" ""` or `tonedial set persona.self_ref= persona.user_ref=` (in interactive `tonedial address`, Enter keeps the current value).
-`show` displays the current descriptions and their counts; `show <slug>` displays the saved preset's descriptions.
+`show` displays the current descriptions and `show --verbose` adds their counts; `show <slug>` displays the saved preset's descriptions.
 Use `set persona.agent=...` or `set persona.user=...` to change just one.
 
 `address_frequency` controls how often the agent calls or refers to you by name or title,

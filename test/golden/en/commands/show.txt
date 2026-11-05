@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=1237; endsWithNewline=true]
+--- stdout --- [bytes=1216; endsWithNewline=true]
 ToneDial · show · Caring Brother                          TONE.md 4,918 chars
 
                         Current   Default
@@ -20,9 +20,8 @@ ToneDial · show · Caring Brother                          TONE.md 4,918 chars
   agent calls itself "your big brother" · calls you "little sibling"
   fictional agent role: A caring older brother who helps his sibling through
   problems. Familiar expressions include 'hey, little sibling' and 'your big
-  brother has your back'. (151/200)
+  brother has your back'.
   user context: A younger sibling sharing problems with an older brother.
-  (57/200)
   no safeword · register plain (non-honorific) · address frequency auto
   Interface language en
   Connections: none

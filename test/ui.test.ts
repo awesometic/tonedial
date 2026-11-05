@@ -677,7 +677,7 @@ test("show and explain stack cleanly at 60 columns without changing saved state"
 });
 
 for (const language of LANGUAGES) {
-  test(`show exposes role descriptions and counts within terminal width in ${language}`, async () => {
+  test(`show exposes role descriptions, and with --verbose their counts, within terminal width in ${language}`, async () => {
     await initializeState();
     assert.equal(await cli("set", `language=${language}`), 0, err.join(""));
     out = [];
@@ -691,19 +691,18 @@ for (const language of LANGUAGES) {
     out = [];
     assert.equal(await run(["show"], env, join(home, "project"), false), 0);
     const shown = out.join("");
-    // Each count stays with the description it measures.
-    assert.ok(visible(shown).includes(`${agent} (${[...agent].length}/200)`));
-    assert.ok(visible(shown).includes(`${user} (${[...user].length}/200)`));
     assert.ok(visible(shown).includes(user));
     assert.ok(visible(shown).includes(agent));
+    assert.doesNotMatch(shown, /\/200\)/, "a count is not printed unless it was asked for");
     for (const line of shown.trimEnd().split("\n")) assert.ok(maxCells(line) <= 59 || isUnbreakable(line), line);
 
     out = [];
     assert.equal(await run(["show", "--verbose"], env, join(home, "project"), false), 0);
     const verbose = out.join("");
     const visibleVerbose = visible(verbose);
-    assert.equal(visibleVerbose.includes(user), true);
-    assert.equal(visibleVerbose.includes(agent), true);
+    // Each count stays with the description it measures.
+    assert.ok(visibleVerbose.includes(`${agent} (${[...agent].length}/200)`));
+    assert.ok(visibleVerbose.includes(`${user} (${[...user].length}/200)`));
     for (const line of verbose.trimEnd().split("\n")) assert.ok(maxCells(line) <= 59 || isUnbreakable(line), line);
 
     out = [];
@@ -713,6 +712,24 @@ for (const language of LANGUAGES) {
     assert.equal(json.persona.agent, agent);
   });
 }
+
+test("show refuses a role description over the cap instead of printing it beside a count", async () => {
+  // Decision: the counter is verbose-only because an over-limit value never reaches the screen.
+  // That holds only while reading the settings refuses it, so pin the refusal where `show` meets it.
+  await initializeState();
+  const configPath = join(home, "state", "config.json");
+  const config = JSON.parse(readFileSync(configPath, "utf8"));
+  config.persona.agent = "x".repeat(201);
+  writeFileSync(configPath, JSON.stringify(config));
+  out = [];
+  err = [];
+  assert.equal(await cli("show"), 1);
+  assert.ok(err.join("").includes(EN.persona.descriptionOverCap("persona.agent", 201, 200)), err.join(""));
+  assert.equal(out.join(""), "");
+  out = [];
+  assert.equal(await cli("show", "--json"), 1);
+  assert.equal(JSON.parse(out.join("")).reason, "settings-unreadable");
+});
 
 test("the retired fullscreen flag is absent from help and refuses without writes", async () => {
   await initializeState();

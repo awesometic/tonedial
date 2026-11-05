@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=1118; endsWithNewline=true]
+--- stdout --- [bytes=1100; endsWithNewline=true]
 ToneDial · show · Caring Brother (저장하지 않은 변경)         TONE.md 4,779자
 
                     현재      기본값
@@ -19,8 +19,8 @@ ToneDial · show · Caring Brother (저장하지 않은 변경)         TONE.md 
   사용자 설정
   자기 호칭 '형' · 사용자 호칭 '동생'
   가상 에이전트 역할: Fictional database specialist with ten years of
-  experience (58/200)
-  사용자 배경: Developer who likes concise technical answers (45/200)
+  experience
+  사용자 배경: Developer who likes concise technical answers
   세이프워드 없음 · 말씨 plain (일반 반말) · 호칭 빈도 auto
   화면 언어 ko
   연결: 없음

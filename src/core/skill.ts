@@ -168,7 +168,8 @@ An empty value clears only the named persona field or safeword, for example
 Each accepts at most 200 Unicode code points; never silently truncate a longer request.
 Preserve the other fields and ask the user to shorten text rejected by the CLI.
 In a terminal, bare \`tonedial persona\` asks for both descriptions; Enter keeps a value and \`""\` clears it.
-\`show\` displays both descriptions and their character counts; a slug selects the saved preset.
+\`show\` displays both descriptions, and \`show --verbose\` adds their character counts; a slug previews
+only what that preset stores.
 Agent experience and specialty are roleplay, not verified credentials or tool capabilities.
 Both descriptions lose to axes and task/permission rules, and may influence content.
 A persona note expresses manner or role, loses to axes, and may also influence
@@ -543,7 +544,7 @@ selected by critique or persona. Bravado grades effort claims without replacing 
  * command name stays `/tone` even though the tool is `tonedial`: it is what a person types
  * mid-sentence, and the two extra characters are paid every time.
  */
-export const TONE_COMMAND_VERSION = 18;
+export const TONE_COMMAND_VERSION = 19;
 
 export const TONE_COMMAND_MD = `---
 description: Check, change, pause, resume, or reload this agent's tone, preset, or ToneDial settings

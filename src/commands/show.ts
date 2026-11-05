@@ -110,10 +110,11 @@ export function runShow(ctx: Ctx, args: string[]): CommandResult {
       note ? ctx.t.persona.noteChars([...note].length) : null,
     ].filter(Boolean);
     if (bits.length) for (const folded of wrap(bits.join(" · "), detailWidth)) details.push(ui.dim(folded));
-    // Each count sits with the text it measures, the way `save` reviews a profile.
+    // A count sits with the text it measures and only under --verbose. A value over the cap never
+    // reaches this screen: the settings that hold it are refused when they are read.
     for (const [field, value] of [["agent", agent], ["user", user]] as const) {
       if (value === null) continue;
-      const text = `${ctx.t.persona.descriptionFull(field, humanText(value))} (${[...value].length}/${PERSONA_DESCRIPTION_MAX})`;
+      const text = `${ctx.t.persona.descriptionFull(field, humanText(value))}${ctx.flags.verbose ? ` (${[...value].length}/${PERSONA_DESCRIPTION_MAX})` : ""}`;
       for (const folded of wrap(text, detailWidth)) {
         details.push(ui.dim(folded));
       }
