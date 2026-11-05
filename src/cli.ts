@@ -7,7 +7,7 @@ import { AXIS_ORDER } from "./core/anchors.ts";
 import { compile } from "./core/compile.ts";
 import { toCompileInput } from "./core/resolve.ts";
 import { inspectContextLayout } from "./core/seeds.ts";
-import { OperationError } from "./core/operations.ts";
+import { OperationError, inspectOperations } from "./core/operations.ts";
 import { RegionError } from "./wiring/region.ts";
 import { connectionScopeFlag, installShape, resolveAgentPaths, resolvePaths, shellQuote, type AgentPaths } from "./core/paths.ts";
 import { catalogue, configLanguage, detectLanguage, messages, type Catalogue, type Messages } from "./core/i18n.ts";
@@ -657,6 +657,11 @@ export async function run(
         throw new ConfigError(t.errors.contextLayout(layout.kind, paths.root, `tonedial doctor ${connectionScopeFlag(agent, cwd)} --json`));
       }
       ctx.contextChecks = layout.checks;
+    }
+    // Disconnecting reads no settings, so it skips the gate above, but a held operation lock still
+    // refuses its write. Say so now, with the commands for it, rather than after a preview.
+    if ((name === "unwire" || name === "eject") && inspectOperations(paths).lock.state !== "none") {
+      throw recoveryPendingError(paths, t, connectionScopeFlag(agent, cwd));
     }
     // The title and scope precede the command's first output, so a refusal on stderr has neither.
     // The dial draws its own live title; the receipt after it gets this one. `show` titles itself.

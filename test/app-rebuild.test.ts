@@ -11,7 +11,7 @@ import { runList } from "../src/commands/list.ts";
 import { runExport } from "../src/commands/transfer.ts";
 import { runUse } from "../src/commands/use.ts";
 import { compile } from "../src/core/compile.ts";
-import { defaultConfig, parseConfig, serializeConfig, type ConfigV2 } from "../src/core/config.ts";
+import { ConfigError, defaultConfig, parseConfig, serializeConfig, type ConfigV2 } from "../src/core/config.ts";
 import { catalogue } from "../src/core/i18n.ts";
 import { resolveAgentPaths, resolvePaths } from "../src/core/paths.ts";
 import { applyPreset, inspectPresetLibrary, RETIRED_PRESETS, resolvePreset, serializePreset, type Preset } from "../src/core/presets.ts";
@@ -473,7 +473,9 @@ test("selected dead mutation retires without certifying its writes, and new rebu
     assert.equal(pending.state, "pending");
     assert.deepEqual(pending.completed, [0]);
     f.ctx.flags.fromOperation = pending.operationId;
-    await assert.rejects(() => runAppRebuild(f.ctx), error => error instanceof Error && error.message === EN.doctor.recoveryPending);
+    // The owner is this process, still running: nothing to continue or undo, so doctor is named.
+    await assert.rejects(() => runAppRebuild(f.ctx), error => error instanceof ConfigError && error.reason === "recovery-pending" &&
+      error.message.split("\n")[0] === EN.doctor.recoveryPending && error.commands.length === 1 && error.commands[0]!.startsWith("tonedial doctor "));
     assert.equal(fs.existsSync(f.ctx.paths.agents), false);
     const ownerPath = join(f.ctx.paths.operationsLock, "owner.json");
     const owner = JSON.parse(fs.readFileSync(ownerPath, "utf8"));

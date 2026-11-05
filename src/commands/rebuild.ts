@@ -322,7 +322,7 @@ export async function runAppRebuild(ctx: Ctx, heading = ctx.t.recovery.heading):
     throw new ConfigError(t.recovery.quarantineRequired(candidate.operationId, command));
   }
   if (quarantined !== null && (operations.lock.state !== "none" || pending.length > 0)) {
-    throw new ConfigError(t.doctor.recoveryPending);
+    throw recoveryPendingError(ctx.paths, t, connectionScopeFlag(ctx.agent, ctx.cwd));
   }
   const scopeExplicit = ctx.scopeExplicit ?? (ctx.flags.global || ctx.flags.here === true || ctx.flags.project !== null);
   if (ctx.flags.auto && !ctx.flags.dryRun && !scopeExplicit) throw new ScopeRequired(t);
@@ -333,7 +333,7 @@ export async function runAppRebuild(ctx: Ctx, heading = ctx.t.recovery.heading):
   const blocked = operations.lock.state !== "none" || pending.length > 0;
   if (blocked && (operations.lock.state === "live" || operations.lock.state === "unknown" ||
     pending.some(entry => entry.journal === null) || (!ctx.flags.fromOperation && (ctx.flags.auto || !ctx.canPrompt)))) {
-    throw new ConfigError(t.doctor.recoveryPending);
+    throw recoveryPendingError(ctx.paths, t, connectionScopeFlag(ctx.agent, ctx.cwd));
   }
   const configCapture = captureRawEntry(ctx.paths.config, t, { within: ctx.paths.root, maxBytes: CONFIG_MAX_BYTES });
   const selected = ctx.flags.fromOperation ? selectedJournal(ctx, ctx.flags.fromOperation) : null;
@@ -341,7 +341,7 @@ export async function runAppRebuild(ctx: Ctx, heading = ctx.t.recovery.heading):
   if (blocked) {
     const owner = operations.lock.owner;
     if (operations.lock.state === "live" || operations.lock.state === "unknown" || pending.some(entry => entry.journal === null)) {
-      throw new ConfigError(t.doctor.recoveryPending);
+      throw recoveryPendingError(ctx.paths, t, connectionScopeFlag(ctx.agent, ctx.cwd));
     }
     if (selected?.journal.state === "retired-for-app-rebuild" && pending.length === 0) {
       // The retirement owner validates this exact receipt, including interrupted owner release.
@@ -349,7 +349,7 @@ export async function runAppRebuild(ctx: Ctx, heading = ctx.t.recovery.heading):
     } else {
       if (owner?.kind !== "mutation" || operations.lock.state !== "dead" ||
           readJournal(ctx.paths, owner.operationId)?.state !== "pending" ||
-          pending.some(entry => entry.operationId !== owner.operationId)) throw new ConfigError(t.doctor.recoveryPending);
+          pending.some(entry => entry.operationId !== owner.operationId)) throw recoveryPendingError(ctx.paths, t, connectionScopeFlag(ctx.agent, ctx.cwd));
       if (selected?.journal.operationId === owner.operationId) retirementId = owner.operationId;
       else if (!ctx.flags.auto && ctx.canPrompt) {
         const input = createInterface({ input: process.stdin, output: process.stdout });
@@ -363,7 +363,7 @@ export async function runAppRebuild(ctx: Ctx, heading = ctx.t.recovery.heading):
           if (answer !== owner.operationId) throw new ConfigError(t.recovery.operationMismatch);
           retirementId = owner.operationId;
         } finally { input.close(); }
-      } else throw new ConfigError(t.doctor.recoveryPending);
+      } else throw recoveryPendingError(ctx.paths, t, connectionScopeFlag(ctx.agent, ctx.cwd));
     }
   }
   const currentText = capturedText(configCapture);
@@ -591,7 +591,7 @@ export async function runAppRebuild(ctx: Ctx, heading = ctx.t.recovery.heading):
         for (const action of operationActions) action.assertFresh?.();
         for (const check of checks) assertFresh(check, t, ctx.paths);
         if (selected?.journal.operationId === retirementId) assertFresh(rawReadCheck(selected.capture, t), t, ctx.paths);
-        if (selected?.journal.operationId === retirementId && JSON.stringify(readJournal(ctx.paths, retirementId)) !== JSON.stringify(selected.journal)) throw new ConfigError(t.doctor.recoveryPending);
+        if (selected?.journal.operationId === retirementId && JSON.stringify(readJournal(ctx.paths, retirementId)) !== JSON.stringify(selected.journal)) throw recoveryPendingError(ctx.paths, t, connectionScopeFlag(ctx.agent, ctx.cwd));
       },
     });
     result = await gate(checks, { ...options, auto: true });

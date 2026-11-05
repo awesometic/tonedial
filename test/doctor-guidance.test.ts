@@ -499,14 +499,14 @@ test("an agent with no hook to inspect is connected with wire, the command that 
 });
 
 /** An operation whose owner died after recording its journal: doctor can continue or undo it. */
-function stopOperation(): string {
+function stopOperation(pid = 2_147_483_000): string {
   const paths = resolvePaths(env);
   const operation = acquireOperation(paths, "mutation");
   beginJournal(operation, []);
   const id = operation.owner.operationId;
   for (const path of [join(paths.operationsLock, "owner.json"), join(paths.operations, `${id}.json`)]) {
     const record = JSON.parse(readFileSync(path, "utf8"));
-    (record.owner ?? record).pid = 2_147_483_000;
+    (record.owner ?? record).pid = pid;
     writeFileSync(path, JSON.stringify(record));
   }
   return id;
@@ -520,8 +520,12 @@ test("a command a stopped operation blocks ends with doctor's commands to contin
   const report = (await human(["doctor"], project)).out;
   for (const command of [resume, undo]) assert.match(report, new RegExp(`^ {2}${command}$`, "m"));
 
+  // Disconnecting and repairing skip the settings gate, so they are named here beside it. A dry run
+  // is refused too: its preview would end with a command that cannot run.
   for (const args of [["set", "warmth=2"], ["use", "bratty-kid"], ["off"], ["wire", "claude", "--global", "--auto"],
-    ["init", "--tools", "codex", "--global", "--auto"]]) {
+    ["init", "--tools", "codex", "--global", "--auto"], ["unwire", "codex", "--global", "--auto"],
+    ["unwire", "codex", "--global", "--dry-run"], ["eject", "--global", "--auto"], ["eject", "--global", "--dry-run"],
+    ["doctor", "--fix", "--global", "--auto"]]) {
     const refused = await human(args, project);
     assert.equal(refused.code, 1, args.join(" "));
     const lines = refused.err.trimEnd().split("\n").map((line) => line.trim());
@@ -530,6 +534,20 @@ test("a command a stopped operation blocks ends with doctor's commands to contin
     const machine = await json(args, project);
     assert.deepEqual([machine.value.reason, machine.value.commands], ["recovery-pending", [resume, undo]], args.join(" "));
   }
+});
+
+test("a command blocked by a running operation is told to diagnose, not to continue or undo it", async () => {
+  assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
+  stopOperation(process.pid);
+  for (const args of [["unwire", "codex", "--global", "--auto"], ["eject", "--global", "--auto"], ["doctor", "--fix", "--global", "--auto"]]) {
+    const refused = await human(args, project);
+    assert.equal(refused.code, 1, args.join(" "));
+    assert.match(refused.err, /An operation is active or needs recovery/);
+    assert.doesNotMatch(refused.err, /from-operation|--rollback|operations\.lock/, args.join(" "));
+    const machine = await json(args, project);
+    assert.deepEqual([machine.value.reason, machine.value.commands], ["recovery-pending", ["tonedial doctor --global"]], args.join(" "));
+  }
+  assert.equal(existsSync(join(home, ".codex", "hooks.json")), true, "nothing was disconnected");
 });
 
 test("show and get with unreadable settings name doctor, as set does", async () => {
