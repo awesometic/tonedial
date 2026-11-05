@@ -5,7 +5,7 @@ import { lstatSync } from "node:fs";
 import { compile, measure, type SizeReport } from "../core/compile.ts";
 import { ConfigError, SettingsUnreadable, defaultConfig, isConfigV2, parseConfig, type Config } from "../core/config.ts";
 import { toCompileInput } from "../core/resolve.ts";
-import { matchesPreset, resolvePreset, type PresetLibrary } from "../core/presets.ts";
+import { assertPresetSelection, matchesPreset, resolvePreset, type PresetLibrary } from "../core/presets.ts";
 import { contextArtifactTargets, GUIDE_MD } from "../core/seeds.ts";
 import { claudeContextCap, humanText, nextStep, num } from "../ui/format.ts";
 import { wrap } from "../ui/width.ts";
@@ -27,13 +27,18 @@ function artifactChange(ctx: Ctx, target: ReturnType<typeof contextArtifactTarge
  */
 export function unsavedEdits(ctx: Ctx, config: Config, library: PresetLibrary, before: string | null): { needsSave: boolean; saveCommand: string; name: string | null; restorable: boolean } {
   const conflict = library.conflicts.some((entry) => !entry.resolved && entry.slug === config.preset);
-  const saved = config.preset && !conflict ? resolvePreset(ctx.paths.presets, config.preset, ctx.t, library)?.preset : null;
+  const entry = config.preset && !conflict ? resolvePreset(ctx.paths.presets, config.preset, ctx.t, library) : null;
+  const saved = entry?.preset;
+  let restorable = false;
+  if (entry) {
+    try { assertPresetSelection(entry, ctx.t); restorable = true; }
+    catch (error) { if (!(error instanceof ConfigError)) throw error; }
+  }
   return {
     needsSave: before !== null && (config.unsaved || saved == null || !matchesPreset(config, saved)),
     saveCommand: saved && !saved.bundled ? "tonedial save" : 'tonedial save "My Tone"',
     name: config.preset === null ? null : saved?.displayName ?? config.preset,
-    // `use <slug>` can bring the selected preset back only if it resolves to one definition.
-    restorable: saved != null,
+    restorable,
   };
 }
 
