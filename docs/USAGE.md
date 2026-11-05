@@ -423,8 +423,8 @@ Local setup does not configure remote/cloud runtimes.
 Scope flags are mutually exclusive.
 A `--project` symlink resolves to its real folder, so previews, records and later commands name that folder.
 Use the same scope for `init`, `wire`, `doctor`, `unwire` and `eject`.
-After a project `wire`, the receipt names the project files it wrote.
-Their hooks run ToneDial with paths from this machine, so keep them out of version control
+After a project `wire`, the preview lists the project files and the receipt adds one note:
+the project hooks run ToneDial with paths from this machine, so keep them out of version control
 (for example with `.git/info/exclude`), or commit them only if you mean to.
 In your home directory a project scope would use the global files,
 so `init`, `wire`, `unwire` and `eject` with `--here` there stop and show the `--global` command.
@@ -565,7 +565,8 @@ tonedial wire codex --here
 ```
 
 Only this folder gets the hook and skill link.
-The receipt lists the files and the version-control choice.
+The preview lists the files; the receipt names the version-control choice.
+Wiring an agent that is already connected prints one row for it, `ok Codex CLI · up to date`, with its hook file on the next line and the host's review step.
 With a global Codex connection the folder already gets the tone, so this writes nothing and shows the commands for the next recipe.
 
 **Connect globally**

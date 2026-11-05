@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=849; endsWithNewline=true]
+--- stdout --- [bytes=787; endsWithNewline=true]
 ToneDial · wire
 
   Project scope
@@ -27,8 +27,7 @@ ToneDial · wire
   Trust this project in Codex, then open /hooks → SessionStart → ToneDial,
   review the command and enable the hook.
 
-  Project files written: .codex/hooks.json, .agents/skills/tonedial
-  Their hooks run ToneDial with paths from this machine. Keep them out of
+  The project hooks run ToneDial with paths from this machine. Keep them out of
   version control (for example with .git/info/exclude), or commit them only if
   you mean to.
 --- stderr --- [bytes=0; endsWithNewline=false]

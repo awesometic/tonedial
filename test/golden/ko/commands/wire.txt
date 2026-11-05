@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=923; endsWithNewline=true]
+--- stdout --- [bytes=857; endsWithNewline=true]
 ToneDial · wire
 
   프로젝트 범위
@@ -27,8 +27,7 @@ ToneDial · wire
   Codex에서 이 프로젝트를 신뢰한 뒤 /hooks → SessionStart → ToneDial에서 실행
   명령을 확인하고 훅을 켜세요.
 
-  프로젝트에 기록한 파일: .codex/hooks.json, .agents/skills/tonedial
-  훅에는 이 컴퓨터의 경로가 들어 있습니다. 버전 관리에서 제외하거나(예:
-  .git/info/exclude), 의도한 경우에만 커밋하세요.
+  프로젝트 훅에는 이 컴퓨터의 경로가 들어 있습니다. 버전 관리에서
+  제외하거나(예: .git/info/exclude), 의도한 경우에만 커밋하세요.
 --- stderr --- [bytes=0; endsWithNewline=false]
 

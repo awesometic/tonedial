@@ -285,18 +285,34 @@ test("bare unwire in a terminal asks with the wire picker and marks installed an
   assert.equal(existsSync(join(project, ".codex", "hooks.json")), true);
 });
 
-test("project wiring names the files it wrote and the version-control choice; global wiring does not", async () => {
+test("project wiring names the version-control choice once and does not list its files again; global wiring says nothing", async () => {
   assert.equal((await invoke(["init", "--global", "--tools", "none", "--auto"])).code, 0);
   const wired = await human(["wire", "codex", "--here", "--auto"]);
   assert.equal(wired.code, 0, wired.errors);
-  // Shared state files are in the preview but are not project files.
-  assert.match(wired.output, /^  Project files written: \.codex\/hooks\.json, \.agents\/skills\/tonedial$/m);
+  // The preview already lists the files; the receipt adds only the choice they leave the user.
+  assert.doesNotMatch(wired.output, /Project files written/);
   const flat = wired.output.replace(/\s+/g, " ");
-  assert.match(flat, /paths from this machine/);
+  assert.equal(flat.split("paths from this machine").length - 1, 1);
   assert.match(flat, /\.git\/info\/exclude/);
   const global = await human(["wire", "claude", "--global", "--auto"]);
   assert.equal(global.code, 0, global.errors);
   assert.doesNotMatch(global.output, /Project files written|paths from this machine/);
+});
+
+test("wiring again says each agent is up to date once, with its file and its review step", async () => {
+  assert.equal((await invoke(["init", "--global", "--tools", "none", "--auto"])).code, 0);
+  const first = await human(["wire", "codex", "--here", "--auto"]);
+  assert.match(first.output, /^  Codex CLI: hook configured$/m, "a first write keeps its receipt");
+  const again = await human(["wire", "codex", "--here", "--auto"]);
+  assert.equal(again.code, 0, again.errors);
+  const rows = again.output.split("\n").map((line) => line.trim());
+  const at = rows.indexOf("ok Codex CLI · up to date");
+  assert.ok(at >= 0, again.output);
+  // The file stays whole on its own line, and the host's step follows it; nothing says it twice.
+  assert.equal(rows[at + 1], join(realpathSync(project), ".codex", "hooks.json"));
+  assert.match(rows.slice(at + 2).join(" "), /\/hooks/);
+  assert.equal(again.output.split("Codex CLI").length - 1, 1, again.output);
+  assert.doesNotMatch(again.output, /hook configured|no changes/);
 });
 
 test("a project scope in the home directory refuses for every connection command and names the global one", async () => {

@@ -341,16 +341,19 @@ async function wireSelected(ctx: Ctx, requested: AgentTool[], rebuilding?: Nativ
   // headline. Doctor's repair report repeats per-host review steps, so its receipt omits them.
   // A preview has nothing configured to report; the doctor report after a repair has its own steps.
   // In a repair receipt, an agent the repair left as it was has its one state in the headline.
+  // Nothing to change is one row per agent: "up to date", its file and the host's review step. The
+  // repair receipt keeps its own headline row, because doctor's report follows with the steps.
+  const current = configured && result.reason === "nothing" && !rebuilding;
   const setup = configured && !rebuilding?.preview && !(rebuilding && result.reason === "nothing")
     ? nativeSetupLines(ctx, nativeSetup(ctx.t, result.reason === "nothing" ? routes : routes.map(({ duplicates, ...route }) => route),
-      ctx.agent.live, ctx.cwd, !rebuilding), result.reason === "written") : [];
+      ctx.agent.live, ctx.cwd, !rebuilding, current), result.reason === "written", current) : [];
   // Project hooks name this machine's runtime and state paths, so committing them is a choice.
   const projectFiles = !ctx.agent.live && !rebuilding && result.reason === "written"
     ? result.diff.filter((change) => !inside(change.path, ctx.paths.root)).map((change) => relative(ctx.agent.root, change.path))
       .filter((path) => path !== "" && !path.startsWith("..") && !isAbsolute(path))
     : [];
-  if (projectFiles.length) setup.push("", ...receiptLines(ctx.t.wiring.projectFiles(projectFiles.map(humanText)), ctx.ui.width - 2).map((line) => `  ${line}`));
-  const headline = tools.length ? summary(ctx, result.reason, tools) :
+  if (projectFiles.length) setup.push("", ...receiptLines(ctx.t.wiring.projectHooks, ctx.ui.width - 2).map((line) => `  ${line}`));
+  const headline = tools.length && !(current && setup.length) ? summary(ctx, result.reason, tools) :
     configured && shellChange ? [`  ${ctx.t.doctor.pathLineAt(humanText(shellChange.path))}`] : [];
   const coveredBlock = coveredLines(ctx, [...covered.keys()]);
   const body = [...headline, ...(headline.length && setup.length ? [""] : []), ...setup];
@@ -591,7 +594,7 @@ function summary(ctx: Ctx, reason: string, tools: AgentTool[], action: "connect"
   // sentence reads as a bug rather than as a missing translation.
   const named = tools.map((t) => TARGETS[t].label).join(", ");
   if (reason === "nothing") return receiptLines(action === "disconnect" ? ctx.t.wiring.alreadyDisconnected(named) : ctx.t.wiring.alreadyMatch(named), ctx.ui.width - 2)
-    .map((line) => `  ${ctx.ui.bold(line)}`);
+    .map((line) => `  ${action === "disconnect" ? "" : `${okMark(ctx)} `}${ctx.ui.bold(line)}`);
   if (reason === "dry-run") return [`  ${ctx.ui.dim(ctx.t.wiring.dryRun)}`];
   if (reason === "declined") return [`  ${ctx.t.wiring.declined}`];
   if (action === "connect") return [];
@@ -599,8 +602,11 @@ function summary(ctx: Ctx, reason: string, tools: AgentTool[], action: "connect"
     .map((line) => `  ${ctx.ui.success(ctx.ui.bold(line))}`);
 }
 
+/** The mark `doctor` puts before a healthy row. */
+const okMark = (ctx: Ctx) => ctx.ui.success("ok");
+
 /** Fold host groups for the receipt; each group's status line carries the result. */
-function nativeSetupLines(ctx: Ctx, messages: string[], written: boolean): string[] {
+function nativeSetupLines(ctx: Ctx, messages: string[], written: boolean, current = false): string[] {
   let groupStart = true;
   return messages.flatMap((message) => {
     if (message === "") {
@@ -608,7 +614,8 @@ function nativeSetupLines(ctx: Ctx, messages: string[], written: boolean): strin
       return [""];
     }
     return receiptLines(message, ctx.ui.width - 2).map((line) => {
-      const painted = groupStart && written ? ctx.ui.success(ctx.ui.bold(line)) : line;
+      const painted = groupStart && written ? ctx.ui.success(ctx.ui.bold(line))
+        : groupStart && current ? `${okMark(ctx)} ${ctx.ui.bold(line)}` : line;
       groupStart = false;
       return `  ${painted}`;
     });

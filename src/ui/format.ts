@@ -131,6 +131,7 @@ export function hookDuplicateNotice(
  * One group per host: its status and file, any duplicate it doubles, then that host's own
  * review step. Groups are separated by an empty message, which callers print as a blank line.
  * `guidance: false` leaves the review steps to a report that follows with its own per-host copy.
+ * `current: true` says each host is already up to date, instead of that its hook was configured.
  */
 export function nativeSetup(
   t: Messages,
@@ -142,10 +143,12 @@ export function nativeSetup(
   global: boolean,
   cwd: string,
   guidance = true,
+  current = false,
 ): string[] {
   const groups = routes.map(({ tool, path, duplicates }) => {
     const label = TARGETS[tool].label;
-    const lines = [t.wiring.hookConfigured(label, humanText(path))];
+    // A connection that already matched is one state, "up to date", with its file on the next line.
+    const lines = [current ? `${t.wiring.alreadyMatch(label)}\n${humanText(path)}` : t.wiring.hookConfigured(label, humanText(path))];
     // A project wired earlier keeps delivering after this one. Reported next to the route it
     // doubles, with the scope that owns it, because clearing it is that scope's decision.
     const doubled = hookDuplicateNotice(t, tool, duplicates ?? [], cwd);

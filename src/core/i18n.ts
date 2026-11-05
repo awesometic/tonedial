@@ -380,7 +380,8 @@ export type Messages = {
     stateKept: (root: string) => string;
     deleteYourself: string;
     nothingWired: string;
-    projectFiles: (files: string[]) => string;
+    /** After a project connection is written: its hooks hold paths from this machine. */
+    projectHooks: string;
     projectIsHome: (command: string) => string;
     damaged: (path: string, reason: string) => string;
     needsApproval: (command: string) => string;
@@ -997,7 +998,7 @@ const enMessages: Messages = {
     claudeOpen: "Open Claude Code in this project now?",
     claudeOpenSteps: "Claude Code opens in this terminal. If it asks whether you trust this folder, answer there, then exit to return.",
     scopeHere: "Project scope",
-    alreadyMatch: (tools) => `${tools}: already up to date · no changes`,
+    alreadyMatch: (tools) => `${tools} · up to date`,
     alreadyDisconnected: (tools) => `${tools}: not connected · nothing to change`,
     dryRun: "--dry-run · nothing written",
     declined: "cancelled · nothing written",
@@ -1010,7 +1011,7 @@ const enMessages: Messages = {
     stateKept: (root) => `Presets and settings stay in:\n${root}`,
     deleteYourself: "to remove state too, delete this directory yourself",
     nothingWired: "No connections in this scope · nothing to disconnect",
-    projectFiles: (files) => `Project files written: ${files.join(", ")}\nTheir hooks run ToneDial with paths from this machine. Keep them out of version control (for example with .git/info/exclude), or commit them only if you mean to.`,
+    projectHooks: "The project hooks run ToneDial with paths from this machine. Keep them out of version control (for example with .git/info/exclude), or commit them only if you mean to.",
     projectIsHome: (command) => `This folder is your home directory, so a project connection here would use the global files. Use the global scope instead:\n  ${command}`,
     damaged: (path, reason) => `${path}: ${reason}. Remove the stray marker, then run eject again.`,
     needsApproval: (command) => `File changes not applied · approval required. To review and approve them, rerun in a terminal:\n  ${command}\nOr preview them, then approve without prompting:\n  ${command} --dry-run\n  ${command} --auto`,
@@ -1805,7 +1806,7 @@ const koMessages: Messages = {
     claudeOpen: "지금 이 프로젝트에서 Claude Code를 열까요?",
     claudeOpenSteps: "Claude Code는 이 터미널에서 열립니다. 이 폴더를 신뢰하는지 물으면 거기서 답하세요. 종료하면 여기로 돌아옵니다.",
     scopeHere: "프로젝트 범위",
-    alreadyMatch: (tools) => `${tools}: 이미 최신 상태 · 변경 없음`,
+    alreadyMatch: (tools) => `${tools} · 최신 상태`,
     alreadyDisconnected: (tools) => `${tools}: 연결되어 있지 않음 · 변경 없음`,
     dryRun: "--dry-run · 기록하지 않음",
     declined: "취소됨 · 기록하지 않음",
@@ -1818,7 +1819,7 @@ const koMessages: Messages = {
     stateKept: (root) => `프리셋과 설정은 이곳에 그대로 남습니다:\n${root}`,
     deleteYourself: "상태까지 지우려면 이 디렉터리를 직접 삭제해 주세요",
     nothingWired: "이 범위에 연결된 항목 없음 · 해제할 것 없음",
-    projectFiles: (files) => `프로젝트에 기록한 파일: ${files.join(", ")}\n훅에는 이 컴퓨터의 경로가 들어 있습니다. 버전 관리에서 제외하거나(예: .git/info/exclude), 의도한 경우에만 커밋하세요.`,
+    projectHooks: "프로젝트 훅에는 이 컴퓨터의 경로가 들어 있습니다. 버전 관리에서 제외하거나(예: .git/info/exclude), 의도한 경우에만 커밋하세요.",
     projectIsHome: (command) => `이 폴더는 홈 디렉터리라서 프로젝트 연결이 전역 연결과 같은 파일을 씁니다. 대신 전역 범위로 실행하세요:\n  ${command}`,
     damaged: (path, reason) => `${path}: ${reason}. 남은 마커를 지운 뒤 eject를 다시 실행해 주세요`,
     needsApproval: (command) => `파일 변경은 승인이 필요해 적용하지 않았습니다. 변경 내용을 확인하고 승인하려면 터미널에서 다시 실행하세요:\n  ${command}\n또는 먼저 미리 본 뒤 확인 질문 없이 승인하세요:\n  ${command} --dry-run\n  ${command} --auto`,

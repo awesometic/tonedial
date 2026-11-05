@@ -377,8 +377,8 @@ test("the doctor --fix receipt gives each agent one state", async () => {
   // An application repair with the hook already in place: nothing to write for Codex.
   writeFileSync(join(home, ".tonedial", "TONE.md"), "edited by hand\n");
   const unchanged = receipt((await human(["doctor", "--fix", "--global", "--auto"])).out);
-  assert.equal(unchanged.match(/Codex CLI:/g)?.length, 1, unchanged);
-  assert.match(unchanged, /Codex CLI: already up to date · no changes/);
+  assert.equal(unchanged.match(/Codex CLI/g)?.length, 1, unchanged);
+  assert.match(unchanged, /ok Codex CLI · up to date/);
 
   // A hook the repair writes again is reported once, as configured, with its file.
   rmSync(hook);
