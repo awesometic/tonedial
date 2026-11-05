@@ -51,6 +51,10 @@ type Check = {
   detail: string;
   /** Separate human facts while keeping the machine detail's existing prose. */
   humanDetail?: readonly string[];
+  /** What the user still has to do, such as a host review step; shown after the facts. */
+  guidance?: readonly string[];
+  /** Advisories the headline counts, such as a doubled hook; shown last. */
+  notices?: readonly string[];
   /** Actionable repair, when available. */
   repair?: string;
   /** PATH repair snapshot used to check recorded shell ownership. */
@@ -883,13 +887,14 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true): Promise<Comm
     // The summary counts every duplicate, so each one is shown whatever the agent's state.
     const duplicates = (integration?.duplicates ?? []).map(({ destination, state }) =>
       ctx.t.wiring.hookDuplicate(setting.tool, humanText(destination), state === "stale-duplicate"));
+    check.notices = duplicates;
     if (integration === undefined || (check.state === "problem" && setting.state !== "disabled")) {
-      check.humanDetail = [...detail, ...duplicates];
+      check.humanDetail = detail;
       continue;
     }
-    const guidance = setting.tool === "codex" ? ctx.t.wiring.codexTrust(ctx.agent.live || integration.inherited)
-      : ctx.t.doctor.hookGuidance[setting.tool];
-    check.humanDetail = [...detail, ctx.t.doctor.hookSettingState[setting.state], guidance, ...duplicates];
+    check.humanDetail = [...detail, ctx.t.doctor.hookSettingState[setting.state]];
+    check.guidance = [setting.tool === "codex" ? ctx.t.wiring.codexTrust(ctx.agent.live || integration.inherited)
+      : ctx.t.doctor.hookGuidance[setting.tool]];
   }
 
   // Measured from the files on disk; Claude Code's own truncation is not observed here.
@@ -1369,7 +1374,8 @@ function report(check: Check, ctx: Ctx): string[] {
   const head = `  ${paint(MARK[check.state])} ${ctx.ui.bold(humanText(checkHeading(check.name, ctx)))}`;
   // Keep the marker and check name together, then give every detail a stable four-cell hanging
   // indent. A fixed name column made a narrow doctor report spend most of its width on padding.
-  const body = (check.files?.length ? [] : check.humanDetail ?? [check.detail]).flatMap(detail => detail.split("\n"))
+  const body = (check.files?.length ? [] : [...(check.humanDetail ?? [check.detail]), ...(check.guidance ?? []), ...(check.notices ?? [])])
+    .flatMap(detail => detail.split("\n"))
     .flatMap(line => receiptLines(humanText(line), ctx.ui.width - 6));
   const lines = [head, ...body.map((line) => `    ${check.state === "ok" ? ctx.ui.dim(line) : line}`),
     ...(check.verbatim ?? []).map((line) => `      ${humanText(line)}`)];
