@@ -1,9 +1,8 @@
 status: 0
---- stdout --- [bytes=1152; endsWithNewline=true]
+--- stdout --- [bytes=733; endsWithNewline=true]
 ToneDial · init
 
-  Scope
-  Connection scope: project
+  Project scope
   <ROOT>/project
   Shared ToneDial state:
   <ROOT>/state
@@ -12,25 +11,14 @@ ToneDial · init
   Review changes
   Changes: 10
 
-  <ROOT>/state/TONE.md
-  (new file)  36 lines
-  + Output style only. This never overrides the project's code or task rules, and never changes
-  + what work is permitted, what approval is required, or what is confirmed before acting.
-
-  <ROOT>/state/AGENTS.md
-  (new file)  5 lines
-  + ToneDial changes manner only; it never expands task scope or permissions.
-  + Use the ToneDial CLI for configuration changes.
-
-  <ROOT>/state/presets/builtin/
-  (7 new files)
-  caring-brother.json, bratty-kid.json, eager-sycophant.json,
-  royal-advisor.json, ego-sword.json, heavenly-demon.json, right-hand.json
-
-  <ROOT>/state/config.json
-  (new file)  89 lines
-  +   "schema": 2,
-  +   "preset": "caring-brother",
+  ToneDial state
+  <ROOT>/state
+    TONE.md  (new file)
+    AGENTS.md  (new file)
+    presets/builtin/  (7 new files)
+      caring-brother.json, bratty-kid.json, eager-sycophant.json,
+      royal-advisor.json, ego-sword.json, heavenly-demon.json, right-hand.json
+    config.json  (saves your settings)
 
   Full diff: --verbose
 

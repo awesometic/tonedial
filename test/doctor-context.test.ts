@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { afterEach, beforeEach, test } from "node:test";
 import childProcess from "node:child_process";
 import fs from "node:fs";
-import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { syncBuiltinESMExports } from "node:module";
 import { PassThrough } from "node:stream";
 import { join } from "node:path";
@@ -47,7 +47,7 @@ let scratch = "";
 let env: NodeJS.ProcessEnv;
 
 beforeEach(() => {
-  scratch = mkdtempSync(join(tmpdir(), "tonedial-doctor-context-"));
+  scratch = realpathSync(mkdtempSync(join(tmpdir(), "tonedial-doctor-context-")));
   env = {
     HOME: scratch,
     TONEDIAL_HOME: join(scratch, "state"),
@@ -112,16 +112,22 @@ async function invokeHuman(args: string[], extra: NodeJS.ProcessEnv = {}): Promi
   }
 }
 
-test("a repair receipt offers each rollback command once and standalone diagnosis retains it", async () => {
+test("a repair receipt offers each rollback command once and verbose diagnosis retains it", async () => {
   assert.equal((await invoke(["init", "--global", "--tools", "none", "--auto"])).code, 0);
   writeFileSync(join(env.TONEDIAL_HOME!, "AGENTS.md"), "damaged generated guide\n");
   const result = await invokeHuman(["doctor", "--fix", "--global", "--tools", "none", "--auto"]);
   assert.equal(result.code, 0, result.error);
   const commands = result.output.match(/tonedial doctor --fix --rollback [0-9a-f]{32}/g) ?? [];
   assert.equal(commands.length, 1, result.output);
+  const id = commands[0]!.split(" ").at(-1)!;
+  // Completed repairs are history: the default view leaves them to --verbose and JSON.
   const diagnosis = await invokeHuman(["doctor", "--global"]);
   assert.equal(diagnosis.code, 0, diagnosis.error);
-  assert.ok(diagnosis.output.includes(commands[0]!), "standalone diagnosis must retain the restorable operation");
+  assert.ok(!diagnosis.output.includes(id), diagnosis.output);
+  const verbose = await invokeHuman(["doctor", "--global", "--verbose"]);
+  assert.ok(verbose.output.includes(commands[0]!), "verbose diagnosis must retain the restorable operation");
+  const json = await invoke(["doctor", "--global"]);
+  assert.ok((json.value.recovery as { operations: { operationId: string }[] }).operations.some(entry => entry.operationId === id));
 });
 
 test("a repair receipt preserves ordered rollback instructions when another operation becomes pending", async t => {
@@ -277,6 +283,11 @@ test("an unreadable operation record is quarantined through the repair gate and 
   assert.equal(inspectOperations(paths).journals.find(entry => entry.operationId === operationId)?.state, "quarantined");
   assert.notDeepEqual(readFileSync(path), original);
 
+  // Without a terminal the rollback waits for approval and offers its exact, unscoped reruns.
+  const rerun = `tonedial doctor --fix --rollback ${repaired.value.operationId}`;
+  const unapproved = await invoke(["doctor", "--fix", "--rollback", String(repaired.value.operationId)]);
+  assert.equal(unapproved.code, 1, unapproved.output);
+  assert.deepEqual([unapproved.value.reason, unapproved.value.commands], ["approval-required", [rerun, `${rerun} --dry-run`, `${rerun} --auto`]]);
   const rollback = await invoke(["doctor", "--fix", "--rollback", String(repaired.value.operationId), "--auto"]);
   assert.equal(rollback.code, 0, rollback.output);
   assert.deepEqual(readFileSync(path), original, "rollback did not restore the unreadable record bytes");
@@ -509,11 +520,14 @@ test("state-only doctor refuses an unavailable native wire repair, including a r
     const claude = check(report, "Claude Code");
     assert.equal(claude.state, "note");
     assert.equal(claude.repair, null);
-    assert.equal(claude.detail, catalogue("en").cli.doctor.legacyRepairWithheld);
+    // Only a recorded connection has a legacy repair to withhold; otherwise the agent is not connected.
+    const expected = retained ? catalogue("en").cli.doctor.legacyRepairWithheld : catalogue("en").cli.doctor.hookNotConnected;
+    assert.equal(claude.detail, expected);
     for (const flags of [[], ["--verbose"]]) {
       const human = await invokeHuman(["doctor", "--here", ...flags]);
       assert.equal(human.code, 0, human.output + human.error);
-      assert.ok(containsWrapped(human.output, catalogue("en").cli.doctor.legacyRepairWithheld), "grouping concealed the withheld legacy diagnosis");
+      if (retained) assert.ok(containsWrapped(human.output, expected), "grouping concealed the withheld legacy diagnosis");
+      else assert.ok(!containsWrapped(human.output, catalogue("en").cli.doctor.legacyRepairWithheld), human.output);
     }
     assert.doesNotMatch(report.output, /tonedial wire claude/);
     assert.equal(existsSync(join(project, ".claude", "CLAUDE.md")), false);
@@ -552,6 +566,7 @@ test("native doctor reports independent runtime and reader health and repairs a 
     // Only Codex answers anything else here.
     trust: "unknown",
     activation: "unverified",
+    duplicates: [],
   });
   assert.equal(check(current, "Claude Code").state, "ok", current.output);
   assert.match(check(current, "Claude Code").detail, /AGENTS\.md.*TONE\.md/i);
@@ -609,11 +624,16 @@ test("doctor shares hook setting states and guidance across agents and locales",
     const human = await invokeHuman(["doctor", "--global"]);
     const t = catalogue(language).cli.doctor;
     assert.ok(containsWrapped(human.output, t.hookSettingState.enabled), human.output);
-    assert.ok(containsWrapped(human.output, t.hookGuidance.codex), human.output);
+    assert.ok(containsWrapped(human.output, catalogue(language).cli.wiring.codexTrust(true)), human.output);
     assert.ok(containsWrapped(human.output, t.hookGuidance.antigravity), human.output);
     assert.ok(containsWrapped(human.output, t.hookGuidance.claude), human.output);
     assert.equal(human.output.split("/hooks").length - 1, 2, human.output);
     assert.ok(containsWrapped(human.output, t.hookSettingScope), human.output);
+    // The caveat closes the report, after every hook state it covers, in the verbose view too.
+    const closing = (output: string) => output.trimEnd().split(/\n\s*\n/).at(-1)!;
+    assert.ok(containsWrapped(closing(human.output), t.hookSettingScope), human.output);
+    const verbose = await invokeHuman(["doctor", "--global", "--verbose"]);
+    assert.ok(containsWrapped(closing(verbose.output), t.hookSettingScope), verbose.output);
   }
   assert.equal(readFileSync(claudePath, "utf8"), original, "diagnosis must not change host settings");
 
@@ -654,7 +674,7 @@ test("native doctor refreshes an owned runtime but preserves an edited handler",
   const oldRuntime = join(scratch, "old runtime", "node");
   let config = parseConfig(readFileSync(paths.config, "utf8"), t);
   assert.ok(isConfigV2(config));
-  const planned = planOrderedDelivery(paths, agent, "claude", config.wiring, env, t, oldRuntime);
+  const planned = planOrderedDelivery(paths, agent, "claude", config.wiring, t, oldRuntime);
   config.wiring = planned.wiring;
   const configChange = planChange(paths.config, (before) => before, t);
   const applied = await gate([...planned.checks, planned.change], {
@@ -704,7 +724,7 @@ test("native doctor refreshes an owned runtime but preserves an edited handler",
   // the two need different answers because only one of them may be overwritten.
   assert.equal(foreignIntegration?.configuration, "foreign");
   assert.equal(check(foreign, "Claude Code").repair, null);
-  assert.match(check(foreign, "Claude Code").detail, /changed outside ToneDial/i);
+  assert.match(check(foreign, "Claude Code").detail, /edited outside ToneDial/i);
 
   const refused = await invoke(["doctor", "--here", "--fix", "--auto"]);
   assert.equal(refused.code, 0, refused.output);
@@ -742,6 +762,7 @@ test("project doctor reports a managed global native hook without creating a pro
     // Only Codex answers anything else here.
     trust: "unknown",
     activation: "unverified",
+    duplicates: [],
   });
   assert.equal(check(report, "Claude Code").state, "ok", report.output);
   assert.match(check(report, "Claude Code").detail, /global SessionStart hook/i);
@@ -779,8 +800,11 @@ test("pair registration without a hook resource stays native and does not fall b
   const claude = check(report, "Claude Code");
   assert.equal(claude.state, "problem");
   assert.match(claude.detail, /No ToneDial SessionStart hook/i);
-  assert.match(claude.repair ?? "", /tonedial init --tools claude/i,
-    "missing reader/skill seeds point back to the seed owner");
+  assert.equal(claude.repair, "tonedial doctor --fix --here",
+    "the scoped repair, which also restores missing reader/skill seeds, named as the folder it runs in");
+  const repaired = await invoke(["doctor", "--fix", "--project", project, "--auto"]);
+  assert.equal((repaired.value.integrations as Array<Record<string, any>>)
+    .find((entry) => entry.tool === "claude")?.configuration, "configured", repaired.output);
   assert.equal((report.value.integrations as Array<Record<string, any>>)
     .some((entry) => entry.tool === "claude" && entry.configuration === "missing"), true);
   // Check the diagnosed status, not serialized paths that may legitimately contain "imported".
@@ -871,7 +895,7 @@ test("doctor does not probe a missing retained reader", async () => {
     scope: "cli-runtime",
   });
   assert.equal(check(report, "reader").state, "problem");
-  assert.equal(check(report, "seeds").repair, `tonedial doctor --fix --project "${join(scratch, "project")}"`);
+  assert.equal(check(report, "seeds").repair, "tonedial doctor --fix --here");
 });
 
 test("doctor does not probe a stale retained reader", async () => {
@@ -1086,6 +1110,7 @@ for (const language of ["en", "ko"] as const) {
     env.LANG = language === "ko" ? "ko_KR.UTF-8" : "en_US.UTF-8";
     env.COLUMNS = "60";
     const copy = catalogue(language).cli.doctor;
+    const scope = catalogue(language).cli.wiring;
     const project = join(scratch, "project");
     const other = join(scratch, "other");
     mkdirSync(project);
@@ -1095,7 +1120,7 @@ for (const language of ["en", "ko"] as const) {
       assert.equal(output.split(label).length - 1, 1, output);
     };
     const fresh = await invokeHuman(["doctor", "--here"]);
-    assertScope(fresh.output, copy.scope, project);
+    assertScope(fresh.output, scope.scopeHere, project);
     assert.equal((await invoke(["init", "--project", project, "--tools", "claude,codex,antigravity", "--lang", language, "--auto"])).code, 0);
     assert.equal((await invoke(["wire", "codex", "--project", other, "--auto"])).code, 0);
     const intact = await invokeHuman(["doctor", "--global"]);
@@ -1105,12 +1130,16 @@ for (const language of ["en", "ko"] as const) {
     rmSync(join(project, ".agents", "hooks.json"));
     rmSync(other, { recursive: true });
 
+    // A row names its scope, its agents and what was found; the directory it shares follows the rows.
+    const scopeWord = catalogue(language).cli.artifact.connectionScope.project.toLowerCase();
+    const row = (targets: string, detail: string) => `${scopeWord} · ${targets} · ${detail}`;
     const mixed = await invokeHuman(["doctor"]);
-    assertScope(mixed.output, copy.scopeGlobal, scratch);
+    assertScope(mixed.output, scope.scopeGlobal, scratch);
     const section = mixed.output.slice(mixed.output.indexOf(copy.wiredElsewhere));
-    assert.ok(containsWrapped(section, `antigravity, claude — ${copy.destinationUnwired}`), section);
-    assert.ok(containsWrapped(section, `codex — ${copy.destinationPresent}`), section);
-    assert.ok(containsWrapped(section, `codex — ${copy.destinationGone}`), section);
+    assert.ok(containsWrapped(section, row("antigravity, claude", copy.destinationUnwired)), section);
+    assert.ok(containsWrapped(section, row("codex", copy.destinationPresent)), section);
+    assert.ok(containsWrapped(section, row("codex", copy.destinationGone)), section);
+    assert.ok(section.indexOf(row("codex", copy.destinationPresent)) < section.indexOf(canonicalDestination(project)), section);
     assert.ok(containsWrapped(section, copy.inspectScope), section);
     assert.ok(containsWrapped(section, copy.disconnectScope), section);
     const unfolded = section.replace(/\s+/g, " ");
@@ -1119,22 +1148,25 @@ for (const language of ["en", "ko"] as const) {
     }
     for (const destination of [project, other].map(canonicalDestination)) {
       assert.equal(section.split("\n").filter(line => line.trim() === destination).length, 1, section);
+      // The current folder's commands name it with --here; another folder needs its path.
+      const flag = destination === canonicalDestination(project) ? "--here" : `--project "${destination}"`;
       for (const command of ["doctor", "eject"]) {
-        assert.equal(section.split(`tonedial ${command} --project "${destination}"`).length - 1, 1, section);
+        assert.equal(section.split(`tonedial ${command} ${flag}`).length - 1, 1, section);
       }
     }
+    assert.ok(containsWrapped(mixed.output, copy.folderConnections(["antigravity", "claude", "codex"], "tonedial doctor --here")), mixed.output);
     // The full scoped commands above stay copyable; their long paths use terminal soft wrapping.
     const prose = (output: string) => output.split("\n").filter(line => !/^tonedial (doctor|eject) /.test(line.trim())).join("\n");
     assertHumanWidth(prose(mixed.output), language, 60);
 
     rmSync(join(project, ".codex", "hooks.json"));
     const missing = await invokeHuman(["doctor", "--global", "--verbose"]);
-    assertScope(missing.output, copy.scopeGlobal, scratch);
-    assert.ok(containsWrapped(missing.output, `antigravity, claude, codex — ${copy.destinationUnwired}`), missing.output);
+    assertScope(missing.output, scope.scopeGlobal, scratch);
+    assert.ok(containsWrapped(missing.output, row("antigravity, claude, codex", copy.destinationUnwired)), missing.output);
     assertHumanWidth(prose(missing.output), language, 60);
     for (const args of [["--here"], ["--project", project, "--verbose"]]) {
       const selected = await invokeHuman(["doctor", ...args]);
-      assertScope(selected.output, copy.scope, project);
+      assertScope(selected.output, scope.scopeHere, project);
       const elsewhere = selected.output.slice(selected.output.indexOf(copy.wiredElsewhere));
       assert.ok(!elsewhere.includes(project), elsewhere);
     }
@@ -1278,7 +1310,7 @@ test("damaged-config recovery requires an explicit source without exposing or ch
 
   const result = await invokeHuman(["doctor", "--here", "--fix", "--auto"]);
   assert.equal(result.code, 1, result.output);
-  assert.ok(containsWrapped(result.error, catalogue("en").cli.recovery.sourceRequired));
+  assert.ok(containsWrapped(result.error, catalogue("en").cli.recovery.sourceRequired("tonedial doctor --fix --here")));
   const layoutRefusal = catalogue("en").cli.errors.contextLayout("conflict", paths.root);
   assert.ok(!result.error.includes(layoutRefusal), "and does not diagnose a layout it never read");
   assert.doesNotMatch(result.error + result.output, new RegExp(secret), "and never echoes its bytes");
@@ -1333,7 +1365,8 @@ test("doctor revalidates its classifier read-set before an interactive repair", 
   let changed = false;
   process.stdout.write = ((chunk: string) => {
     output += chunk;
-    if (!changed && chunk.includes(paths.tone)) {
+    // The approval preview lists TONE.md under the state root it lives in.
+    if (!changed && chunk.includes(`\n  ${paths.root}\n    TONE.md  `)) {
       changed = true;
       writeFileSync(paths.agents, "guide changed after approval preview\n");
     }
@@ -1396,7 +1429,7 @@ for (const language of ["en", "ko"] as const) {
     assert.equal(count(copy.hookGroupHeading), 1, result.output);
     assert.ok(containsWrapped(result.output, copy.hookGroupUnknown(tools)), result.output);
     assert.ok(!containsWrapped(result.output, copy.hookSettingScope), "unused integrations need no enablement disclaimer");
-    assert.ok(result.output.includes(copy.scopeGlobal), result.output);
+    assert.ok(result.output.includes(catalogue(language).cli.wiring.scopeGlobal), result.output);
     assert.doesNotMatch(result.output, /Hook enabled|훅이 켜져/);
     assertHumanWidth(result.output, language, 60);
 

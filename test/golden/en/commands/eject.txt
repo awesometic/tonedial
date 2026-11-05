@@ -1,29 +1,20 @@
 status: 0
---- stdout --- [bytes=612; endsWithNewline=true]
+--- stdout --- [bytes=366; endsWithNewline=true]
 ToneDial · eject
 
-  Connection scope: project
+  Project scope
   <ROOT>/project
 
   Review changes
   Changes: 3
 
-  <ROOT>/project/.codex/hooks.json
-  (removed)  41 lines
-  - {
-  -   "description": "ToneDial: load saved response tone",
-  -   "hooks": {
-  -     "SessionStart": [
+  Project files
+    .codex/hooks.json  (removed)
+    .agents/skills/tonedial  (skill link removed)
 
-  <ROOT>/project/.agents/skills/tonedial
-  (skill link removed)
-
-  <ROOT>/state/config.json
-  (modified)  +2 -106
-  -     "registrations": {
-  -       "[\"codex\",\"project\",\"<ROOT>/project\"]": {
-  +     "registrations": {},
-  +     "resources": {}
+  ToneDial state
+  <ROOT>/state
+    config.json  (removes the Codex CLI connection)
 
   Full diff: --verbose
 

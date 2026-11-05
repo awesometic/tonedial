@@ -15,6 +15,7 @@ import { TONE_COMMAND_VERSION } from "../src/core/skill.ts";
 import { gate, planChange } from "../src/wiring/apply.ts";
 import { orderedFingerprint, planOrderedDelivery, recordedHook } from "../src/wiring/targets.ts";
 import { palette } from "../src/ui/style.ts";
+import { addLegacyRider } from "./support/legacy-fixture.ts";
 
 let scratch: string;
 let env: NodeJS.ProcessEnv;
@@ -175,9 +176,11 @@ for (const tool of ["codex", "claude", "antigravity"] as const) {
   });
 }
 
-test("older recorded hooks inherit unchanged and refresh metadata only in the selected global scope", async () => {
+test("older recorded hooks stay unchanged beside a project and refresh metadata only in the global scope", async () => {
   const setup = await invoke(["init", "--global", "--tools", "codex", "--auto"]);
   assert.equal(setup.code, 0, JSON.stringify(setup.value));
+  // A project recorded on the global hook by an earlier version shares its refreshes.
+  await addLegacyRider(env, "codex", project);
   const paths = resolvePaths(env);
   const globalAgent = resolveAgentPaths({ global: true, project: null }, env, project);
   const projectAgent = resolveAgentPaths({ global: false, project: null }, env, project);
@@ -206,18 +209,6 @@ test("older recorded hooks inherit unchanged and refresh metadata only in the se
 
   const report = await invoke(["doctor", "--global"]);
   assert.equal(report.value.integrations.find((entry: { tool: string }) => entry.tool === "codex").configuration, "stale");
-  const wired = await invoke(["wire", "--here", "codex", "--auto"]);
-  assert.equal(wired.code, 0, JSON.stringify(wired.value));
-  assert.equal(existsSync(projectAgent.hookFile("codex")), false, "inheritance keeps the existing global command");
-  assert.equal(readFileSync(path, "utf8"), oldSettings, "project setup cannot rewrite global display metadata");
-  const inherited = parseConfig(readFileSync(paths.config, "utf8"));
-  assert.ok(isConfigV2(inherited));
-  const inheritedHook = Object.values(inherited.wiring.resources).find((entry) => entry.kind === "hook")!;
-  assert.equal(inheritedHook.consumers.length, 2);
-  for (const entry of Object.values(inheritedHook.managedByRegistration!)) {
-    assert.equal(entry.statusMessage, undefined, "the new consumer owns the exact old handler");
-    assert.equal(entry.handlerSha256, hash);
-  }
   for (const args of [["wire", "--here", "codex", "--auto"], ["init", "--here", "--tools", "codex", "--auto"]]) {
     const repeatedProject = await invoke(args);
     assert.equal(repeatedProject.code, 0, JSON.stringify(repeatedProject.value));
@@ -239,11 +230,11 @@ test("older recorded hooks inherit unchanged and refresh metadata only in the se
     assert.equal(metadata.statusMessage, refreshed.hooks.SessionStart[0].hooks[0].statusMessage);
   }
 
-  const disconnectedGlobal = await invoke(["unwire", "--global", "codex", "--auto"]);
-  assert.equal(disconnectedGlobal.code, 0, JSON.stringify(disconnectedGlobal.value));
-  assert.deepEqual(JSON.parse(readFileSync(path, "utf8")), refreshed, "the remaining project keeps the shared handler and description");
   const disconnectedProject = await invoke(["unwire", "--here", "codex", "--auto"]);
   assert.equal(disconnectedProject.code, 0, JSON.stringify(disconnectedProject.value));
+  assert.deepEqual(JSON.parse(readFileSync(path, "utf8")), refreshed, "the global connection keeps the shared handler and description");
+  const disconnectedGlobal = await invoke(["unwire", "--global", "codex", "--auto"]);
+  assert.equal(disconnectedGlobal.code, 0, JSON.stringify(disconnectedGlobal.value));
   assert.equal(existsSync(path), false, "the final consumer removes the created hook document");
 });
 
@@ -310,7 +301,7 @@ test("a project keeps inheriting an older global Codex hook, and doctor names th
   assert.equal(readFileSync(path, "utf8"), oldSettings, "project setup does not rewrite the global hook");
   const stale = await invoke(["doctor", "--here"]);
   const check = stale.value.checks.find((entry: { name: string }) => entry.name === "Codex CLI");
-  assert.equal(check.repair, "tonedial init --tools codex --global");
+  assert.equal(check.repair, "tonedial doctor --fix --global");
   const refreshed = await invoke(check.repair.split(" ").slice(1).concat("--auto"));
   assert.equal(refreshed.code, 0, JSON.stringify(refreshed.value));
   assert.equal(JSON.parse(readFileSync(path, "utf8")).hooks.SessionStart[0].hooks[0].additionalContextLimit, 0);
@@ -324,6 +315,19 @@ test("an older project Codex hook is still reported as a duplicate of new global
   const global = await invoke(["init", "--global", "--tools", "codex", "--auto"]);
   assert.equal(global.code, 0, JSON.stringify(global.value));
   assert.deepEqual(global.value.native.tools[0].duplicates.map((entry: { state: string }) => entry.state), ["stale-duplicate"]);
+
+  // The human report says so on the line after the hook it describes.
+  let shown = "";
+  const write = process.stdout.write;
+  process.stdout.write = ((text: string) => { shown += text; return true; }) as typeof write;
+  try {
+    assert.equal(await run(["doctor", "--global"], env, project, false, false), 0);
+  } finally {
+    process.stdout.write = write;
+  }
+  const lines = shown.split("\n").map((line) => line.trim());
+  const staleHook = lines.indexOf(join(project, ".codex", "hooks.json"));
+  assert.ok(staleHook >= 0 && /older runtime/.test(lines[staleHook + 1]!), shown);
 });
 
 test("Codex setup and removal preserve existing or edited file descriptions", async () => {
@@ -456,7 +460,7 @@ test("Codex configuration and stored hashes do not certify current trust or acti
   );
 });
 
-test("global native inheritance keeps one hook and disconnects shared consumers by scope", async () => {
+test("a project beside global native connections records nothing and shared consumers disconnect by scope", async () => {
   const paths = resolvePaths(env);
   const globalAgent = resolveAgentPaths({ global: true, project: null }, env, project);
   const projectAgent = resolveAgentPaths({ global: false, project: null }, env, project);
@@ -470,69 +474,34 @@ test("global native inheritance keeps one hook and disconnects shared consumers 
 
   const initialized = await invoke(["init", "--global", "--tools", "claude,codex", "--auto"]);
   assert.equal(initialized.code, 0, JSON.stringify(initialized.value));
-  const globalSettingsReal = realpathSync(globalSettings);
   assert.equal(existsSync(globalSettings), true);
   assert.equal(existsSync(codexHooks), true);
   assert.equal(existsSync(sharedSkill), true);
   assert.equal(countCommands(JSON.parse(readFileSync(globalSettings, "utf8"))), 1);
-
-  // A global handler with a different absolute runtime is not inherited and must not cause a
-  // second project hook while the current WIP keeps mismatch handling conservative.
-  const guide = catalogue("en").cli;
-  const globalBeforeMismatch = readFileSync(globalSettings, "utf8");
-  const configBeforeMismatchText = readFileSync(paths.config, "utf8");
-  const configBeforeMismatch = parseConfig(configBeforeMismatchText, guide);
-  if (!isConfigV2(configBeforeMismatch)) throw new Error("native setup did not record schema 2 wiring");
-  assert.throws(
-    () => planOrderedDelivery(paths, projectAgent, "claude", configBeforeMismatch.wiring, env, guide, join(scratch, "runtime-mismatch", "node")),
-    /unowned|managed content|file type changed/,
-  );
-  assert.equal(readFileSync(globalSettings, "utf8"), globalBeforeMismatch);
-  assert.equal(existsSync(projectClaudeSettings), false);
-  assert.equal(readFileSync(paths.config, "utf8"), configBeforeMismatchText);
+  const configBefore = readFileSync(paths.config, "utf8");
 
   const projectWired = await invoke(["wire", "--here", "claude", "--auto"]);
   assert.equal(projectWired.code, 0, JSON.stringify(projectWired.value));
-  assert.equal(existsSync(projectClaudeSettings), false, "a matching global hook is inherited");
-  assert.equal(countCommands(JSON.parse(readFileSync(globalSettings, "utf8"))), 1, "inheritance does not duplicate the hook");
-  assert.equal(existsSync(projectSharedSkill), true, "project skill delivery remains scoped to the project");
-
-  let config = parseConfig(readFileSync(paths.config, "utf8"), guide);
-  if (!isConfigV2(config)) throw new Error("native setup did not record schema 2 wiring");
-  const globalClaudeId = Object.entries(config.wiring.registrations).find(([, registration]) =>
-    registration.target === "claude" && registration.scope === "global",
-  )?.[0];
-  const projectClaudeId = Object.entries(config.wiring.registrations).find(([, registration]) =>
-    registration.target === "claude" && registration.scope === "project",
-  )?.[0];
-  const hookResource = Object.values(config.wiring.resources).find((resource) =>
-    resource.kind === "hook" && resource.path === globalSettingsReal,
-  );
-  if (!globalClaudeId || !projectClaudeId || !hookResource) throw new Error("missing inherited Claude hook ownership");
-  assert.deepEqual([...hookResource.consumers].sort(), [globalClaudeId, projectClaudeId].sort());
+  assert.equal(projectWired.value.tools[0].covered, true);
+  assert.equal(existsSync(projectClaudeSettings), false, "the global hook already serves the folder");
+  assert.equal(existsSync(projectSharedSkill), false, "the global skill already serves the folder");
+  assert.equal(countCommands(JSON.parse(readFileSync(globalSettings, "utf8"))), 1);
+  assert.equal(readFileSync(paths.config, "utf8"), configBefore);
 
   const disconnectedGlobal = await invoke(["unwire", "claude", "--global", "--auto"]);
   assert.equal(disconnectedGlobal.code, 0, JSON.stringify(disconnectedGlobal.value));
-  assert.equal(existsSync(globalSettings), true, "the project consumer keeps the inherited file");
-  assert.equal(countCommands(JSON.parse(readFileSync(globalSettings, "utf8"))), 1);
+  assert.equal(existsSync(globalSettings), false, "the only Claude consumer removes the created file");
   assert.equal(existsSync(sharedSkill), true, "Codex remains a shared-skill consumer");
-  config = parseConfig(readFileSync(paths.config, "utf8"), guide);
-  if (!isConfigV2(config)) throw new Error("global disconnect did not preserve schema 2 wiring");
-  const retainedHook = Object.values(config.wiring.resources).find((resource) =>
-    resource.kind === "hook" && resource.path === globalSettingsReal,
-  );
-  assert.deepEqual(retainedHook?.consumers, [projectClaudeId]);
 
-  // The remaining project registration owns the retained global file and must reuse its exact
-  // handler rather than appending a second one after the original global registration leaves.
+  // With the global Claude connection gone, the project gets its own hook and skill links.
   const rewiredProject = await invoke(["wire", "--here", "claude", "--auto"]);
   assert.equal(rewiredProject.code, 0, JSON.stringify(rewiredProject.value));
-  assert.equal(existsSync(projectClaudeSettings), false);
-  assert.equal(countCommands(JSON.parse(readFileSync(globalSettings, "utf8"))), 1);
+  assert.equal(countCommands(JSON.parse(readFileSync(projectClaudeSettings, "utf8"))), 1);
+  assert.equal(existsSync(projectSharedSkill), true);
 
   const disconnectedProject = await invoke(["unwire", "--here", "claude", "--auto"]);
   assert.equal(disconnectedProject.code, 0, JSON.stringify(disconnectedProject.value));
-  assert.equal(existsSync(globalSettings), false, "the last Claude hook consumer removes the created file");
+  assert.equal(existsSync(projectClaudeSettings), false);
   assert.equal(existsSync(projectSharedSkill), false);
   assert.equal(existsSync(sharedSkill), true, "the Codex shared-skill consumer remains");
   assert.equal(existsSync(codexHooks), true);
@@ -557,7 +526,7 @@ test("native planner replaces an old runtime exactly and refuses edited ownershi
 
   let config = parseConfig(readFileSync(paths.config, "utf8"), t);
   if (!isConfigV2(config)) throw new Error("native setup did not record schema 2 wiring");
-  const oldPlan = planOrderedDelivery(paths, agent, "claude", config.wiring, env, t, oldRuntime);
+  const oldPlan = planOrderedDelivery(paths, agent, "claude", config.wiring, t, oldRuntime);
   config.wiring = oldPlan.wiring;
   const oldConfigChange = planChange(paths.config, (before) => before, t);
   const oldApplied = await gate([oldPlan.change], {
@@ -583,7 +552,7 @@ test("native planner replaces an old runtime exactly and refuses edited ownershi
 
   config = parseConfig(readFileSync(paths.config, "utf8"), t);
   if (!isConfigV2(config)) throw new Error("runtime replacement lost schema 2 wiring");
-  const newPlan = planOrderedDelivery(paths, agent, "claude", config.wiring, env, t, newRuntime);
+  const newPlan = planOrderedDelivery(paths, agent, "claude", config.wiring, t, newRuntime);
   config.wiring = newPlan.wiring;
   const newConfigChange = planChange(paths.config, (before) => before, t);
   const newApplied = await gate([newPlan.change], {
@@ -615,16 +584,15 @@ test("native planner replaces an old runtime exactly and refuses edited ownershi
   const editedConfig = readFileSync(paths.config, "utf8");
   config = parseConfig(editedConfig, t);
   if (!isConfigV2(config)) throw new Error("edited ownership test lost schema 2 wiring");
-  assert.throws(() => planOrderedDelivery(paths, agent, "claude", config.wiring, env, t, join(scratch, "runtime next", "node")), /unowned|managed content|file type changed/);
+  assert.throws(() => planOrderedDelivery(paths, agent, "claude", config.wiring, t, join(scratch, "runtime next", "node")), /unowned|managed content|file type changed/);
   assert.equal(readFileSync(settingsPath, "utf8"), editedSettings);
   assert.equal(readFileSync(paths.config, "utf8"), editedConfig);
 });
 
-test("global runtime refresh updates shared global/project ownership before either disconnects", async () => {
+test("global runtime refresh updates a legacy project's shared ownership before either disconnects", async () => {
   const initialized = await invoke(["init", "--global", "--tools", "claude", "--auto"]);
   assert.equal(initialized.code, 0, JSON.stringify(initialized.value));
-  const wired = await invoke(["wire", "--here", "claude", "--auto"]);
-  assert.equal(wired.code, 0, JSON.stringify(wired.value));
+  await addLegacyRider(env, "claude", project);
 
   const paths = resolvePaths(env);
   const globalAgent = resolveAgentPaths({ global: true, project: null }, env, project);
@@ -635,7 +603,7 @@ test("global runtime refresh updates shared global/project ownership before eith
   let config = parseConfig(readFileSync(paths.config, "utf8"), t);
   if (!isConfigV2(config)) throw new Error("global refresh setup did not record schema 2 wiring");
 
-  const plan = planOrderedDelivery(paths, globalAgent, "claude", config.wiring, env, t, runtime);
+  const plan = planOrderedDelivery(paths, globalAgent, "claude", config.wiring, t, runtime);
   assert.equal(plan.checks.length, 0);
   config.wiring = plan.wiring;
   const configChange = planChange(paths.config, (before) => before, t);
@@ -689,121 +657,6 @@ test("global runtime refresh updates shared global/project ownership before eith
   assert.equal(existsSync(settingsPath), false);
   assert.equal(existsSync(paths.agents), true);
   assert.equal(existsSync(paths.tone), true);
-});
-
-test("project runtime refresh updates inherited global ownership before global disconnects", async () => {
-  const initialized = await invoke(["init", "--global", "--tools", "claude", "--auto"]);
-  assert.equal(initialized.code, 0, JSON.stringify(initialized.value));
-  const wired = await invoke(["wire", "--here", "claude", "--auto"]);
-  assert.equal(wired.code, 0, JSON.stringify(wired.value));
-
-  const paths = resolvePaths(env);
-  const globalAgent = resolveAgentPaths({ global: true, project: null }, env, project);
-  const projectAgent = resolveAgentPaths({ global: false, project: null }, env, project);
-  const settingsPath = globalAgent.hookFile("claude");
-  const settingsRealPath = realpathSync(settingsPath);
-  const t = catalogue("en").cli;
-  const runtime = join(scratch, "runtime project refresh", "node");
-  let config = parseConfig(readFileSync(paths.config, "utf8"), t);
-  if (!isConfigV2(config)) throw new Error("project refresh setup did not record schema 2 wiring");
-
-  const plan = planOrderedDelivery(paths, projectAgent, "claude", config.wiring, env, t, runtime);
-  assert.equal(plan.checks.length, 0);
-  config.wiring = plan.wiring;
-  const configChange = planChange(paths.config, (before) => before, t);
-  const applied = await gate([...plan.checks, plan.change], {
-    paths,
-    finalChanges: [{ ...configChange, after: serializeConfig(config) }],
-    auto: true,
-    dryRun: false,
-    ui: palette("never", env, false),
-    t,
-  });
-  assert.equal(applied.applied, true);
-
-  const readHandlers = () => (JSON.parse(readFileSync(settingsPath, "utf8")) as {
-    hooks: { SessionStart: Array<{ hooks: Array<{ type: string; command: string; args?: string[] }> }> };
-  }).hooks.SessionStart.flatMap((block) => block.hooks).filter((handler) => handler.type === "command");
-  const handlers = readHandlers();
-  assert.equal(handlers.length, 1);
-  assert.equal(handlers[0]!.command, runtime);
-  assert.deepEqual(handlers[0]!.args, [readerPath(paths.root), "--provider", "claude", "--state", paths.root]);
-
-  config = parseConfig(readFileSync(paths.config, "utf8"), t);
-  if (!isConfigV2(config)) throw new Error("project refresh did not persist schema 2 wiring");
-  const globalId = Object.entries(config.wiring.registrations).find(([, registration]) =>
-    registration.target === "claude" && registration.scope === "global",
-  )?.[0];
-  const projectId = Object.entries(config.wiring.registrations).find(([, registration]) =>
-    registration.target === "claude" && registration.scope === "project",
-  )?.[0];
-  const resource = Object.values(config.wiring.resources).find((candidate) =>
-    candidate.kind === "hook" && candidate.path === settingsRealPath,
-  );
-  if (!globalId || !projectId || !resource) throw new Error("project refresh lost shared hook ownership");
-  assert.deepEqual([...resource.consumers].sort(), [globalId, projectId].sort());
-  assert.equal(resource.managedByRegistration?.[globalId]?.command, runtime);
-  assert.equal(resource.managedByRegistration?.[projectId]?.command, runtime);
-
-  const globalDisconnect = await invoke(["unwire", "claude", "--global", "--auto"]);
-  assert.equal(globalDisconnect.code, 0, JSON.stringify(globalDisconnect.value));
-  assert.equal(existsSync(settingsPath), true);
-  config = parseConfig(readFileSync(paths.config, "utf8"), t);
-  if (!isConfigV2(config)) throw new Error("global disconnect lost schema 2 wiring");
-  const retained = Object.values(config.wiring.resources).find((candidate) =>
-    candidate.kind === "hook" && candidate.path === settingsRealPath,
-  );
-  assert.deepEqual(retained?.consumers, [projectId]);
-  assert.equal(retained?.managedByRegistration?.[projectId]?.command, runtime);
-
-  const projectDisconnect = await invoke(["unwire", "--here", "claude", "--auto"]);
-  assert.equal(projectDisconnect.code, 0, JSON.stringify(projectDisconnect.value));
-  assert.equal(existsSync(settingsPath), false);
-  assert.equal(existsSync(paths.agents), true);
-  assert.equal(existsSync(paths.tone), true);
-});
-
-test("inherited native route refuses a stale local hook probe before applying shared changes", async () => {
-  const initialized = await invoke(["init", "--global", "--tools", "claude", "--auto"]);
-  assert.equal(initialized.code, 0, JSON.stringify(initialized.value));
-
-  const paths = resolvePaths(env);
-  const projectAgent = resolveAgentPaths({ global: false, project: null }, env, project);
-  const localSettings = projectAgent.hookFile("claude");
-  const t = catalogue("en").cli;
-  let config = parseConfig(readFileSync(paths.config, "utf8"), t);
-  if (!isConfigV2(config)) throw new Error("stale-local setup did not record schema 2 wiring");
-  const plan = planOrderedDelivery(paths, projectAgent, "claude", config.wiring, env, t);
-  assert.equal(plan.checks.length, 1, "inheritance must probe the local destination");
-  assert.equal(plan.checks[0]!.path, localSettings);
-  assert.equal(plan.checks[0]!.before, null);
-  assert.equal(plan.checks[0]!.after, null);
-
-  config.wiring = plan.wiring;
-  const configChange = planChange(paths.config, (before) => before, t);
-  const finalConfig = serializeConfig(config);
-  const beforeGlobalSettings = readFileSync(resolveAgentPaths({ global: true, project: null }, env, project).hookFile("claude"), "utf8");
-  const beforeConfig = readFileSync(paths.config, "utf8");
-
-  mkdirSync(dirname(localSettings), { recursive: true });
-  writeFileSync(localSettings, '{"userOwned":true}\n');
-  await assert.rejects(
-    () => gate([...plan.checks, plan.change], {
-      paths,
-      finalChanges: [{ ...configChange, after: finalConfig }],
-      auto: true,
-      dryRun: false,
-      ui: palette("never", env, false),
-      t,
-    }),
-    /changed after the diff was prepared/,
-  );
-  assert.equal(readFileSync(localSettings, "utf8"), '{"userOwned":true}\n');
-  assert.equal(readFileSync(paths.config, "utf8"), beforeConfig);
-  assert.equal(
-    readFileSync(resolveAgentPaths({ global: true, project: null }, env, project).hookFile("claude"), "utf8"),
-    beforeGlobalSettings,
-  );
 });
 
 test("two selected tools whose settings are one file are refused before either is written", async () => {
@@ -1039,7 +892,7 @@ test("an edited optional command blocks native refresh and scoped removal withou
       assert.equal(refused.value.nativeAttention, true);
     } else {
       assert.notEqual(refused.code, 0, JSON.stringify(refused.value));
-      assert.equal(refused.value.error, catalogue("en").cli.errors.ownershipConflict(agent.command("tone")));
+      assert.equal(refused.value.error, `${catalogue("en").cli.errors.ownershipConflict(agent.command("tone"))}\n  tonedial doctor --here`);
     }
     for (const { path, bytes } of before) assert.deepEqual(readFileSync(path), bytes, path);
     assert.equal(existsSync(join(project, ".agents", "skills", "tonedial")), true);

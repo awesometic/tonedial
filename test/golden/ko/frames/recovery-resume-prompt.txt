@@ -1,6 +1,6 @@
 ToneDial · doctor
 
-  검사 범위: 프로젝트
+  프로젝트 범위
   <ROOT>/agents
   중단된 작업:
   ffffffffffffffffffffffffffffffff

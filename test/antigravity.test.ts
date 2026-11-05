@@ -154,7 +154,7 @@ test("the Antigravity enabled switch remains owned and can be disconnected", asy
   assert.equal(existsSync(hookPath), false, "an entirely ToneDial-created hooks file is removed");
 });
 
-test("a project Antigravity setup reuses the recorded global hook", async () => {
+test("a project Antigravity setup beside the global hook writes nothing", async () => {
   const globalHook = join(scratch, ".gemini", "config", "hooks.json");
   const localHook = join(project, ".agents", "hooks.json");
   const globalSetup = await invoke(["init", "--global", "--tools", "antigravity", "--auto"]);
@@ -167,11 +167,13 @@ test("a project Antigravity setup reuses the recorded global hook", async () => 
   const projectSetup = await invoke(["init", "--here", "--tools", "antigravity", "--auto"]);
   assert.equal(projectSetup.code, 0, JSON.stringify(projectSetup.value));
   assert.equal(projectSetup.value.integrations?.[0]?.inherited, true);
-  assert.equal(existsSync(localHook), false, "an inherited project route does not create a second hook");
+  assert.equal(projectSetup.value.integrations?.[0]?.covered, true);
+  assert.equal(existsSync(localHook), false, "a covered project does not get a second hook");
+  assert.equal(existsSync(join(project, ".agents")), false, "nor a skill link: the global one covers the folder");
   assert.deepEqual(readFileSync(globalHook), before, "project setup leaves the global hook byte-identical");
 });
 
-test("a local Antigravity namespace collision blocks inherited setup without writes", async () => {
+test("a local Antigravity namespace beside the global hook is left alone", async () => {
   const globalHook = join(scratch, ".gemini", "config", "hooks.json");
   const localHook = join(project, ".agents", "hooks.json");
   const globalSetup = await invoke(["init", "--global", "--tools", "antigravity", "--auto"]);
@@ -183,8 +185,7 @@ test("a local Antigravity namespace collision blocks inherited setup without wri
 
   const projectSetup = await invoke(["init", "--here", "--tools", "antigravity", "--auto"]);
   assert.equal(projectSetup.code, 0, JSON.stringify(projectSetup.value));
-  assert.equal(projectSetup.value.nativeAttention, true, "the inherited setup reports the protected namespace");
-  assert.equal(projectSetup.value.native?.reason, "protected-native-resource");
+  assert.equal(projectSetup.value.integrations?.[0]?.covered, true, "a covered folder is not planned at all");
   assert.equal(readFileSync(localHook, "utf8"), localBytes);
   assert.deepEqual(readFileSync(globalHook), globalBefore);
 });

@@ -1,7 +1,5 @@
 status: 0
---- stdout --- [bytes=76; endsWithNewline=true]
-ToneDial · reset
-
+--- stdout --- [bytes=57; endsWithNewline=true]
   설정 변경됨
   warmth  5 → 3
   TONE.md 생성됨

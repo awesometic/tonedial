@@ -2,17 +2,17 @@
 <title id="title">ToneDial screen (ko · doctor-recovery-stopped)</title>
 <desc id="description">ToneDial · doctor
 
-  검사 범위: 전역
+  전역 범위(모든 프로젝트 공유)
   &lt;ROOT&gt;
 
   진행 중이거나 복구가 필요한 작업이 있습니다. 이번 실행에서는 파일을 바꾸지
   않았습니다.
   ffffffffffffffffffffffffffffffff  미완료
 
-  앱 복구를 이어가려면:
+  현재 설정으로 복구를 마치려면 이어서 실행하세요:
   tonedial doctor --fix --from-operation ffffffffffffffffffffffffffffffff --global
 
-  이전 파일로 되돌리려면:
+  변경을 취소하고 시작 전 파일로 되돌리려면:
   tonedial doctor --fix --rollback ffffffffffffffffffffffffffffffff
 
   전체 내용 확인:
@@ -20,15 +20,15 @@
 </desc>
 <rect width="100%" height="100%" rx="16" fill="#171b20"/>
 <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, system-ui" font-size="22"><text x="32" y="48" fill="#edf3f6" font-weight="400" opacity="1">ToneDial · doctor</text>
-<text x="60" y="104" fill="#edf3f6" font-weight="400" opacity="1">검사 범위: 전역</text>
+<text x="60" y="104" fill="#edf3f6" font-weight="400" opacity="1">전역 범위(모든 프로젝트 공유)</text>
 <text x="60" y="132" fill="#edf3f6" font-weight="400" opacity="1">&lt;ROOT&gt;</text>
 <text x="60" y="188" fill="#edf3f6" font-weight="400" opacity="1">진행 중이거나 복구가 필요한 작업이 있습니다. 이번 실행에서는 파일을 바꾸지</text>
 <text x="60" y="216" fill="#edf3f6" font-weight="400" opacity="1">않았습니다.</text>
 <text x="60" y="244" fill="#edf3f6" font-weight="400" opacity="1">ffffffffffffffffffffffffffffffff</text>
 <text x="536" y="244" fill="#edf3f6" font-weight="400" opacity="1">미완료</text>
-<text x="60" y="300" fill="#edf3f6" font-weight="400" opacity="1">앱 복구를 이어가려면:</text>
+<text x="60" y="300" fill="#edf3f6" font-weight="400" opacity="1">현재 설정으로 복구를 마치려면 이어서 실행하세요:</text>
 <text x="60" y="328" fill="#edf3f6" font-weight="400" opacity="1">tonedial doctor --fix --from-operation ffffffffffffffffffffffffffffffff --global</text>
-<text x="60" y="384" fill="#edf3f6" font-weight="400" opacity="1">이전 파일로 되돌리려면:</text>
+<text x="60" y="384" fill="#edf3f6" font-weight="400" opacity="1">변경을 취소하고 시작 전 파일로 되돌리려면:</text>
 <text x="60" y="412" fill="#edf3f6" font-weight="400" opacity="1">tonedial doctor --fix --rollback ffffffffffffffffffffffffffffffff</text>
 <text x="60" y="468" fill="#edf3f6" font-weight="400" opacity="1">전체 내용 확인:</text>
 <text x="60" y="496" fill="#edf3f6" font-weight="400" opacity="1">tonedial doctor --global --json</text></g>

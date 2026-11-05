@@ -315,7 +315,9 @@ test("implicit native repair follows current-scope registrations and leaves reco
   assert.equal(result.json.applied, true);
   assert.equal(readFileSync(projectPath, "utf8"), foreign);
   assert.equal(JSON.parse(readFileSync(globalPath, "utf8")).hooks.SessionStart.length, 1);
-  assert.ok((result.json.issues as { reason: string }[]).some((item) => item.reason === "unselected-scopes"));
+  // The project's recorded file is present, so this global repair leaves that scope to its own
+  // doctor, as doctor's other-scopes section does; `doctor --here` reports the content.
+  assert.equal((result.json.issues as { reason: string }[]).some((item) => item.reason === "unselected-scopes"), false);
   assert.doesNotMatch(JSON.stringify(result.json) + result.lines.join("\n"), /PRIVATE_RECORDED_PROJECT/);
   const journal = JSON.parse(readFileSync(join(ctx.paths.operations, `${result.json.operationId}.json`), "utf8"));
   assert.equal(journal.actions.some((action: { path: string }) => action.path === projectPath), false);

@@ -1,42 +1,23 @@
 status: 0
---- stdout --- [bytes=1130; endsWithNewline=true]
+--- stdout --- [bytes=770; endsWithNewline=true]
 ToneDial · wire
 
-  Connection scope: project
+  Project scope
   <ROOT>/project
 
   Connect agents
   Changes: 6
 
-  <ROOT>/state/reader.mjs
-  (new file)  410 lines
-  + #!/usr/bin/env node
-  + import {
+  Project files
+    .codex/hooks.json  (new file)
+    .agents/skills/tonedial  (new skill link)
 
-  <ROOT>/state/skill/tonedial/SKILL.md
-  (new file)  361 lines
-  + ---
-  + name: tonedial
-
-  <ROOT>/state/skill/tonedial/references/traits.md
-  (new file)  113 lines
-  + Twelve axes, each 1 to 5. Read the live values with `tonedial get --json`; this file says what
-  + each one **owns**, which is what tells you which axis a request is actually about.
-
-  <ROOT>/project/.codex/hooks.json
-  (new file)  41 lines
-  +   "description": "ToneDial: load saved response tone",
-  +   "hooks": {
-
-  <ROOT>/project/.agents/skills/tonedial
-  (new skill link)
-
-  <ROOT>/state/config.json
-  (modified)  +173 -51
-  -     "registrations": {},
-  -     "resources": {}
-  +     "registrations": {
-  +       "[\"codex\",\"project\",\"<ROOT>/project\"]": {
+  ToneDial state
+  <ROOT>/state
+    reader.mjs  (new file)
+    skill/tonedial/SKILL.md  (new file)
+    skill/tonedial/references/traits.md  (new file)
+    config.json  (records Codex CLI for this project)
 
   Full diff: --verbose
 
@@ -44,5 +25,9 @@ ToneDial · wire
   <ROOT>/project/.codex/hooks.json
   Trust this project in Codex, then open /hooks → SessionStart → ToneDial,
   review the command and enable the hook.
+
+  The project hooks run ToneDial with paths from this machine. Keep them out of
+  version control (for example with .git/info/exclude), or commit them only if
+  you mean to.
 --- stderr --- [bytes=0; endsWithNewline=false]
 

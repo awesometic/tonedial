@@ -1,31 +1,31 @@
 status: 0
---- stdout --- [bytes=1188; endsWithNewline=true]
+--- stdout --- [bytes=1135; endsWithNewline=true]
 ToneDial · show · Caring Brother (unsaved changes)        TONE.md 4,806 chars
 
-                         Current   ToneDial default · ! risky tone
-  form      formality    ▮▯▯▯▯  1   *3
-            verbosity    ▮▮▮▮▯  4   *3
-            profanity    ▮▮▯▯▯  2   *1
-            playfulness  ▮▮▮▯▯  3    3
-  target    critique     ▮▮▯▯▯  2   *3
-            flattery     ▮▯▯▯▯  1    1
-            warmth       ▮▮▮▮▮  5   *3
-  behaviour conviction   ▮▮▮▮▯  4   *3
-            care         ▮▮▮▮▮  5   *3
-            compliance   ▮▮▮▯▯  3    3
-            refusal      ▮▯▯▯▯  1    1
-            bravado      ▮▯▯▯▯  1    1
+                        Current   Default
+  form     formality    ▮▯▯▯▯  1   *3
+           verbosity    ▮▮▮▮▯  4   *3
+           profanity    ▮▮▯▯▯  2   *1
+           playfulness  ▮▮▮▯▯  3    3
+  target   critique     ▮▮▯▯▯  2   *3
+           flattery     ▮▯▯▯▯  1    1
+           warmth       ▮▮▮▮▮  5   *3
+  behavior conviction   ▮▮▮▮▯  4   *3
+           care         ▮▮▮▮▮  5   *3
+           compliance   ▮▮▮▯▯  3    3
+           refusal      ▮▯▯▯▯  1    1
+           bravado      ▮▯▯▯▯  1    1
 
   Settings
-  agent calls itself your big brother · calls you little sibling
+  agent calls itself "your big brother" · calls you "little sibling"
   fictional agent role: Fictional database specialist with ten years of
-  experience (58/200)
-  user context: Developer who likes concise technical answers (45/200)
+  experience
+  user context: Developer who likes concise technical answers
   no safeword · register plain (non-honorific) · address frequency auto
   Interface language en
   Connections: none
 
-  * differs from ToneDial's default · Not saved to a profile.
+  * differs from ToneDial's default · Not saved to a preset.
   tonedial save "My Tone"
 --- stderr --- [bytes=0; endsWithNewline=false]
 

@@ -67,6 +67,11 @@ export type ManagedResource = {
   kind: ResourceKind;
   created: boolean;
   createdDir: boolean;
+  /**
+   * A skill link's parent directories, counted upward from its own, that its install created.
+   * Absent in records written before 0.1.14, which know only `createdDir`: that the parent was missing.
+   */
+  createdParents?: number;
   consumers: string[];
   /** Optional for older schema-2 records; keyed by registration, not by physical resource. */
   accessPaths?: Record<string, ResourceAccess>;
@@ -180,7 +185,72 @@ export function defaultConfig(): Config {
   };
 }
 
-export class ConfigError extends Error {}
+/**
+ * The user's own file or argument talking back. A refusal also names itself with a stable
+ * `reason` and the commands a person can choose, which JSON reports beside the message.
+ */
+export class ConfigError extends Error {
+  readonly reason: string | undefined;
+  readonly commands: readonly string[];
+  constructor(message?: string, options: ErrorOptions & { reason?: string; commands?: readonly string[] } = {}) {
+    const { reason, commands, ...error } = options;
+    super(message, error);
+    this.reason = reason;
+    this.commands = commands ?? [];
+  }
+}
+
+/** A file whose recorded ownership no longer matches. The CLI adds the scoped `doctor` command. */
+export class OwnershipConflict extends ConfigError {
+  constructor(message: string) {
+    super(message, { reason: "ownership-conflict" });
+  }
+}
+
+/**
+ * `init` was given no agents. The throwing site knows neither the scope nor the options to
+ * keep, so the CLI words the commands that fix it, as it does for a missing scope.
+ */
+export class ToolsRequired extends ConfigError {
+  readonly t: Messages;
+  constructor(t: Messages) {
+    super("tools required", { reason: "tools-required" });
+    this.t = t;
+  }
+}
+
+/**
+ * Saved settings that cannot be read. The CLI names the `doctor --fix` of the scope it ran in,
+ * which the commands that read settings do not know; `message` is the parser's own reason.
+ */
+export class SettingsUnreadable extends ConfigError {
+  readonly t: Messages;
+  readonly path: string;
+  constructor(message: string, path: string, t: Messages, cause: unknown) {
+    super(message, { cause, reason: "settings-unreadable" });
+    this.t = t;
+    this.path = path;
+  }
+}
+
+/**
+ * A preset slug nothing matches. The nearest slug is offered as the caller's own command, which
+ * only the CLI can word, since it knows the invocation. `suggestable` narrows what may be offered
+ * (`edit` cannot open a bundled preset).
+ */
+export class PresetNotFound extends ConfigError {
+  readonly t: Messages;
+  readonly slug: string;
+  readonly known: string[];
+  readonly near: string | null;
+  constructor(t: Messages, slug: string, known: string[], suggestable: readonly string[] = known) {
+    super(t.preset.unknown(slug, known, null));
+    this.t = t;
+    this.slug = slug;
+    this.known = known;
+    this.near = nearest(slug, suggestable);
+  }
+}
 
 /** An object, and not an array — `typeof [] === "object"`, which let a JSON array through. */
 const isRecord = (v: unknown): v is Record<string, unknown> =>
@@ -506,7 +576,7 @@ function readWiringV2(raw: unknown, t: Messages): WiringV2 {
     const tuple = decodeTupleKey(key, 2);
     if (!tuple) invalidValue(`wiring.resources.${key}`, t);
     const value = requiredObject(resourceSource[key], `wiring.resources.${key}`, t);
-    rejectUnknown(value, ["path", "kind", "created", "createdDir", "consumers", "accessPaths", "expected", "managed", "managedByRegistration", "documentDescription"], `wiring.resources.${key}`, t);
+    rejectUnknown(value, ["path", "kind", "created", "createdDir", "createdParents", "consumers", "accessPaths", "expected", "managed", "managedByRegistration", "documentDescription"], `wiring.resources.${key}`, t);
     const canonicalPath = absolutePath(tuple[0], `wiring.resources.${key}`, t);
     const kind = requiredString(tuple[1], `wiring.resources.${key}`, t);
     if (!(RESOURCE_KINDS as readonly string[]).includes(kind)) invalidValue(`wiring.resources.${key}`, t);
@@ -555,6 +625,10 @@ function readWiringV2(raw: unknown, t: Messages): WiringV2 {
       kind: kind as ResourceKind,
       created: requiredBoolean(value.created, `wiring.resources.${key}.created`, t),
       createdDir: requiredBoolean(value.createdDir, `wiring.resources.${key}.createdDir`, t),
+      ...(value.createdParents === undefined ? {} : {
+        createdParents: kind === "skill" && Number.isSafeInteger(value.createdParents) && (value.createdParents as number) >= 0
+          ? value.createdParents as number : invalidValue(`wiring.resources.${key}.createdParents`, t),
+      }),
       consumers: stringArray(value.consumers, `wiring.resources.${key}.consumers`, t),
       ...(accessPaths === undefined ? {} : { accessPaths }),
       ...(Object.keys(managedByRegistration).length ? { managedByRegistration } : {}),
@@ -814,7 +888,8 @@ export function recoverSettings(text: string, t: Messages = catalogue("en").cli)
   };
   for (const key of USER_SETTING_KEYS) {
     if (key === "axes" || key === "persona") continue;
-    if (raw[key] === undefined) { defaulted.push(key); continue; }
+    // The serializer omits `enabled` while on, so its absence is the stored value.
+    if (raw[key] === undefined && key !== "enabled") { defaulted.push(key); continue; }
     const parsed = accept(key, { ...config, [key]: raw[key] } as ConfigV2);
     if (parsed !== null) {
       Object.assign(config, { [key]: parsed[key] });

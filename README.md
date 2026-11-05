@@ -24,14 +24,14 @@ Tone changes manner only; permissions and approval prompts stay as your agent se
 
 ## Same model. A tighter plan.
 
-At `gpt-5.6-sol` / `high`, one fresh session used Codex defaults and one used the complete `vibe-coder` profile below.
-`verbosity=1` is one part of that profile, not the only difference.
+At `gpt-5.6-sol` / `high`, one fresh session used Codex defaults and one used the complete `vibe-coder` preset below.
+`verbosity=1` is one part of that preset, not the only difference.
 
 **Instruction**
 
 > I want to make ToneDial easier for first-time users. The README should get them from installation through `tonedial init` to their first preview with `tonedial test codex --preset <slug>`, and the CLI should make that next step obvious after `init`. Give me a prioritized three-step improvement plan for the README and first-run CLI flow.
 
-<img src="https://raw.githubusercontent.com/awesometic/tonedial/main/docs/media/readme/en/verbosity-comparison.svg" alt="GPT-5.6 Sol high answers the same three-step ToneDial improvement-plan instruction with Codex defaults and the complete vibe-coder profile; the profile response uses 82 words instead of 148" width="760">
+<img src="https://raw.githubusercontent.com/awesometic/tonedial/main/docs/media/readme/en/verbosity-comparison.svg" alt="GPT-5.6 Sol high answers the same three-step ToneDial improvement-plan instruction with Codex defaults and the complete vibe-coder preset; the preset response uses 82 words instead of 148" width="760">
 
 <sub>Same instruction · first completed reply in each fresh session · 148 → 82 response words. One illustrative pair, not an isolated-axis benchmark. The replies demonstrate style; use the guides below for product behavior and commands. <a href="https://github.com/awesometic/tonedial/blob/main/docs/media/readme/verbosity-comparison.json">Inputs & provenance</a>.</sub>
 
@@ -58,8 +58,8 @@ tonedial wire
 
 ## Copy a voice
 
-Copy a complete profile or use it as a starting point.
-Each command saves and applies a complete profile; `--auto` approves the displayed changes.
+Copy a complete preset or use it as a starting point.
+Each command saves and applies a complete preset; `--auto` approves the displayed changes.
 
 Actual `tonedial test codex` replies · `gpt-6.1-sol` / `high` · first reply to the question, one per recipe · dialogue only, no file edits. [Inputs & provenance](https://github.com/awesometic/tonedial/blob/main/docs/media/readme/en/use-cases.json).
 
@@ -169,7 +169,7 @@ Try this voice: `tonedial test codex --preset rough-but-reliable`
 </details>
 
 Enter the question after Codex opens the conversation.
-Model and reasoning effort are Codex settings, separate from the ToneDial profile.
+Model and reasoning effort are Codex settings, separate from the ToneDial preset.
 
 ## Pick your character
 
@@ -189,11 +189,11 @@ tonedial set verbosity=1 warmth=3 address_frequency=rarely
 tonedial save "My Sword"
 ```
 
-Use `tonedial create` to build your own. Profiles keep tone, roles, address forms, register and safeword together.
+Use `tonedial create` to build your own. Presets keep tone, roles, address forms, register and safeword together.
 
 Set `address_frequency` to `none` to omit user names and titles, `auto` (default) to choose from context,
 `rarely` for occasional use, or `frequently` for main replies while skipping brief follow-ups.
-The choice is saved with the profile. [Address settings](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#set-address-roles-and-language).
+The choice is saved with the preset. [Address settings](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#set-address-roles-and-language).
 
 ## Turn the dials
 
@@ -214,7 +214,7 @@ Enter applies and recompiles `TONE.md` at once. Your agent supplies the model.
 `tonedial wire codex`, `claude` or `antigravity` connects one agent.
 Enable its hook where the receipt says; new conversations then receive the tone.
 
-Preview a saved profile in a fresh conversation through an installed Codex or Claude Code client:
+Preview a saved preset in a fresh conversation through an installed Codex or Claude Code client:
 
 ```bash
 tonedial test codex --preset my-sword

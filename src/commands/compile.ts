@@ -3,8 +3,9 @@
 import type { CommandResult, Ctx } from "../cli.ts";
 import { lstatSync } from "node:fs";
 import { compile, measure, type SizeReport } from "../core/compile.ts";
-import { ConfigError, defaultConfig, isConfigV2, parseConfig, type Config } from "../core/config.ts";
+import { ConfigError, SettingsUnreadable, defaultConfig, isConfigV2, parseConfig, type Config } from "../core/config.ts";
 import { toCompileInput } from "../core/resolve.ts";
+import { assertPresetSelection, matchesPreset, resolvePreset, type PresetLibrary } from "../core/presets.ts";
 import { contextArtifactTargets, GUIDE_MD } from "../core/seeds.ts";
 import { claudeContextCap, humanText, nextStep, num } from "../ui/format.ts";
 import { wrap } from "../ui/width.ts";
@@ -19,11 +20,39 @@ function artifactChange(ctx: Ctx, target: ReturnType<typeof contextArtifactTarge
     : { ...rawReadChange(target.capture, ctx.t), after: artifact };
 }
 
+/**
+ * Whether the tone has edits that no saved preset holds, and the command that would save them.
+ * `before` is the config text as read: a root with no config has nothing to save. `show` labels
+ * the state with this, and the commands that would replace it read the same answer.
+ */
+export function unsavedEdits(ctx: Ctx, config: Config, library: PresetLibrary, before: string | null): { needsSave: boolean; saveCommand: string; name: string | null; restorable: boolean } {
+  const conflict = library.conflicts.some((entry) => !entry.resolved && entry.slug === config.preset);
+  const entry = config.preset && !conflict ? resolvePreset(ctx.paths.presets, config.preset, ctx.t, library) : null;
+  const saved = entry?.preset;
+  let restorable = false;
+  if (entry) {
+    try { assertPresetSelection(entry, ctx.t); restorable = true; }
+    catch (error) { if (!(error instanceof ConfigError)) throw error; }
+  }
+  return {
+    needsSave: before !== null && (config.unsaved || saved == null || !matchesPreset(config, saved)),
+    saveCommand: saved && !saved.bundled ? "tonedial save" : 'tonedial save "My Tone"',
+    name: config.preset === null ? null : saved?.displayName ?? config.preset,
+    restorable,
+  };
+}
+
 /** Capture the config before any command reads or transforms it. */
 export function planConfig(ctx: Ctx): { change: Change; config: Config } {
-  const change = planChange(ctx.paths.config, (before) => before, ctx.t, undefined, ctx.paths.root);
-  const config = change.before === null ? defaultConfig() : parseConfig(change.before, ctx.t);
-  return { change, config };
+  try {
+    const change = planChange(ctx.paths.config, (before) => before, ctx.t, undefined, ctx.paths.root);
+    const config = change.before === null ? defaultConfig() : parseConfig(change.before, ctx.t);
+    return { change, config };
+  } catch (cause) {
+    // The parser names the bad field; the CLI adds the recovery route the user can act on.
+    if (cause instanceof ConfigError) throw new SettingsUnreadable(cause.message, ctx.paths.config, ctx.t, cause);
+    throw cause;
+  }
 }
 
 /** Compile a candidate config and plan the artifact without writing either resource. */
@@ -117,7 +146,9 @@ export async function runCompile(ctx: Ctx): Promise<CommandResult> {
       // compile to, which a stale file on disk does not share.
       `  ${ctx.ui.dim(ctx.t.artifact.compiledSize(num(size.chars)))}`,
       ...(check ? [`  ${ctx.ui.dim(ctx.t.artifact.checkOnly)}`] : []),
-      ...nextStep(check && !current ? "tonedial compile" : "tonedial show", ctx.ui),
+      // A file that could not be compared is for doctor to look at, not for compile to overwrite.
+      ...nextStep(status === ctx.t.artifact.uninspected ? "tonedial doctor"
+        : check && !current ? "tonedial compile" : "tonedial show", ctx.ui),
     ],
     json: { path: ctx.paths.tone, agentsPath: ctx.paths.agents, enabled: config.enabled, written: !check, ...size },
     warnings: contextCapWarnings(config, size.chars, ctx.t),

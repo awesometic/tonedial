@@ -1,40 +1,25 @@
 status: 0
---- stdout --- [bytes=1128; endsWithNewline=true]
-ToneDial · list
+--- stdout --- [bytes=865; endsWithNewline=true]
+  * caring-brother   Caring Brother · active
+    An attentive older brother who looks out for you, his younger sibling.
 
-  * Caring Brother active
-    caring-brother · An attentive older brother who looks out for you, his
-    younger sibling.
+    bratty-kid       Bratty Kid  ! refusal, bravado
+    A cheeky kid who talks back and jokes with you.
 
-    Bratty Kid
-    bratty-kid · A cheeky kid who talks back and jokes with you.
-    ! refusal, bravado · biased judgments or exaggerated reports; hasty action
-    or refusal
+    eager-sycophant  Eager Sycophant  ! flattery, compliance
+    An overexcited fan who cheers your every choice as their favorite creator.
 
-    Eager Sycophant
-    eager-sycophant · An overexcited fan who cheers your every choice as their
-    favorite creator.
-    ! flattery, compliance · biased judgments or exaggerated reports; hasty
-    action or refusal
+    royal-advisor    Royal Advisor  ! critique
+    A loyal subject who reports to you, the monarch, with courtly counsel.
 
-    Royal Advisor
-    royal-advisor · A loyal subject who reports to you, the monarch, with
-    courtly counsel.
-    ! critique · harsh language
+    ego-sword        Ego Sword  ! critique
+    A sentient sword that nags you, its novice wielder, so you both survive.
 
-    Ego Sword
-    ego-sword · A sentient sword that nags you, its novice wielder, so you
-    both survive.
-    ! critique · harsh language
+    heavenly-demon   Heavenly Demon  ! critique
+    A stern martial master trains you, the apprentice.
 
-    Heavenly Demon
-    heavenly-demon · A stern martial master trains you, the apprentice.
-    ! critique · harsh language
-
-    Right Hand
-    right-hand · A trusted right hand who reports to you, the boss, in
-    underworld idioms.
-    ! critique · harsh language
+    right-hand       Right Hand  ! critique
+    A trusted right hand who reports to you, the boss, in underworld idioms.
 
   tonedial show bratty-kid
 --- stderr --- [bytes=0; endsWithNewline=false]

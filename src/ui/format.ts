@@ -38,6 +38,29 @@ export function riskWarnings(axes: Axes, t: Messages): string[] {
   return risks.length ? [t.notice.riskAxes(risks)] : [];
 }
 
+/**
+ * The mark every risk line leads with. The catalogue text and JSON keep it, so a person and a
+ * program read the same bytes; this module is the only place that decides how it is shown.
+ */
+const RISK_MARK = "! ";
+
+export function isRiskNotice(message: string): boolean {
+  return message.startsWith(RISK_MARK);
+}
+
+/** The short form for a row without room for the explanation: the mark and the axis ids. */
+export function riskAxesShort(axes: readonly string[]): string {
+  return `${RISK_MARK}${axes.join(", ")}`;
+}
+
+/**
+ * Tone risk is advisory, so a risk line is yellow like every other warning on either stream;
+ * red stays for failures. One line at a time: callers fold first, then paint.
+ */
+export function riskNotice(line: string, ui: Palette): string {
+  return ui.warn(line);
+}
+
 /** Two retained phases restore their shared config in reverse order, with copyable IDs. */
 export function recoveryRollbackLines(t: Messages, appId: unknown, nativeId: unknown): string[] {
   const ids = [nativeId, appId].filter((id): id is string => typeof id === "string" && /^[0-9a-f]{32}$/.test(id));
@@ -47,16 +70,21 @@ export function recoveryRollbackLines(t: Messages, appId: unknown, nativeId: unk
   ];
   return ids.length === 1 ? t.recovery.rollback(ids[0]!).split("\n").map(line => `  ${line}`) : [];
 }
-import type { AgentTool } from "../core/paths.ts";
+import { connectionScopeFlag, type AgentTool } from "../core/paths.ts";
 import { isAbsolute } from "node:path";
 import { wrap } from "./width.ts";
-import { TARGETS } from "../wiring/targets.ts";
+import { TARGETS, type DeliveryDuplicate } from "../wiring/targets.ts";
 
 /** Display values cannot add terminal commands or rows; storage and JSON retain the original. */
 export function humanText(value: string): string {
   return value.replace(/[\p{Cc}\p{Cf}]/gu, character =>
     character === "\u200c" || character === "\u200d"
       ? character : `\\u{${character.codePointAt(0)!.toString(16)}}`);
+}
+
+/** The short name of a connection scope in a row such as `project · codex`, in the interface language. */
+export function scopeToken(t: Messages, scope: "global" | "project"): string {
+  return t.artifact.connectionScope[scope].toLowerCase();
 }
 
 /** Prose reflows; an explicitly separate path or command remains byte-for-byte copyable. */
@@ -77,33 +105,56 @@ export function receiptLines(text: string, width: number): string[] {
 }
 
 /**
+ * One notice per agent for the project hooks that repeat its global hook. The command for each
+ * project names that folder the way the user can run it from where they are: `--here` in the
+ * folder, `--project` elsewhere. `globalHook` is given only where the screen does not already
+ * show the file.
+ */
+export function hookDuplicateNotice(
+  t: Messages,
+  tool: AgentTool,
+  duplicates: readonly DeliveryDuplicate[],
+  cwd: string,
+  globalHook: string | null = null,
+): string | null {
+  if (duplicates.length === 0) return null;
+  return t.wiring.hookDuplicate(TARGETS[tool].label, duplicates.map(({ destination, path, state }) => ({
+    hook: humanText(path),
+    stale: state === "stale-duplicate",
+    command: humanText(`tonedial unwire ${tool} ${connectionScopeFlag({ live: false, root: destination }, cwd)}`),
+  })), globalHook === null ? null : humanText(globalHook));
+}
+
+/**
  * Configuration receipts never claim that a host has activated the installed hook.
  *
  * One group per host: its status and file, any duplicate it doubles, then that host's own
  * review step. Groups are separated by an empty message, which callers print as a blank line.
  * `guidance: false` leaves the review steps to a report that follows with its own per-host copy.
+ * `current: true` says each host is already up to date, instead of that its hook was configured.
  */
 export function nativeSetup(
   t: Messages,
   routes: readonly {
     tool: AgentTool;
     path: string;
-    inherited: boolean;
-    duplicates?: readonly { destination: string; state: "duplicate" | "stale-duplicate" }[];
+    duplicates?: readonly DeliveryDuplicate[];
   }[],
   global: boolean,
+  cwd: string,
   guidance = true,
+  current = false,
 ): string[] {
-  const groups = routes.map(({ tool, path, inherited, duplicates }) => {
+  const groups = routes.map(({ tool, path, duplicates }) => {
     const label = TARGETS[tool].label;
-    const lines = [inherited ? t.wiring.hookInherited(label, humanText(path)) : t.wiring.hookConfigured(label, humanText(path))];
+    // A connection that already matched is one state, "up to date", with its file on the next line.
+    const lines = [current ? `${t.wiring.alreadyMatch(label)}\n${humanText(path)}` : t.wiring.hookConfigured(label, humanText(path))];
     // A project wired earlier keeps delivering after this one. Reported next to the route it
     // doubles, with the scope that owns it, because clearing it is that scope's decision.
-    for (const { destination, state } of duplicates ?? []) {
-      lines.push(t.wiring.hookDuplicate(tool, humanText(destination), state === "stale-duplicate"));
-    }
+    const doubled = hookDuplicateNotice(t, tool, duplicates ?? [], cwd);
+    if (doubled !== null) lines.push(doubled);
     if (guidance) {
-      if (tool === "codex") lines.push(t.wiring.codexTrust(global || inherited));
+      if (tool === "codex") lines.push(t.wiring.codexTrust(global));
       else if (tool === "claude") lines.push(t.wiring.claudeTrust(global));
       else lines.push(t.doctor.hookGuidance[tool]);
     }

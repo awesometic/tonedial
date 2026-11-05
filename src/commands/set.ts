@@ -13,13 +13,13 @@ import {
 } from "../core/config.ts";
 import { toCompileInput } from "../core/resolve.ts";
 import { LANGUAGES, catalogue, isLanguage, type Messages } from "../core/i18n.ts";
-import { presetSettings, resolvePreset } from "../core/presets.ts";
+import { inspectPresetLibrary, presetSettings, resolvePreset } from "../core/presets.ts";
 import { dial } from "../ui/dial.ts";
-import { artifactSize, combination, humanText, offNotice, riskWarnings } from "../ui/format.ts";
+import { artifactSize, combination, humanText, nextStep, offNotice, riskWarnings } from "../ui/format.ts";
 import { guardTerminal, interactive } from "../ui/prompt.ts";
 import { createInterface } from "node:readline/promises";
 import { cells, padEnd, truncate, wrap } from "../ui/width.ts";
-import { applyPlanned, contextCapWarnings, planArtifact, planConfig } from "./compile.ts";
+import { applyPlanned, contextCapWarnings, planArtifact, planConfig, unsavedEdits } from "./compile.ts";
 
 /** A raw number is bucketed on write; the stored and compiled value is always the band. */
 function bucketAge(value: string, t: Messages, asJson: boolean): string {
@@ -420,6 +420,8 @@ export async function runReset(ctx: Ctx, args: string[]): Promise<CommandResult>
   const [axis] = args;
   const previous = { ...config.axes };
   const previousPreset = config.preset === null ? null : humanText(config.preset);
+  // Read before the reset replaces the axes: what the way back cannot bring back depends on it.
+  const before = axis === undefined ? unsavedEdits(ctx, config, inspectPresetLibrary(ctx.paths.presets, ctx.t), configChange.before) : null;
 
   if (axis === undefined) {
     // Axis values only. Persona and safeword are user-level settings rather than a
@@ -451,6 +453,10 @@ export async function runReset(ctx: Ctx, args: string[]): Promise<CommandResult>
       ...(axis ? [] : wrap(ctx.t.axis.resetAll(previousPreset), ctx.ui.width - 2).map((line) => `  ${ctx.ui.dim(line)}`)),
       `  ${ctx.ui.success(toneChange.before === toneChange.after ? ctx.t.artifact.current : ctx.t.artifact.generated)}`,
       ...(ctx.flags.verbose ? [`  ${ctx.ui.dim(artifactSize(size, ctx.t))}`] : []),
+      // A full reset deselects the preset; its saved definition is one command away.
+      ...(before?.restorable && previousPreset !== null ? ["",
+        ...wrap(moves.length > 0 && before.needsSave ? ctx.t.axis.resetRestoreUnsaved : ctx.t.axis.resetRestore, ctx.ui.width - 2).map((line) => `  ${line}`),
+        ...nextStep(`tonedial use ${previousPreset}`, ctx.ui).slice(1)] : []),
       ...offNotice(config.enabled, ctx.t, ctx.ui),
     ],
     json: { reset: axis ?? "all", chars: size.chars },

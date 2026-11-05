@@ -409,3 +409,13 @@ test("artifacts written before the host reply-style rule still recover their set
     assert.deepEqual(recoverLegacyTone(artifact, EN)!.config.axes, config.axes);
   }
 });
+
+test("an omitted enabled flag is the stored on state, not a value recovery must default", () => {
+  const on = recoverSettings(serializeConfig(defaultConfig()), EN)!;
+  assert.ok(!on.defaulted!.includes("enabled"), JSON.stringify(on.defaulted));
+  assert.ok(on.recovered.includes("enabled"));
+  assert.equal(on.config.enabled, true);
+  const paused = recoverSettings(serializeConfig({ ...defaultConfig(), enabled: false }), EN)!;
+  assert.equal(paused.config.enabled, false);
+  assert.ok(paused.recovered.includes("enabled"));
+});

@@ -1,16 +1,18 @@
 status: 0
---- stdout --- [bytes=218; endsWithNewline=true]
+--- stdout --- [bytes=317; endsWithNewline=true]
 ToneDial · update
 
-  tonedial <VERSION>
+  update available · <VERSION> → 9.9.9
+  installed  <VERSION> · released 2026-11-01
+  latest     9.9.9 · released 2026-11-03
 
-  Package update:
-    npm update -g tonedial
   --dry-run · nothing written
+
+  npm update -g tonedial
 
   Bundled files to refresh: 5
 
   Refresh bundled files and repair state:
-    tonedial doctor --fix
+    tonedial doctor --fix --global
 --- stderr --- [bytes=0; endsWithNewline=false]
 

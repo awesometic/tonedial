@@ -1,31 +1,31 @@
 status: 0
---- stdout --- [bytes=1216; endsWithNewline=true]
+--- stdout --- [bytes=1100; endsWithNewline=true]
 ToneDial · show · Caring Brother (저장하지 않은 변경)         TONE.md 4,779자
 
-                         현재      ToneDial 기본값 · ! 위험 말투
-  form      formality    ▮▯▯▯▯  1   *3
-            verbosity    ▮▮▮▮▯  4   *3
-            profanity    ▮▮▯▯▯  2   *1
-            playfulness  ▮▮▮▯▯  3    3
-  target    critique     ▮▮▯▯▯  2   *3
-            flattery     ▮▯▯▯▯  1    1
-            warmth       ▮▮▮▮▮  5   *3
-  behaviour conviction   ▮▮▮▮▯  4   *3
-            care         ▮▮▮▮▮  5   *3
-            compliance   ▮▮▮▯▯  3    3
-            refusal      ▮▯▯▯▯  1    1
-            bravado      ▮▯▯▯▯  1    1
+                    현재      기본값
+  형식 formality    ▮▯▯▯▯  1   *3
+       verbosity    ▮▮▮▮▯  4   *3
+       profanity    ▮▮▯▯▯  2   *1
+       playfulness  ▮▮▮▯▯  3    3
+  대상 critique     ▮▮▯▯▯  2   *3
+       flattery     ▮▯▯▯▯  1    1
+       warmth       ▮▮▮▮▮  5   *3
+  행동 conviction   ▮▮▮▮▯  4   *3
+       care         ▮▮▮▮▮  5   *3
+       compliance   ▮▮▮▯▯  3    3
+       refusal      ▮▯▯▯▯  1    1
+       bravado      ▮▯▯▯▯  1    1
 
   사용자 설정
-  자기 호칭 형 · 사용자 호칭 동생
+  자기 호칭 '형' · 사용자 호칭 '동생'
   가상 에이전트 역할: Fictional database specialist with ten years of
-  experience (58/200)
-  사용자 배경: Developer who likes concise technical answers (45/200)
+  experience
+  사용자 배경: Developer who likes concise technical answers
   세이프워드 없음 · 말씨 plain (일반 반말) · 호칭 빈도 auto
   화면 언어 ko
   연결: 없음
 
-  * ToneDial 기본값과 다름 · 프로필에 저장되지 않았습니다.
+  * ToneDial 기본값과 다름 · 프리셋에 저장 안 됨
   tonedial save "My Tone"
 --- stderr --- [bytes=0; endsWithNewline=false]
 

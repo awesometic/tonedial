@@ -2,11 +2,18 @@
 // setup, or guess ownership of a project export from its filename.
 
 import type { CommandResult, Ctx } from "../cli.ts";
-import { runUnwire } from "./wire.ts";
+import { disconnect } from "./wire.ts";
+import { planConfig } from "./compile.ts";
+import { AGENT_TOOLS } from "../core/paths.ts";
 import { humanText, receiptLines } from "../ui/format.ts";
+import { refuseHomeProject, refuseUnscopedDisconnect } from "../wiring/scopes.ts";
 
 export async function runEject(ctx: Ctx, _args: string[]): Promise<CommandResult> {
-  const result = await runUnwire(ctx, []);
+  refuseHomeProject(ctx.agent, ctx.env, "tonedial eject --global", ctx.t);
+  if (!(ctx.scopeExplicit ?? (ctx.flags.global || ctx.flags.here === true || ctx.flags.project !== null))) {
+    refuseUnscopedDisconnect(planConfig(ctx).config, ctx.cwd, "tonedial eject", ctx.t, undefined, true);
+  }
+  const result = await disconnect(ctx, [...AGENT_TOOLS], true);
   const diff = result.json.diff as { path: string }[];
   return {
     ...result,

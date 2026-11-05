@@ -29,7 +29,6 @@ export type Catalogue = {
   /** Shown once at `init`, in the language the user picked. */
   init: {
     welcome: string;
-    scopeHeading: string;
     toneHeading: string;
     connectionsHeading: string;
     resultHeading: string;
@@ -90,10 +89,9 @@ export type Catalogue = {
 export type Messages = {
   test: {
     missingConfig: string;
-    invalidConfig: string;
     unsupportedProvider: (provider: string) => string;
     noProvider: string;
-    providerRequired: string;
+    providerRequired: (commands: readonly string[]) => string;
     /** The requested provider is missing; `alternative` names an installed one to run instead. */
     providerUnavailable: (provider: string, alternative: { label: string; command: string } | null) => string;
     targetUnavailable: (path: string) => string;
@@ -135,6 +133,9 @@ export type Messages = {
     notSettable: (name: string, nearest: string | null) => string;
     reset: (axis: string, level: number) => string;
     resetAll: (deselected: string | null) => string;
+    /** The way back after a full reset deselected a preset, and what that way cannot bring back. */
+    resetRestore: string;
+    resetRestoreUnsaved: string;
     nothingChanged: string;
     settingsSaved: string;
     settingsUnchanged: string;
@@ -150,7 +151,9 @@ export type Messages = {
     conflict: (slug: string, recoveredSlug: string) => string;
     activeConflict: (slug: string) => string;
     active: (name: string) => string;
-    unknown: (slug: string, known: string[]) => string;
+    /** The state word beside a preset in `list`; `active` names the preset for `use`. */
+    activeState: string;
+    unknown: (slug: string, known: string[], suggestion: { slug: string; command: string } | null) => string;
     saved: (slug: string, count: number) => string;
     savedTarget: (slug: string) => string;
     notApplied: string;
@@ -184,6 +187,11 @@ export type Messages = {
     preview: string;
     unsaved: string;
     changesNotSaved: string;
+    /** `show <slug>` of a preset that stores axes only: its settings are not on the screen. */
+    axisOnlyPreview: string;
+    /** `use` replaced a tone with edits no saved preset held; `name` is the preset they were made on, if any. */
+    replacedUnsaved: (name: string | null) => string;
+    saveFirst: string;
   };
   create: {
     introduction: string;
@@ -204,7 +212,7 @@ export type Messages = {
     heading: string;
     source: Record<"settings" | "snapshot" | "artifact" | "preset", string>;
     choosePreset: string;
-    sourceRequired: string;
+    sourceRequired: (command: string) => string;
     sourceInvalid: string;
     invalidOptions: string;
     keptSettings: string;
@@ -216,6 +224,9 @@ export type Messages = {
     rebuilt: string;
     unchanged: string;
     nativePending: string;
+    /** Native repair needed approval that no terminal could give; `command` reruns it. */
+    nativeApproval: (command: string) => string;
+    otherScopes: string;
     rollback: (id: string) => string;
     rollbackOrder: string;
     noSnapshot: (id: string) => string;
@@ -272,6 +283,8 @@ export type Messages = {
     safewordShort: (phrase: string) => string;
     safewordSet: (phrase: string) => string;
     noSafeword: string;
+    /** `use`'s receipt when none is set: the label before the command that sets one, on its own line. */
+    noSafewordSet: string;
     register: (level: SpeechLevel) => string;
   };
   artifact: {
@@ -305,6 +318,11 @@ export type Messages = {
     settingsHeading: string;
     displaySettings: (language: string) => string;
     connectionRecords: (records: string[]) => string;
+    connectionsHeading: string;
+    connectionScope: Record<"global" | "project", string>;
+    /** What each axis group is called on the gauge. The ids stay English in `show --json`. */
+    axisGroups: Record<"form" | "target" | "behaviour", string>;
+    sharesGlobalHook: (target: string) => string;
     dialTitle: string;
     dialPreview: (presetName: string, changed: boolean) => string;
     dialHelpTitle: string;
@@ -324,8 +342,12 @@ export type Messages = {
   wiring: {
     changeCount: (count: number) => string;
     hookConfigured: (tool: string, path: string) => string;
-    hookInherited: (tool: string, path: string) => string;
-    hookDuplicate: (tool: string, destination: string, stale: boolean) => string;
+    globalCovers: (tools: string) => string;
+    keepProjectOnly: (here: boolean) => string;
+    /** Heads the project folders an unwire --global also disconnects. */
+    alsoDisconnects: (tool: string) => string;
+    /** One agent's project hooks that repeat its global hook; `globalHook` is null where the screen already names it. */
+    hookDuplicate: (label: string, projects: readonly { hook: string; command: string; stale: boolean }[], globalHook: string | null) => string;
     migrationRollback: (operationId: string) => string;
     migrationQuestion: string;
     migrationNotNeeded: string;
@@ -336,6 +358,14 @@ export type Messages = {
     actionLabel: Record<"file" | "entry-rebuild" | "skill" | "case-rename", string>;
     actionState: Record<"created" | "removed" | "updated" | "plain", (label: string) => string>;
     newFiles: (count: number) => string;
+    /** Preview group labels: ToneDial's own state, then this scope's agent files. */
+    rootState: string;
+    rootGlobal: string;
+    rootProject: string;
+    /** ToneDial's config.json in a preview, said in words rather than as an excerpt. */
+    configRecords: (tools: string, global: boolean) => string;
+    configRemoves: (tools: string, count: number) => string;
+    configSaves: (tools: string | null, global: boolean) => string;
     codexTrust: (global: boolean) => string;
     /** Offered after the receipt, because Codex takes the terminal when it starts. */
     codexOpen: string;
@@ -358,8 +388,14 @@ export type Messages = {
     stateKept: (root: string) => string;
     deleteYourself: string;
     nothingWired: string;
+    /** The agent picker of wire / unwire answered with an empty line. */
+    nothingConnected: string;
+    nothingDisconnected: string;
+    /** After a project connection is written: its hooks hold paths from this machine. */
+    projectHooks: string;
+    projectIsHome: (command: string) => string;
     damaged: (path: string, reason: string) => string;
-    needsApproval: string;
+    needsApproval: (command: string) => string;
     projectExclude: string;
     newFile: string;
     modifiedFile: string;
@@ -367,7 +403,7 @@ export type Messages = {
     finalNewlineAdded: string;
     finalNewlineRemoved: string;
     previewMore: string;
-    /** Compact previews show new-file line counts; verbose human previews include the body. */
+    /** A new file's line count, in the structured diff and the verbose preview. */
     newFileLines: (count: number) => string;
     scopeGlobal: string;
     seeded: (labels: string[]) => string;
@@ -379,24 +415,26 @@ export type Messages = {
   doctor: {
     connectionsHeading: string;
     checksHeading: string;
-    applicationHealth: (healthy: boolean) => string;
-    connectionHealth: (attention: boolean) => string;
+    applicationHealth: string;
+    connectionHealth: string;
     healthy: string;
-    scopeGlobal: string;
     /** Registrations outside the scope being inspected. Reported, never repaired. */
     wiredElsewhere: string;
+    /** Global inspection from a folder with its own connections; `command` inspects them. */
+    folderConnections: (targets: readonly string[], command: string) => string;
     destinationGone: string;
     destinationUnwired: string;
     destinationPresent: string;
     inspectScope: string;
     disconnectScope: string;
-    /** Which destination this report is about, and whether it reaches other projects. */
-    scope: string;
-    toLookAt: (count: number) => string;
+    /** Top line: problems to fix, notices worth reading. */
+    summary: (problems: number, notices: number) => string;
     needsAPerson: string;
     toneMatches: string;
     toneNotWritten: string;
     toneDisagrees: string;
+    /** The artifact an earlier compiler wrote for the same settings: a package update, not an edit. */
+    toneEarlierVersion: string;
     seedsHeading: string;
     checkHeading: { context: string; reader: string; pathLine: string; onPath: string; install: string; claudeContext: string; skills: string; skill: (label: string) => string };
     fullDetails: string;
@@ -406,6 +444,8 @@ export type Messages = {
     recoveryPending: string;
     invalidRecoveryPending: string;
     resumeOperation: string;
+    /** The rollback beside a stopped operation's continue command, with when to choose it. */
+    undoOperation: string;
     contextCurrent: string;
     contextRepair: string;
     contextSize: (guideChars: number, totalChars: number | null) => string;
@@ -431,12 +471,25 @@ export type Messages = {
     hookSettingScope: string;
     hookGroupHeading: string;
     hookGroupUnknown: (tools: readonly string[]) => string;
+    /** Agents with no connection in the inspected scope but one registered in another. */
+    hookGroupElsewhere: (tools: readonly string[]) => string;
     hookNotConnected: string;
-    hookNeedsInspection: string;
-    hookGuidance: Record<"claude" | "codex" | "antigravity", string>;
+    hookGuidance: Record<"claude" | "antigravity", string>;
     nativeMissing: (path: string, event: "SessionStart" | "PreInvocation") => string;
     nativeStale: string;
     nativeForeign: string;
+    /** Our recorded entries changed inside a file that is otherwise still ours. */
+    nativeEdited: (path: string) => string;
+    /** The two manual routes; `show` is null when the expected entries are listed below. */
+    editedRoutes: (show: string | null, fix: string) => string;
+    editedExpected: string;
+    /** The finding itself. The step that follows it is a separate string, so a blocked layout can omit it. */
+    unrecordedEntries: (path: string) => string;
+    unrecordedAdopt: string;
+    unrecordedEdited: (path: string) => string;
+    unrecordedEditedNext: (wire: string) => string;
+    orphanedHook: (path: string, directories: readonly string[]) => string;
+    orphanedRemove: string;
     nativeInherited: (path: string, event: "SessionStart" | "PreInvocation") => string;
     nativeInheritedCompact: (path: string, event: "SessionStart" | "PreInvocation") => string;
     legacyRepairWithheld: string;
@@ -494,6 +547,14 @@ export type Messages = {
     stateIssue: Record<"missing" | "unsafe" | "changed" | "invalid" | "unreadable", string>;
     npmQuestion: string;
     npmComplete: (version: string) => string;
+    npmUnchanged: (version: string) => string;
+    installedLabel: string;
+    latestLabel: string;
+    released: (date: string) => string;
+    upToDate: string;
+    available: (from: string, to: string) => string;
+    newer: string;
+    checkUnavailable: string;
     npmMissing: string;
     npmScopeUnknown: string;
     npmScopeMismatch: string;
@@ -502,7 +563,6 @@ export type Messages = {
     versionUnknown: string;
     fetching: (registry: string) => string;
     found: (version: string, bytes: number) => string;
-    already: (version: string) => string;
     wouldReplace: (lib: string, version: string) => string;
     question: (version: string) => string;
     replaced: (version: string) => string;
@@ -556,7 +616,7 @@ export type Messages = {
   errors: {
     notACommand: (name: string, nearest: string | null) => string;
     /** `help` and `version` typed as commands: they are flags. */
-    isAFlag: (name: string) => string;
+    isAFlag: (name: string, command: string | null) => string;
     /** Guidance for stopping words that are not exact command spellings. */
     stoppingHelp: string;
     notAnOption: (flag: string, command: string | null) => string;
@@ -568,7 +628,8 @@ export type Messages = {
     /** Two destination flags name two destinations. Discarding one silently is the worse answer. */
     twoDestinations: string;
     projectPathRequired: string;
-    scopeRequired: string;
+    /** An unattended connection write without a scope flag, with the commands for each scope. */
+    scopeRequired: (commands: readonly string[]) => string;
     migrationFresh: string;
     migrationApprovalRequired: (command: string) => string;
     legacyMigrationBlocked: (reason: string, path: string, doctorCommand: string) => string;
@@ -579,21 +640,26 @@ export type Messages = {
     couldNotWrite: (path: string, reason: string, done: string[]) => string;
     staleTarget: (path: string) => string;
     seedConflict: (path: string) => string;
-    toolsRequired: string;
+    toolsRequired: (commands: readonly string[], auto: boolean) => string;
     toolsSelection: string;
     toolsAmbiguous: string;
     commandsNeedClaude: string;
     toolsPrompt: string;
+    unwireToolsPrompt: string;
+    toolInstalled: string;
+    toolConnected: string;
+    unwireToolsRequired: (example: string, eject: string, auto: boolean) => string;
+    /** `eject` disconnects every agent in the chosen scope, so it speaks of connections. */
+    unwireScopeRequired: (here: string, global: string, eject: boolean) => string;
     /** `wire` without an agent outside a terminal; the --auto rule shows only when it was passed. */
     wireToolsRequired: (example: string, auto: boolean) => string;
     ownershipConflict: (path: string) => string;
     stateOverlap: (path: string) => string;
     stateInstructionOverlap: (path: string) => string;
-    contextLayout: (kind: "fresh" | "current" | "legacy" | "conflict", path: string, doctorCommand?: string) => string;
+    contextLayout: (kind: "fresh" | "current" | "legacy" | "conflict", path: string, doctorCommand?: string, fixCommand?: string) => string;
     /** The config is there and could not be read back. Never carries the file's own bytes. */
-    unreadableConfigFile: (path: string) => string;
+    unreadableConfigFile: (path: string, command: string | null) => string;
     /** The same refusal on `doctor --fix`, which repairs nothing and writes nothing. */
-    fixUnreadableConfig: (path: string) => string;
     legacyConsumers: (destinations: readonly string[]) => string;
     editConflict: (path: string) => string;
     editNotApplied: (path: string, reason: string) => string;
@@ -647,10 +713,9 @@ export type Messages = {
 const enMessages: Messages = {
   test: {
     missingConfig: "ToneDial is not set up yet. Set it up, then rerun this command:\n  tonedial init --tools none --global",
-    invalidConfig: "Saved settings cannot be read safely. Run tonedial doctor --json before choosing recovery.",
     unsupportedProvider: (provider) => `${provider}: conversation preview supports claude or codex.`,
     noProvider: "Neither Claude Code nor Codex is installed on PATH.",
-    providerRequired: "Choose a provider explicitly: tonedial test claude or tonedial test codex.",
+    providerRequired: (commands) => `Choose a provider explicitly:\n  ${commands.join("\n  ")}`,
     providerUnavailable: (provider, alternative) => `${provider} is not installed on PATH.` +
       (alternative ? ` ${alternative.label} is available:\n  ${alternative.command}` : ""),
     targetUnavailable: (path) => `The test working folder is unavailable or is not a directory:\n${path}\nChoose an existing folder with --project DIR.`,
@@ -679,47 +744,50 @@ const enMessages: Messages = {
     off: "ToneDial off · tone delivery paused · settings and TONE.md kept",
     alreadyOn: "ToneDial already on · no changes",
     alreadyOff: "ToneDial already off · no changes",
-    openConversation: "Open conversations may retain an earlier tone. Use a new conversation for a clean no-ToneDial comparison.",
+    openConversation: "Open conversations may retain an earlier tone. Use a new conversation to compare without ToneDial.",
     offNotice: "ToneDial is off, so new conversations get no tone until you turn it back on.",
     status: (enabled) => `ToneDial ${enabled ? "on" : "off"}`,
   },
   axis: {
     range: (axis, given) => `${axis}: expected 1–5 (got ${given})`,
-    unknown: (name, nearest) => `${name}: not an axis.${nearest ? ` Did you mean ${nearest}?` : ""} Axes: tonedial get --help`,
+    unknown: (name, nearest) => `${name}: not an axis.${nearest ? ` Did you mean ${nearest}?` : ""}\nAxes:\n  tonedial get --help`,
     notSettable: (name, nearest) =>
-      `${name}: not an axis or setting. ${nearest ? `Did you mean ${nearest}? ` : ""}` +
-      "Full list: tonedial get --help",
+      `${name}: not an axis or setting.${nearest ? ` Did you mean ${nearest}?` : ""}\nFull list:\n  tonedial get --help`,
     reset: (axis, level) => `${axis} already at default ${level}`,
     resetAll: (deselected) => deselected ? `${deselected} deselected · persona and other settings kept` : "Persona and other settings kept",
+    resetRestore: "To return to the saved preset:",
+    resetRestoreUnsaved: "Unsaved edits cannot be restored. To return to the saved preset:",
     nothingChanged: "no changes",
     settingsSaved: "Settings updated",
     settingsUnchanged: "Settings unchanged",
     needsPair: (given) => `${given}: expected <key>=<value>, for example warmth=4`,
-    needsArgument: "set needs at least one <key>=<value>, for example: tonedial set warmth=4. In a terminal, tonedial set alone opens the dial.",
+    needsArgument: "set needs at least one <key>=<value>, for example:\n  tonedial set warmth=4\nIn a terminal, this opens the dial:\n  tonedial set",
     subagentUnsupported: "subagent axes are not supported yet. Set the user axes instead",
   },
   preset: {
     activeUnknown: "Active preset is unknown until the saved settings are repaired.",
     notSetUp: "ToneDial is not set up yet, so no preset is active. Set it up with:\ntonedial init --tools none --global",
     unavailable: (slug, reason) => `${slug}: unavailable (${reason}); file kept as is`,
-    conflict: (slug, recoveredSlug) => `${slug}: different custom and legacy definitions. Run tonedial doctor --fix to preserve the legacy values as ${recoveredSlug}.`,
-    activeConflict: (slug) => `${slug}: the active definition is ambiguous; saved axes were kept. Choose the definition during tonedial doctor --fix.`,
+    conflict: (slug, recoveredSlug) => `${slug}: different custom and legacy definitions. To preserve the legacy values as ${recoveredSlug}:\n  tonedial doctor --fix`,
+    activeConflict: (slug) => `${slug}: the active definition is ambiguous; saved axes were kept. To choose the definition:\n  tonedial doctor --fix`,
     active: (name) => `${name} active`,
-    unknown: (slug, known) => `preset ${slug} not found. Available: ${known.join(", ")}`,
+    activeState: "active",
+    unknown: (slug, known, suggestion) => `preset ${slug} not found. Available: ${known.join(", ")}` +
+      (suggestion ? `\nDid you mean ${suggestion.slug}?\n  ${suggestion.command}` : ""),
     saved: (slug, count) => `${slug} saved · ${count} non-default axes`,
     savedTarget: (slug) => `Saved preset: ${slug}`,
     notApplied: "Saved to the library; current tone unchanged.",
     bundledSlug: (slug) => `${slug}: bundled preset. Choose another name`,
     bundledNotEditable: (slug) =>
       `${slug}: bundled preset; the next init discards edits. ` +
-      `Run tonedial use ${slug}, then save it under a new name.`,
+      `Apply it, then save it under a new name:\n  tonedial use ${slug}`,
     editSaved: (slug) => `${slug} saved`,
     editAxesKept: (unsaved) => unsaved
-      ? "Current tone settings kept; they differ from the saved profile."
-      : "Current tone settings kept; they match the saved profile.",
+      ? "Current tone settings kept; they differ from the saved preset."
+      : "Current tone settings kept; they match the saved preset.",
     slugNotEditable: (was, tried) =>
       `The slug cannot be edited. The active preset and connection record point to ${was}. ` +
-      `Run tonedial use ${was}, then save it as ${tried}.`,
+      `Apply it, then save it as ${tried}:\n  tonedial use ${was}`,
     noLatin: (name) => `"${name}": a slug needs Latin letters or digits. Choose one with --slug, for example --slug my-tone`,
     nameTooLong: (given, cap) => `display name: ${given} characters · maximum ${cap}`,
     replaced: (slug) => `${slug}: existing preset replaced`,
@@ -733,7 +801,7 @@ const enMessages: Messages = {
     needsDisplayName: "save needs a display name. Use --slug for a name without Latin letters or digits.",
     saveSlugUnknown: (slug) => `${slug}: nothing is saved under this slug. To create it, add a display name:\ntonedial save "Display name" --slug ${slug}`,
     saveAsNew: "To save the current tone, use a new name:\ntonedial save \"My Tone\" --slug my-tone",
-    needsSlugArg: "a preset slug is required. List: tonedial list",
+    needsSlugArg: "a preset slug is required. List:\n  tonedial list",
     invalidSlugFor: (name) => `"${name}": cannot make a valid slug`,
     noSlug: (path) => `${path}: no valid slug. Use lowercase letters, digits, and dashes`,
     schemaMismatch: (slug, given, knows) => `preset ${slug}: schema ${given} · supported schema ${knows}`,
@@ -743,10 +811,13 @@ const enMessages: Messages = {
     nonDefault: (count) => `${count} non-default ${count === 1 ? "axis" : "axes"}`,
     preview: "preview",
     unsaved: "unsaved changes",
-    changesNotSaved: "Not saved to a profile.",
+    changesNotSaved: "Not saved to a preset.",
+    axisOnlyPreview: "Axis-only preset · applying it keeps your current settings",
+    replacedUnsaved: (name) => name ? `Replaced unsaved changes to ${name}.` : "Replaced unsaved changes.",
+    saveFirst: "To keep changes like these next time, save first:",
   },
   create: {
-    introduction: "Choose the profile name, slug, address and role, then adjust all twelve axes. Enter keeps the shown value; \"\" clears an optional field. Final approval saves and applies the whole profile.",
+    introduction: "Choose the preset name, slug, address and role, then adjust all twelve axes. Enter keeps the shown value; \"\" clears an optional field. Final approval saves and applies the whole preset.",
     name: "Display name",
     slug: "Slug (lowercase letters, digits, dashes)",
     user: "Your role or background (up to 200 characters)",
@@ -754,17 +825,17 @@ const enMessages: Messages = {
     register: "Honorific forms (auto, polite, plain, rough)",
     addressFrequency: "Address frequency (none, auto, rarely, frequently)",
     safeword: "Safeword",
-    needsName: "create needs a display name. Run tonedial create in a terminal, or supply a name and optional key=value settings with --auto.",
+    needsName: "create needs a display name. In a terminal, run it without one to be prompted:\n  tonedial create\nOr supply a name and optional key=value settings with --auto.",
     exists: (slug) => `${slug}: a preset already exists. Choose another slug, or use save to update it.`,
     notCreated: "No preset created; current settings unchanged.",
     descriptionCount: (count, cap) => `${count}/${cap} characters`,
-    reviewHeading: "Profile to save",
+    reviewHeading: "Preset to save",
   },
   recovery: {
-    heading: "Application recovery",
+    heading: "ToneDial file recovery",
     source: { settings: "saved settings", snapshot: "selected operation snapshot", artifact: "recognized older tone", preset: "selected preset" },
     choosePreset: "Choose a preset for values with no valid saved source:",
-    sourceRequired: "Saved values are incomplete. Run tonedial doctor --fix interactively, or select --from-preset SLUG or --from-operation ID before unattended recovery.",
+    sourceRequired: (command) => `Saved values are incomplete. To choose a source, run this in a terminal:\n  ${command}\nFor unattended recovery, select --from-preset SLUG or --from-operation ID.`,
     sourceInvalid: "The selected source cannot supply valid settings. The original was kept.",
     invalidOptions: "Recovery source, quarantine and tool options require doctor --fix. --restore-preset requires --from-operation; --rollback cannot be combined with quarantine, source, preset, or tool choices.",
     keptSettings: "Saved settings and custom presets kept.",
@@ -773,11 +844,13 @@ const enMessages: Messages = {
     missing: (fields) => `Values requiring a selected source or defaults: ${fields.join(", ")}`,
     copies: (slugs) => `Preserved definitions can be loaded as: ${slugs.join(", ")}`,
     activeChoice: (slug) => `${slug}: choose which definition the saved axes should name.`,
-    rebuilt: "Application restored",
-    unchanged: "Application files current",
+    rebuilt: "ToneDial files restored",
+    unchanged: "ToneDial files current",
     nativePending: "Agent connections need separate attention; settings and presets remain usable.",
+    otherScopes: "Connections in other scopes need their own repair:",
+    nativeApproval: (command) => `Agent connections not repaired · approval required. To review and approve the changes, rerun in a terminal:\n  ${command}\nOr preview them, then approve without prompting:\n  ${command} --dry-run\n  ${command} --auto`,
     rollback: (id) => `To restore the previous files:\ntonedial doctor --fix --rollback ${id}`,
-    rollbackOrder: "Restore connections first, then application files:",
+    rollbackOrder: "Restore connections first, then ToneDial files:",
     noSnapshot: (id) => `${id}: no valid settings snapshot for this state root`,
     quarantineCandidate: (id) => `Operation ID:\n${id}\nQuarantine it before rebuilding; the original bytes remain available through rollback.`,
     quarantineQuestion: "Type the full operation ID above to quarantine it; Enter cancels:",
@@ -786,14 +859,14 @@ const enMessages: Messages = {
     quarantine: (id) => `Quarantine unreadable operation ${id}; keep its original bytes in rollback history.`,
     quarantineComplete: (id) => `Unreadable operation ${id} quarantined.`,
     quarantineRemaining: (count) => count === 1
-      ? "1 unreadable operation record remains. Quarantine it before repairing the application; its original bytes stay available for rollback."
-      : `${count} unreadable operation records remain. Quarantine the next record before repairing the application.`,
-    retire: (id) => `Retire stopped operation ${id} as history before a new application rebuild. Its external changes are not certified or undone.`,
+      ? "1 unreadable operation record remains. Quarantine it before repairing the ToneDial files; its original bytes stay available for rollback."
+      : `${count} unreadable operation records remain. Quarantine the next record before repairing the ToneDial files.`,
+    retire: (id) => `Retire stopped operation ${id} as history before a new ToneDial file rebuild. Its external changes are not certified or undone.`,
     resumeOperation: (id) => `Stopped operation:\n${id}`,
     resumeQuestion: "Type the full operation ID above to continue; Enter cancels:",
     cancelled: "Recovery cancelled. No files were changed.",
     operationMismatch: "The operation ID did not match. No files were changed.",
-    failure: (id, phase, path, code) => `Application recovery failed during ${({ prepare: "preparation", write: "file writes", verify: "verification", finalize: "completion" })[phase]} (${code}).${path ? `\n${path}` : ""}\nSome file changes may already be applied. Keep this operation record:\n${id}`,
+    failure: (id, phase, path, code) => `ToneDial file recovery failed during ${({ prepare: "preparation", write: "file writes", verify: "verification", finalize: "completion" })[phase]} (${code}).${path ? `\n${path}` : ""}\nSome file changes may already be applied. Keep this operation record:\n${id}`,
   },
   persona: {
     defaults: role("I", "you", "The person requesting help with a task.", "A general-purpose assistant helping with the requested task."),
@@ -809,18 +882,18 @@ const enMessages: Messages = {
     unknownField: (field, fields) =>
       `persona.${field}: not a persona field. Available: ${fields.join(", ")}`,
     addressNeedsPair:
-      "address needs both terms: tonedial address <self name> <user name>. " +
+      "address needs both terms:\n  tonedial address <self name> <user name>\n" +
       'Use "" in each position to clear them. In a terminal, run it without arguments to be prompted.',
     askSelf: "What should the agent call itself?",
-    rolesNeedsPair: 'persona needs both descriptions: tonedial persona <agent role> <user role>. Use "" to clear a description, or run without arguments in a terminal.',
+    rolesNeedsPair: 'persona needs both descriptions:\n  tonedial persona <agent role> <user role>\nUse "" to clear a description, or run without arguments in a terminal.',
     rolesIntroduction: 'Set the agent\'s role and your role or background. Enter keeps the current value; "" clears a role. Changes apply after both answers.',
     askUser: "What should it call you?",
     addressKept: (current) => `current ${current} · Enter keeps it`,
     addressNone: "currently unset · Enter keeps it unset",
     age: (given, bands) => `persona.age=${given} · available: ${bands.join(", ")}`,
     gender: (options) => `persona.gender · available: ${options.join(", ")}`,
-    callsYou: (term) => `calls you ${term}`,
-    callsItself: (term) => `agent calls itself ${term}`,
+    callsYou: (term) => `calls you "${term}"`,
+    callsItself: (term) => `agent calls itself "${term}"`,
     ageLabel: (band) => `age ${band}`,
     genderLabel: (gender) => `gender ${gender}`,
     noteChars: (count) => `note ${count} chars`,
@@ -838,6 +911,7 @@ const enMessages: Messages = {
     safewordSet: (phrase) =>
       `safeword ${phrase}`,
     noSafeword: "no safeword",
+    noSafewordSet: "no safeword · to set one:",
     register: (level) => `register ${level} (${({ auto: "contextual", polite: "honorific", plain: "non-honorific", rough: "curt, blunt non-honorific" })[level]})`,
   },
   artifact: {
@@ -847,7 +921,7 @@ const enMessages: Messages = {
     compiledSize: (chars) => `Size from saved settings: ${chars} characters`,
     checkOnly: "--check · nothing written",
     wrote: "written",
-    notWritten: "TONE.md is missing. Run tonedial compile",
+    notWritten: "TONE.md is missing. To generate it:\ntonedial compile",
     notSetUp: "Not set up yet · showing ToneDial's defaults",
     notSetUpTitle: "not set up",
     movedFromDefault: "differs from ToneDial's default",
@@ -863,6 +937,10 @@ const enMessages: Messages = {
     settingsHeading: "Settings",
     displaySettings: (language) => `Interface language ${language}`,
     connectionRecords: (records) => `Connections: ${records.length ? records.join(", ") : "none"}`,
+    connectionsHeading: "Connections",
+    connectionScope: { global: "Global", project: "Project" },
+    axisGroups: { form: "form", target: "target", behaviour: "behavior" },
+    sharesGlobalHook: (target) => `${target} · uses the global hook (earlier version)`,
     dialTitle: "ToneDial · shape your agent's voice",
     dialPreview: (presetName, changed) => `${presetName} · ${changed ? "changes pending" : "current voice"}`,
     dialHelpTitle: "Dial keys",
@@ -881,7 +959,7 @@ const enMessages: Messages = {
     current: "TONE.md current",
     stale: "TONE.md differs from saved settings",
     missing: "TONE.md has not been generated",
-    uninspected: "TONE.md could not be safely compared; inspect with tonedial doctor",
+    uninspected: "TONE.md could not be safely compared",
     whatElseIsSettable: "Other settings accepted by set:",
   },
   wiring: {
@@ -892,8 +970,21 @@ const enMessages: Messages = {
     finalNewlineRemoved: "(final newline removed)",
     previewMore: "Full diff: --verbose",
     hookConfigured: (tool, path) => `${tool}: hook configured\n${path}`,
-    hookInherited: (tool, path) => `${tool}: using global hook · no project hook added\n${path}`,
-    hookDuplicate: (tool, destination, stale) => `${tool}: this project also configures tone delivery, so both hooks are present${stale ? ". The project hook points to an older runtime" : ""}:\n${destination}\nTo use only the global hook, run from that directory:\ntonedial unwire ${tool} --here`,
+    globalCovers: (tools) => `${tools}: this folder already gets the tone through the global connection · nothing added`,
+    keepProjectOnly: (here) => here
+      ? "To connect only this project, disconnect the global connection first, then connect this folder:"
+      : "To connect only that project, disconnect the global connection first, then run this from inside it:",
+    alsoDisconnects: (tool) => `Also disconnects ${tool} in these projects, which an earlier version recorded on the global hook:`,
+    hookDuplicate: (label, projects, globalHook) => [
+      projects.length === 1
+        ? `${label} has a global and a project hook, so both hooks are present:`
+        : `${label} has a global hook and ${projects.length} project hooks, so all hooks are present:`,
+      ...(globalHook === null ? [] : ["Global hook", globalHook]),
+      projects.length === 1 ? "Project hook" : "Project hooks",
+      ...projects.flatMap(({ hook, stale }) => [hook, ...(stale ? ["This hook points to an older runtime."] : [])]),
+      `To use only the global hook, disconnect the project hook${projects.length === 1 ? "" : "s"}:`,
+      ...projects.map(({ command }) => command),
+    ].join("\n"),
     migrationRollback: (operationId) => `Restore this migration's recorded files and settings with:\ntonedial doctor --fix --rollback ${operationId}`,
     migrationQuestion: "Approve this legacy migration with the saved settings and one recoverable operation?",
     migrationNotNeeded: "The owned context layout is current; no legacy migration is needed.",
@@ -904,6 +995,13 @@ const enMessages: Messages = {
     actionLabel: { file: "file", "entry-rebuild": "rebuilt entry", skill: "skill link", "case-rename": "renamed entry" },
     actionState: { created: (label) => `(new ${label})`, removed: (label) => `(${label} removed)`, updated: (label) => `(${label} updated)`, plain: (label) => `(${label})` },
     newFiles: (count) => `(${count} new files)`,
+    rootState: "ToneDial state",
+    rootGlobal: "Global agent files",
+    rootProject: "Project files",
+    configRecords: (tools, global) => `(records ${tools} for ${global ? "all projects" : "this project"})`,
+    configRemoves: (tools, count) => `(removes the ${tools} connection${count === 1 ? "" : "s"})`,
+    configSaves: (tools, global) => tools === null ? "(saves your settings)"
+      : `(saves your settings and records ${tools} for ${global ? "all projects" : "this project"})`,
     codexTrust: (global) => global
       ? "In Codex, open /hooks → SessionStart → ToneDial, review the command and enable the hook."
       : "Trust this project in Codex, then open /hooks → SessionStart → ToneDial, review the command and enable the hook.",
@@ -915,13 +1013,13 @@ const enMessages: Messages = {
       : "Trust this project in Claude Code; interactive sessions run hooks only in trusted folders. /hooks → SessionStart shows the ToneDial command.",
     claudeOpen: "Open Claude Code in this project now?",
     claudeOpenSteps: "Claude Code opens in this terminal. If it asks whether you trust this folder, answer there, then exit to return.",
-    scopeHere: "Connection scope: project",
-    alreadyMatch: (tools) => `${tools}: already up to date · no changes`,
-    alreadyDisconnected: (tools) => `${tools}: already disconnected · no changes`,
+    scopeHere: "Project scope",
+    alreadyMatch: (tools) => `${tools} · up to date`,
+    alreadyDisconnected: (tools) => `${tools}: not connected · nothing to change`,
     dryRun: "--dry-run · nothing written",
     declined: "cancelled · nothing written",
     disconnected: (tools) => `${tools}: disconnected`,
-    noArtifact: "TONE.md is missing. Run tonedial compile first.",
+    noArtifact: "TONE.md is missing. To generate it first:\n  tonedial compile",
     unknownTool: (given, tools) => `${given}: unsupported tool. Available: ${tools.join(", ")}`,
     noneInstalled: (tools, root) =>
       `Search root: ${root}\nNo ${tools.join(", ")} install found. Name a tool to connect it anyway.`,
@@ -929,13 +1027,16 @@ const enMessages: Messages = {
     stateKept: (root) => `Presets and settings stay in:\n${root}`,
     deleteYourself: "to remove state too, delete this directory yourself",
     nothingWired: "No connections in this scope · nothing to disconnect",
+    nothingConnected: "Nothing connected.",
+    nothingDisconnected: "Nothing disconnected.",
+    projectHooks: "The project hooks run ToneDial with paths from this machine. Keep them out of version control (for example with .git/info/exclude), or commit them only if you mean to.",
+    projectIsHome: (command) => `This folder is your home directory, so a project connection here would use the global files. Use the global scope instead:\n  ${command}`,
     damaged: (path, reason) => `${path}: ${reason}. Remove the stray marker, then run eject again.`,
-    needsApproval:
-      "File changes require approval. Run in a terminal, or review with --dry-run before rerunning with --auto.",
+    needsApproval: (command) => `File changes not applied · approval required. To review and approve them, rerun in a terminal:\n  ${command}\nOr preview them, then approve without prompting:\n  ${command} --dry-run\n  ${command} --auto`,
     projectExclude: "to keep it out of version control without touching .gitignore:",
     newFile: "(new file)",
     newFileLines: (count) => `${count} line${count === 1 ? "" : "s"}`,
-    scopeGlobal: "Connection scope: global (shared across projects)",
+    scopeGlobal: "Global scope (all projects)",
     seeded: (labels) => `bundled files: ${labels.join(", ")}`,
     skillState: (pairs) => `skill ${pairs}`,
     commandInstalled: (path) => `/tone installed\n${path}`,
@@ -945,22 +1046,22 @@ const enMessages: Messages = {
   doctor: {
     connectionsHeading: "Connections",
     checksHeading: "Checks",
-    applicationHealth: (healthy) => `Application: ${healthy ? "healthy" : "needs attention"}`,
-    connectionHealth: (attention) => `Connection files: ${attention ? "attention needed" : "no issues in selected scope"}`,
+    applicationHealth: "ToneDial files: needs attention",
+    connectionHealth: "Connection files: attention needed",
     healthy: "No problems found",
-    scopeGlobal: "Inspection scope: global",
-    wiredElsewhere: "Registered connections outside this inspection scope",
-    destinationGone: "registered directory not found or inaccessible",
-    destinationUnwired: "some or all registered connection files were not found",
-    destinationPresent: "registered connection files found",
+    wiredElsewhere: "Also connected elsewhere",
+    folderConnections: (targets, command) => `This folder has its own connections (${targets.join(", ")}). To check them instead of the global ones:\n${command}`,
+    destinationGone: "folder not found or inaccessible",
+    destinationUnwired: "some or all files not found",
+    destinationPresent: "files present",
     inspectScope: "To keep using these connections, inspect this scope:",
     disconnectScope: "If no longer needed, disconnect all agents in this scope:",
-    scope: "Inspection scope: project",
-    toLookAt: (count) => `${count} ${count === 1 ? "check needs" : "checks need"} attention`,
+    summary: (problems, notices) => `${problems === 0 ? "No problems" : `${problems} problem${problems === 1 ? "" : "s"}`}${notices ? ` · ${notices} notice${notices === 1 ? "" : "s"}` : ""}`,
     needsAPerson: "manual review required · see details above",
     toneMatches: "matches config.json",
     toneNotWritten: "not written",
     toneDisagrees: "differs from config.json · edited directly or write interrupted",
+    toneEarlierVersion: "generated by an earlier ToneDial version · same settings as config.json",
     seedsHeading: "Bundled files",
     checkHeading: { context: "Context files", reader: "Reader", pathLine: "Shell PATH line", onPath: "tonedial on PATH", install: "Install", claudeContext: "Claude Code context", skills: "Skills", skill: (label) => `${label} skill` },
     fullDetails: "Full details:",
@@ -969,7 +1070,8 @@ const enMessages: Messages = {
     seedsAttention: "bundled files need attention",
     recoveryPending: "An operation is active or needs recovery. No files were changed by this command.",
     invalidRecoveryPending: "Unreadable operation history is blocking recovery. No files were changed by this command.",
-    resumeOperation: "To continue the application repair:",
+    resumeOperation: "To finish the repair with your current settings, continue it:",
+    undoOperation: "To undo its changes and go back to the files from before it started:",
     contextCurrent: "AGENTS.md and TONE.md layout is current.",
     contextRepair: "Managed context files need repair. Check the guide and tone-file diagnostics.",
     contextSize: (guide, total) => total === null
@@ -1017,29 +1119,37 @@ const enMessages: Messages = {
     imported: "import connected",
     hookPresent: (event) => `${event} hook · configured to read TONE.md each session`,
     nativeConfigured: (event) => `${event} hook · configured to read AGENTS.md, then TONE.md`,
-    nativeConfiguredCompact: (event) => `${event} · AGENTS.md → TONE.md`,
+    nativeConfiguredCompact: (event) => `Connected · ${event} · AGENTS.md → TONE.md`,
     hookSettingState: {
-      enabled: "Hook enabled in the registered settings file",
-      disabled: "Hook disabled in the registered settings file",
-      unknown: "Hook enablement unknown in the registered settings file",
+      enabled: "Hook enabled in its settings file",
+      disabled: "Hook disabled in its settings file",
+      unknown: "Enablement can't be checked from files",
     },
     hookSettingScope: "Hook states above come from the inspected settings files only; host overrides and session delivery are unverified.",
     hookGroupHeading: "Agent hooks",
     hookGroupUnknown: (tools) => `Not connected: ${tools.join(", ")}.`,
-    hookNotConnected: "No managed ToneDial hook to inspect. To connect, run init with this agent selected in the same scope.",
-    hookNeedsInspection: "Resolve the reported hook settings or program issue before checking enablement in the app.",
+    hookGroupElsewhere: (tools) => `Not connected in this scope: ${tools.join(", ")}.`,
+    hookNotConnected: "No managed ToneDial hook to inspect. To connect, run wire with this agent in the same scope.",
     hookGuidance: {
       claude: "/hooks → SessionStart: check the ToneDial command and settings source. If hooks are off, set disableAllHooks to false and check workspace trust.",
-      codex: "/hooks → SessionStart → ToneDial: review the command and enable the hook. If asked, review and trust the project first.",
       antigravity: "Antigravity IDE agent panel … → Customizations → Hooks (or Desktop Settings → Customizations → Hooks): check the ToneDial PreInvocation command and enable it.",
     },
-    nativeMissing: (path, event) => `No ToneDial ${event} hook · ${path}`,
+    nativeMissing: (path, event) => `No ToneDial ${event} hook\n${path}`,
     nativeStale: "ToneDial hook uses an older reader or runtime configuration.",
     nativeForeign: "Settings changed outside ToneDial. Preserve the file and review it before repair.",
+    nativeEdited: (path) => `ToneDial's entries in this file were edited outside ToneDial, so ToneDial leaves the file as it is:\n${path}`,
+    editedRoutes: (show, fix) => `To repair it, restore ToneDial's entries exactly as it wrote them. ${show === null ? "They are listed below." : `To see them:\n${show}`}\nOr move this file aside, let ToneDial write a new one, then copy your own entries back into it:\n${fix}`,
+    editedExpected: "ToneDial wrote these entries:",
+    unrecordedEntries: (path) => `ToneDial's entries in this file still send the tone, but no connection records them:\n${path}`,
+    unrecordedAdopt: "To record them as this scope's connection, leaving the file as it is:",
+    unrecordedEdited: (path) => `ToneDial's entries in this file still send the tone, but no connection records them and they differ from what ToneDial writes, so ToneDial leaves them as they are:\n${path}`,
+    unrecordedEditedNext: (wire) => `Remove them by hand, then connect again:\n${wire}`,
+    orphanedHook: (path, directories) => `This global hook still sends the tone in every folder:\n${path}\nOnly project connections recorded by an earlier version keep it:\n${directories.join("\n")}`,
+    orphanedRemove: "To remove the hook with those connections:",
     nativeInherited: (path, event) => `Using the global ${event} hook · ${path} · no project hook needed`,
-    nativeInheritedCompact: (path, event) => `Global ${event} hook\n${path}`,
+    nativeInheritedCompact: (path, event) => `Connected through the global ${event} hook\n${path}`,
     legacyRepairWithheld: "This connection method is no longer set up. Reconnect with init for hook delivery.",
-    nativeRuntimeUnusable: (path) => `Hook program is unusable: ${path}`,
+    nativeRuntimeUnusable: (path) => `Hook program is unusable:\n${path}`,
     codexHookDisabled: "Codex setting: hook disabled. Enable it in /hooks → SessionStart → ToneDial.",
     nativeActivationUnverified: (trustKnown) => trustKnown
       ? "app activation unverified"
@@ -1089,9 +1199,17 @@ const enMessages: Messages = {
     refreshFiles: (count) => `Bundled files to refresh: ${count}`,
     reviewState: "Review the flagged bundled files:",
     npmQuestion: "  Run this npm update?",
-    npmComplete: (version) => `npm update complete · installed ${version}`,
+    npmComplete: (version) => `npm update complete · updated to ${version}`,
+    npmUnchanged: (version) => `npm update complete · already up to date (${version})`,
+    installedLabel: "installed",
+    latestLabel: "latest",
+    released: (date) => `released ${date}`,
+    upToDate: "up to date",
+    available: (from, to) => `update available · ${from} → ${to}`,
+    newer: "installed version is newer than the latest release · nothing to update",
+    checkUnavailable: "latest version could not be checked",
     npmMissing: "npm was not found on PATH. Use the Node/npm installation that owns this ToneDial copy.",
-    npmScopeUnknown: "Cannot verify npm's global installation directory. Check npm prefix -g and npm root -g before retrying.",
+    npmScopeUnknown: "Cannot verify npm's global installation directory. Check these before retrying:\n  npm prefix -g\n  npm root -g",
     npmScopeMismatch: "This ToneDial copy is not the global package managed by the selected npm. Use the matching Node/npm installation; no update was run.",
     npmFailed: "npm update failed. Check npm's access and registry settings, then retry the displayed command for npm's diagnostics.",
     npmPermissionDenied: (code, prefix) => `npm update needs write permission (${code}).\n${prefix}\nBack up your settings and presets, then reinstall in a user-owned directory.\nRecovery steps:\nhttps://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#npm-permissions`,
@@ -1101,11 +1219,10 @@ const enMessages: Messages = {
       unsafe: "Saved settings cannot be read safely. Check links and file types.",
       changed: "Saved settings changed during inspection. Retry after changes stop.",
       invalid: "Saved settings are invalid.",
-      unreadable: "Application state could not be read. Check the path and permissions.",
+      unreadable: "ToneDial state could not be read. Check the path and permissions.",
     },
     fetching: (registry) => `checking · ${registry}`,
     found: (version, bytes) => `${version}, ${bytes.toLocaleString("en")} bytes`,
-    already: (version) => `${version} already installed`,
     wouldReplace: (lib, version) => `would replace · ${lib} → ${version}`,
     question: (version) => `  Replace this install with ${version}?`,
     replaced: (version) => `updated · ${version}`,
@@ -1123,7 +1240,7 @@ const enMessages: Messages = {
   help: {
     commandHelp: "Command help: tonedial <command> --help",
     fullReference: "Full reference: tonedial --help",
-    feedback: "Found a problem or have an idea? Open an issue :)\nhttps://github.com/awesometic/tonedial/issues/new/choose",
+    feedback: "Found a problem or have an idea? Open an issue:\nhttps://github.com/awesometic/tonedial/issues/new/choose",
     tagline: "give your coding agent a character and keep it in every project",
     footer: "Connection commands use the global scope unless you pass --here (current project) or --project DIR. Unattended writes need the scope stated explicitly.",
     recoveryOptions: "Recovery options for doctor --fix: tonedial doctor --help",
@@ -1139,18 +1256,18 @@ const enMessages: Messages = {
       address: "set the agent's and your names · no args prompts · frequency: set address_frequency=rarely",
       persona: "set the agent's role and yours · no args prompts",
       reset: "reset one axis · no args resets all twelve",
-      show: "show settings · a slug previews a saved profile",
+      show: "show settings · a slug previews a saved preset",
       test: "preview your tone or a preset in a new conversation",
-      save: "save the current tone as a profile",
+      save: "save the current tone as a preset",
       create: "create and apply a preset · no args guides setup",
       list: "list bundled and saved presets",
       edit: "open settings or a preset in $EDITOR",
       use: "apply a preset",
       compile: "rebuild TONE.md · tone changes already do this",
-      export: "back up a profile, including address and role, as JSON",
-      import: "import a profile from JSON · use applies it",
+      export: "back up a preset, including address and role, as JSON",
+      import: "import a preset from JSON · use applies it",
       wire: "connect an agent in the chosen scope · no args prompts",
-      unwire: "disconnect one agent · no args disconnects all",
+      unwire: "disconnect an agent · no args prompts",
       doctor: "check connections · repair with --fix",
       update: "update this install",
       eject: "disconnect agents in the selected scope · keep presets",
@@ -1172,7 +1289,7 @@ const enMessages: Messages = {
       fromOperation: "doctor --fix: select saved settings from an operation",
       fromPreset: "doctor --fix: preset for unavailable settings",
       restorePreset: "doctor --fix: restore one missing or damaged user preset",
-      preset: "test: preview a saved profile · current state kept",
+      preset: "test: preview a saved preset · current state kept",
       slug: "create/save: preset slug (lowercase, digits, dashes)",
       acceptUsage: "test: accept account usage and charges for this launch",
       explain: "show: explain axes, settings, risky levels",
@@ -1195,10 +1312,11 @@ const enMessages: Messages = {
   },
   errors: {
     notACommand: (name, nearest) =>
-      `${name} is not a command.${nearest ? ` Did you mean tonedial ${nearest}?` : ""}\nCommands: tonedial --help`,
-    isAFlag: (name) => `${name} is an option, not a command:\n  tonedial --${name}`,
+      `${name} is not a command.${nearest ? ` Did you mean:\n  tonedial ${nearest}` : ""}\nCommands: tonedial --help`,
+    isAFlag: (name, command) => `${name} is an option, not a command:\n  tonedial ${command ? `${command} ` : ""}--${name}`,
     stoppingHelp:
-      "To pause tone delivery and keep settings (tonedial on resumes it):\n  tonedial off\n" +
+      "To pause tone delivery and keep settings:\n  tonedial off\n" +
+      "To resume it:\n  tonedial on\n" +
       "To restore axis defaults:\n  tonedial reset\n" +
       "To disconnect agents, once per scope (or --here, --project PATH):\n  tonedial eject --global\n" +
       "To remove the command after every scope is disconnected:\n  npm uninstall -g tonedial",
@@ -1211,7 +1329,7 @@ const enMessages: Messages = {
     colourMode: (given) => `--color=${given}: expected auto, always, or never`,
     twoDestinations: "Use one scope: --global, --here, or --project PATH.",
     projectPathRequired: "--project requires a non-empty directory path. Use --here for the current project.",
-    scopeRequired: "Unattended connection writes require an explicit scope: --global, --here, or --project PATH. Add the intended scope and rerun; --dry-run previews the global default without writing.",
+    scopeRequired: (commands) => `Unattended connection writes need an explicit scope. --dry-run previews the global default without writing. Rerun with the scope you mean, or with --project PATH:\n${commands.map((command) => `  ${command}`).join("\n")}`,
     migrationFresh: "--migrate-legacy applies only to existing supported state. Run init without this flag for first setup.",
     migrationApprovalRequired: (command) => `This older state needs explicit migration approval. Preview with:\n${command} --dry-run\nApply the reviewed plan with:\n${command} --auto\nInteractive init asks for migration approval.`,
     contextInspectionFailure: (path, reason) => `Cannot finish inspection:\n${path}\n${
@@ -1234,7 +1352,7 @@ const enMessages: Messages = {
         overlap: "The state root overlaps agent instructions. Choose a separate state directory before setup.",
         operation: "An operation needs recovery. Inspect its recorded ID and recover that operation before migrating.",
       };
-      return `Legacy migration is blocked:\n${path}\n${explanations[reason] ?? "Ownership or migration eligibility could not be verified. Preserve the files and review the diagnosis."}\nNothing was written. Inspect the same scope with:\n${doctorCommand}\nPreserve the original files; tonedial show --json reads saved settings.`;
+      return `Legacy migration is blocked:\n${path}\n${explanations[reason] ?? "Ownership or migration eligibility could not be verified. Preserve the files and review the diagnosis."}\nNothing was written. Inspect the same scope with:\n${doctorCommand}\nPreserve the original files. To read saved settings:\ntonedial show --json`;
     },
     npxUnsupported:
       "npx installs are not supported. They leave no persistent copy for `tonedial`, so the skill " +
@@ -1252,16 +1370,22 @@ const enMessages: Messages = {
     seedConflict: (path) =>
       `Cannot verify this bundled file's ownership or type:\n${path}\n` +
       "Nothing was changed. Preserve the file and choose a dedicated TONEDIAL_HOME for new setup.",
-    toolsRequired: "Choose agents with --tools codex,claude,antigravity.\n" +
-      "For state-only setup, run init --tools none.\n" +
-      "--auto approves your selection only; choose agents explicitly.",
+    toolsRequired: (commands, auto) => `Choose agents with --tools codex,claude,antigravity.` +
+      `${auto ? "\n--auto approves your selection only; choose agents explicitly." : ""}\nFor example:\n  ${commands[0]}\nFor state-only setup:\n  ${commands[1]}`,
     toolsSelection: "Use a non-empty comma-separated agent list. Only init accepts none, on its own.",
     toolsAmbiguous: "Pass a positional agent or --tools, not both.",
     commandsNeedClaude: "--commands requires claude in the selected agents.",
-    toolsPrompt: "Agents to connect (comma-separated): ",
-    wireToolsRequired: (example, auto) => `Choose an agent to connect, for example:\n  ${example}\n` +
-      `Agents: claude, codex, antigravity · several: --tools codex,claude${auto ? "\n--auto approves your selection only; choose agents explicitly." : ""}`,
-    ownershipConflict: (path) => `Ownership is unknown, or managed content or file type changed:\n${path}\nThe file was preserved. Review it before changing the connection.`,
+    toolsPrompt: "Agents to connect (comma-separated · Enter: cancel): ",
+    unwireToolsPrompt: "Agents to disconnect (comma-separated · Enter: cancel): ",
+    toolInstalled: "installed",
+    toolConnected: "connected",
+    unwireToolsRequired: (example, eject, auto) => `Choose an agent to disconnect.${auto ? "\n--auto approves your selection only; choose agents explicitly." : ""}\nFor example:\n  ${example}\nTo disconnect every agent in this scope:\n  ${eject}`,
+    unwireScopeRequired: (here, global, eject) => eject
+      ? `This folder has its own connections, so choose which ones to disconnect.\n--here disconnects this folder's connections; --global disconnects the ones shared across projects.\n  ${here}\n  ${global}`
+      : `This folder has its own connection, so choose which one to disconnect.\n--here disconnects this folder's connection; --global disconnects the one shared across projects.\n  ${here}\n  ${global}`,
+    wireToolsRequired: (example, auto) => `Choose an agent to connect.\nAgents: claude, codex, antigravity · several: --tools codex,claude` +
+      `${auto ? "\n--auto approves your selection only; choose agents explicitly." : ""}\nFor example:\n  ${example}`,
+    ownershipConflict: (path) => `Ownership is unknown, or managed content or file type changed:\n${path}\nThe file was preserved. Check it with doctor before changing the connection.`,
     rollbackNeedsFix: "Use --rollback with doctor --fix and an operation ID reported by doctor.",
     editNotApplied: (path, reason) => `${reason}\nNothing was applied. Edited copy preserved at:\n${path}`,
     editSavedInvalid: "The edit was saved as written; ToneDial cannot load these settings until the file is fixed. Diagnose and repair:\ntonedial doctor",
@@ -1269,24 +1393,24 @@ const enMessages: Messages = {
     stateOverlap: (path) => `Project export overlaps shared ToneDial state:\n${path}\nNothing was written. Choose a separate state directory or project.`,
     stateInstructionOverlap: (path) => `ToneDial state overlaps an agent instruction root:\n${path}\nNothing was written. Choose a dedicated state directory before running init.`,
     legacyConsumers: (destinations) => `Other or unrecorded connections still read tone.md:\n${destinations.join("\n")}\nNothing was written. Unwire each scope before retrying init, then reconnect after the transition.`,
-    contextLayout: (kind, path, doctorCommand = "tonedial doctor --json") => kind === "fresh"
+    contextLayout: (kind, path, doctorCommand = "tonedial doctor --json", fixCommand = "tonedial doctor --fix") => kind === "fresh"
       ? `ToneDial is not set up yet:\n${path}\nSet it up, then rerun this command:\n  tonedial init --tools none --global`
-      : `ToneDial needs application recovery for this ${kind} layout:\n${path}\nNothing was written. Inspect the same scope with:\n${doctorCommand}\nKeep this root and run tonedial doctor --fix to preserve saved settings and rebuild generated files.`,
-    unreadableConfigFile: (path) => `Cannot read valid settings from:\n${path}\nKeep the original and run tonedial doctor --fix to choose a saved source or disclosed defaults.`,
-    fixUnreadableConfig: (path) => `Settings need a recovery source:\n${path}\nNothing was written. Run tonedial doctor --fix interactively or select --from-operation ID or --from-preset SLUG.`,
+      : `ToneDial needs file recovery for this ${kind} layout:\n${path}\nNothing was written. Inspect the same scope with:\n${doctorCommand}\nKeep this root. To preserve saved settings and rebuild generated files:\n${fixCommand}`,
+    unreadableConfigFile: (path, command) => `Cannot read valid settings from:\n${path}\nKeep the original.` +
+      `${command === null ? "" : `\nTo choose a saved source or disclosed defaults:\n  ${command}`}`,
     editConflict: (path) => `The original file changed while the editor was open. Your edited copy is preserved here:\n${path}\nCompare the files before trying again.`,
     traitsNotOnDisk:
       "There are no trait files to edit. Anchors are compiled into the package, not written to " +
-      "home. Use tonedial set to change an axis.",
+      "home. To change an axis:\n  tonedial set",
     editTarget: (given) => `edit accepts preset <slug> or no arguments (got ${given})`,
     editorChangedNothingUsable: (path) => `${path}: not a preset object`,
-    editNeedsSlug: "edit preset needs a slug. List: tonedial list",
-    noEditor: (path) => `set $EDITOR or $VISUAL, or open directly: ${path}`,
+    editNeedsSlug: "edit preset needs a slug. List:\n  tonedial list",
+    noEditor: (path) => `set $EDITOR or $VISUAL, or open directly:\n${path}`,
     wouldOpen: (editor, path) => `would open · ${editor} · ${path}`,
     editorFailed: (editor, reason) => `${editor}: failed to run · ${reason}`,
     editorExited: (editor, code) => `${editor}: exit ${code} · changes not reread`,
     editUnchanged: "no changes",
-    editDeleted: (path) => `${path}: deleted · repair: tonedial doctor --fix`,
+    editDeleted: (path) => `Deleted by the edit:\n${path}\nTo repair it:\n  tonedial doctor --fix`,
     editDeletionRefused: (path) => `The editor deleted the temporary config. Managed settings and connection records were kept:\n${path}`,
     escapesRoot: (path, real, root) =>
       `${path} → ${real}: outside ${root}, so it will not be written.`,
@@ -1296,8 +1420,8 @@ const enMessages: Messages = {
       `or safeword; connecting it would corrupt the file.`,
     projectNeedsWiring: "--project requires connection support",
     hooksNotJson: (path, reason) =>
-      `${path}: cannot read as JSON${reason ? `: ${reason}` : ""}. ToneDial will not overwrite ` +
-      `other hooks. Fix the file, then rerun.`,
+      `Cannot read this file as JSON${reason ? `: ${reason}` : ""}\n${path}\n` +
+      `ToneDial will not overwrite the other hooks in it. Fix the file, then rerun.`,
   },
   config: {
     unknownKey: (key, known) => `config.json: unknown key ${key} · available: ${known.join(", ")}`,
@@ -1331,14 +1455,13 @@ const en: Catalogue = {
   init: {
     safewordSuggestion: (suggestion) => `Preset suggestion · ${suggestion}`,
     welcome: "ToneDial gives your coding agent a character and keeps its tone across projects.",
-    scopeHeading: "Scope",
     toneHeading: "Tone",
     connectionsHeading: "Agents",
     resultHeading: "Ready",
     refreshHeading: "Refresh",
     preset: "Starting preset (Enter: 1)",
-    userRef: 'Your name (Enter: preset default · "": clear)',
-    selfRef: 'Agent\'s name (Enter: preset default · "": clear)',
+    userRef: 'Your name ("": clear)',
+    selfRef: 'Agent\'s name ("": clear)',
     safeword:
       "Safeword: request one plain answer without persona, praise or jokes. It grants no permissions.",
     safewordSkip: "Enter: none · the skill can still request a plain answer.",
@@ -1365,11 +1488,11 @@ const en: Catalogue = {
     formality: { owns: "wording and social distance", low: "familiar wording with slang", high: "ceremonial, deferential wording" },
     verbosity: { owns: "answer length and depth", low: "one short sentence for a simple result", high: "depth inside the requested task" },
     profanity: { owns: "swearing only: strength and frequency", low: "none; role slang remains", high: "uncensored swearing in nearly every sentence" },
-    playfulness: { owns: "humour and role-idiom intensity", low: "literal wording; keep chosen address terms when used", high: "character idioms in nearly every sentence" },
-    critique: { owns: "criticism of defects and choices", low: "neutral defects without judgement", high: "unsparing mockery of severe defects and choices" },
+    playfulness: { owns: "humor and role-idiom intensity", low: "literal wording; keep chosen address terms when used", high: "character idioms in nearly every sentence" },
+    critique: { owns: "criticism of defects and choices", low: "neutral defects without judgment", high: "unsparing mockery of severe defects and choices" },
     flattery: { owns: "user praise: amount and intensity", low: "none", high: "lavish praise every paragraph; assessment unchanged" },
     warmth: { owns: "warmth toward the user", low: "no greeting, warm acknowledgement or encouragement", high: "kindness, empathy and reassurance every paragraph" },
-    conviction: { owns: "pressure behind its judgement", low: "lists options and asks", high: "states one recommendation as the decision" },
+    conviction: { owns: "pressure behind its judgment", low: "lists options and asks", high: "states one recommendation as the decision" },
     care: { owns: "coverage, organization and functional presentation", low: "requested task only", high: "follow-ups, backup, rest, lists and status emoji" },
     compliance: { owns: "willingness when refusal does not defer", low: "objects with a reason, then acts", high: "eagerly starts now; no delay or negotiation" },
     refusal: { owns: "refusal frequency and conditions", low: "no refusal or delay", high: "visible strike until coaxed or the safeword" },
@@ -1403,10 +1526,9 @@ const en: Catalogue = {
 const koMessages: Messages = {
   test: {
     missingConfig: "ToneDial 초기 설정이 아직 없습니다. 초기 설정 후 이 명령을 다시 실행해 주세요:\n  tonedial init --tools none --global",
-    invalidConfig: "저장된 설정을 안전하게 읽을 수 없습니다. tonedial doctor --json으로 확인한 뒤 복구 방법을 골라 주세요.",
     unsupportedProvider: (provider) => `${provider}: 대화 미리보기는 claude 또는 codex로 실행해 주세요.`,
     noProvider: "PATH에서 Claude Code나 Codex를 찾지 못했습니다.",
-    providerRequired: "사용할 에이전트를 선택해 주세요: tonedial test claude 또는 tonedial test codex.",
+    providerRequired: (commands) => `사용할 에이전트를 선택해 주세요:\n  ${commands.join("\n  ")}`,
     providerUnavailable: (provider, alternative) => `PATH에서 ${provider}를 찾지 못했습니다.` +
       (alternative ? ` ${alternative.label}로 미리 보려면:\n  ${alternative.command}` : ""),
     targetUnavailable: (path) => `시험할 폴더를 찾지 못했거나 디렉터리가 아닙니다:\n${path}\n--project DIR로 이미 있는 폴더를 선택해 주세요.`,
@@ -1435,47 +1557,50 @@ const koMessages: Messages = {
     off: "ToneDial 꺼짐 · 말투 전달 일시 중지 · 설정과 TONE.md 유지",
     alreadyOn: "ToneDial이 이미 켜져 있음 · 변경 없음",
     alreadyOff: "ToneDial이 이미 꺼져 있음 · 변경 없음",
-    openConversation: "열린 대화에는 이전 말투가 남을 수 있습니다. ToneDial이 없는 상태를 제대로 비교하려면 새 대화를 여세요.",
+    openConversation: "열린 대화에는 이전 말투가 남을 수 있습니다. ToneDial 없이 비교하려면 새 대화를 여세요.",
     offNotice: "ToneDial이 꺼져 있어 다시 켜기 전까지 새 대화에는 말투가 전달되지 않습니다.",
     status: (enabled) => `ToneDial ${enabled ? "켜짐" : "꺼짐"}`,
   },
   axis: {
     range: (axis, given) => `${axis}: 1~5만 쓸 수 있습니다(입력: ${given})`,
-    unknown: (name, nearest) => `${name}: 축이 아닙니다.${nearest ? ` ${nearest} 말씀이신가요?` : ""} 축 목록: tonedial get --help`,
+    unknown: (name, nearest) => `${name}: 축이 아닙니다.${nearest ? ` 비슷한 키: ${nearest}` : ""}\n축 목록:\n  tonedial get --help`,
     notSettable: (name, nearest) =>
-      `${name}: 축도 설정도 아닙니다. ${nearest ? `${nearest} 말씀이신가요? ` : ""}` +
-      "전체 목록: tonedial get --help",
+      `${name}: 축도 설정도 아닙니다.${nearest ? ` 비슷한 키: ${nearest}` : ""}\n전체 목록:\n  tonedial get --help`,
     reset: (axis, level) => `${axis}: 이미 기본값(${level})입니다`,
     resetAll: (deselected) => deselected ? `${deselected} 선택 해제 · 페르소나와 다른 설정은 유지` : "페르소나와 다른 설정은 유지",
+    resetRestore: "저장된 프리셋으로 돌아가려면:",
+    resetRestoreUnsaved: "저장하지 않은 편집은 복원할 수 없습니다. 저장된 프리셋으로 돌아가려면:",
     nothingChanged: "변경 없음",
     settingsSaved: "설정 변경됨",
     settingsUnchanged: "설정 변경 없음",
     needsPair: (given) => `${given}: <키>=<값> 형식으로 입력해 주세요(예: warmth=4)`,
-    needsArgument: "set에는 <키>=<값>이 하나 이상 필요합니다. 예: tonedial set warmth=4. 터미널에서는 tonedial set만 입력해도 다이얼이 열립니다.",
+    needsArgument: "set에는 <키>=<값>이 하나 이상 필요합니다. 예:\n  tonedial set warmth=4\n터미널에서 다이얼을 열려면:\n  tonedial set",
     subagentUnsupported: "서브에이전트 축은 아직 지원하지 않습니다. 사용자 축을 설정해 주세요",
   },
   preset: {
     activeUnknown: "저장된 설정을 복구하기 전에는 현재 프리셋을 알 수 없습니다.",
     notSetUp: "아직 초기 설정 전이라 적용된 프리셋이 없습니다. 초기 설정하려면:\ntonedial init --tools none --global",
     unavailable: (slug, reason) => `${slug}: 읽을 수 없음 (${reason}) · 파일은 그대로 둠`,
-    conflict: (slug, recoveredSlug) => `${slug}: 사용자 파일과 이전 파일의 값이 다릅니다. tonedial doctor --fix로 이전 값을 ${recoveredSlug}에 보존하세요.`,
-    activeConflict: (slug) => `${slug}: 어떤 파일을 적용했는지 알 수 없어 저장된 축 값은 유지했습니다. tonedial doctor --fix에서 사용할 파일을 선택하세요.`,
+    conflict: (slug, recoveredSlug) => `${slug}: 사용자 파일과 이전 파일의 값이 다릅니다. 이전 값을 ${recoveredSlug}에 보존하려면:\n  tonedial doctor --fix`,
+    activeConflict: (slug) => `${slug}: 어떤 파일을 적용했는지 알 수 없어 저장된 축 값은 유지했습니다. 사용할 파일을 고르려면:\n  tonedial doctor --fix`,
     active: (name) => `${name} 적용됨`,
-    unknown: (slug, known) => `${slug}: 프리셋을 찾지 못했습니다. 사용 가능: ${known.join(", ")}`,
+    activeState: "적용됨",
+    unknown: (slug, known, suggestion) => `${slug}: 프리셋을 찾지 못했습니다. 사용 가능: ${known.join(", ")}` +
+      (suggestion ? `\n비슷한 프리셋: ${suggestion.slug}\n  ${suggestion.command}` : ""),
     saved: (slug, count) => `${slug} 저장됨 · 기본값과 다른 축 ${count}개`,
     savedTarget: (slug) => `저장한 프리셋: ${slug}`,
     notApplied: "보관함에 저장했습니다. 현재 말투는 바꾸지 않았습니다.",
     bundledSlug: (slug) => `${slug}: 기본 제공 프리셋입니다. 다른 이름을 써 주세요`,
     bundledNotEditable: (slug) =>
       `${slug}: 기본 제공 프리셋이라 다음 init에서 수정 내용이 사라집니다. ` +
-      `tonedial use ${slug} 명령을 실행한 뒤 새 이름으로 저장하세요.`,
+      `적용한 뒤 새 이름으로 저장하세요:\n  tonedial use ${slug}`,
     editSaved: (slug) => `${slug} 저장됨`,
     editAxesKept: (unsaved) => unsaved
-      ? "현재 말투 설정은 유지했습니다. 저장한 프로필과 다릅니다."
-      : "현재 말투 설정은 유지했습니다. 저장한 프로필과 같습니다.",
+      ? "현재 말투 설정은 유지했습니다. 저장한 프리셋과 다릅니다."
+      : "현재 말투 설정은 유지했습니다. 저장한 프리셋과 같습니다.",
     slugNotEditable: (was, tried) =>
       `슬러그를 직접 바꿀 수 없습니다. 활성 프리셋과 연결 기록의 대상: ${was}. ` +
-      `tonedial use ${was} 명령을 실행한 뒤 저장할 새 이름을 지정하세요: ${tried}`,
+      `적용한 뒤 새 슬러그로 저장하세요(${tried}):\n  tonedial use ${was}`,
     noLatin: (name) => `"${name}": 슬러그를 만들 영문자나 숫자가 없습니다. --slug my-tone처럼 직접 지정하세요.`,
     nameTooLong: (given, cap) => `표시 이름: ${given}자 · 최대 ${cap}자`,
     replaced: (slug) => `${slug}: 기존 프리셋 교체됨`,
@@ -1489,7 +1614,7 @@ const koMessages: Messages = {
     needsDisplayName: "save에는 표시 이름이 필요합니다. 이름에 영문자나 숫자가 없으면 --slug를 지정하세요.",
     saveSlugUnknown: (slug) => `${slug}: 이 슬러그로 저장된 항목이 없습니다. 새로 만들려면 표시 이름도 지정하세요:\ntonedial save "표시 이름" --slug ${slug}`,
     saveAsNew: "현재 말투는 새 이름으로 저장하세요:\ntonedial save \"내 말투\" --slug my-tone",
-    needsSlugArg: "프리셋 슬러그가 필요합니다. 목록: tonedial list",
+    needsSlugArg: "프리셋 슬러그가 필요합니다. 목록:\n  tonedial list",
     invalidSlugFor: (name) => `"${name}": 올바른 슬러그를 만들 수 없습니다`,
     noSlug: (path) => `${path}: 올바른 슬러그가 없습니다. 영문 소문자·숫자·하이픈(-)만 쓸 수 있습니다`,
     schemaMismatch: (slug, given, knows) => `프리셋 ${slug}: 스키마 ${given} · 지원 스키마 ${knows}`,
@@ -1499,10 +1624,13 @@ const koMessages: Messages = {
     nonDefault: (count) => `기본값과 다른 축 ${count}개`,
     preview: "미리보기",
     unsaved: "저장하지 않은 변경",
-    changesNotSaved: "프로필에 저장되지 않았습니다.",
+    changesNotSaved: "프리셋에 저장 안 됨",
+    axisOnlyPreview: "축만 담은 프리셋 · 적용해도 현재 설정은 바뀌지 않습니다",
+    replacedUnsaved: (name) => name ? `${name}에서 저장하지 않은 변경을 덮어썼습니다.` : "저장하지 않은 변경을 덮어썼습니다.",
+    saveFirst: "다음에는 먼저 저장하면 이런 변경을 남길 수 있습니다:",
   },
   create: {
-    introduction: "프로필 이름·슬러그·호칭·역할을 입력한 뒤 열두 축을 조절합니다. Enter를 누르면 표시된 값을 유지하며, '\"\"'를 입력하면 선택 항목을 지웁니다. 마지막 확인에서 전체 프로필을 저장하고 적용합니다.",
+    introduction: "프리셋 이름·슬러그·호칭·역할을 입력한 뒤 열두 축을 조절합니다. Enter를 누르면 표시된 값을 유지하며, '\"\"'를 입력하면 선택 항목을 지웁니다. 마지막 확인에서 전체 프리셋을 저장하고 적용합니다.",
     name: "표시 이름",
     slug: "슬러그(영문 소문자·숫자·하이픈(-))",
     user: "사용자 역할·배경(최대 200자)",
@@ -1510,17 +1638,17 @@ const koMessages: Messages = {
     register: "말씨(auto, polite, plain, rough)",
     addressFrequency: "호칭 사용 빈도(none, auto, rarely, frequently)",
     safeword: "세이프워드",
-    needsName: "create에는 표시 이름이 필요합니다. 터미널에서 tonedial create를 실행하거나, 이름과 필요한 키=값 설정을 --auto와 함께 지정하세요.",
+    needsName: "create에는 표시 이름이 필요합니다. 터미널에서 이름 없이 실행하면 물어봅니다:\n  tonedial create\n이름과 필요한 키=값 설정을 --auto와 함께 지정해도 됩니다.",
     exists: (slug) => `${slug}: 이미 있는 프리셋입니다. 다른 슬러그를 쓰거나 save로 갱신하세요.`,
     notCreated: "프리셋을 만들지 않았습니다. 현재 설정을 유지했습니다.",
     descriptionCount: (count, cap) => `${count}/${cap}자`,
-    reviewHeading: "저장할 프로필",
+    reviewHeading: "저장할 프리셋",
   },
   recovery: {
-    heading: "앱 복구",
+    heading: "ToneDial 파일 복구",
     source: { settings: "저장된 설정", snapshot: "선택한 작업의 설정", artifact: "인식한 이전 말투 파일", preset: "선택한 프리셋" },
     choosePreset: "저장된 값이 없는 항목에 사용할 프리셋을 선택하세요:",
-    sourceRequired: "저장된 값이 부족합니다. 터미널에서 tonedial doctor --fix를 실행하거나 자동 복구 전에 --from-preset SLUG 또는 --from-operation ID를 선택하세요.",
+    sourceRequired: (command) => `저장된 값이 부족합니다. 원본을 고르려면 터미널에서 실행하세요:\n  ${command}\n자동 복구에서는 --from-preset SLUG 또는 --from-operation ID를 선택하세요.`,
     sourceInvalid: "선택한 원본에서 올바른 설정을 읽지 못했습니다. 기존 파일은 유지했습니다.",
     invalidOptions: "복구 원본·격리·도구 옵션은 doctor --fix에서 쓰세요. --restore-preset에는 --from-operation이 필요하며, --rollback은 격리·원본·프리셋·도구 선택과 함께 쓸 수 없습니다.",
     keptSettings: "저장된 설정·사용자 프리셋 유지",
@@ -1529,27 +1657,29 @@ const koMessages: Messages = {
     missing: (fields) => `원본이나 기본값을 선택할 항목: ${fields.join(", ")}`,
     copies: (slugs) => `보존한 값을 불러올 이름: ${slugs.join(", ")}`,
     activeChoice: (slug) => `${slug}: 저장된 축 값에 연결할 프리셋을 선택하세요.`,
-    rebuilt: "앱 복구 완료",
-    unchanged: "앱 최신 상태",
+    rebuilt: "ToneDial 파일 복구 완료",
+    unchanged: "ToneDial 파일 최신 상태",
     nativePending: "에이전트 연결은 따로 확인해 주세요. 설정과 프리셋은 계속 쓸 수 있습니다.",
+    otherScopes: "다른 범위의 연결은 따로 복구해야 합니다:",
+    nativeApproval: (command) => `에이전트 연결은 승인이 필요해 복구하지 않았습니다. 변경 내용을 확인하고 승인하려면 터미널에서 다시 실행하세요:\n  ${command}\n또는 먼저 미리 본 뒤 확인 질문 없이 승인하세요:\n  ${command} --dry-run\n  ${command} --auto`,
     rollback: (id) => `이전 파일로 되돌리려면:\ntonedial doctor --fix --rollback ${id}`,
-    rollbackOrder: "연결 파일을 먼저 되돌린 뒤 앱 파일을 되돌리세요:",
+    rollbackOrder: "연결 파일을 먼저 되돌린 뒤 ToneDial 파일을 되돌리세요:",
     noSnapshot: (id) => `${id}: 이 상태 경로에서 쓸 수 있는 설정 기록이 없습니다`,
-    quarantineCandidate: (id) => `작업 ID:\n${id}\n앱을 복구하려면 이 기록을 먼저 격리해야 합니다. 원본 바이트는 롤백 기록에 보존됩니다.`,
+    quarantineCandidate: (id) => `작업 ID:\n${id}\nToneDial 파일을 복구하려면 이 기록을 먼저 격리해야 합니다. 원본 바이트는 롤백 기록에 보존됩니다.`,
     quarantineQuestion: "격리하려면 위 작업 ID 전체를 입력하세요. Enter를 누르면 취소합니다:",
     quarantineRequired: (id, command) => `${id}: 복구 전에 읽을 수 없는 작업 기록을 명시적으로 격리해야 합니다. 파일은 바꾸지 않았습니다.\n${command}`,
     quarantineUnavailable: (id) => `${id}: 격리할 수 있는 읽기 불가 작업 기록을 찾지 못했습니다. 파일은 바꾸지 않았습니다.`,
     quarantine: (id) => `읽을 수 없는 작업 ${id}를 격리합니다. 원본 바이트는 롤백 기록에 보존합니다.`,
     quarantineComplete: (id) => `읽을 수 없는 작업 ${id}를 격리했습니다.`,
     quarantineRemaining: (count) => count === 1
-      ? "읽을 수 없는 작업 기록이 1개 남았습니다. 앱을 복구하려면 이 기록을 먼저 격리하세요. 원본 바이트는 롤백 기록에 보존됩니다."
+      ? "읽을 수 없는 작업 기록이 1개 남았습니다. ToneDial 파일을 복구하려면 이 기록을 먼저 격리하세요. 원본 바이트는 롤백 기록에 보존됩니다."
       : `읽을 수 없는 작업 기록 ${count}개가 남았습니다. 다음 기록을 격리한 뒤 복구를 계속하세요.`,
-    retire: (id) => `중단된 작업 ${id}를 기록으로 보관한 뒤 새 앱 복구를 시작합니다. 그 작업의 외부 파일 변경은 확인하거나 되돌리지 않습니다.`,
+    retire: (id) => `중단된 작업 ${id}를 기록으로 보관한 뒤 새 ToneDial 파일 복구를 시작합니다. 그 작업의 외부 파일 변경은 확인하거나 되돌리지 않습니다.`,
     resumeOperation: (id) => `중단된 작업:\n${id}`,
     resumeQuestion: "계속하려면 위 작업 ID 전체를 입력하세요. Enter를 누르면 취소합니다:",
     cancelled: "복구를 취소했습니다. 파일은 바꾸지 않았습니다.",
     operationMismatch: "작업 ID가 일치하지 않습니다. 파일은 바꾸지 않았습니다.",
-    failure: (id, phase, path, code) => `앱 복구의 ${({ prepare: "준비", write: "파일 쓰기", verify: "결과 검증", finalize: "완료 처리" })[phase]} 단계에서 실패했습니다 (${code}).${path ? `\n${path}` : ""}\n일부 파일 변경이 이미 적용되었을 수 있습니다. 다음 작업 기록을 보존해 주세요:\n${id}`,
+    failure: (id, phase, path, code) => `ToneDial 파일 복구의 ${({ prepare: "준비", write: "파일 쓰기", verify: "결과 검증", finalize: "완료 처리" })[phase]} 단계에서 실패했습니다 (${code}).${path ? `\n${path}` : ""}\n일부 파일 변경이 이미 적용되었을 수 있습니다. 다음 작업 기록을 보존해 주세요:\n${id}`,
   },
   persona: {
     defaults: role("저", "사용자님", "작업에 필요한 도움을 요청하는 사용자.", "요청한 작업을 돕는 범용 조수."),
@@ -1565,10 +1695,10 @@ const koMessages: Messages = {
     unknownField: (field, fields) =>
       `persona.${field}: 페르소나 항목이 아닙니다. 사용 가능: ${fields.join(", ")}`,
     addressNeedsPair:
-      "address에는 두 호칭이 모두 필요합니다: tonedial address <자칭> <사용자 호칭>. " +
+      "address에는 두 호칭이 모두 필요합니다:\n  tonedial address <자칭> <사용자 호칭>\n" +
       '지우려면 각 자리에 ""을 넣으세요. 터미널에서는 인자 없이 실행해 입력할 수도 있습니다.',
     askSelf: "에이전트가 자기를 뭐라고 부를까요?",
-    rolesNeedsPair: 'persona에는 두 역할 설명이 필요합니다: tonedial persona <에이전트 역할> <사용자 역할>. 지울 항목에는 ""를 넣으세요. 터미널에서는 인자 없이 실행해 입력할 수도 있습니다.',
+    rolesNeedsPair: 'persona에는 두 역할 설명이 필요합니다:\n  tonedial persona <에이전트 역할> <사용자 역할>\n지울 항목에는 ""를 넣으세요. 터미널에서는 인자 없이 실행해 입력할 수도 있습니다.',
     rolesIntroduction: '에이전트와 사용자의 역할·배경을 설정합니다. Enter를 누르면 현재 값을 유지하고, ""를 입력하면 해당 역할을 지웁니다. 두 항목을 입력한 뒤 한 번에 적용합니다.',
     askUser: "에이전트가 사용자를 뭐라고 부를까요?",
     addressKept: (current) => `현재 ${current} · Enter: 유지`,
@@ -1578,8 +1708,8 @@ const koMessages: Messages = {
     // Labels rather than clauses, for the same reason as `autoChose` above: an address is
     // free-form user text in any language, and `전하이라고` is what attaching `이라고` to it
     // produced — 전하 ends in a vowel and takes `라고`.
-    callsYou: (term) => `사용자 호칭 ${term}`,
-    callsItself: (term) => `자기 호칭 ${term}`,
+    callsYou: (term) => `사용자 호칭 '${term}'`,
+    callsItself: (term) => `자기 호칭 '${term}'`,
     ageLabel: (band) => `나이대 ${band}`,
     genderLabel: (gender) => `성별 ${gender}`,
     noteChars: (count) => `노트 ${count}자`,
@@ -1596,6 +1726,7 @@ const koMessages: Messages = {
     safewordShort: (phrase) => `세이프워드 ${phrase}: 너무 짧아 실수로 작동할 수 있습니다`,
     safewordSet: (phrase) => `세이프워드 ${phrase}`,
     noSafeword: "세이프워드 없음",
+    noSafewordSet: "세이프워드 없음 · 정하려면:",
     register: (level) => `말씨 ${level} (${({ auto: "관계에 맞게 선택", polite: "존댓말", plain: "일반 반말", rough: "짧고 퉁명스러운 반말" })[level]})`,
   },
   artifact: {
@@ -1605,7 +1736,7 @@ const koMessages: Messages = {
     compiledSize: (chars) => `저장된 설정 기준 크기: ${chars}자`,
     checkOnly: "--check · 기록하지 않음",
     wrote: "기록됨",
-    notWritten: "TONE.md가 없습니다. tonedial compile을 실행해 주세요",
+    notWritten: "TONE.md가 없습니다. 생성하려면:\ntonedial compile",
     notSetUp: "아직 초기 설정 전 · ToneDial 기본값 표시",
     notSetUpTitle: "초기 설정 전",
     movedFromDefault: "ToneDial 기본값과 다름",
@@ -1621,6 +1752,10 @@ const koMessages: Messages = {
     settingsHeading: "사용자 설정",
     displaySettings: (language) => `화면 언어 ${language}`,
     connectionRecords: (records) => `연결: ${records.length ? records.join(", ") : "없음"}`,
+    connectionsHeading: "연결",
+    connectionScope: { global: "전역", project: "프로젝트" },
+    axisGroups: { form: "형식", target: "대상", behaviour: "행동" },
+    sharesGlobalHook: (target) => `${target} · 전역 훅 사용(이전 버전)`,
     dialTitle: "ToneDial · 내 취향의 말투",
     dialPreview: (presetName, changed) => `${presetName} · ${changed ? "변경 미리보기" : "현재 말투"}`,
     dialHelpTitle: "다이얼 키",
@@ -1639,19 +1774,32 @@ const koMessages: Messages = {
     current: "TONE.md 최신",
     stale: "TONE.md가 저장된 설정과 다릅니다",
     missing: "TONE.md를 아직 생성하지 않았습니다",
-    uninspected: "TONE.md를 안전하게 비교하지 못했습니다. tonedial doctor로 확인해 주세요",
+    uninspected: "TONE.md를 안전하게 비교하지 못했습니다",
     whatElseIsSettable: "set으로 바꿀 수 있는 기타 설정:",
   },
   wiring: {
-    changeCount: (count) => `변경 항목 ${count}개`,
+    changeCount: (count) => `변경 ${count}건`,
     modifiedFile: "(수정)",
     modeChanged: "(권한 변경)",
     finalNewlineAdded: "(마지막 줄바꿈 추가)",
     finalNewlineRemoved: "(마지막 줄바꿈 삭제)",
     previewMore: "전체 변경 내용: --verbose",
     hookConfigured: (tool, path) => `${tool}: 훅 설정됨\n${path}`,
-    hookInherited: (tool, path) => `${tool}: 전역 훅 사용 · 프로젝트 훅은 추가하지 않음\n${path}`,
-    hookDuplicate: (tool, destination, stale) => `${tool}: 이 프로젝트에도 톤 전달 훅이 있어 설정이 중복됩니다${stale ? ". 프로젝트 훅은 이전 런타임 경로를 가리킵니다" : ""}:\n${destination}\n전역 훅만 쓰려면 위 프로젝트 위치에서 실행하세요:\ntonedial unwire ${tool} --here`,
+    globalCovers: (tools) => `${tools}: 이 폴더에는 전역 연결로 이미 말투가 전달됨 · 추가한 항목 없음`,
+    keepProjectOnly: (here) => here
+      ? "이 프로젝트에만 연결하려면 먼저 전역 연결을 해제한 뒤 이 폴더를 연결하세요:"
+      : "그 프로젝트에만 연결하려면 먼저 전역 연결을 해제한 뒤 그 폴더 안에서 실행하세요:",
+    alsoDisconnects: (tool) => `이전 버전이 전역 훅에 기록한 다음 프로젝트의 ${tool} 연결도 함께 해제합니다:`,
+    hookDuplicate: (label, projects, globalHook) => [
+      projects.length === 1
+        ? `${label}에 전역 훅과 프로젝트 훅이 모두 있습니다:`
+        : `${label}에 전역 훅과 프로젝트 훅 ${projects.length}개가 모두 있습니다:`,
+      ...(globalHook === null ? [] : ["전역 훅", globalHook]),
+      "프로젝트 훅",
+      ...projects.flatMap(({ hook, stale }) => [hook, ...(stale ? ["이 훅은 이전 런타임 경로를 가리킵니다."] : [])]),
+      "전역 훅만 쓰려면 프로젝트 훅 연결을 해제하세요:",
+      ...projects.map(({ command }) => command),
+    ].join("\n"),
     migrationRollback: (operationId) => `이 작업에 기록된 파일과 설정을 복구하려면 실행하세요:\ntonedial doctor --fix --rollback ${operationId}`,
     migrationQuestion: "저장된 설정을 유지하고 복구 가능한 작업 하나로 이전 상태를 옮길까요?",
     migrationNotNeeded: "관리하는 컨텍스트가 현재 형식입니다. 이전 상태를 옮길 필요가 없습니다.",
@@ -1662,6 +1810,13 @@ const koMessages: Messages = {
     actionLabel: { file: "파일", "entry-rebuild": "복구 항목", skill: "스킬 링크", "case-rename": "이름 변경 항목" },
     actionState: { created: (label) => `(새 ${label})`, removed: (label) => `(${label} 삭제)`, updated: (label) => `(${label} 갱신)`, plain: (label) => `(${label})` },
     newFiles: (count) => `(새 파일 ${count}개)`,
+    rootState: "ToneDial 상태",
+    rootGlobal: "전역 에이전트 파일",
+    rootProject: "프로젝트 파일",
+    configRecords: (tools, global) => `(${global ? "모든 프로젝트" : "이 프로젝트"}의 ${tools} 연결 기록)`,
+    configRemoves: (tools) => `(${tools} 연결 기록 삭제)`,
+    configSaves: (tools, global) => tools === null ? "(설정 저장)"
+      : `(설정 저장, ${global ? "모든 프로젝트" : "이 프로젝트"}의 ${tools} 연결 기록)`,
     codexTrust: (global) => global
       ? "Codex의 /hooks → SessionStart → ToneDial에서 실행 명령을 확인하고 훅을 켜세요."
       : "Codex에서 이 프로젝트를 신뢰한 뒤 /hooks → SessionStart → ToneDial에서 실행 명령을 확인하고 훅을 켜세요.",
@@ -1673,13 +1828,13 @@ const koMessages: Messages = {
       : "Claude Code에서 이 프로젝트를 신뢰해 주세요. 대화형 세션은 신뢰한 폴더에서만 훅을 실행합니다. /hooks → SessionStart에서 ToneDial 명령을 확인할 수 있습니다.",
     claudeOpen: "지금 이 프로젝트에서 Claude Code를 열까요?",
     claudeOpenSteps: "Claude Code는 이 터미널에서 열립니다. 이 폴더를 신뢰하는지 물으면 거기서 답하세요. 종료하면 여기로 돌아옵니다.",
-    scopeHere: "연결 범위: 프로젝트",
-    alreadyMatch: (tools) => `${tools}: 이미 최신 상태 · 변경 없음`,
-    alreadyDisconnected: (tools) => `${tools}: 이미 연결 해제됨 · 변경 없음`,
+    scopeHere: "프로젝트 범위",
+    alreadyMatch: (tools) => `${tools} · 최신 상태`,
+    alreadyDisconnected: (tools) => `${tools}: 연결되어 있지 않음 · 변경 없음`,
     dryRun: "--dry-run · 기록하지 않음",
     declined: "취소됨 · 기록하지 않음",
     disconnected: (tools) => `${tools}: 연결 해제됨`,
-    noArtifact: "연결할 TONE.md가 없습니다. tonedial compile을 먼저 실행해 주세요.",
+    noArtifact: "연결할 TONE.md가 없습니다. 먼저 생성하려면:\n  tonedial compile",
     unknownTool: (given, tools) => `${given}: 지원하는 도구가 아닙니다. 사용 가능: ${tools.join(", ")}`,
     noneInstalled: (tools, root) =>
       `검색 위치: ${root}\n${tools.join(", ")} 설치를 찾지 못했습니다. 그래도 연결하려면 도구 이름을 직접 지정해 주세요`,
@@ -1687,13 +1842,16 @@ const koMessages: Messages = {
     stateKept: (root) => `프리셋과 설정은 이곳에 그대로 남습니다:\n${root}`,
     deleteYourself: "상태까지 지우려면 이 디렉터리를 직접 삭제해 주세요",
     nothingWired: "이 범위에 연결된 항목 없음 · 해제할 것 없음",
+    nothingConnected: "연결하지 않았습니다.",
+    nothingDisconnected: "연결을 해제하지 않았습니다.",
+    projectHooks: "프로젝트 훅에는 이 컴퓨터의 경로가 들어 있습니다. 버전 관리에서 제외하거나(예: .git/info/exclude), 의도한 경우에만 커밋하세요.",
+    projectIsHome: (command) => `이 폴더는 홈 디렉터리라서 프로젝트 연결이 전역 연결과 같은 파일을 씁니다. 대신 전역 범위로 실행하세요:\n  ${command}`,
     damaged: (path, reason) => `${path}: ${reason}. 남은 마커를 지운 뒤 eject를 다시 실행해 주세요`,
-    needsApproval:
-      "파일을 바꾸려면 승인이 필요합니다. 터미널에서 실행하거나 --dry-run으로 변경 내용을 확인한 뒤 --auto로 다시 실행해 주세요",
+    needsApproval: (command) => `파일 변경은 승인이 필요해 적용하지 않았습니다. 변경 내용을 확인하고 승인하려면 터미널에서 다시 실행하세요:\n  ${command}\n또는 먼저 미리 본 뒤 확인 질문 없이 승인하세요:\n  ${command} --dry-run\n  ${command} --auto`,
     projectExclude: ".gitignore를 건드리지 않고 버전 관리에서 빼려면:",
     newFile: "(새 파일)",
     newFileLines: (count) => `${count}줄`,
-    scopeGlobal: "연결 범위: 전역(모든 프로젝트에서 공유)",
+    scopeGlobal: "전역 범위(모든 프로젝트 공유)",
     seeded: (labels) => `기본 파일: ${labels.join(", ")}`,
     skillState: (pairs) => `스킬 ${pairs}`,
     commandInstalled: (path) => `/tone 설치됨\n${path}`,
@@ -1703,22 +1861,22 @@ const koMessages: Messages = {
   doctor: {
     connectionsHeading: "연결",
     checksHeading: "검사",
-    applicationHealth: (healthy) => `앱 상태: ${healthy ? "정상" : "점검 필요"}`,
-    connectionHealth: (attention) => `연결 파일: ${attention ? "점검 필요" : "선택한 범위에서 문제 없음"}`,
+    applicationHealth: "ToneDial 파일: 점검 필요",
+    connectionHealth: "연결 파일: 점검 필요",
     healthy: "문제 없음",
-    scopeGlobal: "검사 범위: 전역",
-    wiredElsewhere: "이번 검사 범위 밖에 등록된 연결",
-    destinationGone: "등록된 디렉토리를 찾을 수 없거나 접근할 수 없음",
-    destinationUnwired: "등록된 연결 파일 중 일부 또는 전부를 찾을 수 없음",
-    destinationPresent: "등록된 연결 파일이 있음",
+    wiredElsewhere: "다른 범위의 연결",
+    folderConnections: (targets, command) => `이 폴더에는 따로 등록된 연결(${targets.join(", ")})이 있습니다. 전역 연결 대신 이 폴더의 연결을 점검하려면:\n${command}`,
+    destinationGone: "폴더를 찾을 수 없거나 접근할 수 없음",
+    destinationUnwired: "파일 일부 또는 전부 없음",
+    destinationPresent: "파일 있음",
     inspectScope: "계속 사용하려면 이 범위를 검사하세요:",
     disconnectScope: "더 이상 필요 없으면 이 범위의 모든 에이전트 연결을 해제하세요:",
-    scope: "검사 범위: 프로젝트",
-    toLookAt: (count) => `점검 필요 ${count}건`,
+    summary: (problems, notices) => `${problems === 0 ? "문제 없음" : `문제 ${problems}건`}${notices ? ` · 알림 ${notices}건` : ""}`,
     needsAPerson: "직접 확인 필요 · 위 세부 내용을 확인해 주세요",
     toneMatches: "config.json과 일치",
     toneNotWritten: "파일 없음",
     toneDisagrees: "config.json과 다름 · 직접 수정했거나 저장이 중단됨",
+    toneEarlierVersion: "이전 ToneDial 버전으로 생성됨 · 설정은 config.json과 같음",
     seedsHeading: "기본 파일",
     checkHeading: { context: "컨텍스트 파일", reader: "전달 스크립트", pathLine: "셸 PATH 줄", onPath: "PATH의 tonedial", install: "설치 방식", claudeContext: "Claude Code 컨텍스트", skills: "스킬", skill: (label) => `${label} 스킬` },
     fullDetails: "전체 내용 확인:",
@@ -1727,7 +1885,8 @@ const koMessages: Messages = {
     seedsAttention: "기본 파일 확인 필요",
     recoveryPending: "진행 중이거나 복구가 필요한 작업이 있습니다. 이번 실행에서는 파일을 바꾸지 않았습니다.",
     invalidRecoveryPending: "읽을 수 없는 작업 기록 때문에 복구를 진행할 수 없습니다. 이번 실행에서는 파일을 바꾸지 않았습니다.",
-    resumeOperation: "앱 복구를 이어가려면:",
+    resumeOperation: "현재 설정으로 복구를 마치려면 이어서 실행하세요:",
+    undoOperation: "변경을 취소하고 시작 전 파일로 되돌리려면:",
     contextCurrent: "AGENTS.md와 TONE.md 구성이 최신입니다.",
     contextRepair: "관리 중인 컨텍스트 파일을 복구해야 합니다. 안내 파일과 톤 파일의 진단을 확인해 주세요.",
     contextSize: (guide, total) => total === null
@@ -1749,7 +1908,7 @@ const koMessages: Messages = {
       changed: "검사 중 전달 스크립트나 설정이 바뀌었습니다. 변경이 끝난 뒤 다시 시도해 주세요.",
       probe: "제어된 검사에 실패했습니다. Node와 임시 디렉터리 접근 권한을 확인한 뒤 doctor를 다시 실행해 주세요.",
     },
-    operationState: { pending: "미완료", complete: "완료", "rolled-back": "되돌림", "retired-for-app-rebuild": "앱 복구를 위해 보관됨", quarantined: "격리됨", invalid: "잘못된 기록" },
+    operationState: { pending: "미완료", complete: "완료", "rolled-back": "되돌림", "retired-for-app-rebuild": "복구를 위해 보관됨", quarantined: "격리됨", invalid: "잘못된 기록" },
     rollbackStatus: {
       ready: "승인하면 선택한 작업을 복구합니다.",
       busy: "아직 진행 중인 작업입니다. 작업이 끝날 때까지 기다려 주세요.",
@@ -1775,29 +1934,37 @@ const koMessages: Messages = {
     imported: "import 연결됨",
     hookPresent: (event) => `${event} 훅 · 매 세션 TONE.md를 읽도록 설정됨`,
     nativeConfigured: (event) => `${event} 훅 · AGENTS.md 다음 TONE.md를 읽도록 설정됨`,
-    nativeConfiguredCompact: (event) => `${event} · AGENTS.md → TONE.md`,
+    nativeConfiguredCompact: (event) => `연결됨 · ${event} · AGENTS.md → TONE.md`,
     hookSettingState: {
-      enabled: "등록된 설정 파일에서 훅이 켜져 있음",
-      disabled: "등록된 설정 파일에서 훅이 꺼져 있음",
-      unknown: "등록된 설정 파일에서 훅 활성화 여부를 확인할 수 없음",
+      enabled: "설정 파일에서 훅 켜짐",
+      disabled: "설정 파일에서 훅 꺼짐",
+      unknown: "활성화 여부는 파일로 확인할 수 없음",
     },
     hookSettingScope: "위 훅 상태는 검사한 설정 파일만 보고 판단한 것입니다. 앱에서 덮어쓴 설정이나 실제 세션 전달 여부는 확인하지 않았습니다.",
     hookGroupHeading: "에이전트 훅",
     hookGroupUnknown: (tools) => `연결 안 됨: ${tools.join(", ")}`,
-    hookNotConnected: "검사할 ToneDial 관리 훅이 없습니다. 연결하려면 같은 범위에서 init을 실행하고 이 에이전트를 선택해 주세요.",
-    hookNeedsInspection: "위에 나온 훅 설정이나 실행 프로그램 문제를 먼저 확인한 뒤 앱에서 활성화 여부를 확인해 주세요.",
+    hookGroupElsewhere: (tools) => `이 범위에서는 연결 안 됨: ${tools.join(", ")}`,
+    hookNotConnected: "검사할 ToneDial 관리 훅이 없습니다. 연결하려면 같은 범위에서 이 에이전트로 wire를 실행해 주세요.",
     hookGuidance: {
       claude: "/hooks → SessionStart에서 ToneDial 실행 명령과 설정 출처를 확인하세요. 훅이 꺼져 있으면 disableAllHooks를 false로 바꾸고 프로젝트 신뢰 설정도 확인하세요.",
-      codex: "/hooks → SessionStart → ToneDial에서 실행 명령을 확인하고 훅을 켜세요. 프로젝트 신뢰를 요청하면 먼저 내용을 확인하고 승인해 주세요.",
       antigravity: "Antigravity IDE 에이전트 패널 … → Customizations → Hooks(또는 데스크톱 Settings → Customizations → Hooks)에서 ToneDial PreInvocation 명령을 확인하고 켜세요.",
     },
-    nativeMissing: (path, event) => `ToneDial ${event} 훅 없음 · ${path}`,
+    nativeMissing: (path, event) => `ToneDial ${event} 훅 없음\n${path}`,
     nativeStale: "ToneDial 훅이 이전 전달 스크립트나 런타임 설정을 사용합니다.",
     nativeForeign: "ToneDial 밖에서 설정이 바뀌었습니다. 파일을 보존하고 복구 전에 확인해 주세요.",
+    nativeEdited: (path) => `이 파일의 ToneDial 항목이 ToneDial 밖에서 수정되어 파일을 그대로 두었습니다:\n${path}`,
+    editedRoutes: (show, fix) => `복구하려면 ToneDial 항목을 처음 작성된 그대로 되돌려 주세요. ${show === null ? "해당 항목은 아래에 있습니다." : `항목을 보려면:\n${show}`}\n또는 이 파일을 다른 곳으로 옮기고 ToneDial이 새 파일을 쓰게 한 뒤, 직접 추가한 항목을 다시 옮겨 주세요:\n${fix}`,
+    editedExpected: "ToneDial이 작성한 항목:",
+    unrecordedEntries: (path) => `이 파일의 ToneDial 항목이 여전히 말투를 전달하지만, 이를 기록한 연결이 없습니다:\n${path}`,
+    unrecordedAdopt: "파일은 그대로 두고 이 범위의 연결로 기록하려면:",
+    unrecordedEdited: (path) => `이 파일의 ToneDial 항목이 여전히 말투를 전달하지만, 기록한 연결이 없고 ToneDial이 쓰는 내용과도 달라 그대로 두었습니다:\n${path}`,
+    unrecordedEditedNext: (wire) => `직접 지운 뒤 다시 연결하세요:\n${wire}`,
+    orphanedHook: (path, directories) => `이 전역 훅이 여전히 모든 폴더에 말투를 전달합니다:\n${path}\n이전 버전이 기록한 다음 프로젝트 연결만 이 훅을 유지하고 있습니다:\n${directories.join("\n")}`,
+    orphanedRemove: "이 연결과 함께 훅을 제거하려면:",
     nativeInherited: (path, event) => `전역 ${event} 훅 사용 · ${path} · 프로젝트 훅은 필요 없음`,
-    nativeInheritedCompact: (path, event) => `전역 ${event} 훅\n${path}`,
+    nativeInheritedCompact: (path, event) => `전역 ${event} 훅으로 연결됨\n${path}`,
     legacyRepairWithheld: "더는 이 방식으로 연결하지 않습니다. init으로 다시 연결하면 훅으로 전달합니다.",
-    nativeRuntimeUnusable: (path) => `훅 실행 프로그램을 사용할 수 없습니다: ${path}`,
+    nativeRuntimeUnusable: (path) => `훅 실행 프로그램을 사용할 수 없습니다:\n${path}`,
     codexHookDisabled: "Codex 설정: 훅 꺼짐. /hooks → SessionStart → ToneDial에서 켜세요.",
     nativeActivationUnverified: (trustKnown) => trustKnown
       ? "앱 활성화 확인 안 됨"
@@ -1847,9 +2014,17 @@ const koMessages: Messages = {
     refreshFiles: (count) => `갱신할 기본 파일: ${count}개`,
     reviewState: "표시된 기본 파일을 확인하려면:",
     npmQuestion: "  npm으로 업데이트할까요?",
-    npmComplete: (version) => `npm 업데이트 완료 · 설치 버전 ${version}`,
+    npmComplete: (version) => `npm 업데이트 완료 · 새 버전 ${version}`,
+    npmUnchanged: (version) => `npm 업데이트 완료 · 이미 최신 상태 (${version})`,
+    installedLabel: "설치됨",
+    latestLabel: "최신",
+    released: (date) => `${date} 배포`,
+    upToDate: "최신 상태",
+    available: (from, to) => `업데이트 가능 · ${from} → ${to}`,
+    newer: "설치 버전이 최신 배포보다 새로움 · 업데이트하지 않음",
+    checkUnavailable: "최신 버전을 확인하지 못함",
     npmMissing: "PATH에서 npm을 찾지 못했습니다. 현재 ToneDial을 설치한 Node/npm 환경을 사용해 주세요.",
-    npmScopeUnknown: "npm의 전역 설치 경로를 확인할 수 없습니다. npm prefix -g와 npm root -g를 확인한 뒤 다시 시도해 주세요.",
+    npmScopeUnknown: "npm의 전역 설치 경로를 확인할 수 없습니다. 다시 시도하기 전에 다음을 확인해 주세요:\n  npm prefix -g\n  npm root -g",
     npmScopeMismatch: "현재 ToneDial은 선택한 npm이 관리하는 전역 패키지가 아닙니다. 설치할 때 사용한 Node/npm 환경을 선택해 주세요. 업데이트는 실행하지 않았습니다.",
     npmFailed: "npm 업데이트에 실패했습니다. npm의 접근 권한과 레지스트리 설정을 확인해 주세요. 표시된 명령을 직접 실행하면 npm의 오류 내용을 볼 수 있습니다.",
     npmPermissionDenied: (code, prefix) => `npm 업데이트에 필요한 쓰기 권한이 없습니다 (${code}).\n${prefix}\n설정과 프리셋을 백업한 뒤 사용자 소유 경로에 다시 설치해 주세요.\n복구 절차:\nhttps://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#npm-permissions`,
@@ -1859,11 +2034,10 @@ const koMessages: Messages = {
       unsafe: "저장된 설정을 안전하게 읽을 수 없습니다. 링크와 파일 형식을 확인해 주세요.",
       changed: "검사 중 저장된 설정이 바뀌었습니다. 변경이 끝난 뒤 다시 시도해 주세요.",
       invalid: "저장된 설정이 올바르지 않습니다.",
-      unreadable: "앱 상태를 읽지 못했습니다. 경로와 접근 권한을 확인해 주세요.",
+      unreadable: "ToneDial 상태를 읽지 못했습니다. 경로와 접근 권한을 확인해 주세요.",
     },
     fetching: (registry) => `확인 중 · ${registry}`,
     found: (version, bytes) => `${version}, ${bytes.toLocaleString("ko")}바이트`,
-    already: (version) => `설치 버전 ${version} · 이미 설치됨`,
     wouldReplace: (lib, version) => `교체 예정 · ${lib} → ${version}`,
     question: (version) => `  대상 버전 ${version} · 이 설치를 바꿀까요?`,
     replaced: (version) => `업데이트됨 · ${version}`,
@@ -1881,12 +2055,12 @@ const koMessages: Messages = {
   help: {
     commandHelp: "명령별 도움말: tonedial <command> --help",
     fullReference: "전체 도움말: tonedial --help",
-    feedback: "문제를 찾았거나 아이디어가 있으면 이슈로 알려 주세요 :)\nhttps://github.com/awesometic/tonedial/issues/new/choose",
+    feedback: "문제를 찾았거나 아이디어가 있으면 이슈로 알려 주세요:\nhttps://github.com/awesometic/tonedial/issues/new/choose",
     tagline: "코딩 에이전트에 캐릭터를 더하고 모든 프로젝트에서 유지합니다",
     footer: "연결 명령은 기본적으로 전역 범위를 씁니다. 현재 프로젝트는 --here, 다른 디렉터리는 --project DIR로 선택하세요. 질문 없이 파일을 바꾸려면 범위를 직접 지정해 주세요.",
     recoveryOptions: "doctor --fix 복구 옵션: tonedial doctor --help",
     groups: { tone: "말투", presets: "프리셋 보관함", agents: "연결", upkeep: "관리", flags: "옵션" },
-    firstSteps: "처음이라면 초기 설정, 미리 보기, 말투 조정, 에이전트 연결 순서로 진행하세요:",
+    firstSteps: "처음이라면 초기 설정, 미리보기, 말투 조정, 에이전트 연결 순서로 진행하세요:",
     examples: "사용 예",
     commands: {
       on: "저장한 말투 전달 재개",
@@ -1897,18 +2071,18 @@ const koMessages: Messages = {
       address: "에이전트 자칭과 사용자 호칭 · 인자 없으면 질문 · 빈도: set address_frequency=rarely",
       persona: "에이전트·사용자 역할 · 인자 없으면 질문",
       reset: "축 하나를 기본값으로 · 인자 없으면 전체 축",
-      show: "현재 설정 표시 · 슬러그 지정 시 프로필 미리 보기",
-      test: "새 대화에서 현재 말투나 프리셋 미리 보기",
-      save: "현재 말투를 프로필로 저장",
+      show: "현재 설정 표시 · 슬러그 지정 시 프리셋 미리보기",
+      test: "새 대화에서 현재 말투나 프리셋 미리보기",
+      save: "현재 말투를 프리셋으로 저장",
       create: "프리셋 생성·적용 · 인자 없으면 안내",
       list: "기본 제공·사용자 프리셋 목록",
       edit: "설정이나 프리셋을 $EDITOR로 열기",
       use: "프리셋 적용",
       compile: "TONE.md 재생성 · 말투를 바꾸면 자동 처리",
-      export: "호칭·역할을 포함한 프로필을 JSON으로 백업",
-      import: "JSON에서 프로필 가져오기 · use로 적용",
-      wire: "선택한 범위에 에이전트 연결 · 인자 없으면 질문",
-      unwire: "에이전트 하나 연결 해제 · 인자 없으면 전체",
+      export: "호칭·역할을 포함한 프리셋을 JSON으로 백업",
+      import: "JSON에서 프리셋 가져오기 · use로 적용",
+      wire: "선택한 범위에 에이전트 연결 · 인자 없으면 직접 선택",
+      unwire: "에이전트 연결 해제 · 인자 없으면 직접 선택",
       doctor: "연결 점검 · 복구는 --fix",
       update: "현재 설치 업데이트",
       eject: "선택한 범위의 모든 에이전트 연결 해제 · 프리셋 유지",
@@ -1930,7 +2104,7 @@ const koMessages: Messages = {
       fromOperation: "doctor --fix: 작업 기록에서 설정 선택",
       fromPreset: "doctor --fix: 없는 설정에 사용할 프리셋",
       restorePreset: "doctor --fix: 없거나 손상된 사용자 프리셋 하나 복원",
-      preset: "test: 저장한 프로필 미리보기 · 현재 상태 유지",
+      preset: "test: 저장한 프리셋 미리보기 · 현재 상태 유지",
       slug: "create/save: 프리셋 슬러그(소문자·숫자·하이픈(-))",
       acceptUsage: "test: 이번 실행의 계정 사용량·비용 부담에 동의",
       explain: "show: 축·설정·주의할 레벨 설명",
@@ -1953,10 +2127,11 @@ const koMessages: Messages = {
   },
   errors: {
     notACommand: (name, nearest) =>
-      `${name}: 없는 명령입니다.${nearest ? ` 비슷한 명령: tonedial ${nearest}` : ""}\n명령 목록: tonedial --help`,
-    isAFlag: (name) => `${name}: 명령이 아니라 옵션입니다. 이렇게 실행하세요:\n  tonedial --${name}`,
+      `${name}: 없는 명령입니다.${nearest ? ` 비슷한 명령:\n  tonedial ${nearest}` : ""}\n명령 목록: tonedial --help`,
+    isAFlag: (name, command) => `${name}: 명령이 아니라 옵션입니다. 이렇게 실행하세요:\n  tonedial ${command ? `${command} ` : ""}--${name}`,
     stoppingHelp:
-      "설정은 두고 말투 전달만 멈추려면(다시 켜기: tonedial on):\n  tonedial off\n" +
+      "설정은 두고 말투 전달만 멈추려면:\n  tonedial off\n" +
+      "다시 켜려면:\n  tonedial on\n" +
       "축을 기본값으로 되돌리려면:\n  tonedial reset\n" +
       "에이전트 연결을 해제하려면(범위마다 실행, --here나 --project PATH도 가능):\n  tonedial eject --global\n" +
       "모든 범위의 연결을 해제한 뒤 명령을 삭제하려면:\n  npm uninstall -g tonedial",
@@ -1969,7 +2144,7 @@ const koMessages: Messages = {
     colourMode: (given) => `--color=${given}: auto, always, never 중 하나만 쓸 수 있습니다`,
     twoDestinations: "--global, --here, --project PATH 중 범위 하나만 선택해 주세요.",
     projectPathRequired: "--project에는 디렉터리 경로가 필요합니다. 현재 프로젝트는 --here로 선택해 주세요.",
-    scopeRequired: "질문 없이 연결을 바꾸려면 --global, --here, --project PATH 중 범위를 직접 선택해 주세요. 원하는 범위를 붙여 다시 실행하세요. --dry-run은 기본 전역 범위의 변경을 미리 보여주며 파일을 쓰지 않습니다.",
+    scopeRequired: (commands) => `질문 없이 연결을 바꾸려면 범위를 직접 지정해야 합니다. --dry-run은 기본 전역 범위의 변경을 미리 보여주며 파일을 쓰지 않습니다. 원하는 범위를 붙여 다시 실행하거나 --project PATH를 지정하세요:\n${commands.map((command) => `  ${command}`).join("\n")}`,
     migrationFresh: "--migrate-legacy는 지원하는 이전 상태에만 씁니다. 처음 설정한다면 이 플래그 없이 init을 실행해 주세요.",
     migrationApprovalRequired: (command) => `이전 상태를 옮기려면 직접 승인해 주세요. 변경을 미리 확인하려면 실행하세요:\n${command} --dry-run\n확인한 변경을 적용하려면 실행하세요:\n${command} --auto\n대화형 init은 옮기기 전에 승인을 묻습니다.`,
     contextInspectionFailure: (path, reason) => `검사를 끝내지 못했습니다:\n${path}\n${
@@ -1992,7 +2167,7 @@ const koMessages: Messages = {
         overlap: "상태 디렉터리가 에이전트 지침 경로와 겹칩니다. 별도 상태 디렉터리를 선택한 뒤 설정해 주세요.",
         operation: "복구가 필요한 작업이 있습니다. 기록된 ID로 그 작업부터 복구한 뒤 이전 상태를 옮겨 주세요.",
       };
-      return `이전 상태를 옮길 수 없습니다:\n${path}\n${explanations[reason] ?? "관리 기록이나 이전 상태를 옮길 조건을 확인하지 못했습니다. 파일을 보존하고 진단 내용을 확인해 주세요."}\n아무것도 쓰지 않았습니다. 같은 범위를 확인하려면 실행하세요:\n${doctorCommand}\n원본 파일을 보존하세요. 저장된 설정은 tonedial show --json으로 읽을 수 있습니다.`;
+      return `이전 상태를 옮길 수 없습니다:\n${path}\n${explanations[reason] ?? "관리 기록이나 이전 상태를 옮길 조건을 확인하지 못했습니다. 파일을 보존하고 진단 내용을 확인해 주세요."}\n아무것도 쓰지 않았습니다. 같은 범위를 확인하려면 실행하세요:\n${doctorCommand}\n원본 파일을 보존하세요. 저장된 설정을 읽으려면:\ntonedial show --json`;
     },
     npxUnsupported:
       "npx 설치는 지원하지 않습니다. 설치 사본이 남지 않아 `tonedial` 명령과 이를 호출하는 " +
@@ -2011,16 +2186,22 @@ const koMessages: Messages = {
     seedConflict: (path) =>
       `ToneDial이 관리하는 일반 파일인지 확인하지 못했습니다:\n${path}\n` +
       "아무것도 바꾸지 않았습니다. 파일을 보존하고 새 설정에는 별도 TONEDIAL_HOME 디렉터리를 지정해 주세요.",
-    toolsRequired: "--tools codex,claude,antigravity로 에이전트를 선택해 주세요.\n" +
-      "상태만 준비하려면 init --tools none을 쓰세요.\n" +
-      "--auto는 선택한 변경만 승인합니다. 에이전트는 직접 골라 주세요.",
+    toolsRequired: (commands, auto) => `--tools codex,claude,antigravity로 에이전트를 선택해 주세요.` +
+      `${auto ? "\n--auto는 선택한 변경만 승인합니다. 에이전트는 직접 골라 주세요." : ""}\n예:\n  ${commands[0]}\n상태만 준비하려면:\n  ${commands[1]}`,
     toolsSelection: "에이전트 이름을 쉼표로 구분해 입력해 주세요. none은 init에서만 단독으로 쓸 수 있습니다.",
     toolsAmbiguous: "에이전트 인자와 --tools 중 하나만 써 주세요.",
     commandsNeedClaude: "--commands를 쓰려면 에이전트 선택에 claude를 포함해 주세요.",
-    toolsPrompt: "연결할 에이전트(쉼표로 구분): ",
-    wireToolsRequired: (example, auto) => `연결할 에이전트를 지정해 주세요. 예:\n  ${example}\n` +
-      `에이전트: claude, codex, antigravity · 여러 개: --tools codex,claude${auto ? "\n--auto는 선택한 변경만 승인합니다. 에이전트는 직접 골라 주세요." : ""}`,
-    ownershipConflict: (path) => `관리 기록이 없거나 관리하던 내용·파일 종류가 바뀌었습니다:\n${path}\n파일을 보존했습니다. 연결을 바꾸기 전에 확인해 주세요.`,
+    toolsPrompt: "연결할 에이전트(쉼표로 구분 · Enter: 취소): ",
+    unwireToolsPrompt: "연결을 해제할 에이전트(쉼표로 구분 · Enter: 취소): ",
+    toolInstalled: "설치됨",
+    toolConnected: "연결됨",
+    unwireToolsRequired: (example, eject, auto) => `연결을 해제할 에이전트를 지정해 주세요.${auto ? "\n--auto는 선택한 변경만 승인합니다. 에이전트는 직접 골라 주세요." : ""}\n예:\n  ${example}\n이 범위의 모든 에이전트 연결을 해제하려면:\n  ${eject}`,
+    unwireScopeRequired: (here, global, eject) => eject
+      ? `이 폴더에 따로 등록된 연결이 있습니다. 연결을 모두 해제할 범위를 골라 주세요.\n--here는 이 폴더의 연결을, --global은 모든 프로젝트가 함께 쓰는 연결을 모두 해제합니다.\n  ${here}\n  ${global}`
+      : `이 폴더에 따로 등록된 연결이 있습니다. 해제할 연결을 골라 주세요.\n--here는 이 폴더의 연결을, --global은 모든 프로젝트가 함께 쓰는 연결을 해제합니다.\n  ${here}\n  ${global}`,
+    wireToolsRequired: (example, auto) => `연결할 에이전트를 지정해 주세요.\n에이전트: claude, codex, antigravity · 여러 개: --tools codex,claude` +
+      `${auto ? "\n--auto는 선택한 변경만 승인합니다. 에이전트는 직접 골라 주세요." : ""}\n예:\n  ${example}`,
+    ownershipConflict: (path) => `관리 기록이 없거나 관리하던 내용·파일 종류가 바뀌었습니다:\n${path}\n파일을 보존했습니다. 연결을 바꾸기 전에 doctor로 확인해 주세요.`,
     rollbackNeedsFix: "doctor가 보여준 작업 ID로 doctor --fix --rollback을 실행해 주세요.",
     editNotApplied: (path, reason) => `${reason}\n아무것도 적용하지 않았습니다. 편집한 사본 보존 위치:\n${path}`,
     editSavedInvalid: "편집 내용은 그대로 저장되었습니다. 파일을 고치기 전까지 ToneDial이 이 설정을 읽을 수 없습니다. 확인과 복구:\ntonedial doctor",
@@ -2028,24 +2209,24 @@ const koMessages: Messages = {
     stateOverlap: (path) => `프로젝트 내보내기 경로가 ToneDial 상태 디렉터리와 겹칩니다:\n${path}\n아무것도 쓰지 않았습니다. 별도 상태 디렉터리나 다른 프로젝트를 선택해 주세요.`,
     stateInstructionOverlap: (path) => `ToneDial 상태 디렉터리가 에이전트 지침 경로와 겹칩니다:\n${path}\n아무것도 쓰지 않았습니다. 전용 상태 디렉터리를 선택한 뒤 init을 실행해 주세요.`,
     legacyConsumers: (destinations) => `다른 연결이나 기록되지 않은 연결이 아직 tone.md를 읽습니다:\n${destinations.join("\n")}\n아무것도 쓰지 않았습니다. 각 범위에서 먼저 unwire한 뒤 init을 다시 실행하세요. 전환이 끝나면 다시 연결해 주세요.`,
-    contextLayout: (kind, path, doctorCommand = "tonedial doctor --json") => kind === "fresh"
+    contextLayout: (kind, path, doctorCommand = "tonedial doctor --json", fixCommand = "tonedial doctor --fix") => kind === "fresh"
       ? `ToneDial 초기 설정이 아직 없습니다:\n${path}\n초기 설정 후 이 명령을 다시 실행해 주세요:\n  tonedial init --tools none --global`
-      : `이 구성은 앱 복구가 필요합니다 (${kind}):\n${path}\n아무것도 쓰지 않았습니다. 같은 범위를 확인하려면 실행하세요:\n${doctorCommand}\n이 경로를 유지하고 tonedial doctor --fix를 실행하세요. 저장된 설정을 보존하고 앱 생성 파일을 다시 준비합니다.`,
-    unreadableConfigFile: (path) => `이 파일에서 올바른 설정을 읽지 못했습니다:\n${path}\n원본을 보존하고 tonedial doctor --fix에서 저장된 원본이나 안내한 기본값을 선택하세요.`,
-    fixUnreadableConfig: (path) => `설정을 복구할 원본이 필요합니다:\n${path}\n아무것도 쓰지 않았습니다. 터미널에서 tonedial doctor --fix를 실행하거나 --from-operation ID 또는 --from-preset SLUG를 선택하세요.`,
+      : `이 구성은 ToneDial 파일 복구가 필요합니다 (${kind}):\n${path}\n아무것도 쓰지 않았습니다. 같은 범위를 확인하려면 실행하세요:\n${doctorCommand}\n이 경로는 그대로 두세요. 저장된 설정을 보존하고 생성 파일을 다시 준비하려면:\n${fixCommand}`,
+    unreadableConfigFile: (path, command) => `이 파일에서 올바른 설정을 읽지 못했습니다:\n${path}\n원본은 그대로 두세요.` +
+      `${command === null ? "" : `\n저장된 원본이나 안내한 기본값을 고르려면:\n  ${command}`}`,
     editConflict: (path) => `편집기가 열린 동안 원본 파일이 바뀌었습니다. 편집한 사본은 여기에 보존했습니다:\n${path}\n두 파일을 비교한 뒤 다시 시도해 주세요.`,
     traitsNotOnDisk:
       "편집할 트레이트 파일이 없습니다. 앵커는 패키지에 들어 있으며 홈에는 쓰지 않습니다. " +
-      "축을 바꾸려면 tonedial set을 쓰세요.",
+      "축을 바꾸려면:\n  tonedial set",
     editTarget: (given) => `edit은 preset <slug>만 받거나 인자 없이 실행합니다(입력: ${given})`,
     editorChangedNothingUsable: (path) => `${path}: 프리셋 객체가 아닙니다`,
-    editNeedsSlug: "edit preset에는 슬러그가 필요합니다. 목록: tonedial list",
-    noEditor: (path) => `$EDITOR나 $VISUAL을 설정하거나 직접 여세요: ${path}`,
+    editNeedsSlug: "edit preset에는 슬러그가 필요합니다. 목록:\n  tonedial list",
+    noEditor: (path) => `$EDITOR나 $VISUAL을 설정하거나 직접 여세요:\n${path}`,
     wouldOpen: (editor, path) => `열기 예정 · ${editor} · ${path}`,
     editorFailed: (editor, reason) => `${editor}: 실행 실패 · ${reason}`,
     editorExited: (editor, code) => `${editor}: 종료 코드 ${code} · 변경 내용은 다시 읽지 않음`,
     editUnchanged: "변경 없음",
-    editDeleted: (path) => `${path}: 삭제됨 · 복구: tonedial doctor --fix`,
+    editDeleted: (path) => `편집으로 삭제됨:\n${path}\n복구하려면:\n  tonedial doctor --fix`,
     editDeletionRefused: (path) => `편집기에서 임시 설정 파일을 삭제해 변경을 적용하지 않았습니다. 기존 설정과 연결 기록은 그대로입니다:\n${path}`,
     escapesRoot: (path, real, root) =>
       `${path} → ${real}: ${root} 밖이므로 기록하지 않습니다.`,
@@ -2055,8 +2236,8 @@ const koMessages: Messages = {
       `세이프워드에서 지워 주세요. 그대로 연결하면 파일이 깨집니다`,
     projectNeedsWiring: "--project에는 연결 기능이 필요합니다",
     hooksNotJson: (path, reason) =>
-      `${path}: JSON으로 읽을 수 없습니다${reason ? `: ${reason}` : ""}. 다른 훅을 보존하기 위해 ` +
-      `ToneDial은 덮어쓰지 않습니다. 파일을 고친 뒤 다시 실행해 주세요`,
+      `이 파일을 JSON으로 읽을 수 없습니다${reason ? `: ${reason}` : ""}\n${path}\n` +
+      `파일 안의 다른 훅을 지키기 위해 ToneDial은 덮어쓰지 않습니다. 파일을 고친 뒤 다시 실행해 주세요.`,
   },
   config: {
     unknownKey: (key, known) => `config.json: 알 수 없는 키 ${key} · 사용 가능: ${known.join(", ")}`,
@@ -2090,14 +2271,13 @@ const ko: Catalogue = {
   init: {
     safewordSuggestion: (suggestion) => `프리셋 제안 · ${suggestion}`,
     welcome: "ToneDial은 코딩 에이전트에 캐릭터를 더하고, 그 말투를 여러 프로젝트에서 유지합니다.",
-    scopeHeading: "범위",
     toneHeading: "말투",
     connectionsHeading: "에이전트",
     resultHeading: "준비 완료",
     refreshHeading: "새로 고침",
     preset: "시작 프리셋 (Enter: 1)",
-    userRef: '내 호칭 (Enter: 프리셋 기본값 · "": 지우기)',
-    selfRef: '에이전트 호칭 (Enter: 프리셋 기본값 · "": 지우기)',
+    userRef: '내 호칭 ("": 지우기)',
+    selfRef: '에이전트 호칭 ("": 지우기)',
     safeword:
       "세이프워드: 한 답변만 페르소나·칭찬·농담 없이 담백하게 요청합니다. 권한은 바꾸지 않습니다.",
     safewordSkip: "Enter: 없음 · 스킬로도 담백한 답을 요청할 수 있습니다.",

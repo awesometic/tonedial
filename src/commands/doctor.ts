@@ -5,17 +5,18 @@ import { accessSync, constants, existsSync, mkdtempSync, realpathSync, rmSync, s
 import { tmpdir } from "node:os";
 
 import type { CommandResult, Ctx } from "../cli.ts";
-import { runAppRebuild } from "./rebuild.ts";
+import { runAppRebuild, stoppedOperationSteps } from "./rebuild.ts";
 import { runRebuildNative } from "./wire.ts";
 import { compile, measure } from "../core/compile.ts";
-import { ConfigError, defaultConfig, isConfigV2, parseConfig, type Config, type ManagedResource, type WiringScope } from "../core/config.ts";
+import { ConfigError, defaultConfig, isConfigV2, parseConfig, type Config, type ManagedResource } from "../core/config.ts";
 import { inspectOperations, inspectRollback } from "../core/operations.ts";
 import { join, relative } from "node:path";
 
-import { AGENT_TOOLS, CONTEXT_ARTIFACT_FILENAME, CONTEXT_GUIDE_FILENAME, UPDATE_COMMAND, connectionScopeFlag, onPath, readerPath, resolveAgentPaths, shimScript, installShape, type AgentTool, type InstallShape, canonicalDestination, shellQuote} from "../core/paths.ts";
+import { AGENT_TOOLS, CONTEXT_ARTIFACT_FILENAME, CONTEXT_GUIDE_FILENAME, UPDATE_COMMAND, connectionScopeFlag, onPath, readerPath, resolveAgentPaths, shimScript, installShape, type AgentTool, type InstallShape, canonicalDestination, canonicalResourcePath, shellQuote} from "../core/paths.ts";
 import { SKILL_NAME } from "../core/skill.ts";
 import { GUIDE_FORMAT_MARKER } from "../core/reader.ts";
 import { DELIVERY_OFF_MARKER } from "../core/anchors.ts";
+import { recoverLegacyTone } from "../core/legacy-tone.ts";
 import { inspect as inspectSkill, skillPath } from "../wiring/skill.ts";
 import { candidateRcPaths, pathLineState, rcPath, withPathLine } from "../wiring/shell.ts";
 import {
@@ -28,13 +29,15 @@ import {
   type SeedState,
 } from "../core/seeds.ts";
 import { toCompileInput } from "../core/resolve.ts";
-import { artifactSize, claudeContextCap, humanText, nextStep, offNotice, receiptLines, recoveryRollbackLines, section } from "../ui/format.ts";
+import { artifactSize, claudeContextCap, hookDuplicateNotice, humanText, isCopyableLine, nextStep, offNotice, receiptLines, recoveryRollbackLines, scopeToken, section } from "../ui/format.ts";
+import type { Paint } from "../ui/style.ts";
 import { wrap } from "../ui/width.ts";
-import { applyRollback, assertFresh, planChange, previewRollback, type Change } from "../wiring/apply.ts";
+import { ApprovalRequired, applyRollback, assertFresh, planChange, previewRollback, type Change } from "../wiring/apply.ts";
 import { confirm } from "../ui/prompt.ts";
 import { RegionError, find } from "../wiring/region.ts";
-import { TARGETS, inspectContextConsumers, orderedFingerprint, orderedHook, recordedHook, regionContent, wiredAt, type WiredAt } from "../wiring/targets.ts";
-import { hasHook, hookCommand, ownedHook } from "../wiring/hooks.ts";
+import { TARGETS, exactDelivery, inspectContextConsumers, orderedFingerprint, orderedHook, projectDuplicates, recordedHook, regionContent, wiredAt, type DeliveryDuplicate, type WiredAt } from "../wiring/targets.ts";
+import { connections, folderConnections, riders, wiredElsewhere, type Elsewhere } from "../wiring/scopes.ts";
+import { hasHook, hookCommand, ownedHook, runsReader, withHook, withoutHook } from "../wiring/hooks.ts";
 import { codexHookTrust, type CodexTrust } from "../wiring/codex-trust.ts";
 import { assertRecordedTextAccess, contentHash, registrationKey, resourceKey } from "../wiring/ownership.ts";
 
@@ -49,11 +52,18 @@ type Check = {
   detail: string;
   /** Separate human facts while keeping the machine detail's existing prose. */
   humanDetail?: readonly string[];
+  /** What the user still has to do, such as a host review step; shown after the facts. */
+  guidance?: readonly string[];
+  /** Advisories the headline counts, such as a doubled hook; shown last. */
+  notices?: readonly string[];
   /** Actionable repair, when available. */
   repair?: string;
   /** PATH repair snapshot used to check recorded shell ownership. */
   change?: Change;
+  /** Lines shown as written, unwrapped, so they can be copied back into a file. */
+  verbatim?: readonly string[];
   files?: { path: string; reason: Exclude<SeedState, "current"> }[];
+  inspectionFailurePath?: string;
 };
 
 type BoundedChange =
@@ -103,6 +113,8 @@ type NativeIntegration = {
   /** Codex's separate trust record; an enabled setting does not prove trust or delivery. */
   trust: CodexTrust;
   activation: "unverified";
+  /** Project hooks that deliver this pair a second time beside the global hook. */
+  duplicates: DeliveryDuplicate[];
 };
 
 type HookSetting = {
@@ -321,8 +333,8 @@ function nativeRoute(ctx: Ctx, config: Config, tool: AgentTool): NativeRoute | n
     const globalResource = globalPair ? nativeResource(config, globalId) : undefined;
 
     if (requestedPair && resource === undefined && globalResource !== undefined) {
-      // `planOrderedDelivery` can attach this explicit project registration to the matching
-      // global resource. Inspect the actual physical source while retaining project repair scope.
+      // An earlier version could record this project registration on the matching global
+      // resource. Inspect the actual physical source while retaining project repair scope.
       sourceId = globalId;
       resource = globalResource;
       inherited = true;
@@ -340,7 +352,16 @@ function nativeRoute(ctx: Ctx, config: Config, tool: AgentTool): NativeRoute | n
   if (!requestedPair && !inherited) return null;
   const defaultPath = sourceAgent.hookFile(tool);
   const path = resource?.accessPaths?.[sourceId]?.path ?? resource?.path ?? defaultPath;
-  if (!ctx.agent.live && path !== ctx.agent.hookFile(tool)) inherited = true;
+  // The same file is spelled differently when a symlinked parent is on one path and not the other.
+  // A path that cannot be resolved keeps the spelling's answer; reading it reports why.
+  const own = ctx.agent.hookFile(tool);
+  if (!ctx.agent.live && !inherited && path !== own) {
+    try {
+      inherited = canonicalResourcePath(path) !== canonicalResourcePath(own);
+    } catch {
+      inherited = true;
+    }
+  }
   return {
     tool,
     sourceId,
@@ -351,9 +372,31 @@ function nativeRoute(ctx: Ctx, config: Config, tool: AgentTool): NativeRoute | n
   };
 }
 
+/** This tool's global native registration and the settings file its hook lives in, when it has one. */
+function globalHook(config: Config, tool: AgentTool): { id: string; path: string } | undefined {
+  const global = connections(config).find((connection) => connection.target === tool && connection.scope === "global");
+  const id = global && registrationKey(tool, "global", global.destination!);
+  const resource = id === undefined ? undefined : nativeResource(config, id);
+  return id === undefined || resource === undefined ? undefined : { id, path: resource.accessPaths?.[id]?.path ?? resource.path };
+}
+
+/**
+ * Project hooks that repeat the global hook for this tool. Global inspection reports every one;
+ * project inspection reports its own folder. A project that inherits the global file is not one.
+ */
+function duplicateHooks(ctx: Ctx, config: Config, tool: AgentTool): DeliveryDuplicate[] {
+  if (!isConfigV2(config)) return [];
+  const global = globalHook(config, tool);
+  if (global === undefined) return [];
+  const here = canonicalDestination(ctx.agent.root);
+  return projectDuplicates(config.wiring, tool, global.id, orderedHook(tool, ctx.paths.root, process.execPath), ctx.paths.root, true)
+    .filter((duplicate) => ctx.agent.live || duplicate.destination === here);
+}
+
 /** Diagnose one native route from a bounded settings snapshot. */
 function diagnoseNative(
   ctx: Ctx,
+  config: Config,
   route: NativeRoute,
   reader: ReaderHealth,
 ): NativeDiagnosis {
@@ -374,9 +417,12 @@ function diagnoseNative(
   let configuration: NativeIntegration["configuration"] = "foreign";
   let repairable = false;
   let detail = ctx.t.doctor.nativeForeign;
+  let edited = false;
+  let inspectionFailurePath: string | undefined;
   const change = inspected.change;
 
   if (change === null) {
+    inspectionFailurePath = route.path;
     // The target could not be read inside its bounds. Preserved and reported, never repaired.
   } else if (change.before === null || resource === undefined || metadata === undefined || installed === null) {
     // Our entry is absent — either the file is not there, or it is someone else's file and this
@@ -399,9 +445,17 @@ function diagnoseNative(
     let owned: string | null = null;
     try {
       assertRecordedTextAccess(change, resource, resource.accessPaths?.[route.sourceId], ctx.t);
+      // The file is still the recorded one, so anything but an intact handler is an outside edit.
+      edited = true;
       owned = ownedHook(change.before, installed, route.path, ctx.t);
-    } catch {
+    } catch (error) {
       owned = null;
+      // A recorded file that no longer parses is a broken file, not an edit of ToneDial's entries.
+      if (edited && error instanceof ConfigError) {
+        edited = false;
+        inspectionFailurePath = route.path;
+        detail = `${error.message}\n${repairCommand(ctx, "doctor")}`;
+      }
     }
     const recordedHash = metadata.handlerSha256 ?? resource.managed.handlerSha256;
     if (owned !== null && recordedHash !== undefined && contentHash(owned) === recordedHash) {
@@ -416,14 +470,27 @@ function diagnoseNative(
         ? (route.inherited ? ctx.t.doctor.nativeInherited(route.path, event) : ctx.t.doctor.nativeConfigured(event))
         : ctx.t.doctor.nativeStale;
       repairable = current ? false : route.repairAllowed;
+      edited = false;
     }
   }
+  if (edited) detail = ctx.t.doctor.nativeEdited(route.path);
 
   const humanDetail = [configuration === "configured"
     ? route.inherited
       ? ctx.t.doctor.nativeInheritedCompact(route.path, event)
       : ctx.t.doctor.nativeConfiguredCompact(event)
     : detail];
+  // Decision D5: an outside edit gets guidance, never a repair or adoption. Both routes end in
+  // a state the planner already accepts: the recorded handler intact, or no file at all.
+  let verbatim: string[] | undefined;
+  if (edited) {
+    const fix = route.inherited ? "tonedial doctor --fix --global" : repairCommand(ctx, "doctor --fix");
+    humanDetail.push(ctx.t.doctor.editedRoutes(ctx.flags.verbose ? null : `${repairCommand(ctx, "doctor")} --verbose`, fix));
+    if (ctx.flags.verbose) {
+      humanDetail.push(ctx.t.doctor.editedExpected);
+      verbatim = withHook(null, installed!, route.path, ctx.t).trimEnd().split("\n");
+    }
+  }
 
   // Runtime availability is its own observation. It can make a configured entry unusable, and it
   // says so beside that reading rather than overwriting it — the configuration is what this tool
@@ -485,15 +552,17 @@ function diagnoseNative(
     reader: nativeReader,
     trust,
     activation: "unverified",
+    duplicates: duplicateHooks(ctx, config, route.tool),
   };
   // A recorded off switch is a configuration problem. Unknown trust remains a separate
   // host-review observation, never approval or activation evidence.
   const state: State =
     configuration === "configured" && runtime.state === "available" &&
     hookSetting.state !== "disabled" ? "ok" : "problem";
-  // An inherited hook lives in the global file, and only a global refresh rewrites it.
-  const repair = configuration === "stale" && route.inherited ? `tonedial init --tools ${route.tool} --global`
-    : repairable ? repairCommand(ctx, `init --tools ${route.tool}`) : undefined;
+  // An inherited hook lives in the global file, and only a global repair rewrites it.
+  const inheritedRepair = route.inherited && (configuration === "stale" || configuration === "missing" && !route.repairAllowed);
+  const repair = inheritedRepair ? "tonedial doctor --fix --global"
+    : repairable ? repairCommand(ctx, "doctor --fix") : undefined;
   return {
     integration,
     hookSetting,
@@ -502,9 +571,17 @@ function diagnoseNative(
       state,
       detail: `${detail} ${ctx.t.doctor.nativeActivationUnverified(trust !== "unknown")}`,
       humanDetail,
+      ...(inspectionFailurePath ? { inspectionFailurePath } : {}),
       ...(repair ? { repair } : {}),
+      ...(verbatim ? { verbatim } : {}),
     },
   };
+}
+
+/** An earlier compiler's artifact for exactly these settings: a package update, not an edit. */
+function earlierVersionTone(onDisk: string, expected: string, t: Ctx["t"]): boolean {
+  const decoded = recoverLegacyTone(onDisk, t);
+  return decoded !== null && compile(toCompileInput(decoded.config)) === expected;
 }
 
 function failedContext(cause: ContextLayoutInspection["cause"] = "inspection"): ContextLayoutInspection {
@@ -560,7 +637,8 @@ function contextCheck(ctx: Ctx, diagnosis: ContextDiagnosis): Check {
     return {
       name: "context",
       state: "problem",
-      detail: ctx.t.errors.unreadableConfigFile(ctx.paths.config),
+      detail: ctx.t.errors.unreadableConfigFile(ctx.paths.config, null),
+      repair: repairCommand(ctx, "doctor --fix"),
     };
   }
   const { kind, cause } = diagnosis.layout;
@@ -572,7 +650,7 @@ function contextCheck(ctx: Ctx, diagnosis: ContextDiagnosis): Check {
     return { name: "context", state: "ok", detail: ctx.t.doctor.contextCurrent };
   }
   if (kind === "current" && cause === "repair") {
-    return { name: "context", state: "problem", detail: ctx.t.doctor.contextRepair };
+    return { name: "context", state: "problem", detail: ctx.t.doctor.contextRepair, repair: repairCommand(ctx, "doctor --fix") };
   }
   if (kind === "legacy") {
     return {
@@ -585,7 +663,7 @@ function contextCheck(ctx: Ctx, diagnosis: ContextDiagnosis): Check {
   return {
     name: "context",
     state: "problem",
-    detail: ctx.t.errors.contextLayout(kind === "current" ? "conflict" : kind, ctx.paths.root, repairCommand(ctx, "doctor --json")),
+    detail: ctx.t.errors.contextLayout(kind === "current" ? "conflict" : kind, ctx.paths.root, repairCommand(ctx, "doctor --json"), repairCommand(ctx, "doctor --fix")),
   };
 }
 
@@ -624,6 +702,7 @@ export async function runDoctor(ctx: Ctx, _args: string[]): Promise<CommandResul
   if (ctx.flags.dryRun) {
     const native = await runRebuildNative(ctx, app.legacy, app.proposedConfig);
     return {
+      previewed: app.json.reason === "dry-run" || native.json.reason === "dry-run",
       lines: [...app.lines, ...native.lines],
       json: { ...app.json, root: ctx.agent.root, stateRoot: ctx.paths.root, agentRoot: ctx.agent.root,
         live: ctx.agent.live, fixed: false, native: native.json,
@@ -637,12 +716,15 @@ export async function runDoctor(ctx: Ctx, _args: string[]): Promise<CommandResul
     json: { ...app.json, root: ctx.agent.root, stateRoot: ctx.paths.root, agentRoot: ctx.agent.root,
       live: ctx.agent.live, fixed: false, appHealthy: false },
   };
+  // In a terminal the agent phase prints its preview as it asks, so the application receipt goes first.
+  const streamed = ctx.canPrompt && !ctx.flags.auto;
+  if (streamed && app.lines.length) process.stdout.write(`${app.lines.join("\n")}\n`);
   const native = await runRebuildNative(ctx, app.legacy);
   const rollbackLines = recoveryRollbackLines(ctx.t, app.json.operationId, native.json.operationId);
   const report = await doctorReport(ctx, rollbackLines.length === 0);
   return {
     lines: [
-      ...app.lines,
+      ...streamed ? [] : app.lines,
       ...native.lines,
       ...((app.lines.length || native.lines.length) && report.lines.length ? [""] : []),
       ...report.lines,
@@ -683,17 +765,11 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true): Promise<Comm
     if (inspected.lock.state === "live" || inspected.lock.state === "unknown" || inspected.lock.state === "invalid") {
       lines.push(...wrap(ctx.t.doctor.rollbackStatus[inspected.lock.state === "live" ? "busy" : "unresolved"], ctx.ui.width - 2)
         .map(line => `  ${line}`));
-    } else if (inspected.lock.state === "dead" && owner?.kind === "mutation") {
-      const entry = inspected.journals.find(({ operationId }) => operationId === owner.operationId);
-      if (entry?.journal && entry.journal.owner.nonce === owner.nonce) {
-        const selection = inspectRollback(ctx.paths, owner.operationId);
-        if (entry.state === "pending" && !selection.synthetic && blocking.every(({ operationId, journal }) => operationId === owner.operationId && journal !== null)) {
-          lines.push("", `  ${ctx.t.doctor.resumeOperation}`,
-            ...nextStep(repairCommand(ctx, `doctor --fix --from-operation ${owner.operationId}`), ctx.ui).slice(1));
-        }
-        if (showRollbackCommands && previewRollback(ctx.paths, owner.operationId, ctx.t).status === "ready") {
-          lines.push("", ...receiptLines(ctx.t.recovery.rollback(owner.operationId), ctx.ui.width - 2).map(line => `  ${line}`));
-        }
+    } else {
+      const { resume, rollback } = stoppedOperationSteps(ctx.paths, ctx.t, connectionScopeFlag(ctx.agent, ctx.cwd), inspected);
+      if (resume !== null) lines.push("", `  ${ctx.t.doctor.resumeOperation}`, ...nextStep(resume, ctx.ui).slice(1));
+      if (showRollbackCommands && rollback !== null) {
+        lines.push("", ...receiptLines(`${ctx.t.doctor.undoOperation}\n${rollback}`, ctx.ui.width - 2).map(line => `  ${line}`));
       }
     }
     if (quarantineable) {
@@ -725,10 +801,9 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true): Promise<Comm
   if (diagnosis.config === null || diagnosis.configChange === null || diagnosis.layout.inspectionFailure !== null) {
     const checks = [contextCheck(ctx, diagnosis)];
     const lines = [
-      ...section(ctx.t.doctor.checksHeading, ctx.ui).slice(1),
+      summaryLine(ctx, 1, 0),
+      ...section(ctx.t.doctor.checksHeading, ctx.ui),
       ...renderCheckBlocks(checks, [], [], ctx),
-      "",
-      `  ${ctx.ui.warn(ctx.t.doctor.toLookAt(1))}`,
     ];
     return {
       lines,
@@ -757,6 +832,7 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true): Promise<Comm
     detail: payload.guideFormat === "supported"
       ? ctx.t.doctor.contextSize(payload.guideChars!, payload.totalChars)
       : ctx.t.doctor.guideFormat[payload.guideFormat],
+    ...(payload.guideFormat === "missing" ? { repair: repairCommand(ctx, "doctor --fix") } : {}),
   });
 
   const expected = compile(toCompileInput(config));
@@ -768,14 +844,14 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true): Promise<Comm
     const onDisk = toneChange.before;
     checks.push(
       onDisk === null
-        ? { name: "TONE.md", state: "problem", detail: ctx.t.doctor.toneNotWritten, repair: "tonedial compile" }
+        ? { name: "TONE.md", state: "problem", detail: ctx.t.doctor.toneNotWritten, repair: repairCommand(ctx, "doctor --fix") }
         : onDisk === expected
           ? { name: "TONE.md", state: "ok", detail: artifactSize(measure(expected), ctx.t) }
           : {
               name: "TONE.md",
               state: "problem",
-              detail: ctx.t.doctor.toneDisagrees,
-              repair: "tonedial compile",
+              detail: earlierVersionTone(onDisk, expected, ctx.t) ? ctx.t.doctor.toneEarlierVersion : ctx.t.doctor.toneDisagrees,
+              repair: repairCommand(ctx, "doctor --fix"),
             },
     );
   }
@@ -792,32 +868,46 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true): Promise<Comm
       ? ctx.t.doctor.seedReason[reader.reason] : "";
   const integrations: NativeIntegration[] = [];
   const hookSettings: HookSetting[] = [];
+  let unownedFound = false;
   for (const tool of AGENT_TOOLS) {
     const route = nativeRoute(ctx, config, tool);
     if (route !== null) {
-      const diagnosed = diagnoseNative(ctx, route, reader);
+      const diagnosed = diagnoseNative(ctx, config, route, reader);
       integrations.push(diagnosed.integration);
       hookSettings.push(diagnosed.hookSetting);
       checks.push(diagnosed.check);
       continue;
     }
 
-    const check = wiringCheck(ctx, tool, shownPath);
+    const unowned = unownedCheck(ctx, config, tool, diagnosis.layout.kind !== "current");
+    if (unowned !== null) {
+      checks.push(unowned);
+      hookSettings.push({ tool, state: "unknown", basis: "unverified", path: null });
+      unownedFound = true;
+      continue;
+    }
+    const check = wiringCheck(ctx, tool, shownPath, isConfigV2(config)
+      ? config.wiring.registrations[registrationKey(tool, scope, destination)] !== undefined
+      : Object.hasOwn(config.wiring, tool));
     checks.push(check);
     hookSettings.push({ tool, state: "unknown", basis: "unverified", path: null });
   }
+  // One state per agent: what is wrong and its fix, or that it is connected and how to enable it
+  // in the app. Enablement is only worth a line once the hook itself is in place.
   for (const setting of hookSettings) {
     const check = checks.find(check => check.name === TARGETS[setting.tool].label)!;
     const integration = integrations.find(integration => integration.tool === setting.tool);
-    const guidance = integration === undefined && TARGETS[setting.tool].delivery === null ? ""
-      : integration === undefined ? ctx.t.doctor.hookNotConnected
-      : integration.configuration !== "configured" || integration.runtime.state !== "available"
-        ? ctx.t.doctor.hookNeedsInspection
-      : ctx.t.doctor.hookGuidance[setting.tool];
     const detail = check.humanDetail ?? [check.detail];
-    const state = ctx.t.doctor.hookSettingState[setting.state];
-    check.humanDetail = [...(check.state === "problem" ? [...detail, state] : [state, ...detail]),
-      ...(guidance === "" ? [] : [guidance])];
+    // The summary counts every duplicate, so each one is shown whatever the agent's state.
+    const notice = hookDuplicateNotice(ctx.t, setting.tool, integration?.duplicates ?? [], ctx.cwd, globalHook(config, setting.tool)?.path ?? null);
+    check.notices = notice === null ? [] : [notice];
+    if (integration === undefined || (check.state === "problem" && setting.state !== "disabled")) {
+      check.humanDetail = detail;
+      continue;
+    }
+    check.humanDetail = [...detail, ctx.t.doctor.hookSettingState[setting.state]];
+    check.guidance = [setting.tool === "codex" ? ctx.t.wiring.codexTrust(ctx.agent.live || integration.inherited)
+      : ctx.t.doctor.hookGuidance[setting.tool]];
   }
 
   // Measured from the files on disk; Claude Code's own truncation is not observed here.
@@ -831,6 +921,9 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true): Promise<Comm
     name: "reader",
     state: reader.state === "missing" || reader.state === "unrunnable" ? "problem" : "note",
     detail: [ctx.t.doctor.readerState[reader.state], readerReason].filter(Boolean).join(" "),
+    // The same bundled-file causes that seedCheck() repairs; a probe failure is retried instead.
+    ...(reader.reason === "missing" || reader.reason === "stale" || reader.reason === "modified"
+      ? { repair: repairCommand(ctx, "doctor --fix") } : {}),
   });
   for (const tool of AGENT_TOOLS) {
     if (!isConfigV2(config) || !config.wiring.registrations[registrationKey(tool, scope, destination)]) continue;
@@ -873,44 +966,59 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true): Promise<Comm
     diagnosis.layout.nativeAttention?.inspectionFailure != null || integrations.some((integration) =>
       integration.configuration !== "configured" || integration.runtime.state !== "available" ||
       integration.trust === "disabled") || hookSettings.some(setting => setting.state === "disabled");
-  const elsewhere = wiredElsewhere(config, { scope, destination });
+  const inspectionFailure = diagnosis.layout.nativeAttention?.inspectionFailure ?? null;
+  const elsewhere = wiredElsewhere(config, ctx.agent);
+  // Inspecting global from a folder with its own connections: say so and name `doctor --here`.
+  const folder = ctx.agent.live ? folderConnections(config, ctx.cwd) : [];
   const nativeCheckNames = new Set(hookSettings.map(({ tool }) => TARGETS[tool].label));
-  // Before setup, the missing guide and artifact restate the context check's single cause.
-  const derived = diagnosis.layout.kind === "fresh" ? new Set(["AGENTS.md", "TONE.md"]) : new Set<string>();
-  const shownChecks = ctx.flags.verbose
-    ? checks
-    : checks.filter((check) => !derived.has(check.name) &&
-        (check.state === "problem" || check.repair !== undefined || nativeCheckNames.has(check.name)));
+  // One finding per cause. Before setup, the missing guide and artifact restate the context
+  // check; after it, a guide or artifact finding names the file the context summary points to.
+  const fileProblem = checks.some((check) => (check.name === "AGENTS.md" || check.name === "TONE.md") && check.state === "problem");
+  const derived = diagnosis.layout.kind === "fresh" ? new Set(["AGENTS.md", "TONE.md"])
+    : diagnosis.layout.kind === "current" && diagnosis.layout.cause === "repair" && fileProblem ? new Set(["context"])
+      : new Set<string>();
+  // The default view's findings; `--verbose` adds context but never changes the count.
+  const findings = checks.filter((check) => !derived.has(check.name) &&
+    (check.state === "problem" || check.repair !== undefined || nativeCheckNames.has(check.name)));
+  const shownChecks = ctx.flags.verbose ? checks : findings;
   const appHealthy = diagnosis.layout.kind === "current" && diagnosis.layout.cause === "none" && seeds.every(({ state }) => state === "current");
 
   const lines: string[] = [
-    `  ${ctx.ui.bold((appHealthy ? ctx.ui.success : ctx.ui.warn)(ctx.t.doctor.applicationHealth(appHealthy)))}`,
+    summaryLine(ctx, findings.filter((check) => check.state === "problem").length,
+      // Agents that are simply not connected are grouped into one row and are not a notice.
+      findings.filter((check) => check.state === "note" && check.detail !== ctx.t.doctor.hookNotConnected).length +
+      integrations.reduce((count, integration) => count + integration.duplicates.length, 0) + (folder.length ? 1 : 0) +
+      // A settings file that could not be inspected has no check of its own when its agent is not
+      // connected. Count it unless a problem already reports that same file's inspection failure.
+      (inspectionFailure && !findings.some((check) => check.state === "problem" && check.inspectionFailurePath === inspectionFailure.path) ? 1 : 0)),
+    // One health statement: the headline. A row follows it only when there is something to fix.
+    ...(appHealthy ? [] : [`  ${ctx.ui.bold(ctx.ui.warn(ctx.t.doctor.applicationHealth))}`]),
     // A healthy setup sends no tone while paused; that is the first thing to know.
     ...offNotice(config.enabled, ctx.t, ctx.ui),
-    ...(integrations.length || nativeAttention ? [
+    ...(folder.length ? ["", ...paintLines(ctx.t.doctor.folderConnections(folder.map(({ target }) => target), "tonedial doctor --here"),
+      ctx.ui.width - 2, ctx).map((line) => `  ${line}`)] : []),
+    ...(nativeAttention ? [
       ...section(ctx.t.doctor.connectionsHeading, ctx.ui),
-      ...wrap(ctx.t.doctor.connectionHealth(nativeAttention), ctx.ui.width - 2).map((line) =>
-        `  ${nativeAttention ? ctx.ui.warn(line) : line}`),
+      ...wrap(ctx.t.doctor.connectionHealth, ctx.ui.width - 2).map((line) => `  ${ctx.ui.warn(line)}`),
+      ...(inspectionFailure ? paintLines(ctx.t.errors.contextInspectionFailure(inspectionFailure.path, inspectionFailure.reason),
+        ctx.ui.width - 2, ctx).map((line) => `  ${line}`) : []),
     ] : []),
     ...section(ctx.t.doctor.checksHeading, ctx.ui),
-    ...renderCheckBlocks(shownChecks, ctx.flags.verbose ? [] : hookSettings, integrations, ctx,
-      integrations.length || nativeAttention ? wrap(ctx.t.doctor.hookSettingScope, ctx.ui.width - 2).map(line => `  ${ctx.ui.dim(line)}`) : []),
-    // A repair receipt presents its new IDs once in native→app order. Standalone diagnosis
-    // still lists available historical rollback commands.
-    ...(showRollbackCommands ? inspected.journals.flatMap(({ operationId, state, journal }) =>
+    ...renderCheckBlocks(shownChecks, ctx.flags.verbose ? [] : hookSettings, integrations, ctx, new Set(elsewhere.map(({ target }) => target))),
+    // A repair receipt presents its new IDs once in native→app order. Completed operations are
+    // history: verbose diagnosis lists their rollback commands, and JSON keeps `recovery`.
+    ...(showRollbackCommands && ctx.flags.verbose ? inspected.journals.flatMap(({ operationId, state, journal }) =>
       state === "complete" && journal?.retention && inspectRollback(ctx.paths, operationId).allowed
         ? ["", `  ${operationId}  ${ctx.t.doctor.operationState.complete}`, `  tonedial doctor --fix --rollback ${operationId}`]
         : []) : []),
     ...elsewhereReport(elsewhere, ctx),
+    // Last, so it covers every hook state above it; only a connected agent shows one.
+    ...(integrations.length ? ["", ...wrap(ctx.t.doctor.hookSettingScope, ctx.ui.width - 2).map(line => `  ${ctx.ui.dim(line)}`)] : []),
   ];
 
-  const shownProblems = problems.filter((check) => ctx.flags.verbose || !derived.has(check.name));
-  if (shownProblems.length) {
-    lines.push("", `  ${ctx.ui.warn(ctx.t.doctor.toLookAt(shownProblems.length))}`);
-  }
   // Nothing connected anywhere: the one step that lets a conversation receive this tone.
-  if (config.enabled && diagnosis.layout.kind === "current" && integrations.length === 0 && !nativeAttention && elsewhere.length === 0) {
-    lines.push(...nextStep(`tonedial wire ${connectionScopeFlag(ctx.agent, ctx.flags.here === true)}`, ctx.ui));
+  if (config.enabled && diagnosis.layout.kind === "current" && integrations.length === 0 && !nativeAttention && !unownedFound && elsewhere.length === 0) {
+    lines.push(...nextStep(`tonedial wire ${connectionScopeFlag(ctx.agent, ctx.cwd)}`, ctx.ui));
   }
 
   return {
@@ -920,7 +1028,7 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true): Promise<Comm
       live: ctx.agent.live,
       healthy: problems.length === 0,
       appHealthy,
-      nativeAttention,
+      nativeAttention: nativeAttention || unownedFound,
       fixed: false,
       recovery,
       context: contextJson(diagnosis.layout),
@@ -953,7 +1061,7 @@ async function runRollback(ctx: Ctx, operationId: string): Promise<CommandResult
     return { lines, json: { fixed: false, reason: ctx.flags.dryRun ? "dry-run" : preview.status, rollback: json } };
   }
   if (!ctx.flags.auto) {
-    if (!ctx.canPrompt) throw new ConfigError(ctx.t.wiring.needsApproval);
+    if (!ctx.canPrompt) throw new ApprovalRequired(ctx.t);
     process.stdout.write(`${lines.join("\n")}\n`);
     lines.length = 0;
     if (await confirm(`  ${ctx.t.doctor.rollbackQuestion}`) !== "yes") {
@@ -988,7 +1096,7 @@ function seedCheck(ctx: Ctx, config: Config, seeds: readonly SeedInspection[]): 
         state: "problem",
         detail: ctx.t.doctor.seedsAttention,
         files: stale.map(({ seed, state }) => ({ path: seed.path, reason: state as Exclude<SeedState, "current"> })),
-        ...(stale.every(({ state }) => state === "missing" || state === "stale") ? { repair: repairCommand(ctx, "doctor --fix") } : {}),
+        ...(stale.every(({ state }) => state === "missing" || state === "stale" || state === "modified") ? { repair: repairCommand(ctx, "doctor --fix") } : {}),
       };
 }
 
@@ -1012,7 +1120,7 @@ function skillCheck(ctx: Ctx, tool: AgentTool): Check {
         detail: ctx.t.doctor.skillForeign(path),
       };
     default:
-      return { name, state: "note", detail: ctx.t.doctor.skillNotLinked, repair: `tonedial wire ${tool}` };
+      return { name, state: "note", detail: ctx.t.doctor.skillNotLinked, repair: repairCommand(ctx, `wire ${tool}`) };
   }
 }
 
@@ -1024,7 +1132,7 @@ function skillCheck(ctx: Ctx, tool: AgentTool): Check {
 function commandCheck(ctx: Ctx, shape: InstallShape): Check | null {
   if (shape !== "curl") return null;
   const path = ctx.paths.command;
-  const repair = `curl -fsSL https://raw.githubusercontent.com/awesometic/tonedial/main/install.sh | TONEDIAL_HOME="${shellQuote(ctx.paths.root)}" sh -s -- --repair ${connectionScopeFlag(ctx.agent)}`;
+  const repair = `curl -fsSL https://raw.githubusercontent.com/awesometic/tonedial/main/install.sh | TONEDIAL_HOME="${shellQuote(ctx.paths.root)}" sh -s -- --repair ${connectionScopeFlag(ctx.agent, ctx.cwd)}`;
   const expected = shimScript(ctx.paths.lib, ctx.paths.root);
   // Planning performs the lstat/open/fstat/read with O_NONBLOCK and rejects directories, devices,
   // FIFOs, and races before any bytes are consumed. The same planned change supplies the mode
@@ -1114,8 +1222,47 @@ function pathCheck(ctx: Ctx, shape: InstallShape): Check {
   };
 }
 
+/**
+ * An agent this scope has no connection for whose hook file still runs this state root's reader:
+ * entries no record owns, or a global hook only earlier-version project records keep. Exact
+ * entries are adopted by `doctor --fix --tools`; edited ones get guidance only (decision D5).
+ */
+function unownedCheck(ctx: Ctx, config: Config, tool: AgentTool, blocked: boolean): Check | null {
+  const name = TARGETS[tool].label;
+  const path = ctx.agent.hookFile(tool);
+  // A blocked layout refuses every repair, so it gets the finding without the step that follows;
+  // the context finding above it carries the command that unblocks it.
+  const finding = (fact: string, step: string) => blocked ? fact : `${fact}\n${step}`;
+  const riding = ctx.agent.live ? riders(config, tool, ctx.env, ctx.cwd) : [];
+  if (riding.length) {
+    return { name, state: "problem", repair: `tonedial unwire ${tool} --global`,
+      detail: finding(ctx.t.doctor.orphanedHook(path, riding.map(({ destination }) => humanText(destination!))), ctx.t.doctor.orphanedRemove) };
+  }
+  const inspected = boundedChange(ctx, path, (before) => before).change;
+  if (inspected === null || inspected.before === null) return null;
+  try {
+    let remaining = inspected.before;
+    for (const resource of isConfigV2(config) ? Object.values(config.wiring.resources) : []) {
+      if (resource.kind !== "hook" || resource.path !== inspected.realPath) continue;
+      for (const consumer of resource.consumers) {
+        const recorded = recordedHook(resource, consumer);
+        if (recorded) remaining = withoutHook(remaining, recorded, path, ctx.t, "document");
+      }
+    }
+    if (!runsReader(remaining, readerPath(ctx.paths.root), path, ctx.t)) return null;
+    return exactDelivery(remaining, orderedHook(tool, ctx.paths.root, process.execPath), ctx.paths.root, path, ctx.t)
+      ? { name, state: "problem", detail: finding(ctx.t.doctor.unrecordedEntries(path), ctx.t.doctor.unrecordedAdopt),
+          repair: repairCommand(ctx, `doctor --fix --tools ${tool}`) }
+      : { name, state: "problem",
+          detail: finding(ctx.t.doctor.unrecordedEdited(path), ctx.t.doctor.unrecordedEditedNext(repairCommand(ctx, `doctor --fix --tools ${tool}`))) };
+  } catch {
+    // A file that does not parse is not evidence of ours; the checks that read it report it.
+    return null;
+  }
+}
+
 /** One tool's region: absent, present and current, present and stale, present and damaged. */
-function wiringCheck(ctx: Ctx, tool: AgentTool, shownPath: WiredAt): Check {
+function wiringCheck(ctx: Ctx, tool: AgentTool, shownPath: WiredAt, registered: boolean): Check {
   const target = TARGETS[tool];
   const name = target.label;
   // A native target has no legacy region. An unregistered Antigravity hooks file is not evidence
@@ -1124,20 +1271,22 @@ function wiringCheck(ctx: Ctx, tool: AgentTool, shownPath: WiredAt): Check {
     return { name, state: "note", detail: ctx.t.doctor.hookNotConnected };
   }
   const path = ctx.agent.wiredFile(tool);
-  // Legacy delivery is inspected only; new setup uses the native pair route.
+  // Legacy delivery is inspected only; new setup uses the native pair route. Without a recorded
+  // connection there is nothing to withhold: the agent is simply not connected.
+  const withheld = registered ? ctx.t.doctor.legacyRepairWithheld : ctx.t.doctor.hookNotConnected;
 
   // Use the shared bounded planner even for inspection. It rejects a directory, FIFO, device,
   // dangling link, invalid text, or replacement race before a command-level read can hang or
   // throw past `doctor --json`.
   const inspected = boundedChange(ctx, path, (before) => before);
   if (inspected.change === null) {
-    return { name, state: "problem", detail: inspected.error };
+    return { name, state: "problem", detail: inspected.error, inspectionFailurePath: path };
   }
   const text = inspected.change.before;
 
   if (text === null) {
     if (!existsSync(ctx.agent.home(tool))) return { name, state: "absent", detail: ctx.t.doctor.notInstalled };
-    return { name, state: "note", detail: ctx.t.doctor.legacyRepairWithheld };
+    return { name, state: "note", detail: withheld };
   }
 
   // **The hook is asked about as a hook.** Its file is JSON with no marker to find, and the
@@ -1156,6 +1305,7 @@ function wiringCheck(ctx: Ctx, tool: AgentTool, shownPath: WiredAt): Check {
         name,
         state: "problem",
         detail: ctx.t.errors.unreadableTarget(path, "invalid hook settings"),
+        inspectionFailurePath: path,
       };
     }
     if (present) {
@@ -1168,7 +1318,7 @@ function wiringCheck(ctx: Ctx, tool: AgentTool, shownPath: WiredAt): Check {
             repair: "tonedial compile",
           };
     }
-    return { name, state: "note", detail: ctx.t.doctor.legacyRepairWithheld };
+    return { name, state: "note", detail: withheld };
   }
 
   const content = regionContent(shownPath.tonePath);
@@ -1183,11 +1333,12 @@ function wiringCheck(ctx: Ctx, tool: AgentTool, shownPath: WiredAt): Check {
       name,
       state: "problem",
       detail: ctx.t.doctor.damagedRegion(path, (cause as RegionError).message),
+      inspectionFailurePath: path,
     };
   }
 
   if (!found) {
-    return { name, state: "note", detail: ctx.t.doctor.legacyRepairWithheld };
+    return { name, state: "note", detail: withheld };
   }
   if (found.content === content) return { name, state: "ok", detail: ctx.t.doctor.imported };
 
@@ -1197,48 +1348,16 @@ function wiringCheck(ctx: Ctx, tool: AgentTool, shownPath: WiredAt): Check {
 /** A repair a user can paste. Under `--global` it has to carry the flag, or running it
  *  repairs a destination it was not pointed at, and leaves the diagnosed one as it was. */
 function repairCommand(ctx: Ctx, rest: string): string {
-  return `tonedial ${rest} ${connectionScopeFlag(ctx.agent)}`;
+  return `tonedial ${rest} ${connectionScopeFlag(ctx.agent, ctx.cwd)}`;
+}
+
+/** The report's first line: what needs fixing and what is worth reading, before the details. */
+function summaryLine(ctx: Ctx, problems: number, notices: number): string {
+  const text = problems + notices === 0 ? ctx.t.doctor.healthy : ctx.t.doctor.summary(problems, notices);
+  return `  ${ctx.ui.bold((problems ? ctx.ui.warn : ctx.ui.success)(text))}`;
 }
 
 const MARK: Record<State, string> = { ok: "ok", problem: "!", note: "·", absent: "·" };
-
-/** A registration this run is not inspecting, and whether its destination is still there. */
-type Elsewhere = { target: string; scope: WiringScope; destination: string; state: "ok" | "gone" | "unwired" };
-
-/**
- * Wiring that lives outside the scope being inspected.
- *
- * Presence only, and report only. `existsSync` is false on `EACCES` and on an unmounted volume,
- * and a renamed project still carries a hook whose handler keeps delivering, so "gone" is a
- * guess about a directory rather than a fact about delivery. That is why nothing here acts on
- * it: `--fix` leaves every one of these records alone, and the row names the one explicit act
- * that removes it instead.
- *
- * Agent targets only. A curl install registers the directory of its rc file as a `shell`
- * target, and `eject --project ~` is not how a PATH line is removed.
- */
-function wiredElsewhere(config: Config, here: { scope: WiringScope; destination: string }): Elsewhere[] {
-  if (!isConfigV2(config)) return [];
-  const rows: Elsewhere[] = [];
-  for (const [id, registration] of Object.entries(config.wiring.registrations)) {
-    if (!(AGENT_TOOLS as readonly string[]).includes(registration.target)) continue;
-    if (registration.scope === here.scope && registration.destination === here.destination) continue;
-    // Every resource, not the first: a codex registration carries a skill directory and a hook,
-    // and the skill survives the hook's deletion, so reading one of them would call a
-    // destination that stopped delivering healthy.
-    const wired = registration.resourceIds.length > 0 && registration.resourceIds.every((resourceId) => {
-      const resource = config.wiring.resources[resourceId];
-      return resource !== undefined && existsSync(resource.accessPaths?.[id]?.path ?? resource.path);
-    });
-    rows.push({
-      target: registration.target,
-      scope: registration.scope,
-      destination: registration.destination,
-      state: !existsSync(registration.destination) ? "gone" : wired ? "ok" : "unwired",
-    });
-  }
-  return rows.sort((a, b) => a.destination.localeCompare(b.destination));
-}
 
 /** Group presentation only; JSON retains each registration and its individual state. */
 function elsewhereReport(rows: Elsewhere[], ctx: Ctx): string[] {
@@ -1253,18 +1372,18 @@ function elsewhereReport(rows: Elsewhere[], ctx: Ctx): string[] {
   const lines = section(ctx.t.doctor.wiredElsewhere, ctx.ui);
   for (const group of groups.values()) {
     const { scope, destination } = group[0]!;
-    lines.push(...wrap(scope === "global" ? ctx.t.wiring.scopeGlobal : ctx.t.wiring.scopeHere, ctx.ui.width - 2)
-      .map(line => `  ${ctx.ui.dim(line)}`), `  ${humanText(destination)}`);
+    // Each row names its scope, so the directory they share is printed once, after them.
     for (const state of ["ok", "unwired", "gone"] as const) {
       const targets = group.filter(row => row.state === state).map(row => row.target);
       if (targets.length === 0) continue;
       const detail = state === "ok" ? ctx.t.doctor.destinationPresent
         : state === "gone" ? ctx.t.doctor.destinationGone : ctx.t.doctor.destinationUnwired;
-      lines.push(...wrap(`${targets.join(", ")} — ${detail}`, ctx.ui.width - 4)
-        .map(line => `    ${state === "ok" ? line : ctx.ui.warn(line)}`));
+      lines.push(...wrap([scopeToken(ctx.t, scope), targets.join(", "), detail].join(" · "), ctx.ui.width - 2)
+        .map(line => `  ${state === "ok" ? line : ctx.ui.warn(line)}`));
     }
+    lines.push(`  ${humanText(destination)}`);
     if (group.some(row => row.state !== "ok")) {
-      const scopeFlag = scope === "global" ? "--global" : `--project "${shellQuote(destination)}"`;
+      const scopeFlag = connectionScopeFlag({ live: scope === "global", root: destination }, ctx.cwd);
       lines.push(...wrap(ctx.t.doctor.inspectScope, ctx.ui.width - 4).map(line => `    ${line}`),
         `    ${ctx.ui.accent(humanText(`tonedial doctor ${scopeFlag}`))}`,
         ...wrap(ctx.t.doctor.disconnectScope, ctx.ui.width - 4).map(line => `    ${line}`),
@@ -1276,15 +1395,32 @@ function elsewhereReport(rows: Elsewhere[], ctx: Ctx): string[] {
   return lines;
 }
 
+/**
+ * A line that is a command or a path stays whole and takes the accent; prose wraps. The kind is
+ * decided before wrapping, because a wrapped continuation can begin with `tonedial `.
+ */
+function paintLines(text: string, width: number, ctx: Ctx, prose: Paint = (line) => line): string[] {
+  return text.split("\n").flatMap((line) => {
+    const shown = humanText(line);
+    return isCopyableLine(shown) ? [ctx.ui.accent(shown)] : wrap(shown, width).map(prose);
+  });
+}
+
 function report(check: Check, ctx: Ctx): string[] {
   const paint =
-    check.state === "problem" ? ctx.ui.error : check.state === "ok" ? ctx.ui.success : ctx.ui.dim;
+    check.state === "problem" ? ctx.ui.warn : check.state === "ok" ? ctx.ui.success : ctx.ui.dim;
   const head = `  ${paint(MARK[check.state])} ${ctx.ui.bold(humanText(checkHeading(check.name, ctx)))}`;
   // Keep the marker and check name together, then give every detail a stable four-cell hanging
   // indent. A fixed name column made a narrow doctor report spend most of its width on padding.
-  const body = (check.files?.length ? [] : check.humanDetail ?? [check.detail]).flatMap(detail => detail.split("\n"))
-    .flatMap(line => receiptLines(humanText(line), ctx.ui.width - 6));
-  const lines = [head, ...body.map((line) => `    ${check.state === "ok" ? ctx.ui.dim(line) : line}`)];
+  // Only the status facts of a healthy check recede; what the user still has to do, and any
+  // notice the headline counts, stays at normal weight.
+  const width = ctx.ui.width - 6;
+  const body = check.files?.length ? [] : [
+    ...(check.humanDetail ?? [check.detail]).flatMap((text) => paintLines(text, width, ctx, check.state === "ok" ? ctx.ui.dim : undefined)),
+    ...[...(check.guidance ?? []), ...(check.notices ?? [])].flatMap((text) => paintLines(text, width, ctx)),
+  ];
+  const lines = [head, ...body.map((line) => `    ${line}`),
+    ...(check.verbatim ?? []).map((line) => `      ${humanText(line)}`)];
   if (check.files?.length) {
     lines.push(`    ${humanText(ctx.paths.root)}`);
     for (const reason of ["missing", "stale", "modified", "foreign", "unreadable"] as const) {
@@ -1354,7 +1490,7 @@ function renderCheckBlocks(
   settings: readonly HookSetting[],
   integrations: readonly NativeIntegration[],
   ctx: Ctx,
-  hookCaveat: string[] = [],
+  elsewhereTools: ReadonlySet<string> = new Set(),
 ): string[] {
   const unconnected = settings.filter((setting) => {
     const check = checks.find(({ name }) => name === TARGETS[setting.tool].label);
@@ -1365,28 +1501,27 @@ function renderCheckBlocks(
   const unconnectedNames = new Set(unconnected.map(({ tool }) => TARGETS[tool].label));
   const grouped = groupSkillChecks(checks, ctx);
   const lastAgentIndex = grouped.findLastIndex((check) => settings.some(({ tool }) => TARGETS[tool].label === check.name));
-  const lastHostIndex = grouped.findLastIndex((check) => AGENT_TOOLS.some((tool) =>
-    TARGETS[tool].label === check.name && integrations.some((integration) => integration.tool === tool)));
   const blocks: string[][] = [];
   for (let index = 0; index < grouped.length; index++) {
     const check = grouped[index]!;
     if (!unconnectedNames.has(check.name)) {
       blocks.push(report(check, ctx));
     }
-    if (index === lastHostIndex && hookCaveat.length) blocks.push(hookCaveat);
     if (index === lastAgentIndex && unconnected.length) {
-      blocks.push(unconnectedReport(unconnected, ctx));
+      blocks.push(unconnectedReport(unconnected, elsewhereTools, ctx));
     }
   }
-  // No connected host block to sit under: keep the caveat with the connection status.
-  if (lastHostIndex < 0 && hookCaveat.length) blocks.unshift(hookCaveat);
   return blocks.flatMap((block, index) => index === 0 ? block : ["", ...block]);
 }
 
-function unconnectedReport(settings: readonly HookSetting[], ctx: Ctx): string[] {
-  const tools = settings.map(({ tool }) => TARGETS[tool].label);
+/** An agent that is connected in another scope is not connected in this one, and says so. */
+function unconnectedReport(settings: readonly HookSetting[], elsewhereTools: ReadonlySet<string>, ctx: Ctx): string[] {
+  const labels = (registered: boolean) => settings.filter(({ tool }) => elsewhereTools.has(tool) === registered).map(({ tool }) => TARGETS[tool].label);
+  const nowhere = labels(false);
+  const elsewhere = labels(true);
   return [
     `  ${ctx.ui.dim(MARK.note)} ${ctx.ui.bold(ctx.t.doctor.hookGroupHeading)}`,
-    ...wrap(ctx.t.doctor.hookGroupUnknown(tools), ctx.ui.width - 4).map(line => `    ${line}`),
+    ...[...nowhere.length ? [ctx.t.doctor.hookGroupUnknown(nowhere)] : [], ...elsewhere.length ? [ctx.t.doctor.hookGroupElsewhere(elsewhere)] : []]
+      .flatMap(text => wrap(text, ctx.ui.width - 4)).map(line => `    ${line}`),
   ];
 }

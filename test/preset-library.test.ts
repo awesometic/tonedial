@@ -280,6 +280,26 @@ test("a damaged higher-priority user file remains raw read evidence and cannot b
   } finally { f.dispose(); }
 });
 
+test("reset does not offer an unselectable legacy preset as a restore command", async () => {
+  const f = fixture();
+  try {
+    assert.equal((await invoke(f, "init", "--global", "--tools", "none", "--auto")).status, 0);
+    writeFileSync(join(f.presets, "old-profile.json"), JSON.stringify({ displayName: "Legacy Profile", values: { warmth: 5 } }));
+    assert.equal((await invoke(f, "use", "old-profile")).status, 0);
+    const outside = join(f.home, "outside.json");
+    writeFileSync(outside, "{}");
+    symlinkSync(outside, join(f.custom, "old-profile.json"));
+    assert.equal((await invoke(f, "use", "old-profile")).status, 1);
+    const output: string[] = [];
+    const original = process.stdout.write;
+    process.stdout.write = ((text: string) => (output.push(text), true)) as typeof process.stdout.write;
+    try {
+      assert.equal(await run(["reset"], f.env, f.home, false, false), 0);
+    } finally { process.stdout.write = original; }
+    assert.doesNotMatch(output.join(""), /tonedial use old-profile/);
+  } finally { f.dispose(); }
+});
+
 for (const preferred of ["parent-link", "file-link", "oversized"] as const) {
   test(`an unwitnessable ${preferred} keeps readonly fallback available and blocks preset mutation before writes or editor launch`, async () => {
     const f = fixture();

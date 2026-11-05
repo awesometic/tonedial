@@ -26,10 +26,76 @@ export const RELEASE_MAX_BYTES = 16 * 1024 * 1024;
 export const RELEASE_TIMEOUT_MS = 30_000;
 
 const TARBALL_BOUNDS = { maxBytes: RELEASE_MAX_BYTES, timeoutMs: RELEASE_TIMEOUT_MS };
-/** Metadata is a small JSON document. The tarball's cap here would hand `JSON.parse` 16 MB. */
-const METADATA_BOUNDS = { maxBytes: 1024 * 1024, timeoutMs: RELEASE_TIMEOUT_MS };
+/**
+ * Metadata is a small JSON document. The tarball's cap here would hand `JSON.parse` 16 MB, and a
+ * check that only decides whether to offer an update should not keep a person waiting as long as a
+ * download may. The npm and curl routes share this bound.
+ * shortcut: the whole packument must fit (about 43 KB at 0.1.11); raise the cap if a long release history outgrows it.
+ */
+const METADATA_BOUNDS = { maxBytes: 1024 * 1024, timeoutMs: 10_000 };
 
-export type Release = { version: string; tarball: string; integrity: string };
+/** The registry's latest release and the publication times it reports, `null` where it vouches for none. */
+export type LatestVersion = { version: string; publishedAt: string | null; installedPublishedAt: string | null };
+export type Release = LatestVersion & { tarball: string; integrity: string };
+
+const SEMVER = /^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/;
+
+/** A displayable release label, not arbitrary responder text. */
+function releaseVersion(value: unknown): string | null {
+  const match = typeof value === "string" && value.length <= 256 && !/[\p{Cc}]/u.test(value) ? SEMVER.exec(value) : null;
+  return match && !match[1]?.split(".").some(identifier => /^0\d+$/.test(identifier)) ? value as string : null;
+}
+
+/** The registry's `time` entry for one version, normalized; anything else is unknown. */
+function publishedAt(time: unknown, version: string): string | null {
+  const value = time !== null && typeof time === "object" && Object.hasOwn(time, version) ? (time as Record<string, unknown>)[version] : undefined;
+  const date = typeof value === "string" && /^\d{4}-\d{2}-\d{2}T/.test(value) ? new Date(value) : null;
+  return date === null || Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
+function latestVersion(version: unknown, time: unknown, installed: string): LatestVersion | null {
+  const latest = releaseVersion(version);
+  return latest === null ? null : { version: latest, publishedAt: publishedAt(time, latest), installedPublishedAt: publishedAt(time, installed) };
+}
+
+/** Semver precedence: numeric fields, then a release above its prereleases; build metadata is ignored. */
+export function compareVersions(left: string, right: string): number {
+  const parse = (version: string) => {
+    const [core, pre] = version.replace(/\+.*$/s, "").split(/-(.*)/s);
+    return { core: core!.split(".").map(Number), pre: pre === undefined ? [] : pre.split(".") };
+  };
+  const a = parse(left);
+  const b = parse(right);
+  for (let index = 0; index < 3; index++) if (a.core[index] !== b.core[index]) return a.core[index]! - b.core[index]!;
+  if (a.pre.length === 0 || b.pre.length === 0) return b.pre.length - a.pre.length;
+  for (let index = 0; index < Math.max(a.pre.length, b.pre.length); index++) {
+    const x = a.pre[index];
+    const y = b.pre[index];
+    if (x === undefined || y === undefined) return x === undefined ? -1 : 1;
+    if (x === y) continue;
+    const xNumeric = /^\d+$/.test(x);
+    const yNumeric = /^\d+$/.test(y);
+    if (xNumeric && yNumeric) return Number(x) - Number(y);
+    if (xNumeric !== yNumeric) return xNumeric ? -1 : 1;
+    return x < y ? -1 : 1;
+  }
+  return 0;
+}
+
+/** npm's latest release under the user's own npm configuration, or `null` when npm cannot say. */
+export function npmLatest(env: NodeJS.ProcessEnv, installed: string): LatestVersion | null {
+  const executable = onPath("npm", env);
+  if (executable === null) return null;
+  const result = spawnSync(resolve(executable), ["view", "tonedial", "version", "time", "--json"],
+    { env, encoding: "utf8", timeout: METADATA_BOUNDS.timeoutMs, maxBuffer: METADATA_BOUNDS.maxBytes, stdio: ["ignore", "pipe", "ignore"] });
+  if (result.status !== 0) return null;
+  try {
+    const raw = JSON.parse(result.stdout) as { version?: unknown; time?: unknown } | null;
+    return latestVersion(raw?.version, raw?.time, installed);
+  } catch {
+    return null;
+  }
+}
 
 /** The version the package on disk declares, or `null` where it cannot be read. */
 export function installedVersion(paths: Pick<Paths, "lib">): string | null {
@@ -234,11 +300,12 @@ function validateArchive(archive: string, t: Messages): void {
   }
 }
 
-/** What the registry says the current release is. */
-export async function latestRelease(registry: string, t: Messages): Promise<Release> {
+/** What the registry's packument says the current release is, with publication times. */
+export async function latestRelease(registry: string, t: Messages, installed: string): Promise<Release> {
   const source = urlIdentity(registry, t);
-  const body = await getBounded(`${registry}/tonedial/latest`, METADATA_BOUNDS, t);
-  let raw: { version?: unknown; dist?: { tarball?: unknown; integrity?: unknown } };
+  // The full packument, not `/tonedial/latest`: only it carries the `time` map.
+  const body = await getBounded(`${registry}/tonedial`, METADATA_BOUNDS, t);
+  let raw: { "dist-tags"?: { latest?: unknown }; versions?: Record<string, { dist?: { tarball?: unknown; integrity?: unknown } }>; time?: unknown };
   try {
     raw = JSON.parse(decodeUtf8(body, t)) as typeof raw;
   } catch (cause) {
@@ -249,16 +316,12 @@ export async function latestRelease(registry: string, t: Messages): Promise<Rele
   if (raw === null || typeof raw !== "object") {
     throw new ConfigError(t.config.fetchFailed(source, t.update.notAPackage));
   }
-  const { version, dist } = raw;
-  // This is a displayable release label, not arbitrary responder text or version ordering.
-  const versionMatch = typeof version === "string" && version.length <= 256 && !/[\p{Cc}]/u.test(version)
-    ? /^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/.exec(version)
-    : null;
-  if (typeof version !== "string" || versionMatch === null || versionMatch[1]?.split(".").some(identifier => /^0\d+$/.test(identifier)) ||
-      typeof dist?.tarball !== "string" || typeof dist.integrity !== "string") {
+  const latest = latestVersion(raw["dist-tags"]?.latest, raw.time, installed);
+  const dist = latest === null ? undefined : raw.versions?.[latest.version]?.dist;
+  if (latest === null || typeof dist?.tarball !== "string" || typeof dist.integrity !== "string") {
     throw new ConfigError(t.config.fetchFailed(source, t.update.notAPackage));
   }
-  return { version, tarball: dist.tarball, integrity: dist.integrity };
+  return { ...latest, tarball: dist.tarball, integrity: dist.integrity };
 }
 
 /**

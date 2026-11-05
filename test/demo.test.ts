@@ -76,7 +76,8 @@ for (const scene of SCENES) {
       for (const axis of AXIS_ORDER) {
         assert.ok(plain.includes(axis), `${axis} is missing from ${scene.id}/${language} — ${RETAKE}`);
       }
-      for (const group of ["form", "target", "behaviour"]) {
+      // The group names are interface copy, so each language shows its own.
+      for (const group of Object.values(catalogue(language).cli.artifact.axisGroups)) {
         assert.ok(plain.includes(group), `the ${group} label is gone from ${scene.id}/${language} — ${RETAKE}`);
       }
       assert.match(plain, /TONE\.md [\d,]+(?: chars|자|文字| 字符| caracteres)\n/, `the character count changed in ${scene.id}/${language} — ${RETAKE}`);

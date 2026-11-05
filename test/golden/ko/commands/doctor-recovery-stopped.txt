@@ -1,18 +1,18 @@
 status: 0
---- stdout --- [bytes=509; endsWithNewline=true]
+--- stdout --- [bytes=595; endsWithNewline=true]
 ToneDial · doctor
 
-  검사 범위: 전역
+  전역 범위(모든 프로젝트 공유)
   <ROOT>
 
   진행 중이거나 복구가 필요한 작업이 있습니다. 이번 실행에서는 파일을 바꾸지
   않았습니다.
   ffffffffffffffffffffffffffffffff  미완료
 
-  앱 복구를 이어가려면:
+  현재 설정으로 복구를 마치려면 이어서 실행하세요:
   tonedial doctor --fix --from-operation ffffffffffffffffffffffffffffffff --global
 
-  이전 파일로 되돌리려면:
+  변경을 취소하고 시작 전 파일로 되돌리려면:
   tonedial doctor --fix --rollback ffffffffffffffffffffffffffffffff
 
   전체 내용 확인:

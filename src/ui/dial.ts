@@ -76,7 +76,7 @@ export function dial(
         ...wrap(`1  ${hint.low}`, budget),
         ...wrap(`5  ${hint.high}`, budget),
       ];
-      const gauges = [gaugeHeader(paint, t), ...gaugeBlock(axes, paint, cursor)];
+      const gauges = [gaugeHeader(paint, t), ...gaugeBlock(axes, paint, t, cursor)];
       if (width >= 119) {
         body = [...titleLines, ""];
         const column = Math.max(...gauges.map((line) => maxCells(stripVTControlCharacters(line))));

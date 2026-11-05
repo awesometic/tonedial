@@ -17,7 +17,7 @@ import { catalogue } from "../src/core/i18n.ts";
 const EN = catalogue("en").cli;
 import { cpSync, mkdtempSync, rmSync, readFileSync, writeFileSync, mkdirSync, existsSync, lstatSync, symlinkSync, chmodSync, statSync, readdirSync, readlinkSync, realpathSync, renameSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
-import { dirname, join, relative, sep } from "node:path";
+import { basename, dirname, join, relative, sep } from "node:path";
 
 import { run } from "../src/cli.ts";
 import { parseConfig, serializeConfig } from "../src/core/config.ts";
@@ -42,7 +42,8 @@ let scratch = "";
 let gatePaths: Paths;
 
 beforeEach(() => {
-  scratch = mkdtempSync(join(tmpdir(), "tonedial-wiring-"));
+  // Physical, so a preview needs no redirect row beside every path; a symlinked parent has its own test.
+  scratch = realpathSync(mkdtempSync(join(tmpdir(), "tonedial-wiring-")));
   gatePaths = resolvePaths({ TONEDIAL_HOME: join(scratch, "gate-state") });
 });
 
@@ -264,7 +265,7 @@ test("disconnect receipts report removal and no-op separately while retaining sh
   const retained = readFileSync(join(home, "config.json"));
   out = [];
   assert.equal(await cli("unwire", "claude", "--here"), 0, err.join(""));
-  assert.match(collapsed(stdout()), /Claude Code: already disconnected/);
+  assert.match(collapsed(stdout()), /Claude Code: not connected · nothing to change/);
   assert.deepEqual(readFileSync(join(home, "config.json")), retained);
   assert.equal(existsSync(join(home, "TONE.md")), true);
   assert.equal(existsSync(join(home, "presets")), true);
@@ -374,9 +375,9 @@ test("legacy wiring writes through a symlink instead of replacing it", async () 
   assert.equal(readFileSync(real, "utf8"), "# from my dotfiles\n", "restored byte for byte");
 });
 
-test("--dry-run shows the diff and writes nothing", async () => {
+test("--dry-run shows the change and writes nothing", async () => {
   // Native setup no longer writes this delivery shape. Exercise the generic diff contract directly:
-  // an existing host file shows its changed lines, while the gate still applies no bytes.
+  // an existing host file is named as modified, its lines are verbose-only, and no bytes land.
   const target = agentFile("claude");
   mkdirSync(dirname(target), { recursive: true });
   writeFileSync(target, "# mine\n");
@@ -393,39 +394,70 @@ test("--dry-run shows the diff and writes nothing", async () => {
     ui: palette("never", {}, false),
   });
   const preview = result.lines.join("\n");
-  assert.match(preview, /\+ <!-- tonedial:begin -->/, "a modification shows its added lines");
+  assert.ok(preview.includes(`\n  ${dirname(target)}\n    ${basename(target)}  ${EN.wiring.modifiedFile}`), preview);
   assert.equal(result.reason, "dry-run");
+  const verbose = await gate([change], { paths: gatePaths, dryRun: true, auto: true, verbose: true, t: EN, ui: palette("never", {}, false) });
+  assert.match(verbose.lines.join("\n"), /\+ <!-- tonedial:begin -->/, "a verbose modification shows its added lines");
   assert.equal(readFileSync(target, "utf8"), "# mine\n", "dry-run leaves the host untouched");
 });
 
-test("compact approval previews bound key lines while verbose shows the complete change", async () => {
+test("compact previews name each root once and list its files relative to it; verbose keeps the diff", async () => {
   const target = join(scratch, "bounded-preview.txt");
   const before = "one\ntwo\nthree\nfour\nfive\nsix\n";
   const after = "alpha\nbeta\ngamma\ndelta\nepsilon\nzeta\n";
   writeFileSync(target, before);
   const change = planChange(target, () => after, EN);
-  const second = join(scratch, "second-preview.txt");
+  const second = join(scratch, "nested", "second-preview.txt");
+  const state = planChange(join(gatePaths.root, "config.json"), () => "{}\n", EN);
   const changes = [change, planChange(second, () => "new content\n", EN)];
-  const compact = await gate(changes, {
-    paths: gatePaths,
-    dryRun: true, auto: true, t: EN, ui: palette("never", {}, false),
-  });
+  const options = { paths: gatePaths, dryRun: true, auto: true, t: EN, ui: palette("never", {}, false),
+    agent: { root: scratch, live: false }, finalChanges: [state],
+    describe: { [state.path]: "(records codex for this project)" } };
+  const compact = await gate(changes, options);
   const compactPreview = compact.lines.join("\n");
-  assert.match(compactPreview, /\+6.*-6/);
-  assert.match(compactPreview, /- one/, "compact output carries a representative removed line");
-  assert.match(compactPreview, /\+ alpha/, "compact output carries a representative added line");
+  assert.ok(compactPreview.includes(EN.wiring.changeCount(3)), "the approval scope has no change count");
+  // State lives under its own root; the agent root's own label and path cover the rest.
+  assert.ok(compactPreview.includes([
+    "", `  ${EN.wiring.rootProject}`, `  ${scratch}`,
+    `    bounded-preview.txt  ${EN.wiring.modifiedFile}`,
+    `    ${join("nested", "second-preview.txt")}  ${EN.wiring.newFile}`,
+    "", `  ${EN.wiring.rootState}`, `  ${gatePaths.root}`,
+    "    config.json  (records codex for this project)",
+  ].join("\n")), compactPreview);
+  assert.equal(compactPreview.split(scratch).length - 1, 2, "each root is printed once");
+  assert.doesNotMatch(compactPreview, /- one|\+ alpha|\+6|lines/, "excerpts and line counts are verbose-only");
   assert.match(compactPreview, new RegExp(EN.wiring.previewMore));
-  assert.doesNotMatch(compactPreview, /zeta/, "compact output is bounded");
-  assert.ok(compactPreview.includes(EN.wiring.changeCount(2)), "the approval scope has no change count");
-  assert.ok(compactPreview.includes(`\n\n  ${second}\n`), "separate files run together");
 
-  const verbose = await gate(changes, {
-    paths: gatePaths,
-    dryRun: true, auto: true, verbose: true, t: EN, ui: palette("never", {}, false),
-  });
-  assert.match(verbose.lines.join("\n"), /\+ zeta/, "verbose output carries every changed line");
+  const verbose = await gate(changes, { ...options, verbose: true });
+  const verbosePreview = verbose.lines.join("\n");
+  assert.match(verbosePreview, /\+ zeta/, "verbose output carries every changed line");
+  assert.ok(verbosePreview.includes(`\n  ${target}\n`), "verbose keeps each file's own path");
   assert.deepEqual(verbose.diff, compact.diff, "human verbosity does not alter the structured diff");
   assert.equal(readFileSync(target, "utf8"), before, "both dry runs leave the file unchanged");
+});
+
+test("a caller that already printed the agent root leaves its path out of the compact preview only", async () => {
+  const actualDir = join(scratch, "external-config");
+  mkdirSync(actualDir);
+  symlinkSync(actualDir, join(scratch, "linked-config"));
+  const plain = planChange(join(scratch, "plain-preview.txt"), () => "one\n", EN);
+  const redirected = planChange(join(scratch, "linked-config", "hooks.json"), () => "{}\n", EN);
+  const state = planChange(join(gatePaths.root, "config.json"), () => "{}\n", EN);
+  const options = { paths: gatePaths, dryRun: true, auto: true, t: EN, ui: palette("never", {}, false),
+    agent: { root: scratch, live: false }, finalChanges: [state] };
+  const lines = async (extra: object) => (await gate([plain, redirected], { ...options, ...extra })).lines;
+
+  // The heading stays and its rows are relative to the root the caller printed above.
+  const shown = await lines({ agentRootShown: true });
+  assert.ok(shown.join("\n").includes(`\n  ${EN.wiring.rootProject}\n    plain-preview.txt  ${EN.wiring.newFile}\n`), shown.join("\n"));
+  assert.ok(!shown.includes(`  ${scratch}`), "the agent root is not printed again");
+  // ToneDial's own root is not the caller's to have printed, and a row that really goes somewhere
+  // else still says where.
+  assert.ok(shown.includes(`  ${gatePaths.root}`));
+  assert.ok(shown.includes(`      → ${join(realpathSync(actualDir), "hooks.json")}`), shown.join("\n"));
+  // Without the option the root is printed as before, and verbose output ignores the option.
+  assert.ok((await lines({})).includes(`  ${scratch}`));
+  assert.deepEqual(await lines({ verbose: true, agentRootShown: true }), await lines({ verbose: true }));
 });
 
 test("approval previews identify final-newline-only changes without altering structured diffs", async () => {
@@ -544,10 +576,11 @@ test("doctor names what it checked, what it could not, and where it looked", asy
     { TONEDIAL_HOME: home, TONEDIAL_AGENT_HOME: join(work, "output"), PATH: bin },
     work, false, false,
   ), 0);
-  assert.match(stdout(), /Application: healthy/);
+  assert.ok(stdout().includes(`  ${EN.doctor.healthy}\n`), "the headline is the one health statement");
+  assert.ok(!stdout().includes(EN.doctor.applicationHealth), "a healthy install shows no ToneDial files attention row");
+  assert.ok(!stdout().includes(EN.doctor.connectionHealth), "and no connection files attention row");
   assert.ok(stdout().includes(EN.doctor.hookGroupUnknown(["Claude Code", "Antigravity IDE/Desktop", "Codex CLI"])));
   assert.equal(stdout().split(EN.doctor.hookGroupHeading).length - 1, 1, "unconnected agents share one group");
-  assert.ok(!stdout().includes(EN.doctor.connectionHealth(false)), "no connection summary without a configured integration");
   assert.ok(!stdout().includes(EN.doctor.hookSettingScope), "no hook-inspection caveat without a managed hook");
   assert.doesNotMatch(stdout(), /App activation is unverified/);
   assert.doesNotMatch(stdout(), new RegExp(EN.doctor.contextCurrent), "healthy check detail is verbose");
@@ -852,8 +885,6 @@ test("the diff is printed before the question, not after the write", async () =>
   // to something the user could not yet see: `gate` buffered its diff into the command's lines,
   // which reach stdout only after `run()` has already resolved.
   const order: string[] = [];
-  // An existing target, so what the gate prints is a real diff. A creation shows its path and a
-  // line count instead, which would make this assert on a body that is deliberately absent.
   writeFileSync(join(scratch, "TARGET.md"), "old content\n");
   const change = planChange(join(scratch, "TARGET.md"), () => "new content\n", EN);
   const result = await gate([change], {
@@ -862,7 +893,7 @@ test("the diff is printed before the question, not after the write", async () =>
     dryRun: false,
     auto: false,
     ui: palette("never", {}, false),
-    out: (text) => order.push(`diff:${text.includes("new content")}`),
+    out: (text) => order.push(`diff:${text.includes(`TARGET.md  ${EN.wiring.modifiedFile}`)}`),
     ask: async () => (order.push("ask"), "no"),
     interactive: () => true,
   });
@@ -886,7 +917,7 @@ test("a new file under a symlinked parent previews its actual destination", asyn
     t: EN, dryRun: false, auto: false, ui: palette("never", {}, false),
     out: (text) => { preview += text; },
     ask: async () => {
-      assert.ok(preview.includes(`  ${path}\n  → ${actual}\n`));
+      assert.ok(preview.includes(`  ${linkedDir}\n    hooks.json  ${EN.wiring.newFile}\n      → ${actual}\n`), preview);
       assert.equal(existsSync(actual), false, "approval must precede creation");
       return "yes";
     },
@@ -1533,9 +1564,9 @@ test("a marker in the artifact no longer reaches any legacy wired file", async (
   assert.equal(await cli("eject", "--here"), 0);
 });
 
-test("a file being created is summarized by default and expanded only when verbose", async () => {
-  // Every line in a created file is an addition. The default still needs representative evidence
-  // before approval, while verbose owns the complete body and structural wrappers add no signal.
+test("a file being created is named by default and expanded only when verbose", async () => {
+  // Every line in a created file is an addition. The default names the file under its folder;
+  // verbose owns the complete body.
   const target = agentFile("claude");
   const change = planChange(
     target,
@@ -1552,13 +1583,8 @@ test("a file being created is summarized by default and expanded only when verbo
     ui: palette("never", {}, false),
   });
   const preview = result.lines.join("\n");
-  assert.match(preview, /\(new file\)/, "it says a file is being created");
-  assert.ok(preview.includes(target), "and names where");
-  assert.match(preview, /\d+ lines/, "and how big it is");
-  assert.match(preview, /\+ @\/state\/tone\.md/, "a representative addition remains visible");
-  assert.match(preview, /\+ Tone changes style only\./, "a second meaningful addition remains visible");
-  assert.doesNotMatch(preview, /later unique instruction/, "the compact excerpt stays bounded");
-  assert.doesNotMatch(preview, /tonedial:begin/, "structural wrappers add no approval evidence");
+  assert.ok(preview.includes(`\n  ${dirname(target)}\n    ${basename(target)}  ${EN.wiring.newFile}`), preview);
+  assert.doesNotMatch(preview, /\d+ lines|^ {2}\+ /m, "line counts and excerpts are verbose-only");
   assert.equal(existsSync(target), false, "the dry-run did not create the file");
 
   const verbose = await gate([change], {
@@ -1652,7 +1678,7 @@ test("doctor --fix leaves an installed-but-unselected tool unwired", async () =>
   assert.deepEqual(readFileSync(join(home, "config.json")), config);
 });
 
-test("legacy owned wiring ejects while retaining empty host containers", async () => {
+test("legacy owned wiring ejects and prunes only the empty containers its setup created", async () => {
   // `init` wires through the same gate but was not recording what it created, so its wiring
   // survived an eject that promises tracelessness. Provenance has to be written by whoever
   // writes the file, at the only moment it is knowable.
@@ -1664,8 +1690,9 @@ test("legacy owned wiring ejects while retaining empty host containers", async (
   assert.equal(await cli("eject", "--here"), 0);
   assert.equal(existsSync(agentFile("claude")), false);
   assert.equal(existsSync(agentFile("codex")), false);
-  assert.deepEqual(readdirSync(join(work, "output", ".agents", "skills")), [], "the shared skill entry is gone");
-  assert.deepEqual(readdirSync(join(work, "output", ".claude", "skills")), [], "the Claude alias is gone");
+  // Setup created both skill containers whole, so nothing of them remains once they are empty.
+  assert.equal(existsSync(join(work, "output", ".agents")), false, "the shared skill entry and its containers are gone");
+  assert.equal(existsSync(join(work, "output", ".claude")), false, "the Claude alias and its containers are gone");
 });
 
 // ── the skill, the command, and the PATH line ────────────────────────────────────────────
@@ -2193,7 +2220,7 @@ test("a live destination needs approval, and refuses when there is no terminal t
   // will not take. It holds at every destination now; the home is the one with the most at stake.
   err = [];
   assert.equal(await liveCli("init", "--lang", "en", "--tools", "none", "--global"), 1);
-  assert.ok(collapsed(stderr()).includes(collapsed(EN.wiring.needsApproval)));
+  assert.ok(collapsed(stderr()).includes(collapsed(EN.wiring.needsApproval("tonedial init --lang en --tools none --global"))));
   assert.equal(existsSync(liveHome(".claude")), false, "and it wrote nothing on the way to refusing");
 });
 
@@ -2518,7 +2545,7 @@ test("approval previews escape path and content controls before asking while str
             && character !== "\n" && character !== "\u200c" && character !== "\u200d");
           assert.deepEqual(controls, [], `${presentation}: ${visible}`);
           assert.match(visible, /\\u\{1b\}\[2J\\u\{a\}\\u\{202e\}\.md/, "the target's controls were not visibly escaped");
-          if (presentation !== "recovery") {
+          if (presentation === "verbose") {
             assert.match(visible, /new\\u\{1b\}\[2J\\u\{202e\}/, "added content was not visibly escaped");
             assert.ok(visible.includes("👩‍💻"), "preview sanitization broke an emoji joiner");
           }

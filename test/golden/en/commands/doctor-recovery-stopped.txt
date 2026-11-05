@@ -1,18 +1,18 @@
 status: 0
---- stdout --- [bytes=461; endsWithNewline=true]
+--- stdout --- [bytes=528; endsWithNewline=true]
 ToneDial · doctor
 
-  Inspection scope: global
+  Global scope (all projects)
   <ROOT>
 
   An operation is active or needs recovery. No files were changed by this
   command.
   ffffffffffffffffffffffffffffffff  pending
 
-  To continue the application repair:
+  To finish the repair with your current settings, continue it:
   tonedial doctor --fix --from-operation ffffffffffffffffffffffffffffffff --global
 
-  To restore the previous files:
+  To undo its changes and go back to the files from before it started:
   tonedial doctor --fix --rollback ffffffffffffffffffffffffffffffff
 
   Full details:

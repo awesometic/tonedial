@@ -61,7 +61,7 @@ test("legacy mutation gates run before editor launch or import network access", 
     for (const args of mutations) {
       const result = await invoke(args);
       assert.equal(result.code, 1, args.join(" "));
-      assert.match(result.value.error, /application recovery.*legacy layout/);
+      assert.match(result.value.error, /file recovery.*legacy layout/);
       assert.match(result.value.error, /tonedial doctor --fix/);
       assert.equal(readFileSync(paths.config, "utf8"), config);
       assert.equal(readFileSync(join(paths.root, "tone.md"), "utf8"), artifact);
@@ -102,11 +102,11 @@ test("read-only and package-only commands do not initialize fresh state", async 
 });
 
 test("disconnecting an uninitialized scope does not create config or context", async () => {
-  for (const command of ["unwire", "eject"]) {
-    const result = await invoke([command, "--here", "--auto"]);
+  for (const command of [["unwire", "codex"], ["eject"]]) {
+    const result = await invoke([...command, "--here", "--auto"]);
     assert.equal(result.code, 0, JSON.stringify(result.value));
     assert.equal(result.value.applied, false);
-    assert.deepEqual(readdirSync(scratch), [], command);
+    assert.deepEqual(readdirSync(scratch), [], command.join(" "));
   }
 });
 
@@ -144,13 +144,27 @@ test("state-only setup preserves unselected legacy imports without treating them
   }
 });
 
+test("a layout refusal names the scope a plain doctor inspects, which a non-connection command does not choose", async () => {
+  const paths = resolvePaths(env);
+  mkdirSync(paths.root);
+  writeFileSync(paths.config, serializeConfig(defaultConfig()));
+  writeFileSync(join(paths.root, "tone.md"), compile(toCompileInput(defaultConfig())));
+  const refused = await invoke(["set", "warmth=2"]);
+  assert.equal(refused.code, 1);
+  const lines = refused.value.error.split("\n");
+  assert.ok(lines.includes("tonedial doctor --fix --global"), refused.value.error);
+  assert.doesNotMatch(refused.value.error, /--here/, "the working folder may be the home, where a project repair refuses");
+  const wire = await invoke(["wire", "codex", "--here", "--auto"]);
+  assert.ok(wire.value.error.split("\n").includes("tonedial doctor --fix --here"), wire.value.error);
+});
+
 test("a generated guide without any recoverable settings requires a source choice before replacement", async () => {
   const paths = resolvePaths(env);
   mkdirSync(paths.root);
   writeFileSync(paths.agents, "foreign guide\n");
   const result = await invoke(["init", "--here", "--tools", "none", "--auto"]);
   assert.equal(result.code, 1);
-  assert.equal(result.value.error, catalogue("en").cli.recovery.sourceRequired);
+  assert.equal(result.value.error, catalogue("en").cli.recovery.sourceRequired("tonedial doctor --fix --here"));
   assert.deepEqual(readdirSync(paths.root), ["AGENTS.md"]);
   assert.equal(readFileSync(paths.agents, "utf8"), "foreign guide\n");
 });

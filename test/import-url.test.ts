@@ -307,22 +307,26 @@ test("remote failures omit URL private components and reflected remote data in b
   assert.equal(existsSync(join(paths().presets, "custom", "remote.json")), false);
 });
 
+/** A registry packument whose `latest` tag names one version. */
+const packument = (version: string, dist: unknown) => JSON.stringify({ "dist-tags": { latest: version }, versions: { [version]: { dist } } });
+
 test("registry diagnostics use the origin without reflecting metadata or transport errors", async () => {
   const registry = "https://PRIVATE_URL:PRIVATE_URL@registry.invalid/PRIVATE_URL?token=PRIVATE_URL#PRIVATE_URL";
-  for (const reply of [{ body: "PRIVATE_BODY invalid JSON" }, { body: "null" }, { body: JSON.stringify({ dist: "PRIVATE_BODY" }) }, { error: new Error("PRIVATE_BODY " + registry) }]) {
+  for (const reply of [{ body: "PRIVATE_BODY invalid JSON" }, { body: "null" }, { body: packument("1.0.0", "PRIVATE_BODY") },
+    { body: JSON.stringify({ "dist-tags": { latest: "1.0.0" }, versions: { "1.0.1": { dist: { tarball: "https://packages.invalid/PRIVATE_BODY", integrity: "sha512-dummy" } } } }) }, { error: new Error("PRIVATE_BODY " + registry) }]) {
     const asked: string[] = [];
-    await withFetch({ ...reply, asked }, () => assert.rejects(() => latestRelease(registry, EN), (cause: unknown) => {
+    await withFetch({ ...reply, asked }, () => assert.rejects(() => latestRelease(registry, EN, "0.0.0"), (cause: unknown) => {
       assert.ok(cause instanceof Error);
       assert.match(cause.message, /https:\/\/registry\.invalid/);
       assert.doesNotMatch(cause.message, /PRIVATE_URL|PRIVATE_BODY/);
       if ("error" in reply) assert.equal(cause.cause, reply.error, "retain the original failure internally");
       return true;
     }));
-    assert.deepEqual(asked, [registry + "/tonedial/latest"]);
+    assert.deepEqual(asked, [registry + "/tonedial"]);
   }
   out = [];
   err = [];
-  await withFetch({ body: JSON.stringify({ version: "9.9.9", dist: { tarball: "https://packages.invalid/PRIVATE_URL", integrity: "sha512-dummy" } }) }, async () => {
+  await withFetch({ body: packument("9.9.9", { tarball: "https://packages.invalid/PRIVATE_URL", integrity: "sha512-dummy" }) }, async () => {
     assert.equal(await run(["update", "--dry-run"], {
       HOME: home, TONEDIAL_HOME: join(home, "state"), TONEDIAL_AGENT_HOME: join(home, "agents"), TONEDIAL_REGISTRY: registry, TONEDIAL_INSTALL_SHAPE: "curl",
     }, join(home, "project"), false, false), 0);
@@ -335,7 +339,7 @@ test("registry metadata cannot turn an invalid release version into displayed pr
   for (const json of [false, true]) {
     out = [];
     err = [];
-    await withFetch({ body: JSON.stringify({ version: "https://example.invalid/PRIVATE_BODY\nPRIVATE_URL", dist: { tarball: "https://packages.invalid/package.tgz", integrity: "sha512-dummy" } }) }, async () => {
+    await withFetch({ body: packument("https://example.invalid/PRIVATE_BODY\nPRIVATE_URL", { tarball: "https://packages.invalid/package.tgz", integrity: "sha512-dummy" }) }, async () => {
       assert.equal(await run(["update", "--dry-run", ...(json ? ["--json"] : [])], {
         HOME: home, TONEDIAL_HOME: join(home, "state"), TONEDIAL_AGENT_HOME: join(home, "agents"), TONEDIAL_REGISTRY: "https://registry.invalid", TONEDIAL_INSTALL_SHAPE: "curl",
       }, join(home, "project"), false, false), 1);
@@ -348,8 +352,8 @@ test("registry metadata cannot turn an invalid release version into displayed pr
     assert.doesNotMatch(out.join("") + err.join(""), /PRIVATE_URL|PRIVATE_BODY/);
   }
   const version = "1.2.3-alpha.1+build.01";
-  await withFetch({ body: JSON.stringify({ version, dist: { tarball: "https://packages.invalid/package.tgz", integrity: "sha512-dummy" } }) }, async () => {
-    assert.equal((await latestRelease("https://registry.invalid", EN)).version, version, "valid prerelease/build labels remain accepted");
+  await withFetch({ body: packument(version, { tarball: "https://packages.invalid/package.tgz", integrity: "sha512-dummy" }) }, async () => {
+    assert.equal((await latestRelease("https://registry.invalid", EN, "0.0.0")).version, version, "valid prerelease/build labels remain accepted");
   });
 });
 

@@ -1,28 +1,27 @@
 status: 0
---- stdout --- [bytes=1271; endsWithNewline=true]
+--- stdout --- [bytes=1216; endsWithNewline=true]
 ToneDial · show · Caring Brother                          TONE.md 4,918 chars
 
-                         Current   ToneDial default · ! risky tone
-  form      formality    ▮▯▯▯▯  1   *3
-            verbosity    ▮▮▮▮▯  4   *3
-            profanity    ▮▮▯▯▯  2   *1
-            playfulness  ▮▮▮▯▯  3    3
-  target    critique     ▮▮▯▯▯  2   *3
-            flattery     ▮▯▯▯▯  1    1
-            warmth       ▮▮▮▮▮  5   *3
-  behaviour conviction   ▮▮▮▮▯  4   *3
-            care         ▮▮▮▮▮  5   *3
-            compliance   ▮▮▮▯▯  3    3
-            refusal      ▮▯▯▯▯  1    1
-            bravado      ▮▯▯▯▯  1    1
+                        Current   Default
+  form     formality    ▮▯▯▯▯  1   *3
+           verbosity    ▮▮▮▮▯  4   *3
+           profanity    ▮▮▯▯▯  2   *1
+           playfulness  ▮▮▮▯▯  3    3
+  target   critique     ▮▮▯▯▯  2   *3
+           flattery     ▮▯▯▯▯  1    1
+           warmth       ▮▮▮▮▮  5   *3
+  behavior conviction   ▮▮▮▮▯  4   *3
+           care         ▮▮▮▮▮  5   *3
+           compliance   ▮▮▮▯▯  3    3
+           refusal      ▮▯▯▯▯  1    1
+           bravado      ▮▯▯▯▯  1    1
 
   Settings
-  agent calls itself your big brother · calls you little sibling
+  agent calls itself "your big brother" · calls you "little sibling"
   fictional agent role: A caring older brother who helps his sibling through
   problems. Familiar expressions include 'hey, little sibling' and 'your big
-  brother has your back'. (151/200)
+  brother has your back'.
   user context: A younger sibling sharing problems with an older brother.
-  (57/200)
   no safeword · register plain (non-honorific) · address frequency auto
   Interface language en
   Connections: none

@@ -2,10 +2,10 @@
 
 [English](./EXAMPLES.md) | [한국어](./EXAMPLES.ko.md) | [日本語](./EXAMPLES.ja.md) | **简体中文** | [Español](./EXAMPLES.es.md)
 
-ToneDial 的 7 个内置配置回答了同一个函数命名问题，内容来自实际 Codex 对话。
+ToneDial 的 7 个内置预设回答了同一个函数命名问题，内容来自实际 Codex 对话。
 回复保留原文；图片是整理后的对话记录，不是截图。
 
-[在 README 中比较 Codex 默认设置和完整的 `vibe-coder` 配置。](../README.zh.md#同一模型更精简的计划)
+[在 README 中比较 Codex 默认设置和完整的 `vibe-coder` 预设。](../README.zh.md#同一模型更精简的计划)
 
 ## 相同的问题
 

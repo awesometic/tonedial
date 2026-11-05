@@ -5,18 +5,20 @@ import { existsSync, readFileSync } from "node:fs";
 import { stripVTControlCharacters } from "node:util";
 
 import type { CommandResult, Ctx } from "../cli.ts";
-import { AXIS_DEFAULT, AXIS_GROUP, AXIS_KIND, AXIS_RISK_FROM, riskyAxes } from "../core/anchors.ts";
+import { AXIS_DEFAULT, AXIS_GROUP, AXIS_KIND, AXIS_ORDER, AXIS_RISK_FROM, riskyAxes } from "../core/anchors.ts";
 import { check as checkCombos, PERSONA_DESCRIPTION_MAX } from "../core/combos.ts";
-import { ConfigError, isConfigV2, settingValues } from "../core/config.ts";
+import { PresetNotFound, settingValues } from "../core/config.ts";
 import { compile, measure } from "../core/compile.ts";
-import { withPreset, matchesPreset, inspectPresetLibrary, resolvePreset } from "../core/presets.ts";
+import { withPreset, inspectPresetLibrary, resolvePreset } from "../core/presets.ts";
 import { toCompileInput } from "../core/resolve.ts";
 import { inspectContextLayout } from "../core/seeds.ts";
+import { AGENT_TOOLS } from "../core/paths.ts";
 import { catalogue, isLanguage, type Messages } from "../core/i18n.ts";
 import { explainBlock, gaugeBlock, gaugeHeader } from "../ui/gauge.ts";
-import { planConfig } from "./compile.ts";
-import { artifactSize, combination, humanText, isCopyableLine, nextStep, riskWarnings } from "../ui/format.ts";
+import { planConfig, unsavedEdits } from "./compile.ts";
+import { artifactSize, combination, humanText, isCopyableLine, nextStep, riskWarnings, scopeToken } from "../ui/format.ts";
 import { maxCells, truncate, wrap } from "../ui/width.ts";
+import { connections, riders, type Connection } from "../wiring/scopes.ts";
 import { inspectContextConsumers } from "../wiring/targets.ts";
 
 export function runShow(ctx: Ctx, args: string[]): CommandResult {
@@ -31,7 +33,7 @@ export function runShow(ctx: Ctx, args: string[]): CommandResult {
   // The real list, as every other call site passes: an empty one renders "Available:" with
   // nothing after it on a root that has all five bundled presets.
   if (slug && !preview) {
-    throw new ConfigError(ctx.t.preset.unknown(slug, library.entries.map((entry) => entry.preset.slug)));
+    throw new PresetNotFound(ctx.t, slug, library.entries.map((entry) => entry.preset.slug));
   }
   const shown = preview ? withPreset(config, preview) : config;
   const axes = shown.axes;
@@ -60,13 +62,9 @@ export function runShow(ctx: Ctx, args: string[]): CommandResult {
     : fresh ? `(${ctx.t.artifact.notSetUpTitle})` : config.preset
       ? activeConflict ? config.preset : resolvePreset(ctx.paths.presets, config.preset, ctx.t, library)?.preset.displayName ?? config.preset
       : `(${ctx.t.preset.unsaved})`;
-  const activePreset = config.preset && !activeConflict ? resolvePreset(ctx.paths.presets, config.preset, ctx.t, library)?.preset : null;
-  const needsSave = preview === null && configChange.before !== null &&
-    (config.unsaved || activePreset == null || !matchesPreset(config, activePreset));
+  const { needsSave: unsavedTone, saveCommand } = unsavedEdits(ctx, config, library, configChange.before);
+  const needsSave = preview === null && unsavedTone;
   const status = preview ? ` (${ctx.t.preset.preview})` : config.preset && needsSave ? ` (${ctx.t.preset.unsaved})` : "";
-  const saveCommand = activePreset && !activePreset.bundled
-    ? "tonedial save"
-    : 'tonedial save "My Tone"';
 
   const lines: string[] = [];
   const sizeLabel = artifactSize(size, ctx.t);
@@ -90,11 +88,16 @@ export function runShow(ctx: Ctx, args: string[]): CommandResult {
   const personaSet = Boolean(age || gender || note || selfRef || userRef || user || agent);
   // A preview's values column holds the profile's levels, not the current tone's.
   const headerCopy = preview ? { ...ctx.t, artifact: { ...ctx.t.artifact, currentLevel: ctx.t.artifact.previewLevel } } : ctx.t;
-  const gauges = [gaugeHeader(ui, headerCopy), ...gaugeBlock(axes, ui)];
+  const moved = AXIS_ORDER.some((axis) => axes[axis] !== AXIS_DEFAULT[axis]);
+  const gauges = [gaugeHeader(ui, headerCopy, { risk: riskyAxes(axes).length > 0 }), ...gaugeBlock(axes, ui, ctx.t)];
   const gaugeWidth = Math.max(...gauges.map((line) => maxCells(stripVTControlCharacters(line))));
   const detailWidth = ui.terminal && ui.width >= 119 ? ui.width - gaugeWidth - 4 : ui.width - 2;
   const details: string[] = [ui.bold(ctx.t.artifact.settingsHeading)];
-  if (personaSet) {
+  // A schema-1 preset stores axes only, so the persona, safeword and register on the screen would be
+  // the current tone's, not the preset's. Say what applying it does instead of showing them as its own.
+  const axisOnly = preview !== null && preview.settings === undefined;
+  if (axisOnly) details.push(...wrap(ctx.t.preset.axisOnlyPreview, detailWidth).map((folded) => ui.dim(folded)));
+  if (personaSet && !axisOnly) {
     const bits = [
       age ? ctx.t.persona.ageLabel(humanText(age)) : null,
       gender ? ctx.t.persona.genderLabel(humanText(gender)) : null,
@@ -103,10 +106,11 @@ export function runShow(ctx: Ctx, args: string[]): CommandResult {
       note ? ctx.t.persona.noteChars([...note].length) : null,
     ].filter(Boolean);
     if (bits.length) for (const folded of wrap(bits.join(" · "), detailWidth)) details.push(ui.dim(folded));
-    // Each count sits with the text it measures, the way `save` reviews a profile.
+    // A count sits with the text it measures and only under --verbose. A value over the cap never
+    // reaches this screen: the settings that hold it are refused when they are read.
     for (const [field, value] of [["agent", agent], ["user", user]] as const) {
       if (value === null) continue;
-      const text = `${ctx.t.persona.descriptionFull(field, humanText(value))} (${[...value].length}/${PERSONA_DESCRIPTION_MAX})`;
+      const text = `${ctx.t.persona.descriptionFull(field, humanText(value))}${ctx.flags.verbose ? ` (${[...value].length}/${PERSONA_DESCRIPTION_MAX})` : ""}`;
       for (const folded of wrap(text, detailWidth)) {
         details.push(ui.dim(folded));
       }
@@ -118,13 +122,17 @@ export function runShow(ctx: Ctx, args: string[]): CommandResult {
 
   // Folded rather than laid out: the safeword is user text of unbounded length, so this row
   // can always exceed the budget and no amount of shortening the fixed words prevents it.
-  const records = isConfigV2(config)
-    ? [...new Set(Object.values(config.wiring.registrations).map((record) => `${record.target} (${record.scope})`))]
-    : Object.keys(config.wiring);
-  for (const text of [
-    stateRow(values, ctx.t), ctx.t.artifact.displaySettings(values.language),
-    ctx.t.artifact.connectionRecords(records.map(humanText)),
-  ]) for (const folded of wrap(text, detailWidth)) details.push(folded);
+  // The interface language and the connections belong to the install, not to a preset, and the
+  // language of a root that is not set up is a default no one chose.
+  const rows = axisOnly ? [] : [stateRow(values, ctx.t), ...(fresh || preview !== null ? [] : [ctx.t.artifact.displaySettings(values.language)])];
+  for (const text of rows) {
+    for (const folded of wrap(text, detailWidth)) details.push(folded);
+  }
+  // Project connections an earlier version recorded on the global hook leave with that hook.
+  const shared = new Set(AGENT_TOOLS.flatMap((tool) => riders(config, tool, ctx.env, ctx.cwd)).map((rider) => JSON.stringify(rider)));
+  const recorded = connections(config).map((connection) =>
+    shared.has(JSON.stringify(connection)) ? { ...connection, sharesGlobalHook: true as const } : connection);
+  if (preview === null) details.push(...connectionRows(recorded, detailWidth, ctx.t));
   if (layout !== null) {
     const advice = layout.kind === "fresh"
       ? ctx.t.artifact.notSetUp
@@ -159,10 +167,12 @@ export function runShow(ctx: Ctx, args: string[]): CommandResult {
         ...nextStep(saveCommand, ui).slice(1));
     }
   } else {
-    // Keep the short legend and save action together after the settings.
-    const legend = ctx.t.artifact.movedFromDefault + (needsSave ? ` · ${ctx.t.preset.changesNotSaved}` : "");
-    const [first, ...rest] = wrap(legend, ui.width - 4);
-    lines.push(`  ${ui.accent("*")} ${ui.dim(first!)}`, ...rest.map((line) => `    ${ui.dim(line)}`),
+    // Keep the legend and save action together after the settings. A marker's key prints only
+    // while the marker does: `*` beside a changed axis, nothing for a tone at its defaults.
+    const legend = [moved ? ctx.t.artifact.movedFromDefault : null, needsSave ? ctx.t.preset.changesNotSaved : null].filter(Boolean).join(" · ");
+    const [first, ...rest] = wrap(legend, ui.width - (moved ? 4 : 2));
+    if (legend) lines.push(`  ${moved ? "* " : ""}${ui.dim(first!)}`, ...rest.map((line) => `  ${moved ? "  " : ""}${ui.dim(line)}`));
+    lines.push(
       ...nextStep(preview ? `tonedial use ${preview.slug}` : fresh ? "tonedial init --tools none --global"
         : needsSave ? saveCommand : paused ? "tonedial on" : "tonedial show --explain", ui).slice(1));
   }
@@ -197,6 +207,7 @@ export function runShow(ctx: Ctx, args: string[]): CommandResult {
       language: values.language,
       chars: size.chars,
       artifact: { exists: artifactOnDisk },
+      connections: recorded,
     },
     warnings,
   };
@@ -215,6 +226,34 @@ function titleRow(name: string, sizeLabel: string, ctx: Ctx): string {
   const used = maxCells(name) + maxCells(sizeLabel);
   const gap = used < ctx.ui.width ? " ".repeat(ctx.ui.width - used) : " ";
   return `${ctx.ui.bold(name)}${gap}${ctx.ui.dim(sizeLabel)}`;
+}
+
+/**
+ * One row per scope and directory: the scope and its agents the way `doctor` names another scope's
+ * connections (`project · codex`), then the directory on its own copyable row. Legacy records
+ * carry no scope or directory, so they keep the single summary row.
+ */
+function connectionRows(records: (Connection & { sharesGlobalHook?: true })[], width: number, t: Messages): string[] {
+  if (records.length === 0 || records.some((record) => record.scope === null)) {
+    return wrap(t.artifact.connectionRecords(records.map((record) => humanText(record.target))), width);
+  }
+  const rows = [t.artifact.connectionsHeading];
+  let scope: Connection["scope"] = null;
+  let destination: string | null = null;
+  for (const record of records) {
+    if (record.scope === scope && record.destination === destination) continue;
+    scope = record.scope;
+    destination = record.destination;
+    const here = records.filter((other) => other.scope === scope && other.destination === destination);
+    const targets = here.filter((other) => !other.sharesGlobalHook).map((other) => humanText(other.target));
+    // A folder whose only agents ride the global hook still names its scope.
+    rows.push(...wrap([scopeToken(t, scope!), ...(targets.length ? [targets.join(", ")] : [])].join(" · "), width));
+    rows.push(humanText(destination!));
+    for (const rider of here.filter((other) => other.sharesGlobalHook)) {
+      rows.push(...wrap(t.artifact.sharesGlobalHook(humanText(rider.target)), width));
+    }
+  }
+  return rows;
 }
 
 /**

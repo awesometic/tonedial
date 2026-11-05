@@ -13,7 +13,7 @@ import { compile } from "../core/compile.ts";
 import { toCompileInput } from "../core/resolve.ts";
 import { isLanguage, LANGUAGES, type Messages } from "../core/i18n.ts";
 import { recoverLegacyTone } from "../core/legacy-tone.ts";
-import { connectionScopeFlag, exportAliasesState, stateOverlapsInstructions } from "../core/paths.ts";
+import { connectionScopeFlag, exportAliasesState, stateOverlapsInstructions, type Paths } from "../core/paths.ts";
 import {
   applyPreset, matchesPreset, assertPresetSelection, BUNDLED, customPresetDir, inspectPresetLibrary, parsePreset, PRESET_MAX_BYTES,
   resolvePreset, serializePreset, SLUG_PATTERN, type PresetEntry, type PresetLibrary,
@@ -22,17 +22,46 @@ import {
   contextArtifactTargets, generatedSeedSelection, planGeneratedSeedRebuild, seedFiles, SEED_VERSION,
 } from "../core/seeds.ts";
 import {
-  inspectOperations, readJournal, retireOperationForAppRebuild, serializeOperationQuarantine, type JsonValue,
+  inspectOperations, inspectRollback, readJournal, retireOperationForAppRebuild, serializeOperationQuarantine, type JsonValue,
   type OperationAction, type OperationJournal, type RecoveryPhase,
 } from "../core/operations.ts";
 import {
-  assertFresh, captureRawEntry, gate, planEntryRebuild, rawReadCheck, validateFileAction,
+  assertFresh, captureRawEntry, gate, planEntryRebuild, previewRollback, rawReadCheck, validateFileAction,
   type Change, type PlannedOperationAction, type RawEntryCapture,
 } from "../wiring/apply.ts";
 import { confirm } from "../ui/prompt.ts";
 import { wrap } from "../ui/width.ts";
 import { parseToolSelection } from "../wiring/targets.ts";
+import { ScopeRequired } from "../wiring/scopes.ts";
 import { receiptLines, riskWarnings } from "../ui/format.ts";
+
+/** Doctor's commands for a stopped operation: continue its repair, undo it, both or neither. */
+export function stoppedOperationSteps(paths: Paths, t: Ctx["t"], scope: string, inspected = inspectOperations(paths)):
+  { resume: string | null; rollback: string | null } {
+  const steps = { resume: null as string | null, rollback: null as string | null };
+  const owner = inspected.lock.owner;
+  if (inspected.lock.state !== "dead" || owner?.kind !== "mutation") return steps;
+  const entry = inspected.journals.find(({ operationId }) => operationId === owner.operationId);
+  if (!entry?.journal || entry.journal.owner.nonce !== owner.nonce) return steps;
+  const blocking = inspected.journals.filter(({ state }) => state === "pending" || state === "invalid");
+  if (entry.state === "pending" && !inspectRollback(paths, owner.operationId).synthetic &&
+    blocking.every(({ operationId, journal }) => operationId === owner.operationId && journal !== null)) {
+    steps.resume = `tonedial doctor --fix --from-operation ${owner.operationId} ${scope}`;
+  }
+  if (previewRollback(paths, owner.operationId, t).status === "ready") steps.rollback = `tonedial doctor --fix --rollback ${owner.operationId}`;
+  return steps;
+}
+
+/** A command refused while an operation needs recovery ends with what doctor offers for it. */
+export function recoveryPendingError(paths: Paths, t: Ctx["t"], scope: string): ConfigError {
+  const { resume, rollback } = stoppedOperationSteps(paths, t, scope);
+  const steps = [...(resume === null ? [] : [t.doctor.resumeOperation, `  ${resume}`]),
+    ...(rollback === null ? [] : [t.doctor.undoOperation, `  ${rollback}`])];
+  // Neither applies while its owner may still run, or to an unreadable record: diagnose first.
+  const commands = steps.length ? [resume, rollback].filter((command) => command !== null) : [`tonedial doctor ${scope}`];
+  return new ConfigError([t.doctor.recoveryPending, ...(steps.length ? steps : [`  ${commands[0]}`])].join("\n"),
+    { reason: "recovery-pending", commands });
+}
 
 export type AppRebuildResult = CommandResult & ({
   quarantineOnly: true;
@@ -164,7 +193,7 @@ async function resolveActiveConflict(ctx: Ctx, config: ConfigV2, library: Preset
     config.preset = selected;
     return;
   }
-  if (ctx.flags.auto || !ctx.canPrompt) throw new ConfigError(ctx.t.recovery.sourceRequired);
+  if (ctx.flags.auto || !ctx.canPrompt) throw new ConfigError(ctx.t.recovery.sourceRequired(`tonedial doctor --fix ${connectionScopeFlag(ctx.agent, ctx.cwd)}`));
   const input = createInterface({ input: process.stdin, output: process.stdout });
   try {
     process.stdout.write(`  ${ctx.t.recovery.activeChoice(conflict.slug)}\n`);
@@ -236,7 +265,7 @@ async function quarantineOneOperation(
     heading: ctx.t.recovery.heading, interactive: () => ctx.canPrompt, ...(ctx.canPrompt ? {} : { out: () => {} }),
     recoveryPresentation: { lines: presentation,
       failureMessage: (id: string, phase: RecoveryPhase, path: string | null, code: string) =>
-        `${ctx.t.recovery.failure(id, phase, path, code)}\ntonedial doctor ${connectionScopeFlag(ctx.agent)} --json` },
+        `${ctx.t.recovery.failure(id, phase, path, code)}\ntonedial doctor ${connectionScopeFlag(ctx.agent, ctx.cwd)} --json` },
     verify: () => {
       const state = inspectOperations(ctx.paths).journals.find(({ operationId }) => operationId === entry.operationId)?.state;
       if (state !== "quarantined") throw new ConfigError(ctx.t.recovery.sourceInvalid);
@@ -254,7 +283,7 @@ async function quarantineOneOperation(
       appRebuilt: false, applied: result.applied, reason: result.reason, operationId: result.operationId ?? null,
       root: ctx.paths.root, quarantinedOperation: entry.operationId, remainingInvalidOperations: [...remaining],
       next: result.applied && remaining.length > 0
-        ? `tonedial doctor --fix --quarantine-operation ${remaining[0]} ${connectionScopeFlag(ctx.agent)}` : null,
+        ? `tonedial doctor --fix --quarantine-operation ${remaining[0]} ${connectionScopeFlag(ctx.agent, ctx.cwd)}` : null,
       nativeAttention: false, activationVerified: false, diff: result.diff,
     },
     rebuiltConfig: null,
@@ -289,14 +318,14 @@ export async function runAppRebuild(ctx: Ctx, heading = ctx.t.recovery.heading):
   }
   if (invalid.length > 0 && quarantined === null) {
     const candidate = invalid[0]!;
-    const command = `tonedial doctor --fix --quarantine-operation ${candidate.operationId} ${connectionScopeFlag(ctx.agent)}`;
+    const command = `tonedial doctor --fix --quarantine-operation ${candidate.operationId} ${connectionScopeFlag(ctx.agent, ctx.cwd)}`;
     throw new ConfigError(t.recovery.quarantineRequired(candidate.operationId, command));
   }
   if (quarantined !== null && (operations.lock.state !== "none" || pending.length > 0)) {
-    throw new ConfigError(t.doctor.recoveryPending);
+    throw recoveryPendingError(ctx.paths, t, connectionScopeFlag(ctx.agent, ctx.cwd));
   }
   const scopeExplicit = ctx.scopeExplicit ?? (ctx.flags.global || ctx.flags.here === true || ctx.flags.project !== null);
-  if (ctx.flags.auto && !ctx.flags.dryRun && !scopeExplicit) throw new ConfigError(t.errors.scopeRequired);
+  if (ctx.flags.auto && !ctx.flags.dryRun && !scopeExplicit) throw new ScopeRequired(t);
   if (ctx.flags.tools !== null) parseToolSelection(ctx.flags.tools, true, t);
   if (quarantined !== null && invalid.length > 1) {
     return quarantineOneOperation(ctx, quarantined, invalid.filter(entry => entry !== quarantined).map(entry => entry.operationId));
@@ -304,7 +333,7 @@ export async function runAppRebuild(ctx: Ctx, heading = ctx.t.recovery.heading):
   const blocked = operations.lock.state !== "none" || pending.length > 0;
   if (blocked && (operations.lock.state === "live" || operations.lock.state === "unknown" ||
     pending.some(entry => entry.journal === null) || (!ctx.flags.fromOperation && (ctx.flags.auto || !ctx.canPrompt)))) {
-    throw new ConfigError(t.doctor.recoveryPending);
+    throw recoveryPendingError(ctx.paths, t, connectionScopeFlag(ctx.agent, ctx.cwd));
   }
   const configCapture = captureRawEntry(ctx.paths.config, t, { within: ctx.paths.root, maxBytes: CONFIG_MAX_BYTES });
   const selected = ctx.flags.fromOperation ? selectedJournal(ctx, ctx.flags.fromOperation) : null;
@@ -312,7 +341,7 @@ export async function runAppRebuild(ctx: Ctx, heading = ctx.t.recovery.heading):
   if (blocked) {
     const owner = operations.lock.owner;
     if (operations.lock.state === "live" || operations.lock.state === "unknown" || pending.some(entry => entry.journal === null)) {
-      throw new ConfigError(t.doctor.recoveryPending);
+      throw recoveryPendingError(ctx.paths, t, connectionScopeFlag(ctx.agent, ctx.cwd));
     }
     if (selected?.journal.state === "retired-for-app-rebuild" && pending.length === 0) {
       // The retirement owner validates this exact receipt, including interrupted owner release.
@@ -320,7 +349,7 @@ export async function runAppRebuild(ctx: Ctx, heading = ctx.t.recovery.heading):
     } else {
       if (owner?.kind !== "mutation" || operations.lock.state !== "dead" ||
           readJournal(ctx.paths, owner.operationId)?.state !== "pending" ||
-          pending.some(entry => entry.operationId !== owner.operationId)) throw new ConfigError(t.doctor.recoveryPending);
+          pending.some(entry => entry.operationId !== owner.operationId)) throw recoveryPendingError(ctx.paths, t, connectionScopeFlag(ctx.agent, ctx.cwd));
       if (selected?.journal.operationId === owner.operationId) retirementId = owner.operationId;
       else if (!ctx.flags.auto && ctx.canPrompt) {
         const input = createInterface({ input: process.stdin, output: process.stdout });
@@ -334,7 +363,7 @@ export async function runAppRebuild(ctx: Ctx, heading = ctx.t.recovery.heading):
           if (answer !== owner.operationId) throw new ConfigError(t.recovery.operationMismatch);
           retirementId = owner.operationId;
         } finally { input.close(); }
-      } else throw new ConfigError(t.doctor.recoveryPending);
+      } else throw recoveryPendingError(ctx.paths, t, connectionScopeFlag(ctx.agent, ctx.cwd));
     }
   }
   const currentText = capturedText(configCapture);
@@ -388,7 +417,7 @@ export async function runAppRebuild(ctx: Ctx, heading = ctx.t.recovery.heading):
   }
   if (ctx.flags.fromPreset && chosenPreset === null) throw new ConfigError(t.recovery.sourceInvalid);
   if (sourceNeeded && chosenPreset === null && (savedSource === null || missingAxes.length > 0)) {
-    if (ctx.flags.auto || !ctx.canPrompt) throw new ConfigError(t.recovery.sourceRequired);
+    if (ctx.flags.auto || !ctx.canPrompt) throw new ConfigError(t.recovery.sourceRequired(`tonedial doctor --fix ${connectionScopeFlag(ctx.agent, ctx.cwd)}`));
     chosenPreset = await choosePreset(ctx, library);
   }
   if (chosenPreset !== null) assertPresetSelection(chosenPreset, t);
@@ -487,7 +516,7 @@ export async function runAppRebuild(ctx: Ctx, heading = ctx.t.recovery.heading):
     ...(damagedFields.includes("guards") ? [`  ${t.recovery.obsoleteGuardsDiscarded}`] : []),
     ...(missingFields.length ? [`  ${t.recovery.missing(missingFields)}`] : []),
     ...(copies.length ? [`  ${t.recovery.copies(copies)}`] : []),
-    ...(nativeAttention ? [`  ${t.recovery.nativePending}\ntonedial doctor ${connectionScopeFlag(ctx.agent, ctx.flags.here === true)}`] : []),
+    ...(nativeAttention ? [`  ${t.recovery.nativePending}\ntonedial doctor ${connectionScopeFlag(ctx.agent, ctx.cwd)}`] : []),
     ...(quarantined ? [`  ${t.recovery.quarantine(quarantined.operationId)}`] : []),
     ...(retirementId ? [`  ${t.recovery.retire(retirementId)}`] : []),
   ].flatMap(line => receiptLines(line.trimStart(), ctx.ui.width - 2).map(part => `  ${part}`));
@@ -498,7 +527,7 @@ export async function runAppRebuild(ctx: Ctx, heading = ctx.t.recovery.heading):
     interactive: () => ctx.canPrompt, ...(ctx.canPrompt ? {} : { out: () => {} }),
     recoveryPresentation: { lines: presentation,
       failureMessage: (id: string, phase: RecoveryPhase, path: string | null, code: string) =>
-        `${t.recovery.failure(id, phase, path, code)}\ntonedial doctor ${connectionScopeFlag(ctx.agent)} --json` },
+        `${t.recovery.failure(id, phase, path, code)}\ntonedial doctor ${connectionScopeFlag(ctx.agent, ctx.cwd)} --json` },
     verify: () => {
       let verificationPath = ctx.paths.config;
       const mismatch = () => new ConfigError(t.recovery.sourceInvalid, { cause: { code: "VERIFY_MISMATCH", path: verificationPath } });
@@ -562,7 +591,7 @@ export async function runAppRebuild(ctx: Ctx, heading = ctx.t.recovery.heading):
         for (const action of operationActions) action.assertFresh?.();
         for (const check of checks) assertFresh(check, t, ctx.paths);
         if (selected?.journal.operationId === retirementId) assertFresh(rawReadCheck(selected.capture, t), t, ctx.paths);
-        if (selected?.journal.operationId === retirementId && JSON.stringify(readJournal(ctx.paths, retirementId)) !== JSON.stringify(selected.journal)) throw new ConfigError(t.doctor.recoveryPending);
+        if (selected?.journal.operationId === retirementId && JSON.stringify(readJournal(ctx.paths, retirementId)) !== JSON.stringify(selected.journal)) throw recoveryPendingError(ctx.paths, t, connectionScopeFlag(ctx.agent, ctx.cwd));
       },
     });
     result = await gate(checks, { ...options, auto: true });

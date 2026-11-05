@@ -53,7 +53,7 @@ test("the gauge is five cells at every level in every locale", async () => {
   const axes = { ...AXIS_DEFAULT };
   for (let level = 1; level <= 5; level++) {
     for (const axis of AXIS_ORDER) axes[axis] = level as 1 | 2 | 3 | 4 | 5;
-    for (const line of gaugeBlock(axes, PLAIN)) {
+    for (const line of gaugeBlock(axes, PLAIN, EN)) {
       const gauge = /[▮▯]+/.exec(line)![0];
       assert.equal(cells(gauge), 5, `level ${level} narrow`);
       assert.equal(maxCells(gauge), 5, `level ${level} wide`);
@@ -63,7 +63,7 @@ test("the gauge is five cells at every level in every locale", async () => {
 
 test("gauge rows stay aligned whatever the levels are", async () => {
   const axes = { ...AXIS_DEFAULT, formality: 1, playfulness: 5, care: 1, refusal: 4 } as typeof AXIS_DEFAULT;
-  const columns = gaugeBlock(axes, PLAIN).map((l) => maxCells(l.slice(0, l.indexOf("▮") >= 0 ? l.indexOf("▮") : l.indexOf("▯"))));
+  const columns = gaugeBlock(axes, PLAIN, EN).map((l) => maxCells(l.slice(0, l.indexOf("▮") >= 0 ? l.indexOf("▮") : l.indexOf("▯"))));
   assert.equal(new Set(columns).size, 1, "the gauge starts in the same column on every row");
 });
 
@@ -131,15 +131,24 @@ test("colour follows explicit flags, environment precedence and the output strea
 
 test("every signal survives with colour stripped", async () => {
   const axes = { ...AXIS_DEFAULT, warmth: 5 } as typeof AXIS_DEFAULT;
-  const plain = gaugeBlock(axes, PLAIN).join("\n");
+  const plain = gaugeBlock(axes, PLAIN, EN).join("\n");
   assert.match(plain, /\*3/, "the moved-from-default marker survives without colour");
   assert.match(plain, /warmth\s+▮▮▮▮▮\s+5/, "and the level is a digit beside its bar");
+});
+
+test("only the bars that changed take the accent; the default marker beside them is plain", () => {
+  const axes = { ...AXIS_DEFAULT, warmth: 5 } as typeof AXIS_DEFAULT;
+  const rows = gaugeBlock(axes, palette("always", {}, true), EN);
+  const moved = rows[AXIS_ORDER.indexOf("warmth")]!;
+  assert.match(moved, /\x1b\[36m▮▮▮▮▮\x1b\[39m/, "the moved bar takes the accent");
+  assert.match(moved, / {2}\*3$/, "and the default it moved from is plain text");
+  assert.doesNotMatch(rows[AXIS_ORDER.indexOf("care")]!, /\x1b\[36m/, "a bar at its default is not accented");
 });
 
 test("risky levels use theme red while the selected axis remains cyan and monochrome keeps the marker", () => {
   const axes = { ...AXIS_DEFAULT, flattery: 3, critique: 4, refusal: 2, conviction: 5 } as typeof AXIS_DEFAULT;
   const cursor = AXIS_ORDER.indexOf("flattery");
-  const color = gaugeBlock(axes, palette("always", {}, true), cursor);
+  const color = gaugeBlock(axes, palette("always", {}, true), EN, cursor);
   const selected = color[cursor]!;
   assert.match(selected, /^\x1b\[36m> /, "selection caret retains the focus token");
   assert.match(selected, /\x1b\[36mflattery/, "selection label remains cyan");
@@ -147,7 +156,7 @@ test("risky levels use theme red while the selected axis remains cyan and monoch
   assert.match(selected, /\x1b\[31m3!/, "the risky current value pairs red with a marker");
   assert.doesNotMatch(color[AXIS_ORDER.indexOf("warmth")]!, /\x1b\[31m/, "ordinary levels are not risk-colored");
   for (const width of [2, 20, 33, 40, 59, 79]) {
-    const rows = gaugeBlock(axes, palette("auto", { NO_COLOR: "1" }, true, width), cursor);
+    const rows = gaugeBlock(axes, palette("auto", { NO_COLOR: "1" }, true, width), EN, cursor);
     assert.doesNotMatch(rows.join("\n"), /\x1b/);
     for (const [index, axis] of AXIS_ORDER.entries()) {
       assert.ok(maxCells(rows[index]!) <= width, `${width}: ${rows[index]}`);
@@ -171,14 +180,18 @@ test("every axis has a kind and a group, and the groups are the three the produc
   }
   // The effect, not the spelling. Restating the group sequence as a literal would agree with
   // `AXIS_GROUP` by construction and survive any rename; what the grouping is *for* is that the
-  // gutter names each group once, which breaks the moment two groups interleave.
-  const gutters = gaugeBlock({ ...AXIS_DEFAULT }, PLAIN).map((line) => {
-    const [, gutter] = /^ {2}(\S*)/.exec(line) ?? [];
-    return gutter ?? "";
-  });
-  const named = gutters.filter((g) => g !== "");
-  assert.equal(named.length, 3, `each group is labelled once, got ${named.join(", ")}`);
-  assert.deepEqual(new Set(named).size, named.length, "and no label is printed twice");
+  // gutter names each group once, in the interface language, which breaks the moment two groups
+  // interleave or a locale shows another language's name.
+  for (const language of LANGUAGES) {
+    const copy = catalogue(language).cli;
+    const gutters = gaugeBlock({ ...AXIS_DEFAULT }, PLAIN, copy).map((line) => {
+      const [, gutter] = /^ {2}(\S*)/.exec(line) ?? [];
+      return gutter ?? "";
+    });
+    const named = gutters.filter((g) => g !== "");
+    assert.deepEqual(named, [...new Set(AXIS_ORDER.map((axis) => copy.artifact.axisGroups[AXIS_GROUP[axis]]))],
+      `${language}: each group is labelled once, in its own language`);
+  }
   const permission = AXIS_ORDER.filter((a) => AXIS_KIND[a] === "permission");
   assert.deepEqual(permission, ["profanity", "flattery", "refusal", "bravado"]);
   for (const axis of permission) assert.equal(AXIS_DEFAULT[axis], 1, `${axis} floors at 1`);
@@ -246,7 +259,7 @@ test("a fresh init composes every line in the language it was asked for", async 
 });
 
 for (const language of LANGUAGES) {
-  test(`native receipts show inherited configuration and the Codex action in ${language}`, async () => {
+  test(`native receipts show the global cover and the Codex action in ${language}`, async () => {
     mkdirSync(join(home, "project"));
     assert.equal(await cli("init", "--global", "--tools", "codex", "--lang", language, "--auto"), 0, err.join(""));
     const global = out.join("");
@@ -257,12 +270,11 @@ for (const language of LANGUAGES) {
     assert.equal(await cli("wire", "--here", "codex", "--auto"), 0, err.join(""));
     const inherited = out.join("");
     const localized = catalogue(language).cli;
-    const [inheritedBefore, inheritedAfter] = localized.wiring.hookInherited("Codex CLI", "__path__").split("__path__");
-    const flattened = inherited.replace(/\s+/g, " ");
-    assert.ok(flattened.includes(inheritedBefore!.trim()));
-    assert.ok(flattened.includes(inheritedAfter!.trim()));
-    assert.match(flattened, /\/hooks → SessionStart → ToneDial/);
-    assert.doesNotMatch(flattened, /App activation is unverified|앱 활성화는 확인하지 않았습니다/);
+    const joined = inherited.replace(/\s+/g, "");
+    assert.ok(joined.includes(localized.wiring.globalCovers("Codex CLI").replace(/\s+/g, "")), inherited);
+    assert.ok(joined.includes(localized.wiring.keepProjectOnly(true).replace(/\s+/g, "")), inherited);
+    assert.match(inherited, /^ {2}tonedial unwire codex --global\n {2}tonedial wire codex --here$/m);
+    assert.doesNotMatch(inherited, /App activation is unverified|앱 활성화는 확인하지 않았습니다/);
     const receipt = inherited.slice(inherited.indexOf("  Codex CLI:"));
     for (const line of receipt.split("\n")) assert.ok(cells(line) <= UNKNOWN_WIDTH || isUnbreakable(line), line);
     out = [];
@@ -270,6 +282,7 @@ for (const language of LANGUAGES) {
     const json = JSON.parse(out.join(""));
     assert.equal(json.root, join(home, "project"));
     assert.equal(json.tools[0].inherited, true);
+    assert.equal(json.tools[0].covered, true);
     assert.equal(json.tools[0].path, join(home, ".codex", "hooks.json"));
     assert.equal(json.tools[0].activation, "unverified");
     assert.equal(json.tools[0].configuration, "configured");
@@ -285,14 +298,14 @@ for (const language of LANGUAGES) {
     rmSync(hookPath);
     out = [];
     assert.equal(await cli("doctor", "--here"), 0, err.join(""));
-    assert.ok(out.join("").includes(localized.doctor.nativeMissing("", "SessionStart").split(" · ")[0]!));
+    assert.ok(out.join("").includes(localized.doctor.nativeMissing("", "SessionStart").split("\n")[0]!));
     assert.doesNotMatch(out.join("").replace(/\s+/g, " "), /\/hooks → SessionStart → ToneDial/, "a missing hook must be repaired before enabling it");
     document.hooks.SessionStart[0].hooks[0].statusMessage = "User-edited hook";
     writeFileSync(hookPath, JSON.stringify(document));
     out = [];
     assert.equal(await cli("doctor", "--here"), 0, err.join(""));
     const foreign = out.join("").replace(/\s+/g, "");
-    assert.ok(foreign.includes(localized.doctor.nativeForeign.replace(/\s+/g, "")));
+    assert.ok(foreign.includes(localized.doctor.nativeEdited(hookPath).replace(/\s+/g, "")));
     assert.doesNotMatch(out.join("").replace(/\s+/g, " "), /\/hooks → SessionStart → ToneDial/, "do not advise enabling a foreign definition");
   });
 }
@@ -305,12 +318,13 @@ for (const language of LANGUAGES) {
     const sharedTrust = localized.wiring.claudeTrust(true);
     // Folding may break CJK prose without a space, so compare with whitespace removed.
     const flat = (text: string) => text.replace(/\s+/g, "");
-    assert.equal(await cli("init", "--global", "--tools", "claude", "--lang", language, "--auto"), 0, err.join(""));
+    // Project first: a project beside an existing global connection gets nothing to trust.
+    assert.equal(await cli("init", "--here", "--tools", "claude", "--lang", language, "--auto"), 0, err.join(""));
+    assert.ok(flat(out.join("")).includes(flat(projectTrust!)), `${language}: project receipt lost its trust step`);
+    out = [];
+    assert.equal(await cli("wire", "--global", "claude", "--auto"), 0, err.join(""));
     assert.ok(flat(out.join("")).includes(flat(sharedTrust!)), `${language}: global receipt lost the trust rule`);
     assert.ok(!flat(out.join("")).includes(flat(projectTrust!)), `${language}: global receipt named one project`);
-    out = [];
-    assert.equal(await cli("wire", "--here", "claude", "--auto"), 0, err.join(""));
-    assert.ok(flat(out.join("")).includes(flat(projectTrust!)), `${language}: project receipt lost its trust step`);
   });
 }
 
@@ -369,17 +383,83 @@ test("hosts without Claude Code get no Claude context cap notice", async () => {
   assert.ok(!JSON.parse(out.join("")).checks.some((check: { name: string }) => check.name === "Claude Code context"));
 });
 
-test("a rejected connection command identifies itself and its scope without writes", async () => {
+test("short receipts start with their result; plan commands and the full view keep a title", async () => {
+  mkdirSync(join(home, "project"));
+  await initializeState();
+  for (const argv of [["set", "verbosity=2"], ["get"], ["get", "verbosity"], ["off"], ["on"], ["use", "bratty-kid"],
+    ["reset"], ["list"], ["persona", "A patient mentor", "A new developer"], ["address", "your mentor", "friend"], ["compile"], ["export", "caring-brother"]]) {
+    out = [];
+    assert.equal(await cli(...argv), 0, `${argv.join(" ")}: ${err.join("")}`);
+    const screen = out.join("");
+    assert.ok(!screen.includes("ToneDial · "), `${argv.join(" ")} printed a title:\n${screen}`);
+    assert.ok(!screen.startsWith("\n"), `${argv.join(" ")} starts with a blank line:\n${screen}`);
+  }
+  for (const argv of [["wire", "codex", "--here", "--dry-run"], ["doctor", "--here"], ["init", "--here", "--tools", "none", "--auto"]]) {
+    out = [];
+    assert.equal(await cli(...argv), 0, `${argv.join(" ")}: ${err.join("")}`);
+    assert.ok(out.join("").startsWith(`ToneDial · ${argv[0]}\n\n`), `${argv.join(" ")} lost its title`);
+  }
+  out = [];
+  assert.equal(await cli("show"), 0, err.join(""));
+  assert.ok(out.join("").startsWith("ToneDial · show"), "show lost its title");
+});
+
+test("a dry run that would change files ends with the command that applies it", async () => {
+  mkdirSync(join(home, "project"));
+  const last = () => out.join("").trimEnd().split("\n").at(-1);
+  for (const [argv, apply] of [
+    [["init", "--here", "--tools", "codex", "--lang", "en", "--dry-run"], "tonedial init --lang en --tools codex --here"],
+  ] as const) {
+    out = [];
+    assert.equal(await cli(...argv), 0, err.join(""));
+    assert.equal(last(), `  ${apply}`, out.join(""));
+  }
+  await initializeState();
+  for (const [argv, apply] of [
+    [["wire", "codex", "--here", "--dry-run"], "tonedial wire codex --here"],
+    [["create", "Example", "--slug", "example", "--dry-run"], "tonedial create Example --slug example"],
+  ] as const) {
+    out = [];
+    assert.equal(await cli(...argv), 0, err.join(""));
+    assert.equal(last(), `  ${apply}`, out.join(""));
+  }
+  assert.equal(await cli("wire", "codex", "--here", "--auto"), 0, err.join(""));
+  for (const [argv, apply] of [
+    [["unwire", "codex", "--here", "--dry-run"], "tonedial unwire codex --here"],
+    [["eject", "--here", "--dry-run"], "tonedial eject --here"],
+  ] as const) {
+    out = [];
+    assert.equal(await cli(...argv), 0, err.join(""));
+    assert.equal(last(), `  ${apply}`, out.join(""));
+  }
+  rmSync(join(home, "project", ".codex"), { recursive: true });
+  out = [];
+  assert.equal(await cli("doctor", "--fix", "--here", "--dry-run"), 0, err.join(""));
+  assert.equal(last(), "  tonedial doctor --fix --here", out.join(""));
+  // Nothing to change, nothing to apply.
+  assert.equal(await cli("doctor", "--fix", "--here", "--auto"), 0, err.join(""));
+  out = [];
+  assert.equal(await cli("wire", "codex", "--here", "--dry-run"), 0, err.join(""));
+  assert.doesNotMatch(out.join(""), /^ {2}tonedial wire/m, out.join(""));
+});
+
+test("a refused connection command writes no title or scope to stdout", async () => {
   mkdirSync(join(home, "project"));
   await initializeState();
   const configPath = join(home, "state", "config.json");
   const before = readFileSync(configPath, "utf8");
+  // Approval is needed and there is no terminal to give it in.
   assert.equal(await cli("wire", "codex", "--here"), 1);
-  const screen = out.join("");
-  assert.ok(screen.startsWith("ToneDial · wire\n\n"), "the rejected command had no leading title");
-  assert.equal(screen.split("ToneDial · wire").length - 1, 1, "the result repeated the title");
-  assert.ok(screen.includes(`  ${EN.wiring.scopeHere}\n`), "the rejected command did not identify its scope");
+  assert.equal(out.join(""), "", "the refusal printed a title or a resolved scope");
+  assert.ok(err.join("").includes("tonedial wire codex --here --auto"), err.join(""));
   assert.equal(readFileSync(configPath, "utf8"), before, "an unapproved preview changed the settings");
+  // Without a scope flag, a folder with its own connection is refused before any scope is assumed.
+  assert.equal(await cli("wire", "codex", "--here", "--auto"), 0, err.join(""));
+  out = [];
+  err = [];
+  assert.equal(await cli("unwire", "codex"), 1);
+  assert.equal(out.join(""), "", "the refusal printed the global scope it did not use");
+  assert.ok(err.join("").includes("tonedial unwire codex --global"), err.join(""));
 });
 
 test("an unreadable import keeps its path copyable and reflows the diagnostic", async () => {
@@ -446,17 +526,17 @@ test("eject and unwire receipts name only the connected agents that were disconn
   assert.doesNotMatch(receipt, /Antigravity.*: disconnected/);
 });
 
-test("empty disconnect reports already disconnected when only config formatting changes", async () => {
+test("empty disconnect reports not connected when only config formatting changes", async () => {
   mkdirSync(join(home, "project"));
   await initializeState();
   const path = join(home, "state", "config.json");
   const original = JSON.parse(readFileSync(path, "utf8"));
   assert.deepEqual(original.wiring.registrations, {});
-  for (const command of ["unwire", "eject"]) {
+  for (const [command, empty] of [[["unwire", "codex"], /Codex CLI: not connected · nothing to change/], [["eject"], /nothing to disconnect/]] as const) {
     for (const json of [false, true]) {
       writeFileSync(path, JSON.stringify(original));
       out = [];
-      assert.equal(await cli(command, "--here", "--auto", ...(json ? ["--json"] : [])), 0, err.join(""));
+      assert.equal(await cli(...command, "--here", "--auto", ...(json ? ["--json"] : [])), 0, err.join(""));
       assert.deepEqual(JSON.parse(readFileSync(path, "utf8")), original);
       assert.notEqual(readFileSync(path, "utf8"), JSON.stringify(original));
       if (json) {
@@ -467,7 +547,7 @@ test("empty disconnect reports already disconnected when only config formatting 
         assert.deepEqual(result.diff.map((change: { path: string }) => change.path), [path]);
       } else {
         const receipt = out.join("").replace(/\s+/g, " ");
-        assert.match(receipt, /nothing to disconnect/);
+        assert.match(receipt, empty);
         assert.doesNotMatch(receipt, /(?:Codex CLI|Claude Code|Antigravity IDE\/Desktop): disconnected/);
       }
     }
@@ -487,8 +567,9 @@ test("default show keeps all axes before complete role settings within 80 column
   assert.ok(screen.replace(/\s+/g, " ").includes(role.user!));
   assert.ok(screen.indexOf("bravado") < screen.indexOf(EN.artifact.settingsHeading), "settings buried the last axis");
   const header = lines.find((line) => line.includes(EN.artifact.currentLevel));
-  assert.ok(header?.includes(EN.artifact.defaultLevel), "the complete header identifies ToneDial defaults");
-  assert.ok(header?.includes(EN.artifact.riskMarker), "the complete header explains advisory risk");
+  assert.ok(header?.includes(EN.artifact.defaultLevelShort), "the header names the column of default levels");
+  assert.ok(!header?.includes(EN.artifact.defaultLevel), "show titles it briefly; the dial keeps the long title");
+  assert.ok(header?.includes(EN.artifact.riskMarker), "a risky level brings the legend for !");
   assert.match(screen, /verbosity\s+[▮▯]{5}\s+3\s+3/);
   assert.match(screen, /refusal\s+[▮▯]{5}\s+3!\s+\*1/);
   assert.ok(screen.includes(EN.artifact.displaySettings("en")));
@@ -501,6 +582,81 @@ test("default show keeps all axes before complete role settings within 80 column
   for (const line of withPersona.trimEnd().split("\n")) assert.ok(maxCells(line) <= 79 || isUnbreakable(line), line);
   assert.ok(withPersona.includes("guide") && withPersona.includes("friend"), "the viewport hid the persona");
   assert.ok(withPersona.includes("bravado") && withPersona.includes('tonedial save "My Tone"'), "the viewport hid an axis or save action");
+});
+
+test("show prints a legend only while its marker is on the screen", async () => {
+  const env = { HOME: home, TONEDIAL_HOME: join(home, "state"), PATH: "", COLUMNS: "80" };
+  const show = async () => {
+    out = [];
+    assert.equal(await run(["show"], env, join(home, "project"), false), 0);
+    const text = out.join("");
+    return { text, header: text.split("\n").find((line) => line.includes(EN.artifact.currentLevel))! };
+  };
+  // Not set up: every axis at its default, nothing risky and nothing to save, so no key is printed.
+  let screen = await show();
+  assert.ok(screen.header.includes(EN.artifact.defaultLevelShort));
+  assert.ok(!screen.header.includes(EN.artifact.riskMarker), "no risky level, no legend for !");
+  assert.ok(!screen.text.includes(EN.artifact.movedFromDefault), "no changed axis, no legend for *");
+  assert.ok(!screen.text.includes(EN.preset.changesNotSaved));
+
+  // A preset changes axes without any being risky, and its saved state still matches.
+  await initializeState();
+  assert.equal(await cli("use", "caring-brother"), 0);
+  screen = await show();
+  assert.ok(screen.text.includes(`* ${EN.artifact.movedFromDefault}`), "the changed axes bring the legend for *");
+  assert.ok(!screen.header.includes(EN.artifact.riskMarker));
+
+  // An edit that is risky and unsaved needs both keys and the save notice.
+  assert.equal(await cli("set", "refusal=3"), 0);
+  screen = await show();
+  assert.ok(screen.header.includes(EN.artifact.riskMarker), "a risky level brings the legend for !");
+  assert.ok(screen.text.includes(`* ${EN.artifact.movedFromDefault} · ${EN.preset.changesNotSaved}`));
+
+  // With every axis back at its default only the save notice remains, with no * to explain.
+  assert.equal(await cli("reset"), 0);
+  screen = await show();
+  assert.ok(!screen.text.includes(EN.artifact.movedFromDefault));
+  assert.ok(screen.text.split("\n").includes(`  ${EN.preset.changesNotSaved}`), screen.text);
+});
+
+test("show leaves out the language of a root that is not set up and the install rows of a preview", async () => {
+  const env = { HOME: home, TONEDIAL_HOME: join(home, "state"), PATH: "", COLUMNS: "80" };
+  const show = async (...args: string[]) => {
+    out = [];
+    assert.equal(await run(["show", ...args], env, join(home, "project"), false), 0);
+    return out.join("");
+  };
+  // Before init the language is a default nobody chose, so the row is not printed in any language.
+  for (const language of LANGUAGES) {
+    const copy = catalogue(language).cli;
+    out = [];
+    assert.equal(await run(["show"], { ...env, LANG: { en: "en_US.UTF-8", ko: "ko_KR.UTF-8", ja: "ja_JP.UTF-8", zh: "zh_CN.UTF-8", es: "es_ES.UTF-8" }[language] }, join(home, "project"), false), 0);
+    assert.ok(!out.join("").includes(copy.artifact.displaySettings("")), `${language}: a root that is not set up has no language row`);
+  }
+  await initializeState();
+  assert.ok((await show()).includes(EN.artifact.displaySettings("en")), "a set-up root shows its language");
+
+  // A preview shows what the preset stores. The language and the connections are the install's.
+  await cli("set", "persona.note=Keep answers short.", "safeword=stop the act");
+  const complete = await show("royal-advisor");
+  assert.ok(complete.includes(EN.persona.callsYou("Your Majesty")), "a complete preset shows its own persona");
+  assert.ok(!complete.includes("stop the act") && !complete.includes("Keep answers short."), "and not the current tone's");
+  for (const row of [EN.artifact.displaySettings("en"), EN.artifact.connectionRecords([])]) assert.ok(!complete.includes(row), row);
+
+  // A schema-1 preset stores axes only: its screen cannot show a persona, a safeword or a register
+  // as the preset's, because they are the current tone's.
+  const axesOnly = await show("tough-love");
+  assert.ok(axesOnly.includes(EN.preset.axisOnlyPreview));
+  for (const current of ["stop the act", "Keep answers short.", "note ", "register", EN.artifact.displaySettings("en"), EN.artifact.connectionRecords([])]) {
+    assert.ok(!axesOnly.includes(current), `an axis-only preview does not show ${current}`);
+  }
+  // Machine output keeps reporting the current install beside the preview.
+  out = [];
+  assert.equal(await run(["show", "tough-love", "--json"], env, join(home, "project"), false), 0);
+  const json = JSON.parse(out.join(""));
+  assert.equal(json.preview, true);
+  assert.equal(json.language, "en");
+  assert.deepEqual(json.connections, []);
 });
 
 test("show and explain stack cleanly at 60 columns without changing saved state", async () => {
@@ -521,7 +677,7 @@ test("show and explain stack cleanly at 60 columns without changing saved state"
 });
 
 for (const language of LANGUAGES) {
-  test(`show exposes role descriptions and counts within terminal width in ${language}`, async () => {
+  test(`show exposes role descriptions, and with --verbose their counts, within terminal width in ${language}`, async () => {
     await initializeState();
     assert.equal(await cli("set", `language=${language}`), 0, err.join(""));
     out = [];
@@ -535,19 +691,18 @@ for (const language of LANGUAGES) {
     out = [];
     assert.equal(await run(["show"], env, join(home, "project"), false), 0);
     const shown = out.join("");
-    // Each count stays with the description it measures.
-    assert.ok(visible(shown).includes(`${agent} (${[...agent].length}/200)`));
-    assert.ok(visible(shown).includes(`${user} (${[...user].length}/200)`));
     assert.ok(visible(shown).includes(user));
     assert.ok(visible(shown).includes(agent));
+    assert.doesNotMatch(shown, /\/200\)/, "a count is not printed unless it was asked for");
     for (const line of shown.trimEnd().split("\n")) assert.ok(maxCells(line) <= 59 || isUnbreakable(line), line);
 
     out = [];
     assert.equal(await run(["show", "--verbose"], env, join(home, "project"), false), 0);
     const verbose = out.join("");
     const visibleVerbose = visible(verbose);
-    assert.equal(visibleVerbose.includes(user), true);
-    assert.equal(visibleVerbose.includes(agent), true);
+    // Each count stays with the description it measures.
+    assert.ok(visibleVerbose.includes(`${agent} (${[...agent].length}/200)`));
+    assert.ok(visibleVerbose.includes(`${user} (${[...user].length}/200)`));
     for (const line of verbose.trimEnd().split("\n")) assert.ok(maxCells(line) <= 59 || isUnbreakable(line), line);
 
     out = [];
@@ -557,6 +712,24 @@ for (const language of LANGUAGES) {
     assert.equal(json.persona.agent, agent);
   });
 }
+
+test("show refuses a role description over the cap instead of printing it beside a count", async () => {
+  // Decision: the counter is verbose-only because an over-limit value never reaches the screen.
+  // That holds only while reading the settings refuses it, so pin the refusal where `show` meets it.
+  await initializeState();
+  const configPath = join(home, "state", "config.json");
+  const config = JSON.parse(readFileSync(configPath, "utf8"));
+  config.persona.agent = "x".repeat(201);
+  writeFileSync(configPath, JSON.stringify(config));
+  out = [];
+  err = [];
+  assert.equal(await cli("show"), 1);
+  assert.ok(err.join("").includes(EN.persona.descriptionOverCap("persona.agent", 201, 200)), err.join(""));
+  assert.equal(out.join(""), "");
+  out = [];
+  assert.equal(await cli("show", "--json"), 1);
+  assert.equal(JSON.parse(out.join("")).reason, "settings-unreadable");
+});
 
 test("the retired fullscreen flag is absent from help and refuses without writes", async () => {
   await initializeState();
@@ -637,6 +810,17 @@ test("compact gauges and init notices respect narrow physical budgets", async ()
       }
       if (args[0] === "show") assert.ok(out.join("").includes("bravado"));
     }
+  }
+});
+
+test("show --json names each axis group by its English id in every interface language", async () => {
+  await initializeState();
+  for (const language of LANGUAGES) {
+    assert.equal(await cli("set", `language=${language}`), 0, err.join(""));
+    out = [];
+    assert.equal(await cli("show", "--json"), 0);
+    // The gauge shows the group's name in the interface language; machine output keeps the id.
+    assert.deepEqual(JSON.parse(out.join("")).groups, AXIS_GROUP, language);
   }
 });
 
@@ -741,6 +925,114 @@ test("no command emits an escape sequence when its output is not a terminal", as
   assert.doesNotMatch(out.join("") + err.join(""), /\x1b\[/);
 });
 
+test("no catalogue string shares a line between a command and a sentence, in any locale", () => {
+  // A command stands alone or follows a bare label ("Options: tonedial x --help"). Beside prose it
+  // wraps mid-command and cannot be copied as a line. Functions are called with sample arguments
+  // that name real commands, so a command built from an argument is seen too.
+  const COMMAND = /\b(?:tonedial (?:on|off|set|get|test|address|persona|reset|show|create|save|list|edit|update|use|compile|export|import|wire|unwire|init|doctor|eject|--)|npm (?:prefix|root|install|uninstall)\b|curl -)/;
+  const samples: unknown[][] = [["show"], ["show", "show"], ["show", ["show"]], ["show", null], [["show"]], [2], [true],
+    ["show", "show", "show"], ["show", "show", "show", "show"]];
+  const offenders: string[] = [];
+  let scanned = 0;
+  const scan = (where: string, text: string) => {
+    for (const line of text.split("\n")) {
+      const at = line.search(COMMAND);
+      if (at < 0) continue;
+      scanned++;
+      const before = line.slice(0, at).trim();
+      if (before !== "" && !/^[^.!?。！？]*[:：]$/.test(before)) offenders.push(`${where}: ${line.trim()}`);
+    }
+  };
+  const walk = (where: string, value: unknown): void => {
+    if (typeof value === "string") scan(where, value);
+    else if (typeof value === "function") {
+      for (const args of samples) {
+        try { const text = value(...args); if (typeof text === "string") scan(where, text); } catch { /* wrong arity for this sample */ }
+      }
+    } else if (value !== null && typeof value === "object") for (const [key, item] of Object.entries(value)) walk(`${where}.${key}`, item);
+  };
+  for (const language of LANGUAGES) walk(language, catalogue(language));
+  assert.deepEqual([...new Set(offenders)], []);
+  assert.ok(scanned > 500, `only ${scanned} command lines were scanned, so the sweep is not reaching the catalogues`);
+});
+
+test("a refusal at 60 columns leaves each command whole on a line of its own, in both locales", async () => {
+  await initializeState();
+  const env = { HOME: home, TONEDIAL_HOME: join(home, "state"), PATH: "", COLUMNS: "60" };
+  for (const language of ["en", "ko"]) {
+    assert.equal(await cli("set", `language=${language}`), 0, err.join(""));
+    for (const argv of [["set", "verbosty=2"], ["get", "verbosty"], ["reset", "verbosty"], ["address", "one"], ["persona", "one"],
+      ["use"], ["export"], ["create", "--auto"], ["edit", "preset"], ["edit"]]) {
+      out = [];
+      err = [];
+      assert.equal(await run(argv, env, join(home, "project"), false, false), 1, `${language} ${argv.join(" ")}`);
+      const lines = err.join("").split("\n");
+      const commands = lines.filter((line) => line.includes("tonedial "));
+      assert.ok(commands.length > 0 || argv[0] === "edit" && argv.length === 1, `${language} ${argv.join(" ")} offers a command`);
+      for (const line of commands) assert.match(line, /^ *tonedial /, `${language} ${argv.join(" ")}: ${line}`);
+    }
+    // The file `edit` cannot open is a copy target, so it stands alone however long it is.
+    err = [];
+    await run(["edit"], env, join(home, "project"), false, false);
+    assert.ok(err.join("").split("\n").includes(join(home, "state", "config.json")), `${language}: the config path is whole on its line`);
+  }
+});
+
+test("list rides the risk mark beside the title, flush right only on a terminal, else under the description", async () => {
+  await initializeState();
+  assert.equal(await cli("set", "profanity=4", "critique=4", "flattery=3", "conviction=5", "compliance=5", "refusal=2", "bravado=2"), 0, err.join(""));
+  assert.equal(await cli("save", "Every Risk At Once", "--slug", "every-risk"), 0, err.join(""));
+  const rows = async (columns: number, terminal: boolean) => {
+    out = [];
+    const env = { HOME: home, TONEDIAL_HOME: join(home, "state"), PATH: "", COLUMNS: String(columns), NO_COLOR: "1" };
+    assert.equal(await run(["list"], env, join(home, "project"), terminal, false), 0, err.join(""));
+    return out.join("").split("\n");
+  };
+  const piped = await rows(100, false);
+  assert.ok(piped.includes("    bratty-kid       Bratty Kid  ! refusal, bravado"), "a pipe gets two spaces, not a column");
+  assert.ok(piped.includes("    A cheeky kid who talks back and jokes with you."), "and the description is one line under it");
+  assert.ok(piped.some((line) => /^ {2}\* every-risk +Every Risk At Once · active · user preset$/.test(line)), "the active row reads slug, name · states");
+  const screen = await rows(80, true);
+  const bratty = screen.find((line) => line.includes("bratty-kid"))!;
+  assert.equal(maxCells(bratty), 79, "on a terminal the mark ends at the last column, with colour off as well");
+  assert.match(bratty, /Bratty Kid {3,}! refusal, bravado$/);
+  const narrow = await rows(60, true);
+  const at = narrow.findIndex((line) => line.includes("every-risk"));
+  assert.deepEqual(narrow.slice(at + 2, at + 4), ["    ! profanity, critique, flattery, conviction,", "      compliance, refusal, bravado"],
+    "seven axes fold under the description with a hanging indent");
+  assert.doesNotMatch([...piped, ...screen, ...narrow].join("\n"), /harsh language|biased judgments/, "the explanation belongs to show");
+  // At 60 columns the name gives way before the words a person scans for, in the longer locales too.
+  assert.equal(await cli("use", "caring-brother"), 0, err.join(""));
+  assert.equal(await cli("set", "warmth=1"), 0, err.join(""));
+  for (const language of ["ko", "es"] as const) {
+    assert.equal(await cli("set", `language=${language}`), 0, err.join(""));
+    const row = (await rows(60, true)).find((line) => line.includes("caring-brother"))!;
+    assert.ok(row.endsWith(catalogue(language).cli.preset.unsaved), `${language}: ${row}`);
+    assert.ok(maxCells(row) <= 59, `${language}: ${row}`);
+  }
+});
+
+test("a risk notice is yellow on stdout and stderr and never the red of a failure", async () => {
+  await initializeState();
+  mkdirSync(join(home, "project"));
+  const bin = join(home, "bin");
+  mkdirSync(bin);
+  writeFileSync(join(bin, "codex"), "#!/bin/sh\n", { mode: 0o755 });
+  const env = { HOME: home, TONEDIAL_HOME: join(home, "state"), PATH: bin };
+  // Each command shows the notice where it always has: three receipts on stdout, `set` on stderr.
+  for (const [argv, stream] of [
+    [["use", "ego-sword"], "out"], [["create", "Risky One", "critique=5", "--auto"], "out"],
+    [["test", "codex", "--dry-run"], "out"], [["set", "critique=5"], "err"],
+  ] as const) {
+    out = [];
+    err = [];
+    assert.equal(await run([...argv, "--color=always"], env, join(home, "project"), false, false), 0, `${argv[0]}: ${err.join("")}`);
+    const shown = (stream === "out" ? out : err).join("");
+    assert.match(shown, /\x1b\[33m! critique/, `${argv[0]}: the notice is yellow and keeps its mark`);
+    assert.doesNotMatch(shown, /\x1b\[31m! /, `${argv[0]}: and is not painted like a failure`);
+  }
+});
+
 /**
  * Every human-facing line every command emits, under the worst case the state can reach:
  * a Korean safeword, a Korean address, a note at its cap, and axes at their extremes.
@@ -758,6 +1050,7 @@ async function everyLine(columns?: number, language = "en"): Promise<{ line: str
     ["set", "safeword=진심으로 부탁할게", "persona.user_ref=선생님", "persona.age=40s"],
     ["set", `persona.note=${"채".repeat(200)}`],
     ["set", ...AXIS_ORDER.map((a) => `${a}=5`)],
+    ["save", "Every Risk At Once"],
     ["show"],
     ["show", "--explain"],
     ["show", "tough-love"],
@@ -784,6 +1077,7 @@ async function everyLine(columns?: number, language = "en"): Promise<{ line: str
     ["nosuchcommand"],
     ["set", "verbosity=9"],
     ["use", "nosuchpreset"],
+    ["use", "bratty-kd"],
     ["set", "persona.address.user=x"],
     ["--color=maybe"],
     ["--badflag"],
@@ -902,7 +1196,9 @@ test("the gauge block leaves room for a wider terminal to be unnecessary", async
   const axes = { ...AXIS_DEFAULT };
   for (let level = 1; level <= 5; level++) {
     for (const axis of AXIS_ORDER) axes[axis] = level as 1 | 2 | 3 | 4 | 5;
-    for (const line of gaugeBlock(axes, PLAIN)) assert.ok(maxCells(line) <= 46, `${maxCells(line)}: ${line}`);
+    for (const language of LANGUAGES) {
+      for (const line of gaugeBlock(axes, PLAIN, catalogue(language).cli)) assert.ok(maxCells(line) <= 46, `${language} ${maxCells(line)}: ${line}`);
+    }
   }
 });
 
@@ -961,8 +1257,7 @@ test("normal setup stays quiet and --explain describes advisory risk in every la
     out = [];
     err = [];
     assert.equal(await cli("show"), 0);
-    // stderr renders the warning marker in place of the notice's own "!".
-    assert.ok(flatten(err.join("")).includes(flatten(copy.cli.notice.riskAxes(["flattery", "refusal"]).replace(/^! /, ""))), `${language}: selected risky axes missing`);
+    assert.ok(flatten(err.join("")).includes(flatten(copy.cli.notice.riskAxes(["flattery", "refusal"]))), `${language}: selected risky axes missing`);
     out = [];
     err = [];
     assert.equal(await cli("list"), 0);
@@ -1079,7 +1374,7 @@ test("a Korean install speaks Korean where a user actually reads", async () => {
   out = [];
   err = [];
   assert.equal(await cli("wire", "--here", "--tools", "other-agent", "--dry-run", "--auto"), 1, "wire --tools other-agent");
-  assert.equal(out.join(""), `ToneDial · wire\n\n  ${catalogue("ko").cli.wiring.scopeHere}\n  ${join(home, "project")}\n`, "native refusal must contain only the command title and scope");
+  assert.equal(out.join(""), "", "a native refusal writes nothing to stdout");
   const expectedRefusal = catalogue("ko").cli.wiring.unknownTool("other-agent", ["claude", "antigravity", "codex"]);
   assert.equal(
     err.join("").replace(/\s+/g, " ").trim(),
@@ -1141,8 +1436,8 @@ test("a Korean install still speaks Korean once its config stops parsing", async
 });
 
 /**
- * Everything that stays English by design, removed before the prose is scanned: axis names and
- * groups (CLI input tokens and a gutter label kept English beside them), preset slugs and
+ * Everything that stays English by design, removed before the prose is scanned: axis names
+ * (CLI input tokens), preset slugs and
  * display names, `tonedial` and its subcommands, flags, filesystem paths, and the artifact's
  * own filename. What is left is sentences, which is what the gate is about.
  */
@@ -1159,7 +1454,7 @@ function stripStable(text: string): string {
     .replace(/\b[a-z0-9]+(-[a-z0-9]+)+\b/g, " ")
     .replace(/\btonedial\b|\bToneDial\b/g, " ")
     .replace(new RegExp(`\\b(${AXIS_ORDER.join("|")})\\b`, "g"), " ")
-    .replace(/\b(form|target|behaviour|tone\.md|config\.json|SKILL\.md|npm|npx|curl|init|show|list|doctor|wire|unwire|eject|compile|export|import|save|reset|edit|update|use|set|none|G1|G2|G3|G4)\b/g, " ")
+    .replace(/\b(tone\.md|config\.json|SKILL\.md|npm|npx|curl|init|show|list|doctor|wire|unwire|eject|compile|export|import|save|reset|edit|update|use|set|none|G1|G2|G3|G4)\b/g, " ")
     // `doctor`'s check names. They are identifiers, not prose: the same strings are the `name`
     // field in `--json`, which the skill reads, and a screen that called a check something
     // other than what the payload calls it would make the two disagree about what was checked.
@@ -1207,8 +1502,7 @@ for (const language of LANGUAGES) {
     };
     // Only init takes the language; every later command reads it back from the saved state.
     assert.equal(await collect("init", "--global", "--tools", "codex", "--lang", language, "--auto"), 0, err.join(""));
-    // A project reached through a long path: the inherited receipt, the duplicate report, and
-    // doctor's own rows all name it.
+    // A project reached through a long path: the covered receipt and doctor's own rows name it.
     assert.equal(await collect("wire", "codex", "--project", deep, "--auto"), 0, err.join(""));
     assert.equal(await collect("doctor", "--project", deep), 0, err.join(""));
     assert.equal(await collect("unwire", "codex", "--project", deep, "--auto"), 0, err.join(""));

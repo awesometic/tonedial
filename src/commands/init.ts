@@ -5,10 +5,11 @@ import { dirname, join, resolve } from "node:path";
 import { lstatSync, readdirSync } from "node:fs";
 
 import type { CommandResult, Ctx } from "../cli.ts";
-import { runAppRebuild } from "./rebuild.ts";
+import { recoveryPendingError, runAppRebuild } from "./rebuild.ts";
 import { runRebuildNative } from "./wire.ts";
+import { ScopeRequired, refuseHomeProject } from "../wiring/scopes.ts";
 import { activationStep } from "./test.ts";
-import { ConfigError, defaultConfig, requireConfigV2, safewordRejection, serializeConfig } from "../core/config.ts";
+import { ConfigError, OwnershipConflict, ToolsRequired, defaultConfig, requireConfigV2, safewordRejection, serializeConfig } from "../core/config.ts";
 import { compile, measure } from "../core/compile.ts";
 import { toCompileInput } from "../core/resolve.ts";
 import { catalogue, configLanguage, detectLanguage, isLanguage, LANGUAGES, type Language } from "../core/i18n.ts";
@@ -17,7 +18,7 @@ import { BUNDLED, localizedPreset, matchesPreset, withPreset } from "../core/pre
 import { SEED_VERSION, inspectContextLayout, planSeedChanges } from "../core/seeds.ts";
 import { inspectOperations } from "../core/operations.ts";
 import { SKILL_NAME, TONE_COMMAND_MD, TONE_COMMAND_VERSION } from "../core/skill.ts";
-import { artifactSize, humanText, nativeSetup, receiptLines, recoveryRollbackLines, riskWarnings, section } from "../ui/format.ts";
+import { artifactSize, humanText, nativeSetup, nextStep, receiptLines, recoveryRollbackLines, riskNotice, riskWarnings, section } from "../ui/format.ts";
 import { riskyAxes } from "../core/anchors.ts";
 import { padEnd, wrap } from "../ui/width.ts";
 import { gate, planChange } from "../wiring/apply.ts";
@@ -25,30 +26,30 @@ import { spawnSync } from "node:child_process";
 import { confirm, pickTools } from "../ui/prompt.ts";
 import { rcPath, withPathLine } from "../wiring/shell.ts";
 import { planSelectedSkills } from "../wiring/skill.ts";
-import { assertDistinctHookTargets, parseToolSelection, planOrderedDelivery } from "../wiring/targets.ts";
+import { TARGETS, assertDistinctHookTargets, parseToolSelection, planOrderedDelivery } from "../wiring/targets.ts";
 import { contentHash, recordFileChange, resourceKey } from "../wiring/ownership.ts";
 
 export async function runInit(entry: Ctx, _args: string[]): Promise<CommandResult> {
+  refuseHomeProject(entry.agent, entry.env, `tonedial init${entry.flags.tools ? ` --tools ${entry.flags.tools}` : ""} --global`, entry.t);
   const operations = inspectOperations(entry.paths);
   const pending = operations.lock.state !== "none" || operations.journals.some(({ state }) => state === "pending" || state === "invalid");
-  if (pending && (entry.flags.auto || !entry.canPrompt)) throw new ConfigError(entry.t.doctor.recoveryPending);
+  const recovery = () => recoveryPendingError(entry.paths, entry.t, connectionScopeFlag(entry.agent, entry.cwd));
+  if (pending && (entry.flags.auto || !entry.canPrompt)) throw recovery();
   // Package-only installation is still fresh setup; any saved app entry instead shares the
   // data-first existing-state owner. Probe entries without decoding or following links.
   const existing = [entry.paths.config, entry.paths.agents, entry.paths.tone,
     join(entry.paths.root, LEGACY_CONTEXT_ARTIFACT_FILENAME)]
     .some((path) => lstatSync(path, { throwIfNoEntry: false }) !== undefined) || hasPresetState(entry.paths.presets);
   if (existing) return rebuildExisting(entry);
-  if (pending) {
-    throw new ConfigError(entry.t.doctor.recoveryPending);
-  }
+  if (pending) throw recovery();
   const scopeExplicit = entry.scopeExplicit ?? (entry.flags.global || entry.flags.here === true || entry.flags.project !== null);
-  if (entry.flags.auto && !entry.flags.dryRun && !scopeExplicit) throw new ConfigError(entry.t.errors.scopeRequired);
+  if (entry.flags.auto && !entry.flags.dryRun && !scopeExplicit) throw new ScopeRequired(entry.t);
   // Everything down to `chooseLanguage` speaks `entry.t`, which came from the config or, when
   // there is no config yet, from the machine's locale. That is correct here and only here:
   // these refusals happen before `--lang` has been read, let alone validated.
   const selection = entry.flags.tools === null ? null : parseToolSelection(entry.flags.tools, true, entry.t);
   if (selection === null && (entry.flags.auto || !entry.canPrompt)) {
-    throw new ConfigError(entry.t.errors.toolsRequired);
+    throw new ToolsRequired(entry.t);
   }
   if (entry.flags.commands && selection !== null && !selection.includes("claude")) {
     throw new ConfigError(entry.t.errors.commandsNeedClaude);
@@ -64,7 +65,7 @@ export async function runInit(entry: Ctx, _args: string[]): Promise<CommandResul
   // for `ctx.t` to have read the language out of. `--lang ko` on a new machine printed its
   // seed list, its skill line, and its scope line in English.
   const ctx: Ctx = { ...entry, t: copy.cli };
-  const doctorCommand = `tonedial doctor ${connectionScopeFlag(ctx.agent)} --json`;
+  const doctorCommand = `tonedial doctor ${connectionScopeFlag(ctx.agent, ctx.cwd)} --json`;
   const lines: string[] = [];
   const addReceipt = (text: string, paint = (line: string) => line) => {
     lines.push(...receiptLines(text, ctx.ui.width - 2).map((line) => `  ${paint(line)}`));
@@ -81,7 +82,7 @@ export async function runInit(entry: Ctx, _args: string[]): Promise<CommandResul
     instructionRoots: [ctx.agent.root, ctx.cwd, ...(ctx.env.HOME ? [ctx.env.HOME] : [])],
     operations,
   });
-  if (layout.cause === "operation") throw new ConfigError(ctx.t.doctor.recoveryPending);
+  if (layout.cause === "operation") throw recoveryPendingError(ctx.paths, ctx.t, connectionScopeFlag(ctx.agent, ctx.cwd));
   if (layout.cause === "overlap") throw new ConfigError(ctx.t.errors.stateInstructionOverlap(ctx.paths.root));
   if (layout.kind === "conflict") {
     const failed = layout.inspectionFailure;
@@ -90,7 +91,7 @@ export async function runInit(entry: Ctx, _args: string[]): Promise<CommandResul
   }
   if (layout.kind === "fresh" && ctx.flags.migrateLegacy) throw new ConfigError(ctx.t.errors.migrationFresh);
   ctx.contextChecks = layout.checks;
-  const introduction = scopeIntroduction(ctx, copy.init.scopeHeading);
+  const introduction = scopeIntroduction(ctx);
   if (ctx.canPrompt) process.stdout.write(`${introduction.join("\n")}\n`);
   else lines.push(...introduction);
 
@@ -125,9 +126,9 @@ export async function runInit(entry: Ctx, _args: string[]): Promise<CommandResul
   }
   // Keep each tool's capture with its ownership record, independent of seed-array positions.
   const perTool = tools.map((tool) => {
-    const plan = planOrderedDelivery(ctx.paths, ctx.agent, tool, config.wiring, ctx.env, ctx.t);
+    const plan = planOrderedDelivery(ctx.paths, ctx.agent, tool, config.wiring, ctx.t);
     config.wiring = plan.wiring;
-    return { tool, change: plan.change, checks: plan.checks, inherited: plan.inherited, duplicates: plan.duplicates };
+    return { tool, change: plan.change, checks: plan.checks, duplicates: plan.duplicates };
   });
   assertDistinctHookTargets(perTool, ctx.t);
   const changes: ReturnType<typeof planChange>[] = seeds.changes.concat(perTool.flatMap((w) => [...w.checks, w.change]));
@@ -155,7 +156,7 @@ export async function runInit(entry: Ctx, _args: string[]): Promise<CommandResul
     const recorded = config.wiring.resources[resourceKey(commandChange.realPath, "command")];
     if (commandChange.snapshot.symbolicLink || (commandChange.before !== null
       && (recorded?.expected.type !== "file" || recorded.expected.sha256 !== contentHash(commandChange.before)))) {
-      throw new ConfigError(ctx.t.errors.ownershipConflict(commandChange.path));
+      throw new OwnershipConflict(ctx.t.errors.ownershipConflict(commandChange.path));
     }
     changes.push(commandChange);
   }
@@ -188,6 +189,10 @@ export async function runInit(entry: Ctx, _args: string[]): Promise<CommandResul
     auto: ctx.flags.auto,
     verbose: ctx.flags.verbose,
     ui: ctx.ui,
+    agent: ctx.agent,
+    // The introduction above already named this scope's root.
+    agentRootShown: true,
+    describe: { [ctx.paths.config]: ctx.t.wiring.configSaves(tools.length ? tools.map((tool) => TARGETS[tool].label).join(", ") : null, ctx.agent.live) },
     heading: ctx.t.wiring.planHeading,
   });
 
@@ -200,7 +205,8 @@ export async function runInit(entry: Ctx, _args: string[]): Promise<CommandResul
   const status = applied
     ? copy.init.done
     : wiring.reason === "dry-run" ? ctx.t.wiring.dryRun : ctx.t.wiring.declined;
-  lines.push(...section(copy.init.resultHeading, ctx.ui),
+  // "Ready" heads a run that finished. A declined or previewed one has only its status.
+  lines.push(...(applied ? section(copy.init.resultHeading, ctx.ui) : [""]),
     `  ${ctx.ui.bold(applied ? ctx.ui.success(status) : status)}`);
   if (applied) {
     addReceipt(ctx.t.artifact.generated, ctx.ui.success);
@@ -215,15 +221,15 @@ export async function runInit(entry: Ctx, _args: string[]): Promise<CommandResul
     if (commandFile) addReceipt(ctx.t.wiring.commandInstalled(humanText(commandFile)));
   }
   if (applied) {
-    const routes = perTool.map(({ tool, change, inherited, duplicates }) => ({ tool, path: change.path, inherited, duplicates }));
+    const routes = perTool.map(({ tool, change, duplicates }) => ({ tool, path: change.path, duplicates }));
     // Host groups are separated by an empty message; keep that row truly blank.
-    for (const message of nativeSetup(copy.cli, routes, ctx.agent.live)) {
+    for (const message of nativeSetup(copy.cli, routes, ctx.agent.live, ctx.cwd)) {
       if (message === "") lines.push("");
       else addReceipt(message);
     }
   }
   if (applied) {
-    for (const notice of riskWarnings(config.axes, ctx.t)) addReceipt(notice, ctx.ui.risk);
+    for (const notice of riskWarnings(config.axes, ctx.t)) addReceipt(notice, (line) => riskNotice(line, ctx.ui));
   }
   // State alone reaches no conversation; say so where the user reads the result.
   const unconnected = applied && tools.length === 0;
@@ -240,6 +246,7 @@ export async function runInit(entry: Ctx, _args: string[]): Promise<CommandResul
   // and "a handoff that is undefined", and the first one is what this means.
   const after = hostHandoff(ctx, applied, tools);
   return {
+    previewed: wiring.reason === "dry-run",
     lines,
     ...(after ? { after } : {}),
     json: {
@@ -250,7 +257,7 @@ export async function runInit(entry: Ctx, _args: string[]): Promise<CommandResul
       safeword: config.safeword,
       seeded: seeds.labels,
       tools,
-      integrations: perTool.map(({ tool, change, inherited, duplicates }) => ({ tool, path: change.path, inherited, duplicates, configuration: applied ? "configured" : "not-applied", activation: "unverified" })),
+      integrations: perTool.map(({ tool, change, duplicates }) => ({ tool, path: change.path, inherited: false, duplicates, configuration: applied ? "configured" : "not-applied", activation: "unverified" })),
       root: ctx.paths.root,
       agentRoot: ctx.agent.root,
       live: ctx.agent.live,
@@ -278,9 +285,8 @@ function hasPresetState(path: string): boolean {
       ? readdirSync(join(path, child.name)).length > 0 : true);
 }
 
-function scopeIntroduction(ctx: Ctx, heading: string): string[] {
+function scopeIntroduction(ctx: Ctx): string[] {
   return [
-    ...section(heading, ctx.ui).slice(1),
     `  ${ctx.agent.live ? ctx.t.wiring.scopeGlobal : ctx.t.wiring.scopeHere}`,
     `  ${humanText(ctx.agent.root)}`,
     `  ${ctx.t.wiring.stateRoot}`,
@@ -291,18 +297,20 @@ function scopeIntroduction(ctx: Ctx, heading: string): string[] {
 async function rebuildExisting(entry: Ctx): Promise<CommandResult> {
   const scopeExplicit = entry.scopeExplicit ?? (entry.flags.global || entry.flags.here === true || entry.flags.project !== null);
   const selection = entry.flags.tools === null ? null : parseToolSelection(entry.flags.tools, true, entry.t);
-  if (selection === null && (entry.flags.auto || !entry.canPrompt)) throw new ConfigError(entry.t.errors.toolsRequired);
+  if (selection === null && (entry.flags.auto || !entry.canPrompt)) throw new ToolsRequired(entry.t);
   const language = chooseLanguage(entry);
   const copy = catalogue(language);
-  const ctx: Ctx = { ...entry, t: copy.cli };
+  const ctx: Ctx = { ...entry, t: copy.cli, scopeShown: !entry.flags.verbose };
   if (ctx.flags.commands && selection !== null && !selection.includes("claude")) throw new ConfigError(ctx.t.errors.commandsNeedClaude);
-  const introduction = scopeIntroduction(ctx, copy.init.scopeHeading);
+  const introduction = scopeIntroduction(ctx);
   if (ctx.canPrompt) process.stdout.write(`${introduction.join("\n")}\n`);
   const resultHeading = ctx.canPrompt && !ctx.flags.auto && !ctx.flags.dryRun
     ? section(copy.init.resultHeading, ctx.ui) : [];
   const app = await runAppRebuild(ctx, copy.init.refreshHeading);
+  // The heading belongs to a run that finished; a declined one is a blank line and its status.
+  const heading = resultHeading.length > 0 && !(app.json.applied === true || app.json.reason === "nothing") ? [""] : resultHeading;
   if (app.quarantineOnly) {
-    return { ...app, lines: [...(ctx.canPrompt ? [] : introduction), ...resultHeading, ...app.lines] };
+    return { ...app, lines: [...(ctx.canPrompt ? [] : introduction), ...heading, ...app.lines] };
   }
   if (ctx.flags.dryRun) {
     const answers = await ask(ctx, copy, false, selection);
@@ -310,6 +318,7 @@ async function rebuildExisting(entry: Ctx): Promise<CommandResult> {
     if (ctx.flags.commands && !tools.includes("claude")) throw new ConfigError(ctx.t.errors.commandsNeedClaude);
     const native = await runRebuildNative({ ...ctx, flags: { ...ctx.flags, tools: tools.length ? tools.join(",") : "none" } }, app.legacy, app.proposedConfig);
     return {
+      previewed: app.json.reason === "dry-run" || native.json.reason === "dry-run",
       lines: [...(ctx.canPrompt ? [] : introduction), ...app.lines, ...native.lines],
       json: { ...app.json, agentRoot: ctx.agent.root, live: ctx.agent.live,
         scope: ctx.agent.live ? "global" : "project", scopeExplicit, language: app.proposedConfig.language,
@@ -320,7 +329,7 @@ async function rebuildExisting(entry: Ctx): Promise<CommandResult> {
       warnings: [...(app.warnings ?? []), ...(native.warnings ?? [])],
     };
   }
-  if (app.rebuiltConfig === null) return { ...app, lines: [...(ctx.canPrompt ? [] : introduction), ...resultHeading, ...app.lines] };
+  if (app.rebuiltConfig === null) return { ...app, lines: [...(ctx.canPrompt ? [] : introduction), ...heading, ...app.lines] };
   const answers = await ask(ctx, copy, false, selection);
   const tools = selection ?? answers.tools!;
   if (ctx.flags.commands && !tools.includes("claude")) throw new ConfigError(ctx.t.errors.commandsNeedClaude);
@@ -328,7 +337,10 @@ async function rebuildExisting(entry: Ctx): Promise<CommandResult> {
   const native = await runRebuildNative(scoped, app.legacy);
   const after = hostHandoff(scoped, native.json.applied === true || native.json.reason === "nothing", tools);
   return {
-    lines: [...(ctx.canPrompt ? [] : introduction), ...resultHeading, ...app.lines, ...native.lines,
+    lines: [...(ctx.canPrompt ? [] : introduction), ...heading, ...app.lines, ...native.lines,
+      // A protected connection file is diagnosed, with its manual routes, by the scoped doctor.
+      ...(native.json.reason === "protected-native-resource"
+        ? nextStep(`tonedial doctor ${connectionScopeFlag(ctx.agent, ctx.cwd)}`, ctx.ui) : []),
       ...recoveryRollbackLines(ctx.t, app.json.operationId, native.json.operationId)],
     ...(after ? { after } : {}),
     json: {

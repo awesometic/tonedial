@@ -7,7 +7,7 @@ import { tmpdir } from "node:os";
 import { isDeepStrictEqual } from "node:util";
 
 import type { CommandResult, Ctx } from "../cli.ts";
-import { CONFIG_SCHEMA, ConfigError, parseConfig, serializeConfig, type Config } from "../core/config.ts";
+import { CONFIG_SCHEMA, ConfigError, PresetNotFound, parseConfig, serializeConfig, type Config } from "../core/config.ts";
 import {
   BUNDLED, SLUG_PATTERN, matchesPreset, withPreset, assertPresetSelection, customPresetDir, inspectPresetLibrary, parsePreset,
   preparePresetWrite, resolvePreset, type Preset, type PresetEntry,
@@ -308,7 +308,8 @@ function presetTarget(ctx: Ctx, slug: string): {
   const damaged = library.unavailable.find((candidate) => candidate.slug === slug);
   const path = entry?.path ?? damaged?.path;
   if (path === null || path === undefined) {
-    throw new ConfigError(ctx.t.preset.unknown(slug, library.entries.map((candidate) => candidate.preset.slug)));
+    throw new PresetNotFound(ctx.t, slug, library.entries.map((candidate) => candidate.preset.slug),
+      library.entries.filter((candidate) => candidate.preset.bundled !== true).map((candidate) => candidate.preset.slug));
   }
   const capture = entry?.capture ?? captureRawEntry(path, ctx.t, { within: ctx.paths.root, maxBytes: 64 * 1024, allowLink: false });
   const selectionReads = entry?.selectionReads ?? [capture];

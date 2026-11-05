@@ -11,12 +11,12 @@ import type { CommandResult, Ctx } from "../cli.ts";
 import { withPreset, inspectPresetLibrary, readDisplayName, resolvePreset, type Preset } from "../core/presets.ts";
 import { compile } from "../core/compile.ts";
 import { riskyAxes } from "../core/anchors.ts";
-import { ConfigError, isConfigV2, type Config } from "../core/config.ts";
+import { ConfigError, PresetNotFound, isConfigV2, type Config } from "../core/config.ts";
 import { AGENT_TOOLS, connectionScopeFlag, onPath, shellQuote } from "../core/paths.ts";
 import { toCompileInput } from "../core/resolve.ts";
 import { confirm, guardTerminal } from "../ui/prompt.ts";
 import { wrap } from "../ui/width.ts";
-import { humanText, nextStep, riskWarnings } from "../ui/format.ts";
+import { humanText, nextStep, riskNotice, riskWarnings } from "../ui/format.ts";
 import { planConfig } from "./compile.ts";
 
 const PROVIDERS = ["claude", "codex"] as const;
@@ -31,7 +31,7 @@ function connected(config: Config): boolean {
 
 /** Connections default to global; only a scope the user named carries over. */
 function wireStep(ctx: Ctx): string {
-  return `tonedial wire ${ctx.scopeExplicit ? connectionScopeFlag(ctx.agent, ctx.flags.here === true) : "--global"}`;
+  return `tonedial wire ${ctx.scopeExplicit ? connectionScopeFlag(ctx.agent, ctx.cwd) : "--global"}`;
 }
 
 /**
@@ -62,13 +62,7 @@ export async function runTest(ctx: Ctx, args: string[]): Promise<CommandResult> 
   try { targetIsDirectory = statSync(target).isDirectory(); } catch { /* Report the bounded path error below. */ }
   if (!targetIsDirectory) throw new ConfigError(copy.targetUnavailable(displayTarget));
 
-  let saved: ReturnType<typeof planConfig>;
-  try { saved = planConfig(ctx); }
-  catch (cause) {
-    if (!(cause instanceof ConfigError)) throw cause;
-    throw new ConfigError(copy.invalidConfig, { cause });
-  }
-  const { change, config } = saved;
+  const { change, config } = planConfig(ctx);
   if (change.before === null) throw new ConfigError(copy.missingConfig);
   let input = toCompileInput(config);
   let preview: Preset | null = null;
@@ -76,7 +70,7 @@ export async function runTest(ctx: Ctx, args: string[]): Promise<CommandResult> 
     const library = inspectPresetLibrary(ctx.paths.presets, ctx.t);
     preview = resolvePreset(ctx.paths.presets, ctx.flags.preset, ctx.t, library)?.preset ?? null;
     if (preview === null) {
-      throw new ConfigError(ctx.t.preset.unknown(ctx.asJson ? ctx.flags.preset : humanText(ctx.flags.preset), library.entries.map((entry) => entry.preset.slug)));
+      throw new PresetNotFound(ctx.t, ctx.flags.preset, library.entries.map((entry) => entry.preset.slug));
     }
     input = toCompileInput(withPreset(config, preview));
   }
@@ -98,7 +92,10 @@ export async function runTest(ctx: Ctx, args: string[]): Promise<CommandResult> 
     }));
   }
   if (installed.length === 0) throw new ConfigError(copy.noProvider);
-  if (selected === undefined && installed.length > 1 && planOnly) throw new ConfigError(copy.providerRequired);
+  if (selected === undefined && installed.length > 1 && planOnly) {
+    // A dry run stays one; --json is added by whoever runs a chosen command.
+    throw new ConfigError(copy.providerRequired(installed.map(({ provider }) => `${rerun(provider)}${ctx.flags.dryRun ? " --dry-run" : ""}`)));
+  }
 
   const usageLines = [copy.cost, copy.interpretationCaveat, copy.history, copy.protection, copy.automationCaveat, copy.driftCaveat]
     .flatMap((notice, index) => wrap(notice, ctx.ui.width - 4).map((line, continuation) =>
@@ -170,7 +167,7 @@ export async function runTest(ctx: Ctx, args: string[]): Promise<CommandResult> 
   lines.splice(1, 0, ...wrap(preview ? copy.previewTone(toneName) : copy.savedTone(toneName), ctx.ui.width - 2)
     .map((line) => `  ${ctx.ui.bold(line)}`));
   lines.push(...riskWarnings(input.axes, ctx.t).flatMap((notice) => wrap(notice, ctx.ui.width - 2)
-    .map((line) => `  ${ctx.ui.risk(line)}`)));
+    .map((line) => `  ${riskNotice(line, ctx.ui)}`)));
   // A plan ends with the command that would open it.
   if (planOnly) {
     lines.push(...nextStep(rerun(provider), ctx.ui));

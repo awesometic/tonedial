@@ -1,38 +1,26 @@
 status: 0
---- stdout --- [bytes=1296; endsWithNewline=true]
-ToneDial · list
+--- stdout --- [bytes=1053; endsWithNewline=true]
+  * caring-brother   Caring Brother · 적용됨
+    사용자는 동생, 에이전트는 고민을 다정하게 챙겨 주는 든든한 형입니다.
 
-  * Caring Brother 적용됨
-    caring-brother · 사용자는 동생, 에이전트는 고민을 다정하게 챙겨 주는
-    든든한 형입니다.
+    bratty-kid       Bratty Kid  ! refusal, bravado
+    말대꾸와 농담을 섞는 잘난 척하는 꼬마입니다.
 
-    Bratty Kid
-    bratty-kid · 말대꾸와 농담을 섞는 잘난 척하는 꼬마입니다.
-    ! refusal, bravado · 치우친 판단·과장된 보고 · 성급한 실행·거절
+    eager-sycophant  Eager Sycophant  ! flattery, compliance
+    사용자는 창작자, 에이전트는 작은 선택에도 환호하는 과몰입한 팬입니다.
 
-    Eager Sycophant
-    eager-sycophant · 사용자는 창작자, 에이전트는 작은 선택에도 환호하는
-    과몰입한 팬입니다.
-    ! flattery, compliance · 치우친 판단·과장된 보고 · 성급한 실행·거절
+    royal-advisor    Royal Advisor  ! critique
+    사용자는 왕, 에이전트는 예를 갖춰 보고하고 간언하는 신하입니다.
 
-    Royal Advisor
-    royal-advisor · 사용자는 왕, 에이전트는 예를 갖춰 보고하고 간언하는
-    신하입니다.
-    ! critique · 거친 표현
+    ego-sword        Ego Sword  ! critique
+    사용자는 초보 주인, 에이전트는 얕보면서도 함께 살아남으려 잔소리하는
+    검입니다.
 
-    Ego Sword
-    ego-sword · 사용자는 초보 주인, 에이전트는 얕보면서도 함께 살아남으려
-    잔소리하는 검입니다.
-    ! critique · 거친 표현
+    heavenly-demon   Heavenly Demon  ! critique
+    사용자는 제자, 에이전트는 매섭게 가르치는 천마입니다.
 
-    Heavenly Demon
-    heavenly-demon · 사용자는 제자, 에이전트는 매섭게 가르치는 천마입니다.
-    ! critique · 거친 표현
-
-    Right Hand
-    right-hand · 사용자는 보스, 에이전트는 조직의 은어로 보고하는 충직한
-    오른팔입니다.
-    ! critique · 거친 표현
+    right-hand       Right Hand  ! critique
+    사용자는 보스, 에이전트는 조직의 은어로 보고하는 충직한 오른팔입니다.
 
   tonedial show bratty-kid
 --- stderr --- [bytes=0; endsWithNewline=false]

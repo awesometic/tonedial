@@ -19,7 +19,7 @@ import { createLegacyFixture } from "./support/legacy-fixture.ts";
 let scratch: string;
 let env: NodeJS.ProcessEnv;
 beforeEach(() => {
-  scratch = mkdtempSync(join(tmpdir(), "tonedial-setup-"));
+  scratch = realpathSync(mkdtempSync(join(tmpdir(), "tonedial-setup-")));
   env = { HOME: scratch, TONEDIAL_HOME: join(scratch, "state"), PATH: "", LANG: "en_US.UTF-8" };
 });
 afterEach(() => rmSync(scratch, { recursive: true, force: true }));
@@ -221,7 +221,9 @@ test("native setup refuses before touching an existing unowned tone command", as
   writeFileSync(command, ownCommand);
   const result = await invoke(["init", "--here", "--tools", "claude", "--commands", "--auto", "--json"]);
   assert.notEqual(result.code, 0, result.out + result.err);
-  assert.equal(JSON.parse(result.out).error, catalogue("en").cli.errors.ownershipConflict(command));
+  const refusal = JSON.parse(result.out);
+  assert.equal(refusal.error, `${catalogue("en").cli.errors.ownershipConflict(command)}\n  tonedial doctor --here`);
+  assert.deepEqual([refusal.reason, refusal.commands], ["ownership-conflict", ["tonedial doctor --here"]]);
   assert.equal(readFileSync(command, "utf8"), ownCommand);
   assert.equal(existsSync(resolvePaths(env).config), false);
   assert.equal(existsSync(resolvePaths(env).tone), false);
@@ -269,7 +271,7 @@ test("native wire preserves a foreign skill and succeeds after the collision is 
   writeFileSync(join(foreign, "SKILL.md"), "# My skill\n");
   const refused = await invoke(["wire", "--here", "codex", "--auto", "--json"]);
   assert.notEqual(refused.code, 0);
-  assert.equal(JSON.parse(refused.out).error, catalogue("en").cli.errors.ownershipConflict(foreign));
+  assert.equal(JSON.parse(refused.out).error, `${catalogue("en").cli.errors.ownershipConflict(foreign)}\n  tonedial doctor --here`);
   assert.equal(readFileSync(paths.config, "utf8"), before);
   assert.equal(existsSync(paths.skill), false);
   assert.equal(existsSync(join(scratch, "project", ".codex")), false);
@@ -475,7 +477,9 @@ test("doctor previews and restores an explicitly selected retained migration wit
   const journalBefore = readFileSync(join(paths.operations, `${id}.json`), "utf8");
   const args = ["doctor", "--fix", "--rollback", id];
 
-  const listing = await invoke(["doctor", "--here"]);
+  // A retained backup is history: discoverable without JSON, but only in the verbose view.
+  assert.ok(!(await invoke(["doctor", "--here"])).out.includes(id));
+  const listing = await invoke(["doctor", "--here", "--verbose"]);
   assert.ok(listing.out.includes(id), "the retained backup must be discoverable without JSON");
   for (const lang of ["en_US.UTF-8", "ko_KR.UTF-8"]) {
     const preview = await invoke([...args, "--dry-run", "--json"], { LANG: lang });

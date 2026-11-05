@@ -1,11 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="652" viewBox="0 0 1100 652" role="img" aria-labelledby="title description">
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="596" viewBox="0 0 1100 596" role="img" aria-labelledby="title description">
 <title id="title">ToneDial screen (en · doctor --global)</title>
 <desc id="description">ToneDial · doctor
 
-  Inspection scope: global
+  Global scope (all projects)
   &lt;ROOT&gt;
 
-  Application: healthy
+  1 problem
 
   Checks
   · Agent hooks
@@ -18,15 +18,13 @@
     npm prefix -g
     Then add its bin directory to PATH (macOS/Linux).
 
-  1 check needs attention
-
   tonedial wire --global
 </desc>
 <rect width="100%" height="100%" rx="16" fill="#171b20"/>
 <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, system-ui" font-size="22"><text x="32" y="48" fill="#edf3f6" font-weight="400" opacity="1">ToneDial · doctor</text>
-<text x="60" y="104" fill="#edf3f6" font-weight="400" opacity="1">Inspection scope: global</text>
+<text x="60" y="104" fill="#edf3f6" font-weight="400" opacity="1">Global scope (all projects)</text>
 <text x="60" y="132" fill="#edf3f6" font-weight="400" opacity="1">&lt;ROOT&gt;</text>
-<text x="60" y="188" fill="#edf3f6" font-weight="400" opacity="1">Application: healthy</text>
+<text x="60" y="188" fill="#edf3f6" font-weight="400" opacity="1">1 problem</text>
 <text x="60" y="244" fill="#edf3f6" font-weight="400" opacity="1">Checks</text>
 <text x="60" y="272" fill="#edf3f6" font-weight="400" opacity="1">· Agent hooks</text>
 <text x="88" y="300" fill="#edf3f6" font-weight="400" opacity="1">Not connected: Claude Code, Antigravity IDE/Desktop, Codex CLI.</text>
@@ -36,6 +34,5 @@
 <text x="88" y="440" fill="#edf3f6" font-weight="400" opacity="1">Find the global prefix:</text>
 <text x="88" y="468" fill="#edf3f6" font-weight="400" opacity="1">npm prefix -g</text>
 <text x="88" y="496" fill="#edf3f6" font-weight="400" opacity="1">Then add its bin directory to PATH (macOS/Linux).</text>
-<text x="60" y="552" fill="#edf3f6" font-weight="400" opacity="1">1 check needs attention</text>
-<text x="60" y="608" fill="#edf3f6" font-weight="400" opacity="1">tonedial wire --global</text></g>
+<text x="60" y="552" fill="#edf3f6" font-weight="400" opacity="1">tonedial wire --global</text></g>
 </svg>

@@ -1,6 +1,6 @@
 # Using ToneDial
 
-ToneDial is a local CLI for saving tone axes, roles, address forms, register and a safeword as one reusable coding-agent profile.
+ToneDial is a local CLI for saving tone axes, roles, address forms, register and a safeword as one reusable coding-agent preset.
 
 ```bash
 tonedial use ego-sword
@@ -13,13 +13,13 @@ tonedial save "My Sword"
 For a checkout, use [build and run from source](../CONTRIBUTING.md#build-and-run-from-source).
 Use the [candidate procedure](./TESTING.md#isolated-candidate) for disposable setup.
 
-[Profiles & roles](#presets-and-personal-settings) · [Try a conversation](#try-a-fresh-conversation) · [Read settings](#read-current-settings) · [Axes](#tone-and-axes) · [Dial](#the-inline-dial) · [Connect](#connecting-an-agent) · [Reload](#changing-an-open-conversation) · [Recover](#recovery) · [Commands & JSON](#command-reference-and-json)
+[Presets & roles](#presets-and-personal-settings) · [Try a conversation](#try-a-fresh-conversation) · [Read settings](#read-current-settings) · [Axes](#tone-and-axes) · [Dial](#the-inline-dial) · [Connect](#connecting-an-agent) · [Reload](#changing-an-open-conversation) · [Recover](#recovery) · [Commands & JSON](#command-reference-and-json)
 
 ## Presets and personal settings
 
 ### Pick a relationship
 
-| Profile | You → agent | Korean self / user address |
+| Preset | You → agent | Korean self / user address |
 |---|---|---|
 | `caring-brother` | Younger sibling → caring older brother | 형 / 동생 |
 | `bratty-kid` | Conversation partner → mischievous kid | 나 / 너 |
@@ -30,31 +30,33 @@ Use the [candidate procedure](./TESTING.md#isolated-candidate) for disposable se
 | `right-hand` | Organization boss → trusted right hand | 저 / 보스 |
 
 [Hear all seven in Codex](./EXAMPLES.md).
-Every bundled profile includes axes, address, persona, register and safeword defaults.
-`use` restores the complete profile; language and wiring stay global.
+Every bundled preset includes axes, address, persona, register and safeword defaults.
+`use` restores the complete preset; language and wiring stay global.
 
 ```bash
-tonedial list                       # bundled and saved profiles; --verbose adds axes
-tonedial show ego-sword             # preview the saved profile
+tonedial list                       # bundled and saved presets; --verbose adds axes
+tonedial show ego-sword             # preview the saved preset
 tonedial show                        # inspect the current settings
-tonedial use ego-sword               # replace current tone settings with this profile
+tonedial use ego-sword               # replace current tone settings with this preset
 ```
 
-`show` without a slug flags tone settings that have not been saved to a profile and offers a copyable `save` command.
-Your settings and `TONE.md` are already persisted; the notice concerns the profile library.
-Selecting the same profile again discards those unsaved profile changes.
+`show` without a slug flags tone settings that have not been saved to a preset and offers a copyable `save` command.
+Your settings and `TONE.md` are already persisted; the notice concerns the preset library.
+Selecting the same preset again discards those unsaved preset changes.
+When `use` replaces a tone that has them, its receipt says so and prints the `save` command that would have kept them; JSON has no extra field for it.
+`show <slug>` previews only what the preset stores, so it leaves out the interface language and connections; for a legacy axis-only preset it prints the axes and says that your current settings stay.
 
 Built-in address and role defaults use the interface language at selection or preview time.
-Changing the interface alone does not rewrite current role text; custom profiles always retain literal text.
-Interactive `init` asks you to choose a profile, then the user and self address and an optional safeword.
-Unattended `init` selects the first bundled profile, `caring-brother`.
+Changing the interface alone does not rewrite current role text; custom presets always retain literal text.
+Interactive `init` asks you to choose a preset, then the user and self address and an optional safeword.
+Unattended `init` selects the first bundled preset, `caring-brother`.
 
-### Create or save a profile
+### Create or save a preset
 
 ```bash
 tonedial create                      # guided form, then the twelve-axis dial
 tonedial save "My Jarvis" --slug my-jarvis
-tonedial save                        # update the selected user profile
+tonedial save                        # update the selected user preset
 ```
 
 The guided form collects name, slug, self/user address, user context, agent role, register, `address_frequency` and safeword.
@@ -63,10 +65,10 @@ Enter keeps a displayed value; `""` clears an optional field in `create` and `pe
 Each role description allows **200 Unicode code points**, including spaces and punctuation.
 Invalid fields retry without discarding earlier answers.
 
-After the dial, review the file changes, profile name, addresses and descriptions, then approve once to save and apply.
+After the dial, review the file changes, preset name, addresses and descriptions, then approve once to save and apply.
 Esc in the dial or declining approval leaves settings and the library unchanged.
 `create` takes a single display-name argument followed by optional `key=value` assignments, and refuses an existing slug.
-`save` joins positional words as the display name and updates custom profiles; `save` with no arguments or `save --slug <slug>` updates an existing custom profile, while a bundled or unset selection needs a new display name.
+`save` joins positional words as the display name and updates custom presets; `save` with no arguments or `save --slug <slug>` updates an existing custom preset, while a bundled or unset selection needs a new display name.
 Use `--slug` to choose an identifier separately from the name, including for Korean names.
 
 For scripted creation:
@@ -92,14 +94,14 @@ tonedial set speech_level=polite      # auto (default) | polite | plain | rough
 tonedial set address_frequency=rarely # none | auto (default) | rarely | frequently
 tonedial set "safeword=plain answer please"
 tonedial set language=ko              # en | ko | ja | zh (Simplified) | es
-tonedial save                         # also update the selected user profile
+tonedial save                         # also update the selected user preset
 ```
 
 `set persona.agent="..."` adds a role to the current tone, preserves axes and recompiles immediately.
 `persona` sets both descriptions together, agent first and user second, with at most 200 Unicode code points each.
 In the guided `persona` form, Enter keeps the current value and `""` clears it; invalid descriptions are retried before either role is applied.
 To clear saved addresses, run `tonedial address "" ""` or `tonedial set persona.self_ref= persona.user_ref=` (in interactive `tonedial address`, Enter keeps the current value).
-`show` displays the current descriptions and their counts; `show <slug>` displays the saved profile's descriptions.
+`show` displays the current descriptions and `show --verbose` adds their counts; `show <slug>` displays the saved preset's descriptions.
 Use `set persona.agent=...` or `set persona.user=...` to change just one.
 
 `address_frequency` controls how often the agent calls or refers to you by name or title,
@@ -114,11 +116,11 @@ Code, quotations, translations and strict JSON-only/code-only output never recei
 Honorific endings, formality, warmth and role idioms remain independent.
 These modes set prompt instructions rather than a conversation counter.
 
-Profiles save and restore the frequency with the other tone settings.
+Complete presets save and restore the frequency with the other tone settings.
 `reset`, old axis-only presets and changing an address term preserve the current frequency.
-Older configurations and complete profiles that omit the field load with `auto`.
+Older configurations and complete presets that omit the field load with `auto`.
 An older CLI cannot read a newly saved `address_frequency` field; retain a pre-upgrade
-configuration/profile copy before downgrading rather than removing the state root.
+configuration/preset copy before downgrading rather than removing the state root.
 
 ### Read current settings
 
@@ -131,13 +133,13 @@ tonedial get speech_level            # honorific forms, separate from formality
 tonedial get persona.agent           # full saved role description
 tonedial get warmth --json           # { "schema": 3, "ok": true, "values": { "warmth": 3 }, ... }
 tonedial get --help                  # available keys, meanings and choices
-tonedial show                       # gauges, settings, profile and artifact state
+tonedial show                       # gauges, settings, preset, artifact state and connections
 ```
 
-`get` reads the active configuration, including changes not yet saved to a profile.
+`get` reads the active configuration, including changes not yet saved to a preset.
 It never writes, connects an agent or reloads a conversation.
 Before initial setup it reports that no saved configuration exists.
-Use `show <slug>` to preview a saved profile without applying it.
+Use `show <slug>` to preview a saved preset without applying it.
 
 The readable keys are all [twelve axes](#tone-and-axes) and every setting in the table below.
 Single-key human output includes an explanation and available enum values;
@@ -165,7 +167,7 @@ tonedial set "persona.note="
 ```
 
 Long descriptions are rejected before writing, never truncated; literal `unspecified` remains text.
-Persona and safeword begin unset before profile defaults are applied.
+Persona and safeword begin unset before preset defaults are applied.
 Axes take precedence over unanchored persona text, which is framed as output style rather than verified facts or answer filters.
 Explicit config JSON and review diffs can contain the descriptions; native test plans omit the injected prompt.
 
@@ -187,7 +189,7 @@ tonedial get speech_level
 It does not add swearing, stronger criticism or role idioms by itself.
 The register request has no effect where a language lacks the relevant honorific distinction.
 Familiar polite, formal plain and affectionate swearing remain valid: warmth and profanity are independent.
-Profiles containing `rough` require a CLI that supports that value; older versions reject them.
+Presets containing `rough` require a CLI that supports that value; older versions reject them.
 
 ### Make the character louder
 
@@ -203,7 +205,7 @@ Courtly phrases such as “아뢰옵기 황송하오나” and underworld metaph
 There is no role-word blacklist or silent substitution; role language can sound rude or violent.
 `profanity` grades swearing and `bravado` grades effort claims independently.
 
-### Move or back up a profile
+### Move or back up a preset
 
 ```bash
 tonedial export my-jarvis > my-jarvis.json
@@ -211,21 +213,21 @@ tonedial import my-jarvis.json
 tonedial use my-jarvis
 ```
 
-Export/import carries the full profile, including address, descriptions and persona notes.
+Export/import carries the full preset, including address, descriptions and persona notes.
 Import saves without activating; follow it with `use` to apply it.
 `export <slug> --json` adds the schema-3 envelope around the raw preset object.
 HTTPS imports use bounded downloads and guarded redirects.
 Receipts identify only scheme, host and port; the request uses the full URL.
-Profiles store the requested intensity, never a session's approval to use it.
+Presets store the requested intensity, never a session's approval to use it.
 
 <details>
-<summary>Older profiles and retired presets</summary>
+<summary>Legacy and retired presets</summary>
 
-Current bundled and custom profiles use preset schema 2.
-Schema-1 profiles contain axes only and preserve current separate settings when applied.
+Current bundled and custom presets use preset schema 2.
+Legacy schema-1 presets contain axes only and preserve current separate settings when applied.
 Tough Love and Terse Operator are retired from the menu; their old slugs still resolve.
 Custom and flat user definitions take precedence over historical axes, and modified retired caches remain readable.
-Saving a retired cache creates a custom profile while preserving the original cache bytes and mode.
+Saving a retired cache creates a custom preset while preserving the original cache bytes and mode.
 
 </details>
 
@@ -241,7 +243,7 @@ Compilation is local and deterministic, with no model call.
 | form | `verbosity` | 3 | one sentence or terse items · conclusion and one reason · needed explanation · conclusion, reason and one example · rationale, edge cases, alternatives and background |
 | form | `profanity` | **1** | none · one mild interjection · mild swearing about once per paragraph · strong everyday profanity in most paragraphs · varied harsh uncensored profanity in nearly every sentence |
 | form | `playfulness` | 3 | literal · one restrained touch · two recognizable touches · exaggerated idioms in most paragraphs · character idioms in nearly every sentence |
-| target | `critique` | 3 | neutral observation · softened defect and impact · direct defect and impact · harsh judgement with vivid consequences · open contempt with cutting mockery of supported defects and choices |
+| target | `critique` | 3 | neutral observation · softened defect and impact · direct defect and impact · harsh judgment with vivid consequences · open contempt with cutting mockery of supported defects and choices |
 | target | `flattery` | **1** | none · one brief positive remark · two specific remarks · three specific remarks · explicit lavish praise for at least four observable choices without inventing achievements |
 | target | `warmth` | 3 | none · one friendly acknowledgement · two warm acknowledgements · three including encouragement · intense kindness in every paragraph with greeting, empathy, comfort and reassurance |
 | behaviour | `conviction` | 3 | list options and ask · name a preference but ask before deciding · recommend with a reason · lead with a clear choice · state one decision and ask no follow-up |
@@ -251,6 +253,7 @@ Compilation is local and deterministic, with no model call.
 | behaviour | `bravado` | **1** | none · one playful effort overstatement · one credit claim and one boast · two boasts/claims and one dramatic effort remark · credit and dramatized effort in every answer without replacing the persona |
 
 The four bold defaults have a natural floor of 1; setting everything to 3 activates them.
+The Group column holds the ids `show --json` reports as `groups`; the gauge names each group in the interface language.
 
 ```bash
 tonedial show --explain
@@ -262,16 +265,18 @@ tonedial on                        # resume delivery
 ```
 
 `reset` preserves persona, safeword and other settings, and its receipt lists each moved axis like `set`.
+A full `reset` deselects the preset and ends with `tonedial use <slug>` to return to its saved definition; it says when unsaved edits cannot be restored that way.
 It neither disables delivery nor unloads context.
 `off` adds a delivery marker while retaining the complete compiled tone;
 the current managed reader emits no ToneDial context until `on` removes it.
-The switch is shared by every connection using that state root and is not part of a profile.
+The switch is shared by every connection using that state root and is not part of a preset.
 It cannot remove context already delivered to an open conversation, so use a fresh conversation
 for a clean comparison with the model's ordinary manner.
 While delivery is off, `set`, `use`, `reset`, `show` and `doctor` say that new conversations get no tone and suggest `tonedial on`.
 After updating an older installation, refresh its existing tools and scope through the normal
 previewed `init` flow before using `off`; an older installed reader does not recognize the marker.
 The safeword requests one plain answer without persona, flattery or jokes, then the saved tone resumes.
+When `use` applies a preset with no safeword, its receipt says so and shows `tonedial set "safeword=plain answer please"`; JSON keeps `notice.safeword` as `no safeword`.
 It authorizes no action or intense tone and may not be followed by the model.
 ToneDial adds no factuality, visible-refusal, flattery-honesty or emergency-register guard; host permissions and file-change consent still apply.
 
@@ -302,7 +307,8 @@ When one asks for brevity and the other for depth, the reply opens with the shor
 A request in the current conversation overrides both.
 Whether a model follows this is model behavior; generated checks do not measure it.
 
-`show` marks deviations; `show --explain` describes settings and advisory risks.
+`show` marks deviations and prints the key to a marker (`*`, `!`) only while that marker is on the screen; the dial always shows both keys.
+`show --explain` describes settings and advisory risks.
 Red levels and a color-independent `!` start at `profanity=4`, `critique=4`, `flattery=3`, `conviction=5`, `compliance=5`, `refusal=2` and `bravado=2`.
 They never clamp values or block a setting; the intense-tone approval below is based on the requested components, not the warning display.
 
@@ -317,7 +323,7 @@ menace added by high playfulness while either component is active. Warmth, prais
 criticism and ordinary role idioms require no approval.
 
 Approval lasts in that session while those components remain unchanged. Raising an approved
-level or adding or changing an intense component requires another approval. A profile records
+level or adding or changing an intense component requires another approval. A preset records
 the requested settings, never the approval itself: `use`, `import`, `save`, `create`,
 `--auto`, a safeword, and approval from another session do not count. Approval changes manner
 only and never authorizes work or bypasses host permissions. Hate speech aimed at protected
@@ -399,10 +405,16 @@ tonedial init --tools codex --here
 tonedial doctor --here
 ```
 
-The plan writes nothing and launches no provider.
+The plan writes nothing and launches no provider; when it finds changes, its last line is the command that applies them.
 Review proposed file changes before approving; `--verbose` includes the diff and `--auto` supplies approval without hiding the plan.
-The preview names each path with its direction, such as `new file`, `modified`, `removed`, `new skill link` or `skill link removed`,
-and collapses three or more new files in one directory into a single block.
+Without a terminal to approve in, a command writes nothing and prints the commands that rerun it with the same agents, options and scope:
+in a terminal, with `--dry-run`, and with `--auto`; JSON reports them in `commands` with `reason: "approval-required"`.
+The preview prints each root once on its own line under a label: the scope's agent files, then ToneDial state.
+For `wire`, `unwire`, `eject` and `doctor --fix` the scope's own root is already printed in the introduction above, so the agent files appear under their label without repeating it.
+It lists each file relative to its root with the change, such as `new file`, `modified`, `removed`, `new skill link` or `skill link removed`;
+ToneDial's `config.json` says what it records instead, such as `records Codex CLI for this project`.
+Three or more new files in one folder below a root share one row.
+Excerpt lines, line counts and per-file diffs appear only with `--verbose`; JSON `diff` is the same either way.
 The receipt then groups each agent's status, hook file and its own enablement step.
 Local setup does not configure remote/cloud runtimes.
 
@@ -413,8 +425,19 @@ Local setup does not configure remote/cloud runtimes.
 | Another project | `--project <dir>`; `--project .` equals `--here` |
 
 Scope flags are mutually exclusive.
+A `--project` symlink resolves to its real folder, so previews, records and later commands name that folder.
 Use the same scope for `init`, `wire`, `doctor`, `unwire` and `eject`.
-The scope chooses wiring destinations, not another tone or profile library.
+After a project `wire`, the preview lists the project files and the receipt adds one note:
+the project hooks run ToneDial with paths from this machine, so keep them out of version control
+(for example with `.git/info/exclude`), or commit them only if you mean to.
+In your home directory a project scope would use the global files,
+so `init`, `wire`, `unwire` and `eject` with `--here` there stop and show the `--global` command.
+Hosts load global hooks and skills in every folder.
+Beside a global connection for the same agent, `wire <tool> --here` and `init --here` write and record nothing for it,
+and show the two commands that keep the tone in this project only; JSON marks that agent `covered: true`.
+Without a scope flag, `unwire <tool>` stops in a folder with its own connection for that agent,
+and `eject` in a folder with any connection of its own; both show the `--here` and `--global` commands.
+The scope chooses wiring destinations, not another tone or preset library.
 `use --project` instead exports `.tonedial/TONE.md`; `test --project` selects a conversation folder.
 
 For state only, without a native connection:
@@ -429,7 +452,9 @@ tonedial show --json
 
 With delivery on and no agent connected, `init`, `use` and `create` end with `tonedial test` for an installed Claude Code or Codex, otherwise with `tonedial wire`.
 Unattended setup needs explicit tools; ordinary unattended connection writes also need explicit scope, including state-only init and `doctor --fix`.
-Read-only doctor, dry runs and operation-ID rollback retain their scope exceptions.
+Without tools, `init` writes nothing and prints `init --tools codex` and `init --tools none` for the scope and options you gave, one command per line; JSON reports them in `commands` with `reason: "tools-required"`.
+Read-only doctor, dry runs and operation-ID rollback need no explicit scope under `--auto`.
+Otherwise a dry run stops wherever the real run would, such as an unscoped `unwire <tool>` in a folder with its own connection for that agent.
 `--auto` never chooses tools by detection; JSON never prompts.
 
 ### Native routes
@@ -445,7 +470,7 @@ Claude Code replaces hook context over 10,000 characters with a short preview.
 When Claude Code is connected and the guide and an enabled tone exceed that, tone-changing commands and `doctor` show a notice; the change is still saved.
 For Codex, ToneDial writes the pair as JSON `additionalContext` with `additionalContextLimit: 0` on `SessionStart` and `UserPromptSubmit`.
 Codex then skips its default preview of hook context over about 2,500 tokens (observed on Codex 0.164.0).
-Hooks written by earlier versions keep that preview until `doctor --fix` or `init` rewrites them; a project inheriting a global hook needs `init --global --tools codex`.
+Hooks written by earlier versions keep that preview until `doctor --fix` or `init` rewrites them; a project the global hook serves needs `doctor --fix --global`.
 Codex keys hook trust to the definition, so review a rewritten hook again in `/hooks`.
 Tone changes regenerate the artifact without rewriting the guide.
 Setup merges owned entries and preserves unrelated handlers; no home instruction-file import is added.
@@ -457,7 +482,9 @@ When `codex` is connected interactively and installed on `PATH`, `init` offers t
 When `claude` is connected to a project interactively and installed on `PATH`, `init` offers to open Claude Code there so you can answer its workspace trust prompt.
 When both are connected, the first installed of Codex and Claude Code is offered.
 `wire` accepts a positional tool name or `--tools <list>`.
-With neither, it shows `init`'s numbered agent picker in a terminal; without a terminal it stops and shows an example command.
+With neither, it shows `init`'s numbered agent picker in a terminal,
+marking agents installed on `PATH` and those already connected in the scope; an empty answer cancels with exit 0 and writes nothing;
+without a terminal it stops and shows an example command.
 
 ### Review host enablement
 
@@ -478,12 +505,32 @@ Use [actual-host trials](./TESTING.md#actual-host-and-one-day-trial) for deliver
 <summary>Doctor connection and enablement details</summary>
 
 Human diagnosis always shows the selected scope/directory, without needing `--verbose`.
+It then opens with a count of problems and notices; doctor exits 0 either way, and JSON `healthy` reports problems.
+That count is the one health statement.
+The ToneDial files and connection files rows follow it only when they need attention, and a settings file that could not be inspected is named under the second.
+When hook states are shown, the report closes with the note that they come from the inspected settings files only.
+Each finding appears once and ends with the command that fixes it; `tonedial doctor --fix` with the same scope when `--fix` repairs it.
+JSON gives a check's repair command in `checks[].repair` when it has one.
+A connected agent reads as connected, then whether its settings file shows the hook enabled, then the step that enables it in the app.
+The Codex project-trust step appears only for project connections.
+When ToneDial's own entries in a hook file were edited outside it, doctor leaves the file alone and gives two manual routes.
+Restore the entries exactly as ToneDial wrote them (`doctor --verbose` lists them), or move the file aside, run `doctor --fix` in that scope and copy your own entries back.
 When delivery is paused it suggests `tonedial on`; when no agent is connected it ends with `tonedial wire` for that scope.
-Other registered connections are grouped by scope/directory and shared file status.
+Other registered connections are listed under "Also connected elsewhere", one row per scope, agents and file status, with the directory they share printed once after its rows.
+Inspecting global from a folder with its own connections says so and gives `tonedial doctor --here`; that folder's listed commands also use `--here`.
+An agent that is connected only in another scope is listed as not connected in this scope.
+A project hook that repeats the global hook for the same agent is reported in both scopes.
+One notice per agent names the global hook once, each project hook, and the `unwire` command for each project that keeps only the global one: `--here` in that folder, `--project` from anywhere else.
+JSON lists it in `integrations[].duplicates` with its `scope`, `destination`, `path` and `state`.
+ToneDial entries in the inspected scope's hook file that no connection records are a problem.
+When they are exactly what ToneDial writes now, the finding ends with `doctor --fix --tools <tool>` for that scope, which records them without rewriting the file;
+edited ones get guidance only: remove them by hand, then connect again.
+A global hook kept only by project connections an earlier version recorded is a problem that ends with `unwire <tool> --global`.
+While ToneDial's own files need setting up first, these findings stop at the hook file; the finding for the context files gives the command that comes before them.
 Missing files mean some or all recorded files were absent, not that no connection was registered.
 These are presence checks; `--fix` leaves other scopes alone.
 Use the displayed read-only `doctor` command to inspect them, or `eject` if no longer needed.
-Eject disconnects every agent in that displayed scope, including those with present files; use scoped `unwire <tool>` for one (`unwire` without a tool disconnects all tools in that scope).
+Eject disconnects every agent in that displayed scope, including those with present files; use scoped `unwire <tool>` for one.
 Unimplemented targets do not appear as connections or hook observations.
 
 JSON `hookSettings` records each tool's `state` (`enabled`, `disabled`, `unknown`), `basis` and inspected `path`.
@@ -501,8 +548,92 @@ tonedial unwire codex --here
 tonedial eject --here
 ```
 
-Removal preserves shared state, profiles, CLI, shell PATH, other scopes/consumers and changed or ambiguous foreign resources.
+`unwire <tool>` disconnects one agent and `eject` every agent in the scope.
+`unwire` without a tool shows the same picker as `wire` in a terminal;
+without a terminal it stops and shows an example, with `--here` in a folder that has its own connections.
+Without a scope flag, `unwire <tool>` stops in a folder that has its own connection for that agent
+and shows the `--here` and `--global` commands; elsewhere it disconnects the global connection.
+Removal preserves shared state, presets, CLI, shell PATH, other scopes/consumers and changed or ambiguous foreign resources.
+Versions before 0.1.14 recorded a project connected beside a global one on the global hook.
+`unwire <tool> --global` and `eject --global` remove those project connections with the hook, as `unwire --here` would;
+the preview names each directory and JSON lists them in `alsoDisconnected`.
 Use `off` instead when the connections should remain installed and only delivery should pause.
+
+### Connection recipes
+
+**Connect one project**
+
+```bash
+cd ~/work/app
+tonedial wire codex --here
+```
+
+Only this folder gets the hook and skill link.
+The preview lists the files; the receipt names the version-control choice.
+Wiring an agent that is already connected prints one row for it, `ok Codex CLI · up to date`, with its hook file on the next line and the host's review step.
+With a global Codex connection the folder already gets the tone, so this writes nothing and shows the commands for the next recipe.
+
+**Connect globally**
+
+```bash
+tonedial wire codex --global
+```
+
+Run it from any folder; the global hook applies in every project.
+
+**Move from project to global**
+
+```bash
+cd ~/work/app
+tonedial unwire codex --here
+tonedial wire codex --global
+```
+
+Disconnect the project first; otherwise the agent loads the tone from both hooks.
+
+**Move from global to one project**
+
+```bash
+tonedial unwire codex --global
+cd ~/work/app
+tonedial wire codex --here
+```
+
+Every other folder stops getting the tone; only this one keeps it.
+
+**Disconnect one agent**
+
+```bash
+tonedial unwire codex --here      # this folder's connection
+tonedial unwire codex --global    # the shared connection
+```
+
+`eject --here` or `eject --global` disconnects every agent in that scope instead.
+After `unwire codex --global`, nothing ToneDial wrote for Codex stays in `~/.codex/hooks.json`,
+including entries an earlier version kept there for a project.
+Disconnecting removes the skill folders setup created, such as `.agents/skills`, once they are empty; folders that existed before setup stay.
+
+**See what is connected where**
+
+```bash
+tonedial show
+tonedial show --json
+```
+
+`show` lists each scope and directory once, as `project · codex, claude` above the directory, the same words `doctor` uses for other scopes; JSON lists every connection in `connections`.
+A project connection an earlier version recorded on the global hook is labeled, and JSON marks it `sharesGlobalHook: true`;
+`unwire <tool> --global` removes it with the global hook, and its preview lists those project folders under their own heading.
+`tonedial doctor --here` checks one folder's files and lists the other connections.
+
+**Recover after a host or Node update**
+
+```bash
+tonedial doctor --here
+tonedial doctor --fix --here
+```
+
+Hooks record the Node runtime path, so `doctor` flags a hook whose runtime moved, and `doctor --fix` rewrites it after approval.
+Use `--global` for global connections, and review a rewritten Codex hook again in `/hooks`.
 
 ## Hook refresh and bounded style feedback
 
@@ -557,7 +688,7 @@ Moving an installed curl root breaks command/PATH references and is not repair.
 | Stored content | Location in the state root |
 |---|---|
 | Settings and compiled instructions | `config.json`, `AGENTS.md`, `TONE.md` |
-| Profiles | `presets/builtin/`, `presets/custom/`, older flat user presets |
+| Presets | `presets/builtin/`, `presets/custom/`, older flat user presets |
 | Recovery evidence | Operation records and originals |
 | Native setup | Generated reader/skill files |
 | Curl installation | Package in `lib/`, shim in `bin/` |
@@ -591,13 +722,21 @@ tonedial list --json
 tonedial show --json
 ```
 
-Rebuild replaces generated files while preserving valid settings, unsaved profile changes and custom profiles.
-Healthy profiles remain listable/exportable with damaged config; one bad profile does not hide others.
+Without a terminal, `doctor --fix` writes no agent-connection change that needs approval.
+It says so and prints the commands to rerun it with the same agents and scope:
+in a terminal, or previewed with `--dry-run` and then approved with `--auto`.
+JSON reports `native.reason: "approval-required"`.
+Rebuild replaces generated files while preserving valid settings, unsaved preset changes and custom presets.
+Healthy presets remain listable/exportable with damaged config; one bad preset does not hide others.
+Other commands that read damaged config, `show` and `get` included, name the file and the `doctor --fix` that recovers it, with the scope of the command that failed (global for commands that have none), on a line of its own.
+JSON reports it as `reason: "settings-unreadable"` with that command in `commands`.
 Flat user presets stay readable; conflicts receive a reported recovered copy without overwriting originals.
 
 After a failed repair, the error identifies the phase, affected path when known, safe error code and operation ID.
 Some file changes may already be applied; keep the operation record and run the reported scoped diagnosis.
 Doctor shows current blockers by default; `--verbose` and `--json` retain the full operation history.
+A repair's receipt ends with the `--rollback` command that undoes it;
+afterwards, `doctor --verbose` lists that command for each completed operation that can still be restored.
 Running and uncertain owners remain protected and receive no automatic mutation recommendation.
 
 An unreadable operation record has no trusted actions to resume or restore.
@@ -610,12 +749,15 @@ tonedial doctor --fix --quarantine-operation <id> --global
 ```
 
 Quarantine replaces only the selected unreadable record with a nonblocking marker.
-When several records are unreadable, doctor reports the next ID and command; repeat until the last command continues the application rebuild.
+When several records are unreadable, doctor reports the next ID and command; repeat until the last command continues the ToneDial file rebuild.
 Each repair journal retains that record's original bytes and mode for explicit rollback; never delete records by hand.
 
 For a stopped valid operation, use the exact `--from-operation` command shown by doctor.
 Preview it with `--dry-run`, then review and approve the proposed repair.
-This continues application repair with valid current settings first; it does not undo the previous changes.
+This continues ToneDial file repair with valid current settings first; it does not undo the previous changes.
+To undo the stopped operation's changes instead, use the `--rollback` command doctor shows beside it.
+A setting change or connection command refused while the operation is stopped ends with the same two commands;
+JSON reports them in `commands` with `reason: "recovery-pending"`.
 Interactive selection asks for the full displayed operation ID; Enter cancels and a different ID is rejected without writing.
 The file-change preview still requires separate approval after selection.
 
@@ -623,12 +765,18 @@ The file-change preview still requires separate approval after selection.
 |---|---|
 | Axes | `--from-preset <slug>` |
 | Available saved values | `--from-operation <id>` from a validated same-root operation; current valid fields win |
-| A missing/invalid user profile | Add `--restore-preset <slug>` with the operation source; retain its damaged preimage |
+| A missing/invalid user preset | Add `--restore-preset <slug>` with the operation source; retain its damaged preimage |
 | Other values | Disclosed defaults |
 
 Review native attention separately; explicitly select tools (`--tools <list>`) when adding or reconciling a route during `doctor --fix`.
+`doctor --fix` and a repeat `init` repair one scope.
+When another scope's folder is there but its connection files are missing, they name that scope's `doctor --fix` command, and JSON lists `unselected-scopes` in `native.issues`;
+healthy connections elsewhere and missing folders are left to doctor's report of other scopes.
+A file whose ToneDial entries changed outside ToneDial is named with the reason it was preserved.
+A rebuilt config records no connections, so the hooks it no longer records keep delivering the tone and `doctor` reports them.
+`doctor --fix --tools <tool>` with the same scope records entries that are exactly what ToneDial writes, after the usual preview and without changing the file.
 Keep rollback IDs and originals.
-If both native and app phases changed files, roll back **native first, then app**, using each reported ID:
+If both native and ToneDial file phases changed files, roll back **native first, then ToneDial files**, using each reported ID:
 
 ```bash
 printf 'Reported mutation operation ID: '
@@ -646,8 +794,8 @@ Any `operations.lock` entry suppresses native reader delivery; removing it exter
 <details>
 <summary>If the command itself cannot run</summary>
 
-Package and application repair are separate.
-Npm users reinstall through npm, then use `doctor --fix` to repair application files.
+Package and ToneDial file repair are separate.
+Npm users reinstall through npm, then use `doctor --fix` to repair ToneDial files.
 Curl users run a fresh `install.sh --repair` at the same root, retain program archives and approve required component/source choices.
 Unknown components stay protected without their named archive choice; retry failed state repair with the new command.
 Curl PATH repair covers only the recorded global profile/owned region; changed/foreign content is protected and npm owns its PATH setup.
@@ -671,41 +819,42 @@ A reader that closes early, as in `tonedial show | head`, does not crash the com
 | Command | Purpose |
 |---|---|
 | `set <key>=<value> …` | Change axes, roles or settings; no args opens the dial |
-| `show [slug]` | Show current settings or preview a saved profile; `--explain` adds settings and risks |
+| `show [slug]` | Show current settings or preview a saved preset; `--explain` adds settings and risks |
 | `get [key]` | Show one or all current editable values; a key adds meaning and choices |
 | `reset [axis]` | Reset one axis, or all twelve with no args; keep other settings |
 | `address [self user]` | Set the agent's and your address; no args asks for both |
 | `persona [agent user]` | Set both role descriptions; no args asks for each |
-| `test [claude\|codex]` | Preview your tone or a profile in a new conversation; accepts `--preset`, `--project`, `--accept-usage`, `--dry-run` |
-| `off` / `on` | Pause/resume tone delivery; keep settings, profiles and full `TONE.md` |
-| `list` | List bundled and saved profiles; `--verbose` adds axis values |
-| `use <slug>` | Apply a profile; `--project <dir>` also exports `TONE.md` to `<dir>/.tonedial/` |
+| `test [claude\|codex]` | Preview your tone or a preset in a new conversation; accepts `--preset`, `--project`, `--accept-usage`, `--dry-run` |
+| `off` / `on` | Pause/resume tone delivery; keep settings, presets and full `TONE.md` |
+| `list` | List bundled and saved presets; `--verbose` adds axis values |
+| `use <slug>` | Apply a preset; `--project <dir>` also exports `TONE.md` to `<dir>/.tonedial/` |
 | `create [display name] [key=value …]` | Create and apply after approval; no args guides setup; accepts `--slug`, `--auto`, `--dry-run` |
-| `save [display name] [--slug <slug>]` | Save the current tone as a profile; no name or `--slug` updates a custom profile |
-| `export <slug>` / `import <file-or-https-url>` | Transfer complete profiles |
-| `edit [preset <slug>]` | Open config/custom profile in the editor; `--dry-run` previews |
+| `save [display name] [--slug <slug>]` | Save the current tone as a preset; no name or `--slug` updates a custom preset |
+| `export <slug>` / `import <file-or-https-url>` | Transfer complete presets |
+| `edit [preset <slug>]` | Open config/custom preset in the editor; `--dry-run` previews |
 | `init` | Set up and refresh bundled files; accepts scope flags, `--tools`, `--lang`, `--commands`, `--migrate-legacy`, `--auto`, `--dry-run` |
-| `wire [tool \| --tools <list>]` / `unwire [tool]` | Connect/disconnect in the selected scope (`--auto`, `--dry-run`); `wire` without a tool prompts, `unwire` without one disconnects all |
+| `wire [tool \| --tools <list>]` / `unwire [tool]` | Connect/disconnect in the selected scope (`--auto`, `--dry-run`); without a tool, both show the agent picker in a terminal |
 | `doctor` | Diagnose; `--fix` repairs (`--tools`, `--from-preset`, `--from-operation [--restore-preset]`, `--quarantine-operation`, `--rollback`) |
-| `eject` | Disconnect every agent in a scope; retain shared state and profiles (`--auto`, `--dry-run`) |
+| `eject` | Disconnect every agent in a scope; retain shared state and presets (`--auto`, `--dry-run`) |
 | `compile` | Rebuild missing/stale `TONE.md`; `--check` reports without writing |
-| `update` | Update the running npm or curl installation (`--global`, `--auto`, `--dry-run`) |
+| `update` | Compare installed and latest versions, then update the running npm or curl installation (`--auto`, `--dry-run`) |
 
 Ordinary changes compile automatically; `compile --check --json` also supplies reload paths.
 
 | Machine contract | Behavior |
 |---|---|
 | Envelope | Every command accepts `--json`; integer `schema: 3`, including version/errors |
+| Refusals | `ok: false` with the message in `error`; a named refusal adds a stable `reason` (`scope-required`, `home-directory`, `tools-required`, `approval-required`, `ownership-conflict`, `recovery-pending`, `settings-unreadable`) and the `commands` it prints |
 | Delivery state | `get`, `show`, `compile --check`, `on` and `off` report boolean `enabled` |
 | Stored schemas | Config 2; preset 2 with legacy 1 support; operation formats separate |
 | Streams | JSON stdout has no terminal escapes or ToneDial prompts/provider handoff |
 | Export | Plain is raw preset JSON; `--json` wraps it |
 | Get | Flat `values` object using editable keys; one requested key or all; full text and typed nulls |
-| Show | Includes `riskAxes`, `riskThresholds`; no unsupported guard/ceiling/width fields |
+| Show | Includes `riskAxes`, `riskThresholds` and `connections` (`target`, `scope`, `destination`; null scope and directory for legacy records); no unsupported guard/ceiling/width fields |
 | Compile check | Human: current/stale/missing; JSON: character count and absolute `agentsPath`/`path`, not existence/delivery proof |
 | Explicit editor | `edit --json` still launches the requested editor; live output uses stderr |
 
-`edit` opens `config.json`; `edit preset <slug>` opens a custom or legacy user profile (bundled profiles are refused).
+`edit` opens `config.json`; `edit preset <slug>` opens a custom or legacy user preset (bundled presets are refused).
 For `config.json`, `edit` checks wiring ownership before writing.
 Staging content that is not a valid JSON object or that changes `wiring` ownership is refused before modifying live files,
 and any remaining staging copy is retained at its reported temp path
@@ -716,7 +865,7 @@ Concurrent on-disk changes also abort before writing and retain the staging copy
 Once `config.json` ownership is verified, or during `edit preset <slug>`, validation failures still record the operation
 and commit the raw edit to the target path before reporting the error.
 These failures are invalid settings, malformed preset JSON, a changed internal `"slug"` field and, for `edit preset <slug>`, a deleted staging file.
-The error says the edit was saved as written and names the next step: `tonedial doctor` for `config.json`, or the `edit preset` command that reopens a profile.
+The error says the edit was saved as written and names the next step: `tonedial doctor` for `config.json`, or the `edit preset` command that reopens a preset.
 
 ## Try a fresh conversation
 
@@ -735,20 +884,20 @@ Enter `y` to accept; Enter or `n` cancels.
 
 | Choice | Preview input |
 |---|---|
-| No `--preset` | Current saved settings, including unsaved profile edits |
-| Schema-2 profile | Its complete axes, persona/note, address, register and safeword |
-| Schema-1 profile | Its axes with current separate settings |
+| No `--preset` | Current saved settings, including unsaved preset edits |
+| Complete preset (schema 2) | Its complete axes, persona/note, address, register and safeword |
+| Legacy axis-only preset (schema 1) | Its axes with current separate settings |
 | Provider | One installed client can be selected; two prompt interactively; ambiguous plans need an explicit name |
 | Folder | Current directory or existing `--project` directory |
 
 If the named client is missing, the error offers the installed one; with neither installed, `test` stops before planning.
 `--dry-run` shows the plan and ends with the command that launches it.
-After a clean exit, a `--preset` preview suggests `tonedial use <slug>` unless that profile is already active without unsaved changes.
+After a clean exit, a `--preset` preview suggests `tonedial use <slug>` unless that preset is already active without unsaved changes.
 Otherwise, with delivery on and no agent connected, it suggests `tonedial wire --global`.
 
 The README includes a [recorded Codex-default vs complete `vibe-coder` comparison](../README.md#same-model-a-tighter-plan)
 with [verbatim replies and provenance](./media/readme/verbosity-comparison.json).
-It uses one fresh `gpt-5.6-sol` / `high` session per condition and illustrates the whole profile,
+It uses one fresh `gpt-5.6-sol` / `high` session per condition and illustrates the whole preset,
 not the isolated effect of `verbosity=1`.
 
 Compilation happens in memory and leaves ToneDial state unchanged.
@@ -791,11 +940,21 @@ npm install --global tonedial
 tonedial update
 ```
 
-`update --dry-run` previews the update without replacing the package; `--global` is accepted explicitly and `--auto` approves an unattended update (JSON output never prompts).
-For npm installations, ToneDial runs npm only after checking that its global target matches the running copy.
+`update` shows the installed and latest versions with their release dates,
+and says whether the installation is up to date, has an update available or is newer than the latest release.
+It replaces nothing when the installation is current or newer, so it never downgrades.
+npm installations ask `npm view tonedial version time --json`, so your npm registry settings apply;
+curl installations read the package metadata from `TONEDIAL_REGISTRY`.
+If npm cannot answer, `update` says the latest version could not be checked and still offers the npm update.
+`update --dry-run` previews the update without replacing the package, leads with the status and the two versions, and ends with the command that applies it (`npm update -g tonedial`, or `tonedial update` for a curl installation); `--auto` approves an unattended update (JSON output never prompts).
+JSON adds `latestVersion`, `installedPublishedAt` and `latestPublishedAt`, each `null` when unknown;
+`checkedRemote` is `true` when the registry or npm answered.
+`installedVersion` is the version left installed: the running one, unless the update replaced it.
+For npm installations, ToneDial runs `npm update` only after checking that its global target matches the running copy.
 A different prefix or linked development copy is reported without updating another installation.
-The receipt reports the installed version, not a separate registry freshness check.
-If generated files need attention, the command reports their state and the applicable repair action once.
+The npm receipt says whether npm updated the package or it was already up to date, with the version npm left installed.
+If generated files need attention, the command reports their state and the applicable repair action once,
+scoped to the global installation (`tonedial doctor --fix --global`) so an unattended run can use it.
 ToneDial does not require root privileges; npm's global prefix must be writable by your user.
 For `EACCES` or `EPERM`, follow [npm permission recovery](#npm-permissions).
 
@@ -825,7 +984,7 @@ It never elevates privileges, retries with `sudo`, changes directory ownership o
 For a new npm setup, npm recommends a [Node version manager](https://docs.npmjs.com/resolving-eacces-permissions-errors-when-installing-packages-globally/).
 To recover only ToneDial without changing other global packages, use its existing curl installer:
 
-1. Back up the complete state root, including settings and custom profiles.
+1. Back up the complete state root, including settings and custom presets.
    The commands below use the same root selection as the installer.
    Keep this backup private; it can contain personal descriptions.
 
@@ -843,7 +1002,7 @@ To recover only ToneDial without changing other global packages, use its existin
 
 2. Install a user-owned copy with the same state root.
    The installer replaces only its own package and command files;
-   it preserves saved settings, custom profiles and agent connections.
+   it preserves saved settings, custom presets and agent connections.
    It refuses conflicting files rather than deleting them.
 
    ```bash
@@ -854,7 +1013,7 @@ To recover only ToneDial without changing other global packages, use its existin
    ```
 
    Stop on any installation or verification failure and keep the backup.
-   Check your expected settings and profiles before removing the old copy.
+   Check your expected settings and presets before removing the old copy.
 
 3. Put the new command first on PATH in the current shell, then add that same PATH entry
    to your shell startup file for future terminals.

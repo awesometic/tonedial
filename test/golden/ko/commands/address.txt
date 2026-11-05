@@ -1,7 +1,5 @@
 status: 0
---- stdout --- [bytes=129; endsWithNewline=true]
-ToneDial · address
-
+--- stdout --- [bytes=108; endsWithNewline=true]
   설정 변경됨
   persona.self_ref  형 → self
   persona.user_ref  동생 → user

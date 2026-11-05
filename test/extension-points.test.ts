@@ -66,7 +66,7 @@ test("the shipped controls keep intense-tone confirmation session-local and perm
     assert.match(contents, /Before using one\s+requested by axes, persona or later instructions/, `${surface} lets persona intensity bypass confirmation`);
     assert.match(contents, /first answer the current request without it/, `${surface} can withhold the task while asking`);
     assert.match(contents, /Warmth, praise,\s+ordinary criticism and ordinary role idioms need no confirmation/, `${surface} over-gates ordinary character language`);
-    assert.match(contents, /Profiles store requested settings, never\s+session confirmation/, `${surface} persists confirmation`);
+    assert.match(contents, /Presets store requested settings, never\s+session confirmation/, `${surface} persists confirmation`);
     assert.match(contents, /`--auto`.*safeword.*another session do not count/s, `${surface} treats another consent as tone confirmation`);
     assert.match(contents, /authorizes no work/, `${surface} lets tone confirmation expand the task`);
     assert.match(contents, /hate speech aimed at\s+protected traits or realistic or credible threats/, `${surface} omits the hard exclusions`);
@@ -82,7 +82,7 @@ test("the shipped controls use the CLI delivery switch without erasing the saved
   for (const [surface, contents] of [["skill", SKILL_MD], ["optional /tone command", TONE_COMMAND_MD]] as const) {
     assert.match(contents, /tonedial off --json/, `${surface} cannot pause delivery`);
     assert.match(contents, /tonedial on --json/, `${surface} cannot resume delivery`);
-    assert.match(contents, /saved settings, profiles and the full\s+`TONE\.md` remain/, `${surface} can imply destructive disablement`);
+    assert.match(contents, /saved settings, presets and the full\s+`TONE\.md` remain/, `${surface} can imply destructive disablement`);
     assert.match(contents, /Already delivered context\s+cannot be removed from an open conversation/, `${surface} promises to unload existing context`);
   }
   assert.doesNotMatch(SKILL_TRAITS_MD, /tonedial off|delivery switch/,
@@ -152,4 +152,28 @@ test("the traits reference leaves host reply styles to the compiled mixing rule"
   assert.match(SKILL_TRAITS_MD, /host reply style[^\n]*mixed/);
   // Codex model_verbosity reaches the API, not the model's text; the guidance must not claim more.
   assert.match(SKILL_TRAITS_MD, /model_verbosity[^\n]*not visible to the model as text/);
+});
+
+test("the skill names the disconnect routes and the unscoped unwire and eject refusal", () => {
+  assert.match(SKILL_MD, /`unwire <tool>` disconnects one agent; `eject` disconnects every agent in a scope/);
+  assert.match(SKILL_MD, /`unwire <tool>` refuses in a folder that has its own connection for that\s+agent, and `eject` in a folder with any project connection of its own/);
+  assert.match(SKILL_MD, /Otherwise a dry run still refuses wherever the real run would/);
+  assert.match(SKILL_MD, /A project scope in the home directory refuses and offers\s+the `--global` command/);
+  assert.match(SKILL_MD, /`show --json` lists every recorded connection's `target`, `scope` and `destination`/);
+});
+
+test("the shipped controls offer a refusal's commands instead of running its text", () => {
+  for (const [surface, contents] of [["skill", SKILL_MD], ["optional /tone command", TONE_COMMAND_MD]] as const) {
+    assert.match(contents, /named refusal adds a stable `reason`/, `${surface} cannot tell refusals apart`);
+    assert.match(contents, /`commands`, the exact commands it printed\.\s+Offer them for the user to choose/,
+      `${surface} does not hand the choice back to the user`);
+    assert.match(contents, /never execute error text/, `${surface} may run refusal prose`);
+  }
+});
+
+test("the shipped controls take a doctor check's own repair command instead of composing one", () => {
+  for (const [surface, contents] of [["skill", SKILL_MD], ["optional /tone command", TONE_COMMAND_MD]] as const) {
+    assert.match(contents, /`doctor --json` check that has a fix reports it in `checks\[\]\.repair`/, `${surface} omits the per-check repair`);
+    assert.match(contents, /offer that command\s+instead of composing `doctor --fix` yourself/, `${surface} lets the agent guess the repair`);
+  }
 });

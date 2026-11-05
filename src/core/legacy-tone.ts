@@ -410,7 +410,7 @@ export function recoverLegacyTone(text: string, t: Messages): SettingsRecovery |
     register: string | null;
     format: boolean;
     address?: boolean;
-    /** The host reply-style rule follows the format rule from 0.1.13 on. */
+    /** The host reply-style rule follows the format rule from 0.1.14 on. */
     host?: boolean;
   };
   const oldComposites = (axes: Config["axes"]): string[] => [

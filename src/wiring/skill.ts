@@ -8,9 +8,9 @@ import {
 import { createHash } from "node:crypto";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 
-import { ConfigError, writeAtomic } from "../core/config.ts";
+import { ConfigError, OwnershipConflict, writeAtomic } from "../core/config.ts";
 import { SKILL_NAME } from "../core/skill.ts";
-import { canonicalDestination, canonicalResourcePath, entryIdentity, nearestRealPath, skillDestinations, type SkillDestination } from "../core/paths.ts";
+import { canonicalDestination, canonicalResourcePath, entryIdentity, inside, nearestRealPath, skillDestinations, type SkillDestination } from "../core/paths.ts";
 import type { ManagedResource, WiringV2 } from "../core/config.ts";
 import type { Messages } from "../core/i18n.ts";
 import type { JsonValue, OperationAction } from "../core/operations.ts";
@@ -87,6 +87,8 @@ export type SkillPlanOptions = {
   files: Readonly<Record<string, string>>;
   /** Canonical or lexical boundary supplied by the selected agent route. */
   boundary?: string;
+  /** Record an unrecorded link that already points at exactly this source (explicit repair only). */
+  adopt?: boolean;
 };
 
 export type SkillPlan = {
@@ -430,17 +432,17 @@ export function probeSkillAction(action: OperationAction): SkillRecoveryProbeSta
 }
 
 function throwConflict(path: string, t: Messages): never {
-  throw new ConfigError(t.errors.ownershipConflict(path));
+  throw new OwnershipConflict(t.errors.ownershipConflict(path));
 }
 
 function withinBoundary(destination: string, boundary: string | undefined, t: Messages): void {
   if (!boundary) return;
-  const lexical = relative(resolve(boundary), resolve(destination));
-  // Compare like with like. `/tmp` is commonly a symlink to `/private/tmp` on macOS, so using a
-  // lexical boundary against a canonical destination rejects every fresh temporary project.
+  // Physical paths on both sides, and only those: a home can be reached by more than one spelling,
+  // and an earlier version recorded a `--project` folder as it was typed (`/tmp` is a symlink to
+  // `/private/tmp` on macOS), so a lexical comparison refuses a path that really is inside.
+  // This is also the check that stops a removal from following a swapped parent out of the project.
   const canonical = relative(safeBoundary(boundary), safeCanonical(destination));
-  const outside = (value: string): boolean => isAbsolute(value) || value === ".." || value.startsWith(`..${sep}`);
-  if (outside(lexical) || outside(canonical)) throwConflict(destination, t);
+  if (isAbsolute(canonical) || canonical === ".." || canonical.startsWith(`..${sep}`)) throwConflict(destination, t);
 }
 
 function fileHashes(files: Readonly<Record<string, string>>): Record<string, string> {
@@ -467,6 +469,7 @@ function resourceFor(
   expectedFiles: Record<string, string> | undefined,
   previous: ManagedResource | undefined,
   before: SkillSnapshot,
+  boundary: string | undefined,
 ): ManagedResource {
   const expected: ManagedResource["expected"] = mode === "link"
     ? { type: "symlink", linkTarget: source }
@@ -479,9 +482,11 @@ function resourceFor(
     kind: "skill",
     created: previous?.created ?? before.kind === "missing",
     // For a copied delivery this is the destination directory itself; for a link it is the
-    // parent chain that the link action may have created and later prune.  These are different
-    // facts even though both travel in the one ownership record.
+    // link's parent. These are different facts even though both travel in the one ownership record.
     createdDir: previous?.createdDir ?? (mode === "copy" ? before.kind === "missing" : before.parentIdentity === null),
+    // Creation is historical: a record from before this count existed keeps not knowing it.
+    ...(mode === "link" && (previous === undefined || previous.createdParents !== undefined)
+      ? { createdParents: previous?.createdParents ?? missingParents(destination, boundary) } : {}),
     consumers: previous?.consumers ?? [],
     expected,
     managed: { version: previous?.managed.version ?? 1 },
@@ -514,6 +519,30 @@ function ensureSafeDirectory(path: string, boundary: string | undefined, t: Mess
     here = up;
   }
   for (const directory of missing) mkdirSync(directory);
+}
+
+/** How many of the link's parents, counted upward from its own and below the boundary, are missing. */
+function missingParents(destination: string, boundary: string | undefined): number {
+  const missing = (dir: string) => lstatSync(dir, { throwIfNoEntry: false }) === undefined;
+  if (boundary === undefined) return missing(dirname(destination)) ? 1 : 0;
+  const root = resolve(boundary);
+  let count = 0;
+  for (let dir = dirname(resolve(destination)); dir !== root && inside(dir, root) && missing(dir); dir = dirname(dir)) count += 1;
+  return count;
+}
+
+/** Remove the now-empty parents a link install created, up to `count` levels and its boundary. */
+function pruneCreatedParents(destination: string, boundary: string, count: number): void {
+  const root = resolve(boundary);
+  for (let dir = dirname(destination); count > 0 && dir !== root && inside(dir, root); dir = dirname(dir), count -= 1) {
+    try {
+      if (readdirSync(dir).length > 0) return;
+      rmdirSync(dir);
+    } catch {
+      // A directory that will not go is not a failed removal.
+      return;
+    }
+  }
 }
 
 function ensureSkillParent(destination: string, boundary: string | undefined, t: Messages): void {
@@ -703,7 +732,10 @@ export function validateSkillAction(action: OperationAction, applied = false): v
   }
   if (metadata.boundary !== null) {
     const remainder = relative(resolve(metadata.boundary), resolve(metadata.destination));
-    if (isAbsolute(remainder) || remainder === ".." || remainder.startsWith(`..${sep}`)) {
+    // A removal planned under another spelling of its project journals a boundary and a destination
+    // that are not lexically related. Identity settles those without touching the destination.
+    if ((isAbsolute(remainder) || remainder === ".." || remainder.startsWith(`..${sep}`)) &&
+        !inside(metadata.destination, metadata.boundary)) {
       throw invalidSkillAction(action.path, "skill destination escapes its boundary");
     }
   }
@@ -772,9 +804,10 @@ function actionFor(
           if (!current.isSymbolicLink()) throwConflict(destination, t);
           rmSync(destination, { force: false });
         }
-        // Keep parent containers. A single `createdDir` bit cannot prove which intermediate
-        // directory this action created, so pruning them could delete a pre-existing empty
-        // `.agents` or `.claude` container.
+        // Prune only the parents the install created; a pre-existing `.agents` or `.claude`
+        // container stays, even when it ends up empty. An older record knows only its own parent.
+        const created = resource.createdParents ?? (resource.createdDir ? 1 : 0);
+        if (boundary !== undefined && boundary !== null) pruneCreatedParents(destination, boundary, created);
       }
     } else if (operation === "install") {
       applyCopy(destination, desiredFiles, oldFiles, boundary, t);
@@ -811,7 +844,8 @@ export function planSkillInstall(
   const oldFiles = previous?.expected.files ?? {};
   const trackedFiles = trackedFilesFor(previous, hashes);
   const before = captureSnapshot(lexicalDestination, trackedFiles);
-  if (previous === undefined && before.kind !== "missing") throwConflict(lexicalDestination, t);
+  const adoptable = options.adopt === true && options.mode === "link" && before.kind === "symlink" && before.linkTarget === lexicalSource;
+  if (previous === undefined && before.kind !== "missing" && !adoptable) throwConflict(lexicalDestination, t);
   if (previous !== undefined) {
     const expectedType = previous.expected.type;
     if (options.mode === "link") {
@@ -826,7 +860,7 @@ export function planSkillInstall(
       if (expectedType !== "directory" && before.kind !== "missing") throwConflict(lexicalDestination, t);
     }
   }
-  const resource = resourceFor(lexicalDestination, lexicalSource, options.mode, hashes, previous, before);
+  const resource = resourceFor(lexicalDestination, lexicalSource, options.mode, hashes, previous, before, options.boundary);
   const desired = desiredSnapshot(lexicalDestination, options.mode, lexicalSource, desiredFiles, trackedFiles);
   const obsoleteClean = Object.entries(oldFiles).every(([name]) =>
     desiredFiles[name] !== undefined || before.files[name]?.kind === "missing");
@@ -856,7 +890,7 @@ export function planSkillRemoval(
   const before = captureSnapshot(lexicalDestination, Object.keys(previous?.expected.files ?? {}).sort());
   if (previous === undefined) {
     if (before.kind !== "missing") throwConflict(lexicalDestination, t);
-    const resource = resourceFor(lexicalDestination, lexicalSource, "link", undefined, undefined, before);
+    const resource = resourceFor(lexicalDestination, lexicalSource, "link", undefined, undefined, before, options.boundary);
     return { state: "absent", resourceId, resource, action: null };
   }
   const remaining = previous.consumers.filter((consumer) => consumer !== registrationId);
@@ -929,6 +963,7 @@ export function planSelectedSkills(
   wiring: WiringV2,
   files: Readonly<Record<string, string>>,
   t: Messages,
+  adopt = false,
 ): SelectedSkillPlan {
   let next = wiring;
   const actions: PlannedOperationAction[] = [];
@@ -958,6 +993,7 @@ export function planSelectedSkills(
         mode,
         files,
         boundary: agent.root,
+        adopt,
       }, t);
       if (!actionResources.has(plan.resourceId) && plan.action !== null) {
         actions.push(plan.action);

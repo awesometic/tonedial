@@ -1,11 +1,8 @@
 status: 1
---- stdout --- [bytes=56; endsWithNewline=true]
-ToneDial · doctor
+--- stdout --- [bytes=0; endsWithNewline=false]
 
-  Inspection scope: global
-  <ROOT>
---- stderr --- [bytes=211; endsWithNewline=true]
-Application recovery failed during file writes (EACCES).
+--- stderr --- [bytes=213; endsWithNewline=true]
+ToneDial file recovery failed during file writes (EACCES).
 <ROOT>/state/skill/tonedial/SKILL.md
 Some file changes may already be applied. Keep this operation record:
 <OPERATION_ID>

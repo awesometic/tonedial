@@ -184,6 +184,9 @@ Inspect files/modes as well as receipts:
 ### Check native configuration without a host
 
 Use a disposable fake layout with a foreign hook and custom setting.
+`td_trial` sets `TONEDIAL_AGENT_HOME`, which overrides both scopes: `--global`, `--here` and `--project` all write under that one directory.
+For project/global paths and scoped removal, remove that variable from the helper's `env -i` list;
+the disposable `HOME` then holds global connections and `TONEDIAL_HOME` the state.
 Preview `init --tools claude --global --dry-run --json`, then approve that exact tool/scope; repeat for Antigravity.
 Verify:
 

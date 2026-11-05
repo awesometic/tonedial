@@ -82,6 +82,9 @@ export function createGoldenWorkspace(language: GoldenLanguage): GoldenWorkspace
   const fakeCodex = join(bin, "codex");
   writeFileSync(fakeCodex, "#!/bin/sh\nprintf 'unexpected fake codex launch\\n' >&2\nexit 97\n", { mode: 0o700 });
   chmodSync(fakeCodex, 0o700);
+  // `update` asks npm for the latest release; this answers only that read-only query, offline.
+  const npmView = JSON.stringify({ version: "9.9.9", time: { [VERSION]: "2026-11-01T09:30:00.000Z", "9.9.9": "2026-11-03T18:00:00.000Z" } });
+  writeFileSync(join(bin, "npm"), `#!/bin/sh\n[ "$*" = "view tonedial version time --json" ] || exit 97\nprintf '%s\\n' '${npmView}'\n`, { mode: 0o700 });
 
   const env: NodeJS.ProcessEnv = {
     HOME: root,

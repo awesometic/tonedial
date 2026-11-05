@@ -24,14 +24,14 @@ ToneDial 是一个 CLI，为 Claude Code、Codex 和 Antigravity 赋予你选定
 
 ## 同一模型，更精简的计划
 
-在 `gpt-5.6-sol` / `high` 下，一个全新会话使用 Codex 默认设置，另一个使用下方完整的 `vibe-coder` 配置。
-`verbosity=1` 只是该配置的一部分，并非唯一差异。
+在 `gpt-5.6-sol` / `high` 下，一个全新会话使用 Codex 默认设置，另一个使用下方完整的 `vibe-coder` 预设。
+`verbosity=1` 只是该预设的一部分，并非唯一差异。
 
 **指令**
 
 > I want to make ToneDial easier for first-time users. The README should get them from installation through `tonedial init` to their first preview with `tonedial test codex --preset <slug>`, and the CLI should make that next step obvious after `init`. Give me a prioritized three-step improvement plan for the README and first-run CLI flow.
 
-<img src="https://raw.githubusercontent.com/awesometic/tonedial/main/docs/media/readme/zh/verbosity-comparison.svg" alt="GPT-5.6 Sol high 使用 Codex 默认设置和完整 vibe-coder 配置回答同一条 ToneDial 改进计划指令；配置后的英文回复从 148 个词缩短到 82 个词" width="760">
+<img src="https://raw.githubusercontent.com/awesometic/tonedial/main/docs/media/readme/zh/verbosity-comparison.svg" alt="GPT-5.6 Sol high 使用 Codex 默认设置和完整 vibe-coder 预设回答同一条 ToneDial 改进计划指令；使用预设后的英文回复从 148 个词缩短到 82 个词" width="760">
 
 <sub>同一指令 · 每个新会话的首次完整回复 · 英文回复 148 个词 → 82 个词。这是一次示例性对比，并非只隔离单个轴的基准测试。回复用于展示语气差异；产品行为和命令请以下方指南为准。 <a href="https://github.com/awesometic/tonedial/blob/main/docs/media/readme/verbosity-comparison.json">输入与生成记录</a>.</sub>
 
@@ -58,8 +58,8 @@ tonedial wire
 
 ## 复制一种语气
 
-复制完整配置，或把它作为自定义设置的起点。
-每条命令都会保存并应用完整配置；`--auto` 会批准显示的更改。
+复制完整预设，或把它作为自定义设置的起点。
+每条命令都会保存并应用完整预设；`--auto` 会批准显示的更改。
 
 实际 `tonedial test codex` 回复 · `gpt-6.1-sol` / `high` · 每组配置保留问题的首次回答 · 仅对话，不编辑文件。 [输入与生成记录](https://github.com/awesometic/tonedial/blob/main/docs/media/readme/zh/use-cases.json).
 
@@ -173,7 +173,7 @@ tonedial create '就喜欢嘴狠的' --slug rough-but-reliable --auto \
 </details>
 
 Codex 开始对话后，输入上面的问题即可。
-模型与推理强度由 Codex 设置，与 ToneDial 配置分开。
+模型与推理强度由 Codex 设置，与 ToneDial 预设分开。
 
 ## 选择你的角色
 
@@ -193,12 +193,12 @@ tonedial set verbosity=1 warmth=3 address_frequency=rarely
 tonedial save "My Sword"
 ```
 
-也可用 `tonedial create` 创建自己的角色。语气、角色、称呼、敬语形式和安全词一起保存在配置中。
+也可用 `tonedial create` 创建自己的角色。语气、角色、称呼、敬语形式和安全词一起保存在预设中。
 
 用 `address_frequency` 选择用户姓名和称呼的使用频率。
 `none` 表示省略，`auto` 是根据语境选择的默认值，`rarely` 表示偶尔使用。
 `frequently` 在主要回答中使用，在简短的后续回答中省略。
-该值也会保存在配置中。[称呼设置](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#set-address-roles-and-language)。
+该值也会保存在预设中。[称呼设置](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#set-address-roles-and-language)。
 
 ## 调节语气
 
@@ -220,7 +220,7 @@ tonedial save "My Sword"
 `tonedial wire codex`、`claude` 或 `antigravity` 可连接一个代理。
 按完成提示所示位置启用其钩子，此后新对话就会收到该语气。
 
-通过已安装的 Codex 或 Claude Code 客户端，在全新对话中预览已保存的配置：
+通过已安装的 Codex 或 Claude Code 客户端，在全新对话中预览已保存的预设：
 
 ```bash
 tonedial test codex --preset my-sword

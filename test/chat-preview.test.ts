@@ -377,6 +377,9 @@ test("non-terminal conversations and ambiguous automatic selection do not launch
     assert.match(args.includes("--json") ? JSON.parse(ambiguous.stdout).error : ambiguous.stderr, /Choose a provider explicitly/);
     assert.ok(!ambiguous.stdout.includes("[y/N]"));
   }
+  const dry = invoke(["--dry-run"]);
+  assert.deepEqual(dry.stderr.trimEnd().split("\n").slice(-2).map((line) => line.trim()),
+    ["tonedial test claude --dry-run", "tonedial test codex --dry-run"], "each provider's own dry run, one per line");
   assert.deepEqual(nativeCalls(), []);
   assert.deepEqual(snapshot(scratch), before);
 });

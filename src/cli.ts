@@ -2,20 +2,21 @@
 
 import { parseArgs } from "node:util";
 
-import { ConfigError, SETTING_KEYS, isConfigV2, nearest } from "./core/config.ts";
+import { ConfigError, OwnershipConflict, PresetNotFound, SETTING_KEYS, SettingsUnreadable, ToolsRequired, isConfigV2, nearest } from "./core/config.ts";
 import { AXIS_ORDER } from "./core/anchors.ts";
 import { compile } from "./core/compile.ts";
 import { toCompileInput } from "./core/resolve.ts";
 import { inspectContextLayout } from "./core/seeds.ts";
-import { OperationError } from "./core/operations.ts";
+import { OperationError, inspectOperations } from "./core/operations.ts";
 import { RegionError } from "./wiring/region.ts";
-import { connectionScopeFlag, installShape, resolveAgentPaths, resolvePaths, type AgentPaths } from "./core/paths.ts";
+import { connectionScopeFlag, installShape, resolveAgentPaths, resolvePaths, shellQuote, type AgentPaths, type Paths } from "./core/paths.ts";
 import { catalogue, configLanguage, detectLanguage, messages, type Catalogue, type Messages } from "./core/i18n.ts";
 import { isColourMode, palette, type Palette } from "./ui/style.ts";
 import { cells, maxCells, resolveBudget, wrap } from "./ui/width.ts";
 import { interactive } from "./ui/prompt.ts";
-import { humanText, isCopyableLine } from "./ui/format.ts";
-import type { Change } from "./wiring/apply.ts";
+import { humanText, isCopyableLine, isRiskNotice, nextStep, riskNotice } from "./ui/format.ts";
+import { ApprovalRequired, type Change } from "./wiring/apply.ts";
+import { ScopeRequired, projectIsHome } from "./wiring/scopes.ts";
 
 import { planConfig, runCompile } from "./commands/compile.ts";
 import { runExport, runImport } from "./commands/transfer.ts";
@@ -29,6 +30,7 @@ import { runShow } from "./commands/show.ts";
 import { runGet, settingHelp } from "./commands/get.ts";
 import { runUse } from "./commands/use.ts";
 import { runDoctor } from "./commands/doctor.ts";
+import { recoveryPendingError } from "./commands/rebuild.ts";
 import { runEject } from "./commands/eject.ts";
 import { runInit } from "./commands/init.ts";
 import { runUnwire, runWire } from "./commands/wire.ts";
@@ -42,7 +44,7 @@ export const JSON_SCHEMA = 3;
  * run time is the one thing that breaks all three binary packagers at once. A test asserts this
  * equals the manifest, which is the cheap half of the trade.
  */
-export const VERSION = "0.1.13";
+export const VERSION = "0.1.14";
 
 /** Command flags are declared centrally and parsed strictly, so a typo fails rather than
  *  being silently dropped — which is what a permissive parse did to `--project`. */
@@ -106,6 +108,8 @@ export type CommandResult = {
   json: Record<string, unknown>;
   /** Non-blocking notices about tone combinations and persona settings. */
   warnings?: string[];
+  /** A dry run that found changes to make; the output ends with the command that makes them. */
+  previewed?: boolean;
   /**
    * Something to do once the receipt is on screen, and only then.
    *
@@ -138,6 +142,10 @@ export type Ctx = {
   canPrompt: boolean;
   /** User intent, distinct from the effective global default and an isolation override. */
   scopeExplicit?: boolean;
+  /** The scope introduction (scope label and root) was printed, so a preview need not print the root again. */
+  scopeShown?: boolean;
+  /** This invocation as a command to rerun, offered when approval was needed and nobody could give it. */
+  rerun?: string;
   /** Read-only context evidence revalidated with the command's eventual writes. */
   contextChecks?: readonly Change[];
 };
@@ -174,6 +182,8 @@ const COMMANDS: Record<
 };
 
 const CONNECTION_COMMANDS = ["init", "wire", "doctor", "unwire", "eject"];
+/** Commands that present a plan or ask for approval carry a title; short receipts start with their result. */
+const TITLED_COMMANDS = [...CONNECTION_COMMANDS, "update", "create", "save", "import", "edit", "test"];
 
 /**
  * Every command this CLI dispatches. Exported so the help screen can be held to covering them:
@@ -366,7 +376,8 @@ function commandUsage(name: string, copy: Catalogue, ui: Palette): string {
   const command = COMMANDS[name]!;
   const syntax = COMMAND_SYNTAX.find(([key]) => key === name)?.[1] ?? name;
   const flagKeys = [
-    ...command.flags,
+    // `update --global` stays accepted from earlier releases; it never selected anything.
+    ...command.flags.filter((key) => !(name === "update" && key === "global")),
     "json",
     "verbose",
     "color",
@@ -560,7 +571,11 @@ export async function run(
     // one: `stop` is two edits from `show` and `delete` three from `reset`, so the match would
     // answer a person trying to leave with the command they were leaving.
     if (STOPPING.includes(name)) return fail(asJson, say.errors.stoppingHelp, 2, uiErr);
-    if (FLAG_WORDS.includes(name)) return fail(asJson, say.errors.isAFlag(name), 2, uiErr);
+    if (FLAG_WORDS.includes(name)) {
+      // `help doctor` asks for `doctor --help`; `version` takes no command.
+      const about = name === "help" && rest[0] !== undefined && Object.hasOwn(COMMANDS, rest[0]) ? rest[0] : null;
+      return fail(asJson, say.errors.isAFlag(name, about), 2, uiErr);
+    }
     return fail(asJson, say.errors.notACommand(asJson ? name : humanText(name), nearest(name, COMMAND_NAMES)), 2, uiErr);
   }
 
@@ -611,33 +626,27 @@ export async function run(
     return fail(asJson, say.recovery.invalidOptions, 2, uiErr);
   }
 
+  // Once resolved, the invocation names what an ownership or approval refusal ends with.
+  let ctx: Ctx | null = null;
   try {
     const connection = CONNECTION_COMMANDS.includes(name);
     const scopeExplicit = flags.global || flags.here === true || flags.project !== null;
     const agent = resolveAgentPaths({ ...flags, global: flags.global || (connection && !scopeExplicit) }, env, cwd);
     const paths = resolvePaths(env);
     const t = messages(paths.config, env);
-    const ctx: Ctx = { paths, cwd, flags, ui, agent, env, t, asJson, canPrompt: !asJson && interactive(), scopeExplicit };
+    ctx = { paths, cwd, flags, ui, agent, env, t, asJson, canPrompt: !asJson && interactive(), scopeExplicit,
+      rerun: rerunCommand(name, rest, flags, connection && flags.rollback === null ? connectionScopeFlag(agent, cwd) : null) };
     // Init and doctor own recovery-first diagnosis before enforcing ordinary write intent.
     if (connection && name !== "doctor" && name !== "init" && flags.auto && !flags.dryRun && !scopeExplicit) {
-      throw new ConfigError(t.errors.scopeRequired);
+      throw new ScopeRequired(t);
     }
-    const scopeLabel = name === "doctor"
-      ? (agent.live ? t.doctor.scopeGlobal : t.doctor.scope)
-      : (agent.live ? t.wiring.scopeGlobal : t.wiring.scopeHere);
+    const scopeLabel = agent.live ? t.wiring.scopeGlobal : t.wiring.scopeHere;
     const introduction = connection && name !== "init" && flags.rollback === null && !asJson
       ? [`  ${scopeLabel}`, `  ${humanText(agent.root)}`] : [];
+    ctx.scopeShown = introduction.length > 0;
     const contextExempt = name === "compile" && flags.check;
     if (command.context !== undefined && command.context !== "setup" && !contextExempt) {
-      let planned: ReturnType<typeof planConfig>;
-      try {
-        planned = planConfig(ctx);
-      } catch (cause) {
-        // The parser names the bad field; the recovery route is what the user can act on.
-        if (cause instanceof ConfigError) throw new ConfigError(`${cause.message}\n${t.errors.unreadableConfigFile(paths.config)}`);
-        throw cause;
-      }
-      const { change, config } = planned;
+      const { change, config } = planConfig(ctx);
       const layout = inspectContextLayout(paths, change, t, {
         config: change.before === null ? null : config,
         expectedArtifact: compile(toCompileInput(config)),
@@ -645,26 +654,60 @@ export async function run(
           ...(isConfigV2(config) ? Object.values(config.wiring.registrations).map(registration => registration.destination) : [])],
       });
       if (layout.cause === "overlap") throw new ConfigError(t.errors.stateInstructionOverlap(paths.root));
-      if (layout.cause === "operation") throw new ConfigError(t.doctor.recoveryPending);
+      // The steps name the scope a plain `doctor` from here inspects: the command's own, or global.
+      const doctorScope = connectionScopeFlag(connection ? agent : resolveAgentPaths({ global: true, project: null }, env, cwd), cwd);
+      if (layout.cause === "operation") throw recoveryPendingError(paths, t, doctorScope);
       if (layout.kind === "legacy" || layout.kind === "conflict" ||
           layout.kind === "fresh") {
-        throw new ConfigError(t.errors.contextLayout(layout.kind, paths.root, `tonedial doctor ${connectionScopeFlag(agent)} --json`));
+        throw new ConfigError(t.errors.contextLayout(layout.kind, paths.root, `tonedial doctor ${doctorScope} --json`,
+        `tonedial doctor --fix ${doctorScope}`));
       }
       ctx.contextChecks = layout.checks;
     }
-    // The dial owns its live title; other human commands identify themselves before approval.
-    const earlyBanner = !["export", "show"].includes(name) && !(name === "set" && rest.length === 0);
-    if (!asJson && earlyBanner) process.stdout.write(`${ui.bold(`ToneDial · ${name}`)}\n\n`);
-    if (introduction.length) process.stdout.write(`${introduction.join("\n")}\n`);
-    const result = await command.run(ctx, rest);
+    // Disconnecting reads no settings, so it skips the gate above, but a held operation lock still
+    // refuses its write. Say so now, with the commands for it, rather than after a preview.
+    if ((name === "unwire" || name === "eject") && operationHeld(paths)) {
+      throw recoveryPendingError(paths, t, connectionScopeFlag(agent, cwd));
+    }
+    // The title and scope precede the command's first output, so a refusal on stderr has neither.
+    // The dial draws its own live title; the receipt after it gets this one. `show` titles itself.
+    const dial = name === "set" && rest.length === 0;
+    const header = [...(!asJson && (TITLED_COMMANDS.includes(name) || dial) ? [ui.bold(`ToneDial · ${name}`), ""] : []), ...introduction];
+    const write = process.stdout.write;
+    let pending = header.length > 0;
+    const flush = () => {
+      if (!pending) return;
+      pending = false;
+      process.stdout.write = write;
+      write.call(process.stdout, `${header.join("\n")}\n`);
+    };
+    // Prompts, pickers and previews write to stdout directly. Only text counts: a test runner's
+    // binary reports share this stream.
+    if (pending && !dial) {
+      process.stdout.write = ((chunk: string | Uint8Array, ...more: never[]) => {
+        if (typeof chunk === "string") flush();
+        return write.call(process.stdout, chunk, ...more);
+      }) as typeof write;
+    }
+    let result: CommandResult;
+    try {
+      result = await command.run(ctx, rest);
+    } finally {
+      if (pending) process.stdout.write = write;
+    }
     if (asJson) {
       process.stdout.write(
         `${JSON.stringify({ ...result.json, schema: JSON_SCHEMA, ok: true, warnings: result.warnings ?? [] }, null, 2)}\n`,
       );
     } else {
-      if (!earlyBanner && !["export", "show"].includes(name)) process.stdout.write(`${ui.bold(`ToneDial · ${name}`)}\n\n`);
+      flush();
       if (introduction.length && result.lines.length && result.lines[0] !== "") process.stdout.write("\n");
-      for (const line of result.lines) process.stdout.write(`${line}\n`);
+      const lines = [...result.lines];
+      if (result.previewed && ctx.rerun !== undefined) {
+        while (lines.at(-1) === "") lines.pop();
+        lines.push(...nextStep(ctx.rerun, ui));
+      }
+      for (const line of lines) process.stdout.write(`${line}\n`);
       for (const w of result.warnings ?? []) process.stderr.write(notice(w, uiErr));
       // After the receipt, never instead of part of it.
       const afterStatus = await result.after?.();
@@ -676,7 +719,44 @@ export async function run(
     // and nothing else. Anything else is a defect and keeps its stack.
     // A RegionError is someone else's file talking back — a marker they moved or duplicated —
     // which is the user's situation to fix and not a defect in this tool.
-    if (cause instanceof ConfigError || cause instanceof RangeError || cause instanceof RegionError || cause instanceof OperationError) {
+    if (cause instanceof OwnershipConflict && ctx !== null) {
+      const doctor = `tonedial doctor ${connectionScopeFlag(ctx.agent, cwd)}`;
+      return fail(asJson, `${cause.message}\n  ${doctor}`, 1, uiErr, { reason: cause.reason, commands: [doctor] });
+    }
+    if (cause instanceof ScopeRequired && ctx !== null) {
+      // A project scope in the home directory would refuse, so only the global one is offered there.
+      const here = projectIsHome(resolveAgentPaths({ global: false, project: null, here: true }, env, cwd), env);
+      const commands = (here ? ["--global"] : ["--global", "--here"]).map((scope) => `${rerunCommand(name, rest, flags, scope)} --auto`);
+      return fail(asJson, cause.t.errors.scopeRequired(commands), 1, uiErr, { reason: cause.reason, commands });
+    }
+    if (cause instanceof SettingsUnreadable && ctx !== null) {
+      // The scope a plain `doctor` from here inspects: the command's own, or global.
+      const command = `tonedial doctor --fix ${CONNECTION_COMMANDS.includes(name) ? connectionScopeFlag(ctx.agent, cwd) : "--global"}`;
+      return fail(asJson, `${cause.message}\n${cause.t.errors.unreadableConfigFile(cause.path, command)}`, 1, uiErr,
+        { reason: cause.reason, commands: [command] });
+    }
+    if (cause instanceof ToolsRequired && ctx !== null) {
+      // This invocation with each way of choosing agents. `--commands` needs claude, so it is not carried.
+      const scope = connectionScopeFlag(ctx.agent, cwd);
+      const commands = ["codex", "none"].map((tools) => rerunCommand(name, rest, { ...flags, tools, commands: false }, scope));
+      return fail(asJson, cause.t.errors.toolsRequired(commands, flags.auto), 1, uiErr, { reason: cause.reason, commands });
+    }
+    if (cause instanceof PresetNotFound && ctx !== null) {
+      // The failed invocation with the nearest slug in place of the one typed: `show typo` is
+      // answered with `show`, and a dry run stays one. `test` carries the slug in --preset; usage
+      // consent is per launch, so it does not ride along to a preset the person did not name.
+      const near = cause.near;
+      const swapped = rest.map((arg, i) => near !== null && i === rest.lastIndexOf(cause.slug) ? near : arg);
+      const command = near === null ? null : `${rerunCommand(name, name === "test" ? rest : swapped,
+        name === "test" ? { ...flags, preset: near, acceptUsage: false } : flags, null)}${flags.dryRun ? " --dry-run" : ""}`;
+      return fail(asJson, cause.t.preset.unknown(cause.slug, cause.known, near === null ? null : { slug: near, command: command! }), 1, uiErr);
+    }
+    if (cause instanceof ApprovalRequired && ctx?.rerun !== undefined) {
+      const commands = [ctx.rerun, `${ctx.rerun} --dry-run`, `${ctx.rerun} --auto`];
+      return fail(asJson, cause.t.wiring.needsApproval(ctx.rerun), 1, uiErr, { reason: cause.reason, commands });
+    }
+    if (cause instanceof ConfigError) return fail(asJson, cause.message, 1, uiErr, cause);
+    if (cause instanceof RangeError || cause instanceof RegionError || cause instanceof OperationError) {
       return fail(asJson, (cause as Error).message, 1, uiErr);
     }
     throw cause;
@@ -688,20 +768,49 @@ const CONTINUATION = "    ";
 
 /** Fold warning prose without reflowing copyable paths or commands. */
 function notice(message: string, ui: Palette): string {
-  // A risk notice leads with "!" for stdout rows; here the warning marker stands in for it.
-  const folded = message.replace(/^! /, "").split("\n").flatMap(line => {
+  // A risk notice keeps the "!" its text leads with, as it does on stdout; other warnings get the sign.
+  const risk = isRiskNotice(message);
+  const folded = message.split("\n").flatMap(line => {
     const safe = humanText(line);
     return isCopyableLine(safe) ? [safe] : wrap(safe, ui.width - cells(MARKER));
   });
   return folded
-    .map((line, i) => (i === 0 ? `${ui.warn(MARKER)}${line}` : `${CONTINUATION}${line}`))
+    .map((line, i) => risk
+      ? `${i === 0 ? "  " : CONTINUATION}${riskNotice(line, ui)}`
+      : i === 0 ? `${ui.warn(MARKER)}${line}` : `${CONTINUATION}${line}`)
     .join("\n") + "\n";
 }
 
-function fail(asJson: boolean, message: string, code: number, ui: Palette): number {
+/**
+ * The command a person reruns to repeat this invocation: its arguments and options, the
+ * effective `scope` spelled out (an unattended rerun needs it), and no approval or dry-run mode.
+ */
+/** Unreadable state is not a held lock: the write that needs it reports the failure in its own words. */
+function operationHeld(paths: Paths): boolean {
+  try {
+    return inspectOperations(paths).lock.state !== "none";
+  } catch {
+    return false;
+  }
+}
+
+function rerunCommand(name: string, args: string[], flags: Flags, scope: string | null): string {
+  const quote = (value: string) => /^[\w@%+=:,./-]+$/.test(value) ? value : `"${shellQuote(value)}"`;
+  const options = FLAG_NAMES.flatMap((flag) => {
+    if (flag === "auto" || flag === "dryRun" || scope !== null && (flag === "global" || flag === "here" || flag === "project")) return [];
+    const value = flags[flag];
+    return value === true ? [`--${FLAG_SPELLING[flag]}`] : typeof value === "string" ? [`--${FLAG_SPELLING[flag]} ${quote(value)}`] : [];
+  });
+  return ["tonedial", name, ...args.map(quote), ...options, ...(scope === null ? [] : [scope])].join(" ");
+}
+
+/** A named refusal adds its `reason` and the commands it offers; other failures carry neither. */
+function fail(asJson: boolean, message: string, code: number, ui: Palette,
+  refusal: { reason: string | undefined; commands: readonly string[] } = { reason: undefined, commands: [] }): number {
   if (asJson) {
+    const named = refusal.reason === undefined ? {} : { reason: refusal.reason, commands: refusal.commands };
     process.stdout.write(
-      `${JSON.stringify({ schema: JSON_SCHEMA, ok: false, error: message, warnings: [] }, null, 2)}\n`,
+      `${JSON.stringify({ schema: JSON_SCHEMA, ok: false, error: message, ...named, warnings: [] }, null, 2)}\n`,
     );
   } else {
     // A standalone path is a copy target, not prose to split into unusable fragments.

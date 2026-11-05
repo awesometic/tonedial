@@ -78,7 +78,8 @@ async function rollbackRebuild(value: Record<string, any>, scope: string[] = [])
 async function legacyState(tools: Exclude<AgentTool, "antigravity">[] = ["codex", "claude"], elsewhere?: string, destination = project) {
   const paths = resolvePaths(env);
   mkdirSync(paths.root);
-  const agent = resolveAgentPaths({ global: false, project: destination }, env, project);
+  // An earlier version kept a `--project` folder as it was typed; the override still does.
+  const agent = resolveAgentPaths({ global: false, project: null }, { ...env, TONEDIAL_AGENT_HOME: destination }, project);
   const config = requireConfigV2(defaultConfig(), t);
   const artifact = compile(toCompileInput(config));
   const lower = join(paths.root, "tone.md");
@@ -675,7 +676,9 @@ for (const state of ["pending", "invalid"] as const) {
     const result = await invoke(["init", "--tools", "none", "--auto"]);
     assert.equal(result.code, 1, result.stdout);
     assert.match(result.value.error, /recover|rollback|doctor/i);
-    assert.doesNotMatch(result.value.error, /JSON|--global|--here|--project/);
+    // The recovery refusal, not the config parser or the missing-scope refusal; it names doctor.
+    assert.equal(result.value.reason, "recovery-pending");
+    assert.doesNotMatch(result.value.error, /JSON|explicit scope/);
     assert.equal(readFileSync(paths.config, "utf8"), "damaged config\n");
     assert.equal(readFileSync(provider, "utf8"), "damaged provider settings\n");
     assert.deepEqual(readdirSync(paths.root, { recursive: true }).sort(), before);

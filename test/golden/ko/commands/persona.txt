@@ -1,7 +1,5 @@
 status: 0
---- stdout --- [bytes=125; endsWithNewline=true]
-ToneDial · persona
-
+--- stdout --- [bytes=104; endsWithNewline=true]
   설정 변경됨
   persona.agent  64자 → 18자
   persona.user   22자 → 9자

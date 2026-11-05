@@ -1,0 +1,797 @@
+// Doctor's human guidance: every finding names its cause once and ends with the command that
+// fixes it, in the scope the user is looking at.
+
+import assert from "node:assert/strict";
+import { afterEach, beforeEach, test } from "node:test";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, renameSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { spawnSync } from "node:child_process";
+import { dirname, join } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
+
+import { run } from "../src/cli.ts";
+import { HOST_COMPOSITION } from "../src/core/anchors.ts";
+import { acquireOperation, beginJournal } from "../src/core/operations.ts";
+import { resolvePaths } from "../src/core/paths.ts";
+import { addLegacyRider, recordThroughAlias } from "./support/legacy-fixture.ts";
+
+let scratch: string;
+let home: string;
+let project: string;
+let env: NodeJS.ProcessEnv;
+
+beforeEach(() => {
+  // Physical, like a real working directory; see test/connection-scopes.test.ts.
+  scratch = realpathSync(mkdtempSync(join(tmpdir(), "tonedial-doctor-guidance-")));
+  home = join(scratch, "home");
+  project = join(home, "project");
+  mkdirSync(project, { recursive: true });
+  mkdirSync(join(home, ".codex"));
+  env = { HOME: home, PATH: "", LANG: "en_US.UTF-8", COLUMNS: "80" };
+});
+afterEach(() => rmSync(scratch, { recursive: true, force: true }));
+
+/** Human output without a terminal: what a pipe, CI log or agent shell sees. */
+async function human(args: string[], cwd = home): Promise<{ code: number; out: string; err: string }> {
+  let out = "";
+  let err = "";
+  const stdout = process.stdout.write;
+  const stderr = process.stderr.write;
+  process.stdout.write = ((text: string) => { out += text; return true; }) as typeof stdout;
+  process.stderr.write = ((text: string) => { err += text; return true; }) as typeof stderr;
+  try {
+    const code = await run(args, env, cwd, false, false);
+    return { code, out, err };
+  } finally {
+    process.stdout.write = stdout;
+    process.stderr.write = stderr;
+  }
+}
+
+async function json(args: string[], cwd = home) {
+  const result = await human([...args, "--json"], cwd);
+  return { code: result.code, value: JSON.parse(result.out) };
+}
+
+test("doctor --fix without a terminal reports approval, not a protected file, with both rerun commands", async () => {
+  assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
+  rmSync(join(home, ".codex", "hooks.json"));
+
+  const machine = await json(["doctor", "--fix", "--global"]);
+  assert.equal(machine.code, 0);
+  assert.equal(machine.value.native.reason, "approval-required");
+  assert.deepEqual(machine.value.native.issues, [{ tool: null, reason: "approval-required" }]);
+
+  const shown = await human(["doctor", "--fix", "--global"]);
+  assert.equal(shown.code, 0);
+  assert.doesNotMatch(shown.out, /need separate attention/);
+  assert.match(shown.out, /approval required/);
+  assert.match(shown.out, /^ {2,}tonedial doctor --fix --global$/m);
+  assert.match(shown.out, /^ {2,}tonedial doctor --fix --global --dry-run$/m);
+  assert.match(shown.out, /^ {2,}tonedial doctor --fix --global --auto$/m);
+});
+
+/** One finding's lines, from its marked heading to the blank line that ends it. */
+function block(out: string, heading: string): string[] {
+  const lines = out.split("\n");
+  const start = lines.findIndex((line) => /^ {2}(ok|!|·) /.test(line) && line.endsWith(` ${heading}`));
+  assert.ok(start >= 0, `no ${heading} finding in:\n${out}`);
+  const end = lines.findIndex((line, index) => index > start && line.trim() === "");
+  return lines.slice(start, end < 0 ? undefined : end).map((line) => line.trim());
+}
+
+test("each fixable finding ends with the scoped doctor --fix that fixes it, once per cause", async () => {
+  assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
+  const state = join(home, ".tonedial");
+  rmSync(join(home, ".codex", "hooks.json"));
+  rmSync(join(state, "TONE.md"));
+  writeFileSync(join(state, "skill", "tonedial", "SKILL.md"), "locally edited\n");
+
+  const machine = await json(["doctor", "--global"]);
+  const repair = (name: string) => machine.value.checks.find((check: { name: string }) => check.name === name)?.repair;
+  for (const name of ["Codex CLI", "TONE.md", "seeds"]) assert.equal(repair(name), "tonedial doctor --fix --global", name);
+
+  const shown = await human(["doctor", "--global"]);
+  for (const heading of ["Codex CLI", "TONE.md", "Bundled files"]) {
+    assert.equal(block(shown.out, heading).at(-1), "tonedial doctor --fix --global", heading);
+  }
+  // The missing artifact is one cause: the context-layout summary does not repeat it.
+  assert.doesNotMatch(shown.out, /Context files/);
+  assert.doesNotMatch(shown.out, /tonedial (compile|init --tools)/);
+
+  assert.equal((await human(["doctor", "--fix", "--global", "--auto"])).code, 0);
+  const after = await json(["doctor", "--global"]);
+  for (const name of ["Codex CLI", "TONE.md", "seeds"]) {
+    assert.notEqual(after.value.checks.find((check: { name: string }) => check.name === name).state, "problem", name);
+  }
+});
+
+test("an edited TONE.md is one finding with the doctor --fix command", async () => {
+  assert.equal((await human(["init", "--tools", "none", "--global", "--auto"])).code, 0);
+  writeFileSync(join(home, ".tonedial", "TONE.md"), "edited by hand\n");
+  const shown = await human(["doctor", "--global"]);
+  assert.doesNotMatch(shown.out, /Context files/);
+  assert.equal(block(shown.out, "TONE.md").at(-1), "tonedial doctor --fix --global");
+});
+
+test("a TONE.md an earlier version wrote from the same settings says so, not that it was edited", async () => {
+  assert.equal((await human(["init", "--tools", "none", "--global", "--auto"])).code, 0);
+  const tone = join(home, ".tonedial", "TONE.md");
+  // 0.1.11 wrote the current artifact without the host reply-style rule (added in 0.1.14).
+  const current = readFileSync(tone, "utf8");
+  const earlier = current.replace(`- ${HOST_COMPOSITION}\n`, "");
+  assert.notEqual(earlier, current);
+  writeFileSync(tone, earlier);
+
+  const lines = block((await human(["doctor", "--global"])).out, "TONE.md");
+  assert.match(lines.join(" "), /generated by an earlier ToneDial version/);
+  assert.doesNotMatch(lines.join(" "), /edited directly|write interrupted/);
+  assert.equal(lines.at(-1), "tonedial doctor --fix --global");
+
+  // A recognised artifact with other settings than config.json's is a write that did not finish.
+  assert.equal((await human(["set", "warmth=1"])).code, 0);
+  writeFileSync(tone, current);
+  const interrupted = block((await human(["doctor", "--global"])).out, "TONE.md");
+  assert.match(interrupted.join(" "), /edited directly or write interrupted/);
+  assert.equal(interrupted.at(-1), "tonedial doctor --fix --global");
+});
+
+test("a reader an update left behind ends with the doctor --fix that refreshes it", async () => {
+  assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
+  // A bundled reader recorded at an earlier seed version, as an older package left it.
+  const config = join(home, ".tonedial", "config.json");
+  const saved = JSON.parse(readFileSync(config, "utf8"));
+  saved.managedSeeds.reader.version -= 1;
+  writeFileSync(config, JSON.stringify(saved));
+
+  const reader = block((await human(["doctor", "--global"])).out, "Reader");
+  assert.match(reader.join(" "), /Reader self-test failed\. Bundled file update available/);
+  assert.equal(reader.at(-1), "tonedial doctor --fix --global");
+  const check = (await json(["doctor", "--global"])).value.checks.find((row: { name: string }) => row.name === "reader");
+  assert.equal(check.repair, "tonedial doctor --fix --global");
+
+  assert.equal((await human(["doctor", "--fix", "--global", "--auto"])).code, 0);
+  const after = (await json(["doctor", "--global"])).value.checks.find((row: { name: string }) => row.name === "reader");
+  assert.deepEqual([after.state, after.repair], ["note", null]);
+});
+
+test("a connected agent shows one state: connected, with enablement that files cannot show", async () => {
+  mkdirSync(join(home, ".claude"));
+  assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
+  const global = await human(["doctor", "--global"]);
+  const codex = block(global.out, "Codex CLI");
+  assert.equal(codex[0], "ok Codex CLI");
+  assert.match(codex[1]!, /^Connected · SessionStart/);
+  assert.match(codex.join(" "), /can't be checked from files/);
+  assert.doesNotMatch(codex.join(" "), /unknown|[Tt]rust/);
+  // An installed agent that was never connected is simply not connected.
+  assert.match(block(global.out, "Agent hooks").join(" "), /Not connected: Claude Code, Antigravity IDE\/Desktop\./);
+  assert.doesNotMatch(global.out, /no longer set up/);
+
+  rmSync(join(home, ".codex", "hooks.json"));
+  const missing = block((await human(["doctor", "--global"])).out, "Codex CLI");
+  assert.deepEqual(missing.slice(-1), ["tonedial doctor --fix --global"]);
+  assert.doesNotMatch(missing.join(" "), /[Ee]nablement|Resolve the reported/);
+});
+
+test("the project trust step appears only for a project connection", async () => {
+  assert.equal((await human(["init", "--tools", "codex", "--here", "--auto"], project)).code, 0);
+  const here = block((await human(["doctor", "--here"], project)).out, "Codex CLI");
+  assert.match(here.join(" "), /Trust this project in Codex/);
+});
+
+test("the report opens with a count of problems and notices", async () => {
+  assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
+  const lead = (out: string) => out.split("\n").filter((line) => line.trim() !== "")[3]!.trim();
+  const unhealthy = await human(["doctor", "--global"]);
+  assert.equal(unhealthy.code, 0, "problems keep exit status 0");
+  assert.equal(lead(unhealthy.out), "1 problem", unhealthy.out);
+  assert.doesNotMatch(unhealthy.out, /need(s)? attention\n*$/);
+
+  const bin = join(scratch, "bin");
+  mkdirSync(bin);
+  writeFileSync(join(bin, "tonedial"), "#!/bin/sh\n", { mode: 0o755 });
+  env.PATH = bin;
+  assert.equal(lead((await human(["doctor", "--global"])).out), "No problems found");
+});
+
+test("plain doctor in a folder with its own connections points to doctor --here", async () => {
+  assert.equal((await human(["init", "--tools", "codex", "--here", "--auto"], project)).code, 0);
+  const shown = await human(["doctor"], project);
+  assert.match(shown.out, /This folder has its own connections \(codex\)/);
+  assert.match(shown.out, /^ {2}tonedial doctor --here$/m);
+  assert.match(shown.out.split("\n").filter((line) => line.trim())[3]!, /1 notice/);
+  const machine = await json(["doctor"], project);
+  assert.equal(machine.value.wiredElsewhere.length, 1, "JSON keeps every registration outside the scope");
+
+  // The agent this folder connects is not "not connected": it is not connected in this scope. Any
+  // folder that inspects the global scope sees the same, because the project is still registered.
+  for (const cwd of [project, home]) {
+    const group = block((await human(["doctor"], cwd)).out, "Agent hooks").join(" ");
+    assert.match(group, /Not connected: Claude Code, Antigravity IDE\/Desktop\./, group);
+    assert.match(group, /Not connected in this scope: Codex CLI\./, group);
+  }
+});
+
+test("doctor reports a project hook that duplicates the global one, in both scopes", async () => {
+  assert.equal((await human(["init", "--tools", "codex", "--here", "--auto"], project)).code, 0);
+  assert.equal((await human(["wire", "codex", "--global", "--auto"])).code, 0);
+  const globalHook = join(home, ".codex", "hooks.json");
+  const projectHook = join(project, ".codex", "hooks.json");
+  // The command names the project the way it can be run from where the user is.
+  for (const [args, cwd, scope] of [[["doctor", "--global"], home, `--project "${project}"`], [["doctor", "--here"], project, "--here"]] as const) {
+    const codex = block((await human([...args], cwd)).out, "Codex CLI");
+    assert.match(codex.join(" "), /Codex CLI has a global and a project hook, so both hooks are present/);
+    assert.ok(codex.includes(globalHook) && codex.indexOf(projectHook) > codex.indexOf(globalHook), codex.join("\n"));
+    assert.equal(codex.at(-1), `tonedial unwire codex ${scope}`);
+    assert.doesNotMatch(codex.join(" "), /run from that directory/);
+    const machine = await json([...args], cwd);
+    const integration = machine.value.integrations.find((row: { tool: string }) => row.tool === "codex");
+    assert.deepEqual(integration.duplicates.map((row: { destination: string }) => row.destination), [project]);
+  }
+});
+
+test("project hooks that repeat the global one share one notice, with one command for each project", async () => {
+  const other = join(home, "other");
+  mkdirSync(other);
+  assert.equal((await human(["init", "--tools", "codex", "--here", "--auto"], project)).code, 0);
+  assert.equal((await human(["init", "--tools", "codex", "--here", "--auto"], other)).code, 0);
+  assert.equal((await human(["wire", "codex", "--global", "--auto"])).code, 0);
+
+  const codex = block((await human(["doctor", "--global"])).out, "Codex CLI");
+  assert.match(codex.join(" "), /global hook and 2 project hooks, so all hooks are present/);
+  assert.equal(codex.filter((line) => line === join(home, ".codex", "hooks.json")).length, 1, "the global hook is named once");
+  const commands = codex.filter((line) => line.startsWith("tonedial unwire codex"));
+  // In the order the projects are listed in: by folder.
+  assert.deepEqual(commands, [other, project].map((dir) => `tonedial unwire codex --project "${dir}"`));
+  for (const dir of [project, other]) assert.ok(codex.includes(join(dir, ".codex", "hooks.json")), codex.join("\n"));
+
+  // Seen from one of the projects, only its own hook doubles the global one, and its command is --here.
+  const here = block((await human(["doctor", "--here"], other)).out, "Codex CLI");
+  assert.equal(here.at(-1), "tonedial unwire codex --here");
+  assert.equal(here.filter((line) => line.startsWith("tonedial unwire")).length, 1, here.join("\n"));
+});
+
+test("doctor dims only status facts: the remaining step and the notice stay readable and commands stand out", async () => {
+  const DIM = "\x1b[2m";
+  const ACCENT = "\x1b[36m";
+  const WARN = "\x1b[33m";
+  env.COLUMNS = "140";
+  assert.equal((await human(["init", "--tools", "codex", "--here", "--auto"], project)).code, 0);
+  assert.equal((await human(["wire", "codex", "--global", "--auto"])).code, 0);
+  const lines = (await human(["doctor", "--global", "--color=always"])).out.split("\n");
+  const line = (text: string) => lines.find((candidate) => candidate.includes(text)) ?? assert.fail(`no line with ${text}`);
+
+  assert.ok(line("Connected · SessionStart").includes(DIM), "a status fact is dim");
+  assert.ok(!line("open /hooks → SessionStart").includes(DIM), "the step the user still has to take is not");
+  assert.ok(!line("both hooks are present").includes(DIM), "neither is the notice the headline counts");
+  assert.ok(line("tonedial unwire codex").includes(ACCENT), "a command the notice gives is accented");
+  assert.ok(line(project).includes(ACCENT), "so is the project path the notice names");
+
+  // A failed check is marked in the headline's colour, not in the colour of a command failure.
+  rmSync(join(home, ".codex", "hooks.json"));
+  const broken = (await human(["doctor", "--global", "--color=always"])).out.split("\n");
+  assert.ok(broken.find((candidate) => /\d+ problems?/.test(candidate))?.includes(WARN));
+  assert.ok(broken.some((candidate) => candidate.includes(`${WARN}!`) && candidate.includes("Codex CLI")), broken.join("\n"));
+});
+
+test("an unconnected agent's unreadable settings file is named, and nothing is claimed about hook states", async () => {
+  assert.equal((await human(["init", "--tools", "none", "--global", "--auto"])).code, 0);
+  mkdirSync(join(home, ".claude"));
+  const settings = join(home, ".claude", "settings.json");
+  writeFileSync(settings, "{ not json");
+  // A tonedial on PATH, so the unreadable file is the only thing the report has to say.
+  mkdirSync(join(scratch, "bin"));
+  writeFileSync(join(scratch, "bin", "tonedial"), "#!/bin/sh\n", { mode: 0o755 });
+  env.PATH = join(scratch, "bin");
+
+  const shown = await human(["doctor", "--global"]);
+  const lines = shown.out.split("\n");
+  assert.ok(lines.includes(`  ${settings}`), `the file that cannot be inspected is not named:\n${shown.out}`);
+  assert.equal(lines.filter((line) => line.trim() !== "")[3]!.trim(), "No problems · 1 notice", shown.out);
+  assert.doesNotMatch(shown.out, /ToneDial files:|Hook states above/);
+  const machine = await json(["doctor", "--global"]);
+  assert.equal(machine.value.nativeAttention, true);
+  assert.equal(machine.value.healthy, true, "a notice is not a problem");
+});
+
+test("an unreadable settings file that is already a problem is not counted again as a notice", async () => {
+  assert.equal((await human(["init", "--tools", "none", "--global", "--auto"])).code, 0);
+  writeFileSync(join(home, ".codex", "hooks.json"), "{ not json");
+  mkdirSync(join(scratch, "bin"));
+  writeFileSync(join(scratch, "bin", "tonedial"), "#!/bin/sh\n", { mode: 0o755 });
+  env.PATH = join(scratch, "bin");
+  const lines = (await human(["doctor", "--global"])).out.split("\n").map((line) => line.trim());
+  assert.ok(lines.includes("1 problem"), lines.join("\n"));
+  assert.ok(lines.includes(join(home, ".codex", "hooks.json")), "the file is still named");
+});
+
+test("an unrelated problem does not hide an unreadable settings notice", async () => {
+  assert.equal((await human(["init", "--tools", "none", "--global", "--auto"])).code, 0);
+  mkdirSync(join(home, ".claude"));
+  const settings = join(home, ".claude", "settings.json");
+  writeFileSync(settings, "{ not json");
+  const lines = (await human(["doctor", "--global"])).out.split("\n").map((line) => line.trim());
+  assert.ok(lines.includes("1 problem · 1 notice"), lines.join("\n"));
+  assert.ok(lines.includes(settings), "the file is still named");
+});
+
+test("a project recorded on the global hook is not reported as a duplicate", async () => {
+  assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
+  await addLegacyRider(env, "codex", project);
+  for (const [args, cwd] of [[["doctor", "--global"], home], [["doctor", "--here"], project]] as const) {
+    const machine = await json([...args], cwd);
+    assert.deepEqual(machine.value.integrations.find((row: { tool: string }) => row.tool === "codex").duplicates, []);
+    assert.doesNotMatch((await human([...args], cwd)).out, /both hooks are present/);
+  }
+});
+
+test("a hook file that no longer parses is reported as unreadable, not as edited entries", async () => {
+  assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
+  const hook = join(home, ".codex", "hooks.json");
+  writeFileSync(hook, readFileSync(hook, "utf8").replace(/\}\s*$/, ""));
+
+  const lines = block((await human(["doctor", "--global"])).out, "Codex CLI");
+  const codex = lines.join(" ");
+  assert.doesNotMatch(codex, /edited outside ToneDial/);
+  assert.match(codex, /Cannot read this file as JSON/);
+  assert.ok(lines.includes(hook), codex);
+  assert.equal(lines.at(-1), "tonedial doctor --global");
+  const machine = await json(["doctor", "--global"]);
+  assert.equal(machine.value.integrations.find((row: { tool: string }) => row.tool === "codex").configuration, "foreign");
+});
+
+test("an externally edited hook gets what ToneDial expected and two routes that work", async () => {
+  assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
+  const hook = join(home, ".codex", "hooks.json");
+  const written = readFileSync(hook, "utf8");
+  writeFileSync(hook, written.replace('"additionalContextLimit": 0', '"additionalContextLimit": 5'));
+
+  const codex = block((await human(["doctor", "--global"])).out, "Codex CLI");
+  assert.match(codex.join(" "), /edited outside ToneDial/);
+  assert.ok(codex.includes(hook), codex.join("\n"));
+  assert.ok(codex.includes("tonedial doctor --global --verbose"), codex.join("\n"));
+  assert.equal(codex.at(-1), "tonedial doctor --fix --global");
+  const verbose = block((await human(["doctor", "--global", "--verbose"])).out, "Codex CLI");
+  assert.ok(verbose.includes('"statusMessage": "ToneDial: load saved response tone",'), verbose.join("\n"));
+  assert.ok(verbose.includes('"additionalContextLimit": 0'), "the expected entries, not the edited ones");
+
+  // Refresh does not dead-end either: it points to the diagnosis that carries these routes.
+  assert.match((await human(["init", "--tools", "codex", "--global", "--auto"])).out, /^ {2}tonedial doctor --global$/m);
+
+  // Route 1: restoring the entries as written makes the hook ToneDial's again.
+  writeFileSync(hook, written);
+  assert.equal((await json(["doctor", "--global"])).value.integrations[0].configuration, "configured");
+
+  // Route 2: with the edited file moved aside, doctor --fix writes a new one.
+  writeFileSync(hook, written.replace('"additionalContextLimit": 0', '"additionalContextLimit": 5'));
+  renameSync(hook, `${hook}.mine`);
+  assert.equal((await human(["doctor", "--fix", "--global", "--auto"])).code, 0);
+  assert.equal((await json(["doctor", "--global"])).value.integrations[0].configuration, "configured");
+});
+
+test("doctor --fix --dry-run previews without a configured-hook receipt", async () => {
+  assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
+  writeFileSync(join(home, ".tonedial", "skill", "tonedial", "SKILL.md"), "locally edited\n");
+  const preview = await human(["doctor", "--fix", "--global", "--dry-run"]);
+  assert.equal(preview.code, 0, preview.err);
+  assert.match(preview.out, /--dry-run · nothing written/);
+  assert.doesNotMatch(preview.out, /hook configured|enable the hook/);
+});
+
+test("the doctor --fix receipt gives each agent one state", async () => {
+  assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
+  const hook = join(home, ".codex", "hooks.json");
+  const receipt = (out: string) => out.slice(out.indexOf("Connect agents"), out.indexOf("\n  Checks\n"));
+
+  // An application repair with the hook already in place: nothing to write for Codex.
+  writeFileSync(join(home, ".tonedial", "TONE.md"), "edited by hand\n");
+  const unchanged = receipt((await human(["doctor", "--fix", "--global", "--auto"])).out);
+  assert.equal(unchanged.match(/Codex CLI/g)?.length, 1, unchanged);
+  assert.match(unchanged, /ok Codex CLI · up to date/);
+
+  // A hook the repair writes again is reported once, as configured, with its file.
+  rmSync(hook);
+  const written = receipt((await human(["doctor", "--fix", "--global", "--auto"])).out);
+  assert.equal(written.match(/Codex CLI:/g)?.length, 1, written);
+  assert.match(written, /Codex CLI: hook configured/);
+  assert.ok(written.split("\n").some((line) => line.trim() === hook), written);
+});
+
+test("a missing hook's path sits on its own line", async () => {
+  env.COLUMNS = "60";
+  assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
+  const hook = join(home, ".codex", "hooks.json");
+  rmSync(hook);
+  const codex = block((await human(["doctor", "--global"])).out, "Codex CLI");
+  assert.deepEqual(codex.slice(1, 3), ["No ToneDial SessionStart hook", hook]);
+});
+
+test("an unlinked skill names wire in the scope doctor inspected", async () => {
+  assert.equal((await human(["init", "--tools", "claude", "--here", "--auto"], project)).code, 0);
+  rmSync(join(project, ".claude", "skills", "tonedial"));
+  const machine = await json(["doctor", "--here"], project);
+  const skill = machine.value.checks.find((check: { name: string }) => check.name === "Claude Code skill");
+  assert.equal(skill?.repair, "tonedial wire claude --here", JSON.stringify(skill));
+});
+
+test("an interactive repair reports the application phase before the agent phase starts", async () => {
+  assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
+  rmSync(resolvePaths(env).tone);
+  const entry = join(dirname(fileURLToPath(import.meta.url)), "..", "src", "cli.ts");
+  const source = `
+    Object.defineProperty(process.stdin, "isTTY", { value: true });
+    Object.defineProperty(process.stdout, "isTTY", { value: true });
+    process.stdin.setRawMode = () => process.stdin;
+    const { run } = await import(${JSON.stringify(pathToFileURL(entry).href)});
+    process.exitCode = await run(["doctor", "--fix", "--global"]);
+  `;
+  const result = spawnSync(process.execPath, ["--input-type=module", "-e", source], {
+    cwd: home, env: { ...env, NO_COLOR: "1" }, input: "y\n", encoding: "utf8", timeout: 10_000,
+  });
+  assert.equal(result.status, 0, result.stderr);
+  const restored = result.stdout.indexOf("ToneDial files restored");
+  const native = result.stdout.indexOf("Connect agents");
+  assert.ok(restored >= 0 && native >= 0, result.stdout);
+  assert.ok(restored < native, `the application receipt came after the agent phase:\n${result.stdout}`);
+});
+
+test("a global wire names a project hook it would double in the preview, and once", async () => {
+  assert.equal((await human(["init", "--tools", "codex", "--here", "--auto"], project)).code, 0);
+  const preview = await human(["wire", "codex", "--global", "--dry-run"]);
+  assert.equal(preview.code, 0, preview.err);
+  const shown = preview.out.split("\n");
+  const notice = shown.findIndex((line) => /both hooks are present/.test(line));
+  assert.ok(notice >= 0, `the preview did not name the duplicate:\n${preview.out}`);
+  assert.match(shown[notice]!, /^ {2}Codex CLI has /);
+  assert.ok(shown.includes(`  ${join(project, ".codex", "hooks.json")}`), preview.out);
+  // From another folder the command names the project; inside it, `--here` is already the project.
+  assert.ok(shown.includes(`  tonedial unwire codex --project "${project}"`), preview.out);
+  const inside = await human(["wire", "codex", "--global", "--dry-run"], project);
+  assert.ok(inside.out.split("\n").includes("  tonedial unwire codex --here"), inside.out);
+  assert.doesNotMatch(inside.out, /run from that directory/);
+  const applied = await human(["wire", "codex", "--global", "--auto"]);
+  assert.equal(applied.code, 0, applied.err);
+  assert.equal(applied.out.match(/both hooks are present/g)?.length, 1, applied.out);
+  // With nothing left to change there is no preview, so the receipt still names it.
+  const again = await human(["wire", "codex", "--global", "--auto"]);
+  assert.equal(again.out.match(/both hooks are present/g)?.length, 1, again.out);
+});
+
+test("a duplicate hook stays visible and counted when that agent also has a problem", async () => {
+  assert.equal((await human(["init", "--tools", "codex", "--here", "--auto"], project)).code, 0);
+  assert.equal((await human(["wire", "codex", "--global", "--auto"])).code, 0);
+  const hooks = join(home, ".codex", "hooks.json");
+  writeFileSync(hooks, readFileSync(hooks, "utf8").replace("tonedial", "tonedial-edited"));
+  const shown = await human(["doctor", "--global"]);
+  const codex = block(shown.out, "Codex CLI").join(" ");
+  assert.match(codex, /both hooks are present/);
+  const machine = await json(["doctor", "--global"]);
+  assert.equal(machine.value.integrations.find((row: { tool: string }) => row.tool === "codex").duplicates.length, 1);
+});
+
+test("approval reruns keep the agent selection and options the user asked for", async () => {
+  assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
+  mkdirSync(join(home, ".claude"));
+  rmSync(join(home, ".codex", "hooks.json"));
+  const fixed = await human(["doctor", "--fix", "--tools", "codex", "--global"]);
+  assert.match(fixed.out, /^ {2,}tonedial doctor --fix --tools codex --global$/m, fixed.out);
+  assert.match(fixed.out, /^ {2,}tonedial doctor --fix --tools codex --global --auto$/m);
+
+  const setup = await human(["init", "--tools", "claude", "--commands", "--global"]);
+  assert.match(setup.out, /^ {2,}tonedial init --commands --tools claude --global$/m, setup.out + setup.err);
+  assert.match(setup.out, /^ {2,}tonedial init --commands --tools claude --global --auto$/m);
+});
+
+test("a hook left after a damaged config is restored is reported, then adopted exactly by doctor --fix --tools", async () => {
+  assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
+  const hook = join(home, ".codex", "hooks.json");
+  const bytes = readFileSync(hook, "utf8");
+  writeFileSync(join(home, ".tonedial", "config.json"), "{");
+  assert.equal((await human(["doctor", "--fix", "--global", "--from-preset", "caring-brother", "--auto"])).code, 0);
+
+  const codex = block((await human(["doctor", "--global"])).out, "Codex CLI");
+  assert.match(codex.join(" "), /no connection records them/);
+  assert.ok(codex.includes(hook), codex.join("\n"));
+  assert.equal(codex.at(-1), "tonedial doctor --fix --tools codex --global");
+  const machine = await json(["doctor", "--global"]);
+  assert.equal(machine.value.healthy, false);
+  assert.equal(machine.value.checks.find((row: { name: string }) => row.name === "Codex CLI").repair,
+    "tonedial doctor --fix --tools codex --global");
+
+  // Adoption goes through the usual preview: here it only records the connection.
+  const preview = await json(["doctor", "--fix", "--tools", "codex", "--global", "--dry-run"]);
+  assert.deepEqual(preview.value.native.diff.map((row: { path: string }) => row.path), [join(home, ".tonedial", "config.json")]);
+  const adopted = await human(["doctor", "--fix", "--tools", "codex", "--global", "--auto"]);
+  assert.equal(adopted.code, 0, adopted.err);
+  assert.equal(readFileSync(hook, "utf8"), bytes, "adoption leaves the entries byte for byte");
+  const after = await json(["doctor", "--global"]);
+  assert.equal(after.value.integrations.find((row: { tool: string }) => row.tool === "codex").configuration, "configured");
+  assert.equal(after.value.checks.find((row: { name: string }) => row.name === "Codex CLI").state, "ok");
+
+  // Recorded again, the connection disconnects completely.
+  assert.equal((await human(["unwire", "codex", "--global", "--auto"])).code, 0);
+  assert.equal(existsSync(hook), false);
+  assert.equal(existsSync(join(home, ".agents", "skills", "tonedial")), false);
+});
+
+test("an edited unrecorded entry is preserved and its guidance reconnects after manual cleanup", async () => {
+  assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
+  const hook = join(home, ".codex", "hooks.json");
+  writeFileSync(hook, readFileSync(hook, "utf8").replace('"additionalContextLimit": 0', '"additionalContextLimit": 5'));
+  const edited = readFileSync(hook, "utf8");
+  writeFileSync(join(home, ".tonedial", "config.json"), "{");
+  assert.equal((await human(["doctor", "--fix", "--global", "--from-preset", "caring-brother", "--auto"])).code, 0);
+
+  const codex = block((await human(["doctor", "--global"])).out, "Codex CLI");
+  assert.match(codex.join(" "), /differ from what ToneDial writes/);
+  assert.ok(codex.includes(hook), codex.join("\n"));
+  const command = codex.at(-1)!;
+  assert.ok(command.startsWith("tonedial "), command);
+  assert.equal((await json(["doctor", "--global"])).value.checks.find((row: { name: string }) => row.name === "Codex CLI").repair, null);
+
+  assert.equal((await human(["doctor", "--fix", "--tools", "codex", "--global", "--auto"])).code, 0);
+  assert.equal(readFileSync(hook, "utf8"), edited);
+  assert.match(block((await human(["doctor", "--global"])).out, "Codex CLI").join(" "), /differ from what ToneDial writes/);
+
+  // Remove this fixture's ToneDial entries by hand, leaving the unrecorded skill links.
+  writeFileSync(hook, JSON.stringify({ ...JSON.parse(edited), hooks: {} }, null, 2));
+  assert.equal(existsSync(join(home, ".agents", "skills", "tonedial")), true);
+  const reconnected = await human([...command.split(" ").slice(1), "--auto"]);
+  assert.equal(reconnected.code, 0, reconnected.err);
+  const after = await json(["doctor", "--global"]);
+  assert.equal(after.value.integrations.find((row: { tool: string }) => row.tool === "codex").configuration, "configured");
+  assert.equal(after.value.checks.find((row: { name: string }) => row.name === "Codex CLI").state, "ok");
+});
+
+test("doctor names a global hook only an earlier version's project record keeps, with unwire --global", async () => {
+  assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
+  await addLegacyRider(env, "codex", project, true);
+  const hook = join(home, ".codex", "hooks.json");
+
+  const codex = block((await human(["doctor", "--global"])).out, "Codex CLI");
+  assert.match(codex.join(" "), /still sends the tone in every folder/);
+  assert.ok(codex.includes(hook) && codex.includes(project), codex.join("\n"));
+  assert.equal(codex.at(-1), "tonedial unwire codex --global");
+  const machine = await json(["doctor", "--global"]);
+  assert.equal(machine.value.checks.find((row: { name: string }) => row.name === "Codex CLI").state, "problem");
+  assert.equal(machine.value.nativeAttention, true);
+
+  assert.equal((await human(["unwire", "codex", "--global", "--auto"])).code, 0);
+  assert.equal(existsSync(hook), false);
+  assert.equal((await json(["doctor", "--global"])).value.checks.find((row: { name: string }) => row.name === "Codex CLI").state, "note");
+});
+
+test("a blocked layout reports a hook nothing records without a step it cannot take", async () => {
+  assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
+  const hook = join(home, ".codex", "hooks.json");
+  const edited = readFileSync(hook, "utf8").replace('"additionalContextLimit": 0', '"additionalContextLimit": 5');
+  const exact = readFileSync(hook, "utf8");
+  // Without its settings and artifact ToneDial is not set up, and every repair here is refused.
+  for (const file of ["config.json", "TONE.md", "AGENTS.md"]) rmSync(join(home, ".tonedial", file));
+  const finding = async () => {
+    const codex = block((await human(["doctor", "--global"])).out, "Codex CLI");
+    const check = (await json(["doctor", "--global"])).value.checks.find((row: { name: string }) => row.name === "Codex CLI");
+    return { codex, check };
+  };
+
+  // The finding ends on the file: no colon introducing a command that is not there.
+  const entries = await finding();
+  assert.equal(entries.codex.at(-1), hook, entries.codex.join("\n"));
+  assert.equal(entries.check.repair, null);
+  assert.doesNotMatch(entries.check.detail, /:\s*$/);
+
+  // An edited entry used to advise a wire the setup gate refuses; the context finding above has the command.
+  writeFileSync(hook, edited);
+  const outside = await finding();
+  assert.equal(outside.codex.at(-1), hook, outside.codex.join("\n"));
+  assert.doesNotMatch(outside.check.detail, /tonedial wire/);
+  assert.match((await human(["doctor", "--global"])).out, /^ {6}tonedial init --tools none --global$/m);
+
+  // Set up again and the same entries get their step back (the unblocked path is covered above).
+  writeFileSync(hook, exact);
+  assert.equal((await human(["doctor", "--fix", "--global", "--from-preset", "caring-brother", "--auto"])).code, 0);
+  assert.equal((await finding()).codex.at(-1), "tonedial doctor --fix --tools codex --global");
+});
+
+test("a global hook only an earlier version's project record keeps, in a blocked layout, ends on its projects", async () => {
+  assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
+  await addLegacyRider(env, "codex", project, true);
+  // A recorded guide that is gone is only a repair, but one that is neither recorded nor there
+  // leaves the layout unclassified. It is blocked while the connection records stay readable.
+  const config = join(home, ".tonedial", "config.json");
+  const saved = JSON.parse(readFileSync(config, "utf8"));
+  delete saved.managedSeeds.guide;
+  writeFileSync(config, JSON.stringify(saved));
+  rmSync(join(home, ".tonedial", "AGENTS.md"));
+
+  const codex = block((await human(["doctor", "--global"])).out, "Codex CLI");
+  assert.match(codex.join(" "), /still sends the tone in every folder/);
+  assert.equal(codex.at(-1), project, codex.join("\n"));
+  const check = (await json(["doctor", "--global"])).value.checks.find((row: { name: string }) => row.name === "Codex CLI");
+  assert.equal(check.repair, null);
+});
+
+test("a repair here leaves healthy connections elsewhere alone and names each scope that needs its own", async () => {
+  assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
+  assert.equal((await human(["wire", "claude", "--here", "--auto"], project)).code, 0);
+  const other = join(scratch, "other");
+  mkdirSync(other);
+  assert.equal((await human(["wire", "claude", "--project", other, "--auto"])).code, 0);
+
+  const healthy = await human(["doctor", "--fix", "--global", "--auto"], project);
+  assert.equal(healthy.code, 0, healthy.err);
+  assert.doesNotMatch(healthy.out, /need separate attention|need their own repair/);
+  const machine = await json(["doctor", "--fix", "--global", "--auto"], project);
+  assert.deepEqual([machine.value.native.nativeRepair, machine.value.native.issues], ["complete", []]);
+
+  rmSync(join(project, ".claude", "settings.json"));
+  rmSync(join(other, ".claude", "settings.json"));
+  const broken = await human(["doctor", "--fix", "--global", "--auto"], project);
+  assert.equal(broken.code, 0, broken.err);
+  assert.doesNotMatch(broken.out, /need separate attention/);
+  assert.match(broken.out.replace(/\s+/g, " "), /Connections in other scopes need their own repair/);
+  // The current folder is `--here`; another folder keeps its path.
+  assert.match(broken.out, /^ {2}tonedial doctor --fix --here$/m);
+  assert.match(broken.out, new RegExp(`^ {2}tonedial doctor --fix --project "${other.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"$`, "m"));
+  const issues = (await json(["doctor", "--fix", "--global", "--auto"], project)).value.native.issues;
+  assert.deepEqual(issues, [{ tool: null, reason: "unselected-scopes" }]);
+});
+
+test("a repair blocked by an edited hook says which file and why, not only that connections need attention", async () => {
+  assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
+  const hook = join(home, ".codex", "hooks.json");
+  writeFileSync(hook, readFileSync(hook, "utf8").replace(/"command": "/, '"command": "edited '));
+  for (const args of [["doctor", "--fix", "--global", "--auto"], ["init", "--tools", "codex", "--global", "--auto"]]) {
+    const shown = await human(args);
+    assert.equal(shown.code, 0, shown.err);
+    assert.doesNotMatch(shown.out, /need separate attention/, args.join(" "));
+    assert.match(shown.out, /Ownership is unknown, or managed content or file type changed/, args.join(" "));
+    assert.ok(shown.out.split("\n").some((line) => line.trim() === hook), shown.out);
+    // doctor's own report follows its repair; init names the diagnosis that shows the guidance.
+    if (args[0] === "init") assert.match(shown.out, /^ {2}tonedial doctor --global$/m);
+  }
+});
+
+test("an agent with no hook to inspect is connected with wire, the command that adds one", async () => {
+  assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
+  const report = await json(["doctor", "--global"]);
+  const antigravity = report.value.checks.find((check: { name: string }) => check.name === "Antigravity IDE/Desktop");
+  assert.match(antigravity.detail, /run wire with this agent/);
+  assert.doesNotMatch(antigravity.detail, /\binit\b/);
+});
+
+/** An operation whose owner died after recording its journal: doctor can continue or undo it. */
+function stopOperation(pid = 2_147_483_000): string {
+  const paths = resolvePaths(env);
+  const operation = acquireOperation(paths, "mutation");
+  beginJournal(operation, []);
+  const id = operation.owner.operationId;
+  for (const path of [join(paths.operationsLock, "owner.json"), join(paths.operations, `${id}.json`)]) {
+    const record = JSON.parse(readFileSync(path, "utf8"));
+    (record.owner ?? record).pid = pid;
+    writeFileSync(path, JSON.stringify(record));
+  }
+  return id;
+}
+
+test("a command a stopped operation blocks ends with doctor's commands to continue or undo it", async () => {
+  assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
+  const id = stopOperation();
+  const resume = `tonedial doctor --fix --from-operation ${id} --global`;
+  const undo = `tonedial doctor --fix --rollback ${id}`;
+  const report = (await human(["doctor"], project)).out;
+  for (const command of [resume, undo]) assert.match(report, new RegExp(`^ {2}${command}$`, "m"));
+
+  // Disconnecting and repairing skip the settings gate, so they are named here beside it. A dry run
+  // is refused too: its preview would end with a command that cannot run.
+  for (const args of [["set", "warmth=2"], ["use", "bratty-kid"], ["off"], ["wire", "claude", "--global", "--auto"],
+    ["init", "--tools", "codex", "--global", "--auto"], ["unwire", "codex", "--global", "--auto"],
+    ["unwire", "codex", "--global", "--dry-run"], ["eject", "--global", "--auto"], ["eject", "--global", "--dry-run"],
+    ["doctor", "--fix", "--global", "--auto"]]) {
+    const refused = await human(args, project);
+    assert.equal(refused.code, 1, args.join(" "));
+    const lines = refused.err.trimEnd().split("\n").map((line) => line.trim());
+    assert.match(lines[0]!, /An operation is active or needs recovery/);
+    assert.deepEqual([lines.at(-3), lines.at(-1)], [resume, undo], refused.err);
+    const machine = await json(args, project);
+    assert.deepEqual([machine.value.reason, machine.value.commands], ["recovery-pending", [resume, undo]], args.join(" "));
+  }
+});
+
+test("a command blocked by a running operation is told to diagnose, not to continue or undo it", async () => {
+  assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
+  stopOperation(process.pid);
+  for (const args of [["unwire", "codex", "--global", "--auto"], ["eject", "--global", "--auto"], ["doctor", "--fix", "--global", "--auto"]]) {
+    const refused = await human(args, project);
+    assert.equal(refused.code, 1, args.join(" "));
+    assert.match(refused.err, /An operation is active or needs recovery/);
+    assert.doesNotMatch(refused.err, /from-operation|--rollback|operations\.lock/, args.join(" "));
+    const machine = await json(args, project);
+    assert.deepEqual([machine.value.reason, machine.value.commands], ["recovery-pending", ["tonedial doctor --global"]], args.join(" "));
+  }
+  assert.equal(existsSync(join(home, ".codex", "hooks.json")), true, "nothing was disconnected");
+});
+
+test("show and get with unreadable settings name doctor, as set does", async () => {
+  assert.equal((await human(["init", "--tools", "none", "--global", "--auto"])).code, 0);
+  const config = join(home, ".tonedial", "config.json");
+  writeFileSync(config, "{");
+  const guidance = (await human(["set", "warmth=2"])).err;
+  assert.match(guidance, /tonedial doctor --fix/);
+  for (const args of [["show"], ["show", "caring-brother"], ["get", "warmth"]]) {
+    const refused = await human(args);
+    assert.equal(refused.code, 1, args.join(" "));
+    // The parser's reason, then where the settings are and the doctor command that recovers them.
+    assert.match(refused.err, /cannot read/);
+    assert.ok(refused.err.split("\n").includes(config), refused.err);
+    assert.match(refused.err, /tonedial doctor --fix/, args.join(" "));
+    assert.match((await json(args)).value.error, /tonedial doctor --fix/);
+  }
+  assert.equal(readFileSync(config, "utf8"), "{");
+});
+
+/** A project folder reached both physically and through a symlinked parent, with `init` done. */
+async function aliasedProject() {
+  const real = join(scratch, "real");
+  const physical = join(real, "app");
+  mkdirSync(physical, { recursive: true });
+  symlinkSync(real, join(scratch, "alias"));
+  assert.equal((await human(["init", "--tools", "none", "--global", "--auto"])).code, 0);
+  return { physical, aliased: join(scratch, "alias", "app") };
+}
+
+test("a project's own hook is its own under every spelling of the folder", async () => {
+  const { physical, aliased } = await aliasedProject();
+  for (const [wired, other] of [[aliased, physical], [physical, aliased]] as const) {
+    assert.equal((await human(["wire", "codex", "--project", wired, "--auto"])).code, 0);
+    // An earlier version recorded the folder as it was typed.
+    if (wired === aliased) recordThroughAlias(env, physical, aliased);
+    for (const [args, cwd] of [[["doctor", "--here"], physical], [["doctor", "--project", physical], home],
+      [["doctor", "--project", aliased], home]] as const) {
+      const label = `wired through ${wired}: ${args.join(" ")}`;
+      const route = (await json([...args], cwd)).value.integrations.find((row: { tool: string }) => row.tool === "codex");
+      assert.equal(route.inherited, false, label);
+      const shown = block((await human([...args], cwd)).out, "Codex CLI").join(" ");
+      assert.match(shown, /Connected · SessionStart/, label);
+      assert.doesNotMatch(shown, /global/, label);
+    }
+    assert.equal((await human(["unwire", "codex", "--project", other, "--auto"])).code, 0);
+  }
+});
+
+test("doctor --fix has nothing to do for a project wired through a symlink", async () => {
+  const { physical, aliased } = await aliasedProject();
+  assert.equal((await human(["wire", "codex", "--project", aliased, "--auto"])).code, 0);
+  const fix = await json(["doctor", "--fix", "--project", physical, "--auto"]);
+  assert.equal(fix.code, 0);
+  assert.equal(fix.value.native.reason, "nothing");
+});
+
+test("doctor --fix respells an earlier version's record once and leaves the project's hook as written", async () => {
+  const { physical, aliased } = await aliasedProject();
+  assert.equal((await human(["wire", "codex", "--project", aliased, "--auto"])).code, 0);
+  recordThroughAlias(env, physical, aliased);
+  const hook = join(physical, ".codex", "hooks.json");
+  const bytes = readFileSync(hook, "utf8");
+  for (const reason of ["written", "nothing"]) {
+    const fix = await json(["doctor", "--fix", "--project", physical, "--auto"]);
+    assert.equal(fix.code, 0);
+    assert.equal(fix.value.native.reason, reason);
+    assert.equal(readFileSync(hook, "utf8"), bytes);
+  }
+});
+
+test("doctor reports an unreadable project hook under another spelling of the folder, with no stack trace", async () => {
+  const { physical, aliased } = await aliasedProject();
+  assert.equal((await human(["wire", "codex", "--project", aliased, "--auto"])).code, 0);
+  recordThroughAlias(env, physical, aliased);
+  rmSync(join(physical, ".codex"), { recursive: true });
+  writeFileSync(join(physical, ".codex"), "a file where the hook folder was\n");
+  const shown = await human(["doctor", "--project", physical]);
+  assert.equal(shown.code, 0, shown.err);
+  assert.doesNotMatch(shown.err, /\n\s+at /);
+  assert.match(block(shown.out, "Codex CLI")[0]!, /^! Codex CLI$/, "reported as a finding, not a crash");
+  const check = (await json(["doctor", "--project", physical])).value.checks.find((row: { name: string }) => row.name === "Codex CLI");
+  assert.equal(check.state, "problem");
+});

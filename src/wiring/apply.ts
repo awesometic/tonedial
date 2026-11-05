@@ -28,7 +28,7 @@ import {
 import { randomBytes } from "node:crypto";
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 
-import { ConfigError } from "../core/config.ts";
+import { ConfigError, OwnershipConflict } from "../core/config.ts";
 import { inside } from "../core/paths.ts";
 import type { Messages } from "../core/i18n.ts";
 import {
@@ -53,7 +53,7 @@ import {
 import { confirm, interactive } from "../ui/prompt.ts";
 import { palette as paletteFor, type Palette } from "../ui/style.ts";
 import { humanText, section } from "../ui/format.ts";
-import { wrap } from "../ui/width.ts";
+import { maxCells, wrap } from "../ui/width.ts";
 import { probeSkillAction, rollbackSkillAction, validateSkillAction } from "./skill.ts";
 
 export type Change = {
@@ -481,8 +481,8 @@ function renderDiff(change: Change, ui: Palette, t: Messages, context = 2, audie
   lines.push(`  ${ui.bold(display(change.path))}`);
   // Keep both paths copyable without composing two long paths into one wide heading.
   if (change.realPath !== change.path) lines.push(`  ${ui.warn(`→ ${display(change.realPath)}`)}`);
-  // Keep the structured new-file representation stable: path and size. Human previews select
-  // representative additions or the complete body outside this function.
+  // Keep the structured new-file representation stable: path and size. The verbose human
+  // preview adds the complete body outside this function.
   if (change.before === null) {
     lines.push(`  ${t.wiring.newFile}  ${ui.dim(t.wiring.newFileLines(after.length))}`);
     return lines;
@@ -499,44 +499,53 @@ function renderDiff(change: Change, ui: Palette, t: Messages, context = 2, audie
   return lines;
 }
 
-/** A bounded approval summary that still shows representative changed lines. */
-function renderSummary(change: Change, ui: Palette, t: Messages): string[] {
-  const { before, after, removed, added, finalNewline } = changedLines(change);
-  const lines = [`  ${ui.bold(humanText(change.path))}`];
-  if (change.realPath !== change.path) lines.push(`  ${ui.warn(`→ ${humanText(change.realPath)}`)}`);
+/** What a compact preview says happens to one file: its change kind, never its lines. */
+function changeKind(change: Change, t: Messages): string {
+  if (change.before === null) return t.wiring.newFile;
+  // An owned file emptied by this change is deleted, not left as a zero-line file.
+  if (!writesRegular(change)) return t.wiring.removedFile;
+  const { removed, added, finalNewline } = changedLines(change);
+  if (removed.length > 0 || added.length > 0) return t.wiring.modifiedFile;
+  return finalNewline === "added" ? t.wiring.finalNewlineAdded
+    : finalNewline === "removed" ? t.wiring.finalNewlineRemoved : t.wiring.modeChanged;
+}
 
-  if (change.before === null) {
-    lines.push(`  ${t.wiring.newFile}  ${ui.dim(t.wiring.newFileLines(after.length))}`);
-  } else if (!writesRegular(change)) {
-    // An owned file emptied by this change is deleted, not left as a zero-line file.
-    lines.push(`  ${ui.warn(t.wiring.removedFile)}  ${ui.dim(t.wiring.newFileLines(before.length))}`);
-  } else if (removed.length === 0 && added.length === 0) {
-    const detail = finalNewline === "added"
-      ? t.wiring.finalNewlineAdded
-      : finalNewline === "removed" ? t.wiring.finalNewlineRemoved : t.wiring.modeChanged;
-    lines.push(`  ${detail}`);
-    return lines;
-  } else {
-    lines.push(`  ${t.wiring.modifiedFile}  ${ui.accent(`+${added.length}`)} ${ui.error(`-${removed.length}`)}`);
-  }
+/** One compact preview row: a path, what happens to it, and the names a collapsed run holds. */
+type PreviewRow = { path: string; realPath: string; kind: string; removed: boolean; names?: string[] };
 
-  let representativeAdded = added;
-  if (change.before === null) {
-    const nonBlankAdded = added.filter((line) => line.trim() !== "");
-    const substantiveAdded = nonBlankAdded.filter((line) => {
-      const value = line.trim();
-      return !/^[{}\[\],]+$/.test(value) &&
-        !/^<!--.*-->$/.test(value) &&
-        !/^#{1,6}\s/.test(value);
-    });
-    representativeAdded = substantiveAdded.length > 0 ? substantiveAdded : nonBlankAdded;
+/** A preview group: its heading lines and the roots under it. `always` prints a root without rows. */
+type PreviewRoot = { heading: string[]; paths: string[]; always?: boolean; pathShown?: boolean };
+
+/**
+ * Rows under the root each one lives in, each root printed once on its own copyable line, in
+ * the order the roots are given. A file outside every root is grouped by its own folder.
+ */
+function renderRows(rows: PreviewRow[], roots: PreviewRoot[], ui: Palette): string[] {
+  const all = roots.flatMap((root) => root.paths);
+  const under = new Map<string, PreviewRow[]>();
+  const loose: PreviewRoot[] = [];
+  for (const row of rows) {
+    // The deepest root wins: the global state root sits inside the home directory.
+    const root = all.filter((path) => lexicallyInside(row.path, path)).sort((left, right) => right.length - left.length)[0];
+    const key = root ?? dirname(row.path);
+    if (root === undefined && !under.has(key)) loose.push({ heading: [], paths: [key] });
+    under.set(key, [...under.get(key) ?? [], row]);
   }
-  const limit = change.before === null ? 2 : 4;
-  const removedCount = Math.min(removed.length, limit - Math.min(representativeAdded.length, 2));
-  const addedCount = Math.min(representativeAdded.length, limit - removedCount);
-  for (const line of removed.slice(0, removedCount)) lines.push(`  ${ui.error(`- ${humanText(line)}`)}`);
-  for (const line of representativeAdded.slice(0, addedCount)) lines.push(`  ${ui.accent(`+ ${humanText(line)}`)}`);
-  return lines;
+  return [...roots, ...loose].flatMap(({ heading, paths, always, pathShown }) => {
+    const shown = paths.filter((path) => always === true || under.has(path));
+    return shown.length === 0 ? [] : ["", ...heading, ...shown.flatMap((root) => [...(pathShown === true ? [] : [`  ${humanText(root)}`]),
+      ...(under.get(root) ?? []).flatMap((row) => {
+        const path = humanText(`${relative(root, row.path)}${row.names ? sep : ""}`);
+        const paint = (kind: string) => row.removed ? ui.warn(kind) : kind;
+        // A description too long for the row moves under its path rather than past the budget.
+        return [
+          ...maxCells(`${path}  ${row.kind}`) <= ui.width - 4 ? [`    ${path}  ${paint(row.kind)}`]
+            : [`    ${path}`, ...wrap(row.kind, ui.width - 6).map((line) => `      ${paint(line)}`)],
+          ...(row.realPath === row.path ? [] : [`      ${ui.warn(`→ ${humanText(row.realPath)}`)}`]),
+          ...wrap(humanText((row.names ?? []).join(", ")), ui.width - 6).filter(Boolean).map((line) => `      ${ui.dim(line)}`),
+        ];
+      })])];
+  });
 }
 
 /** A created regular file at its own path; only these can share a collapsed summary row. */
@@ -556,17 +565,6 @@ function newFileRuns(changes: Change[]): Change[][] {
     }
   }
   return groups.flatMap((group) => group.length >= 3 ? [group] : group.map((change) => [change]));
-}
-
-/** One directory, its count, and every file name, instead of one sample block per file. */
-function renderNewFileRun(group: Change[], ui: Palette, t: Messages): string[] {
-  const directory = dirname(group[0]!.path);
-  const names = group.map((change) => humanText(basename(change.path))).join(", ");
-  return [
-    `  ${ui.bold(humanText(directory.endsWith(sep) ? directory : `${directory}${sep}`))}`,
-    `  ${t.wiring.newFiles(group.length)}`,
-    ...wrap(names, ui.width - 2).map((line) => `  ${ui.dim(line)}`),
-  ];
 }
 
 /** Complete human diff, including created-file bodies and final-newline changes. */
@@ -1873,7 +1871,7 @@ function moveWithoutReplacing(from: string, to: string, t: Messages): void {
     linkSync(from, to);
   } catch (cause) {
     if ((cause as NodeJS.ErrnoException).code === "EEXIST") {
-      throw new ConfigError(t.errors.ownershipConflict(to));
+      throw new OwnershipConflict(t.errors.ownershipConflict(to));
     }
     throw new ConfigError(t.errors.couldNotWrite(to, (cause as Error).message, []));
   }
@@ -2452,11 +2450,24 @@ function changeDirection(change: Change): ActionDirection {
   return change.before === null ? "created" : writesRegular(change) ? "updated" : "removed";
 }
 
+/** The direction an action takes, read from its recorded snapshots when it has them. */
+function actionState(action: Partial<Pick<OperationAction, "before" | "after">>): ActionDirection {
+  return "before" in action && "after" in action ? actionDirection(action as Pick<OperationAction, "before" | "after">) : "updated";
+}
+
+/** What happens to a non-text resource, or to a file shown without its lines. */
+function actionKind(kind: string, state: ActionDirection, t: Messages): string {
+  const label = Object.hasOwn(t.wiring.actionLabel, kind)
+    ? t.wiring.actionLabel[kind as keyof typeof t.wiring.actionLabel] : humanText(kind);
+  return kind === "file"
+    ? state === "created" ? t.wiring.newFile : state === "removed" ? t.wiring.removedFile : t.wiring.modifiedFile
+    : kind === "skill" ? t.wiring.actionState[state](label) : t.wiring.actionState.plain(label);
+}
+
 function renderAction(
   action: Pick<OperationAction, "kind" | "path" | "realPath"> & Partial<Pick<OperationAction, "before" | "after">>,
   ui: Palette,
   t?: Messages,
-  direction?: ActionDirection,
 ): string[] {
   // Machine previews keep their stable `[kind]` and path lines.
   if (t === undefined) {
@@ -2466,12 +2477,8 @@ function renderAction(
   }
   // The path leads like a file row, then the change direction. A bare `-` bullet read as a
   // removal beside diff lines even when the action created the entry.
-  const state = direction ?? ("before" in action && "after" in action ? actionDirection(action as Pick<OperationAction, "before" | "after">) : "updated");
-  const label = Object.hasOwn(t.wiring.actionLabel, action.kind)
-    ? t.wiring.actionLabel[action.kind as keyof typeof t.wiring.actionLabel] : humanText(action.kind);
-  const detail = action.kind === "file"
-    ? state === "created" ? t.wiring.newFile : state === "removed" ? t.wiring.removedFile : t.wiring.modifiedFile
-    : action.kind === "skill" ? t.wiring.actionState[state](label) : t.wiring.actionState.plain(label);
+  const state = actionState(action);
+  const detail = actionKind(action.kind, state, t);
   const lines = [`  ${ui.bold(humanText(action.path))}`];
   if (action.realPath !== action.path) lines.push(`  ${ui.warn(`→ ${humanText(action.realPath)}`)}`);
   lines.push(`  ${state === "removed" ? ui.warn(detail) : detail}`);
@@ -2487,6 +2494,16 @@ export type GateOptions = {
   t: Messages;
   /** Human phase title, shown with the same preview before its approval. */
   heading?: string;
+  /** Lines the preview shows after its change count, before the approval they inform. */
+  notice?: string[];
+  /** This scope's agent root: the compact preview lists its files under it. */
+  agent?: { root: string; live: boolean };
+  /** The caller already printed that root, so the compact preview names it by heading and not again by path. */
+  agentRootShown?: boolean;
+  /** Further roots, each printed under its heading even when no change falls under it. */
+  roots?: { heading: string[]; paths: string[] }[];
+  /** Words that replace the change kind of ToneDial's own state files, keyed by path. */
+  describe?: Record<string, string>;
   /** Where the diff goes. It is written before the question, never returned to be printed after. */
   out?: ((text: string) => void) | undefined;
   /** Injected so tests can drive the gate without a terminal. */
@@ -2559,26 +2576,41 @@ export async function gate(changes: Change[], opts: GateOptions): Promise<GateRe
     lines: renderAction(planned.action, plain),
   }));
   const diff = [...fileDiff(real), ...actionDiff, ...fileDiff(finalReal)];
-  const renderHuman = opts.verbose === true ? renderVerboseDiff : renderSummary;
   if (opts.heading === undefined) lines.push(...section(opts.t.wiring.planHeading, opts.ui));
   lines.push(`  ${opts.t.wiring.changeCount(real.length + operationActions.length + finalReal.length)}`);
+  lines.push(...opts.notice ?? []);
   if (typeof opts.recoveryPresentation === "object") lines.push(...(opts.recoveryPresentation.lines ?? []));
-  const renderChanges = (list: Change[]) => {
-    if (opts.recoveryPresentation) {
-      for (const change of list) {
-        lines.push("", ...renderAction({ kind: "file", path: change.path, realPath: change.realPath }, opts.ui, opts.t, changeDirection(change)));
-      }
-      return;
-    }
-    for (const group of opts.verbose === true ? list.map((change) => [change]) : newFileRuns(list)) {
-      lines.push("", ...(group.length === 1 ? renderHuman(group[0]!, opts.ui, opts.t) : renderNewFileRun(group, opts.ui, opts.t)));
-    }
-  };
-  renderChanges(real);
-  for (const action of operationActions) {
-    lines.push("", ...renderAction(action.action, opts.ui, opts.t));
+  if (opts.verbose === true && !opts.recoveryPresentation) {
+    // Each diff names its own path, so the further roots stand on their own above them.
+    for (const root of opts.roots ?? []) lines.push("", ...root.heading, ...root.paths.map((path) => `  ${humanText(path)}`));
+    for (const change of real) lines.push("", ...renderVerboseDiff(change, opts.ui, opts.t));
+    for (const action of operationActions) lines.push("", ...renderAction(action.action, opts.ui, opts.t));
+    for (const change of finalReal) lines.push("", ...renderVerboseDiff(change, opts.ui, opts.t));
+  } else {
+    // The files of this scope's agents first, ToneDial's own state after them.
+    const roots: PreviewRoot[] = [
+      ...(opts.agent ? [{ heading: [`  ${opts.ui.bold(opts.agent.live ? opts.t.wiring.rootGlobal : opts.t.wiring.rootProject)}`], paths: [opts.agent.root],
+        ...(opts.agentRootShown === true ? { pathShown: true } : {}) }] : []),
+      ...(opts.roots ?? []).map((root) => ({ ...root, always: true })),
+      { heading: [`  ${opts.ui.bold(opts.t.wiring.rootState)}`], paths: [opts.paths.root] },
+    ];
+    // A recovery row names its direction only. A run of new files below a root shares one row;
+    // a root's own files keep theirs.
+    const fileRows = (list: Change[]): PreviewRow[] => (opts.recoveryPresentation ? list.map((change) => [change]) : newFileRuns(list))
+      .flatMap((group): PreviewRow[] => {
+        const directory = dirname(group[0]!.path);
+        if (group.length > 1 && !roots.some((root) => root.paths.some((path) => resolve(path) === directory))) {
+          return [{ path: directory, realPath: directory, kind: opts.t.wiring.newFiles(group.length), removed: false,
+            names: group.map((change) => basename(change.path)) }];
+        }
+        return group.map((change) => ({ path: change.path, realPath: change.realPath, removed: !writesRegular(change),
+          kind: opts.recoveryPresentation ? actionKind("file", changeDirection(change), opts.t)
+            : opts.describe?.[change.path] ?? changeKind(change, opts.t) }));
+      });
+    const actionRows = operationActions.map(({ action }): PreviewRow => ({ path: action.path, realPath: action.realPath,
+      kind: actionKind(action.kind, actionState(action), opts.t), removed: actionState(action) === "removed" }));
+    lines.push(...renderRows([...fileRows(real), ...actionRows, ...fileRows(finalReal)], roots, opts.ui));
   }
-  renderChanges(finalReal);
 
   if (!opts.recoveryPresentation && !opts.verbose && real.length + finalReal.length > 0) {
     lines.push("", `  ${opts.ui.dim(opts.t.wiring.previewMore)}`);
@@ -2596,7 +2628,7 @@ export async function gate(changes: Change[], opts: GateOptions): Promise<GateRe
     if (!canAsk) {
       // Silence is not consent. A pipe cannot see the diff above, so assuming approval here
       // would make the unattended case the one with the least oversight.
-      throw new ConfigError(opts.t.wiring.needsApproval);
+      throw new ApprovalRequired(opts.t);
     }
     const answer = await (opts.ask ?? confirm)(`  ${opts.t.wiring.applyQuestion(real.length + operationActions.length + finalReal.length)}`);
     if (answer === "no") return { applied: false, lines, reason: "declined", diff };
@@ -2749,6 +2781,18 @@ export async function gate(changes: Change[], opts: GateOptions): Promise<GateRe
 }
 
 const defaultOut = (text: string) => process.stdout.write(text);
+
+/**
+ * Approval was needed and nobody could give it: nothing is wrong with the files. The CLI words
+ * it with the commands that rerun this invocation, in the catalogue `t` the plan was made in.
+ */
+export class ApprovalRequired extends ConfigError {
+  readonly t: Messages;
+  constructor(t: Messages) {
+    super("approval required", { reason: "approval-required" });
+    this.t = t;
+  }
+}
 // The structured diff is unpainted: escape sequences are for a terminal, and a consumer reading
 // `--json` is not one.
 const palettePlain = () => paletteFor("never", {}, false);

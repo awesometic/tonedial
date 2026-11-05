@@ -2,10 +2,10 @@
 
 **English** | [한국어](./EXAMPLES.ko.md) | [日本語](./EXAMPLES.ja.md) | [简体中文](./EXAMPLES.zh.md) | [Español](./EXAMPLES.es.md)
 
-Seven bundled ToneDial profiles answer the same naming question in recorded Codex conversations.
+Seven bundled ToneDial presets answer the same naming question in recorded Codex conversations.
 Each reply is verbatim; the images are formatted transcripts, not screenshots.
 
-[Compare Codex defaults with the complete `vibe-coder` profile in the README.](../README.md#same-model-a-tighter-plan)
+[Compare Codex defaults with the complete `vibe-coder` preset in the README.](../README.md#same-model-a-tighter-plan)
 
 ## Shared question
 

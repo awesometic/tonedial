@@ -5,12 +5,12 @@
 import { homedir } from "node:os";
 import { isAbsolute, join } from "node:path";
 
-import { ConfigError, isConfigV2, type Config, type ManagedHookEvent, type ManagedResource, type WiringV2 } from "../core/config.ts";
+import { ConfigError, OwnershipConflict, isConfigV2, type Config, type ManagedHookEvent, type ManagedResource, type WiringV2 } from "../core/config.ts";
 import { AGENT_TOOLS, LEGACY_CONTEXT_ARTIFACT_FILENAME, canonicalDestination, readerPath, resolveAgentPaths, shellQuote, type AgentPaths, type AgentTool, type Paths } from "../core/paths.ts";
 import type { ContextConsumerCheck, ContextInspectionFailure } from "../core/seeds.ts";
 import { planChange, type Change } from "./apply.ts";
 import { MARKDOWN, RegionError, find, remove, upsert } from "./region.ts";
-import { hasHook, hookCommand, hookDocumentDescription, ownedHook, withHook, withoutHook, type HookEvent, type HookEventSpec, type HookHandler, type HookSpec } from "./hooks.ts";
+import { hasHook, hookCommand, hookDocumentDescription, ownedHook, runsReader, withHook, withoutHook, type HookEvent, type HookEventSpec, type HookHandler, type HookSpec } from "./hooks.ts";
 import type { Messages } from "../core/i18n.ts";
 import { assertRecordedTextAccess, normalizeWiring, contentHash, recordFileChange, registrationKey, resourceKey } from "./ownership.ts";
 
@@ -146,8 +146,7 @@ export function sameDelivery(left: HookSpec | null, right: HookSpec | null): boo
 
 /**
  * Display fields and Codex's context limit may differ under one command; a changed runtime or
- * payload may not. A project keeps inheriting an older global hook until a global refresh adds
- * the limit, rather than refusing to connect.
+ * payload may not. A project hook written before a refresh added the limit is still a duplicate.
  */
 function sameDeliveryCommand(left: HookSpec | null, right: HookSpec | null): boolean {
   const commandOnly = (spec: HookSpec | null): HookSpec | null => {
@@ -175,96 +174,77 @@ export function orderedFingerprint(spec: HookSpec, path: string, t: Messages): s
   return contentHash(ownedHook(withHook(null, spec, path, t), spec, path, t) ?? "");
 }
 
-/** Init and wire share exact handler ownership and the same file planner. */
+/**
+ * Whether `before` runs this state root's reader only through `spec`'s entries, complete and
+ * unedited: the one shape an explicit repair may record as its own without rewriting it.
+ */
+export function exactDelivery(before: string | null, spec: HookSpec, stateRoot: string, path: string, t: Messages): boolean {
+  const owned = ownedHook(before, spec, path, t);
+  return owned !== null && contentHash(owned) === orderedFingerprint(spec, path, t) &&
+    !runsReader(withoutHook(before!, spec, path, t, "document"), readerPath(stateRoot), path, t);
+}
+
+/**
+ * Init and wire share exact handler ownership and the same file planner. `adopt` lets an
+ * explicit repair record unrecorded entries that `exactDelivery` accepts, leaving the bytes.
+ */
 export function planOrderedDelivery(
   paths: Paths,
   agent: AgentPaths,
   tool: AgentTool,
   wiring: WiringV2,
-  env: NodeJS.ProcessEnv,
   t: Messages,
   runtime = process.execPath,
   legacy?: Change,
+  adopt = false,
 ) {
   const scope = agent.live ? "global" : "project";
   const destination = canonicalDestination(agent.root);
   const id = registrationKey(tool, scope, destination);
   const selected = wiring.registrations[id];
   const existing = selected?.resourceIds.map((key) => wiring.resources[key]!).find((resource) => resource.kind === "hook");
-  let desired = orderedHook(tool, paths.root, runtime);
-  let path = agent.hookFile(tool);
-  let ownerId = id;
-  let prior = existing;
-  let reuseInherited = false;
+  const desired = orderedHook(tool, paths.root, runtime);
+  // A project the global hook already serves is never planned here; callers check `globalCover`.
+  const path = existing ? existing.accessPaths?.[id]?.path ?? existing.path : agent.hookFile(tool);
+  const ownerId = id;
+  const prior = existing;
   const checks: Change[] = [];
-  // Hosts merge scopes. Reuse the exact recorded global command without changing its display fields.
-  if (!agent.live && !existing) {
-    const global = resolveAgentPaths({ global: true, project: null }, { ...env, TONEDIAL_AGENT_HOME: undefined }, agent.root);
-    const globalId = registrationKey(tool, "global", canonicalDestination(global.root));
-    const inherited = wiring.registrations[globalId]?.resourceIds.map((key) => wiring.resources[key]!)
-      .find((resource) => resource.kind === "hook");
-    if (inherited) {
-      const installed = recordedHook(inherited, globalId);
-      if (!sameDeliveryCommand(installed, desired)) {
-        throw new ConfigError(t.errors.ownershipConflict(inherited.path));
-      }
-      const local = planChange(path, (before) => before, t);
-      const localOwned = ownedHook(local.before, desired, path, t);
-      if (tool === "antigravity" && local.before?.trim() && Object.hasOwn(JSON.parse(local.before), "tonedial")) {
-        throw new ConfigError(t.errors.ownershipConflict(path));
-      }
-      if (localOwned !== null || ownedHook(local.before, installed!, path, t) !== null) {
-        throw new ConfigError(t.errors.ownershipConflict(path));
-      }
-      checks.push(local);
-      path = inherited.accessPaths?.[globalId]?.path ?? inherited.path;
-      prior = inherited;
-      ownerId = globalId;
-      desired = installed!;
-      reuseInherited = true;
-    }
-  }
-  if (existing) path = existing.accessPaths?.[id]?.path ?? existing.path;
   const previous = prior ? recordedHook(prior, ownerId) : null;
-  if (prior && previous === null) throw new ConfigError(t.errors.ownershipConflict(path));
-  // Repeated project setup inherits display-only changes too; it must not relabel a global hook.
-  if (!agent.live && path !== agent.hookFile(tool) && sameDeliveryCommand(previous, desired)) {
-    desired = previous!;
-    reuseInherited = true;
-  }
+  if (prior && previous === null) throw new OwnershipConflict(t.errors.ownershipConflict(path));
   const planned = planChange(path, (before) => before, t);
   const replacesLegacy = legacy !== undefined && legacy.realPath === planned.realPath;
   if (replacesLegacy && (legacy.before !== planned.before ||
     legacy.snapshot.targetIdentity !== planned.snapshot.targetIdentity)) {
-    throw new ConfigError(t.errors.ownershipConflict(path));
+    throw new OwnershipConflict(t.errors.ownershipConflict(path));
   }
   if (replacesLegacy) checks.push({ ...legacy, after: legacy.before });
   const before = planned.before;
   const desiredOwned = ownedHook(before, desired, path, t);
-  if (tool === "antigravity" && !prior && before?.trim() && Object.hasOwn(JSON.parse(before), "tonedial")) {
-    throw new ConfigError(t.errors.ownershipConflict(path));
+  const adopting = adopt && !prior && !replacesLegacy && exactDelivery(before, desired, paths.root, path, t);
+  if (tool === "antigravity" && !prior && !adopting && before?.trim() && Object.hasOwn(JSON.parse(before), "tonedial")) {
+    throw new OwnershipConflict(t.errors.ownershipConflict(path));
   }
   let remaining = replacesLegacy ? legacy.after : before;
   if (previous && prior) {
     const owned = ownedHook(before, previous, path, t);
     if (before !== null && (owned === null || contentHash(owned) !== (prior.managedByRegistration?.[ownerId] ?? prior.managed).handlerSha256)) {
-      throw new ConfigError(t.errors.ownershipConflict(path));
+      throw new OwnershipConflict(t.errors.ownershipConflict(path));
     }
     if (before !== null) {
       const handlerOnly = { ...previous };
       delete handlerOnly.documentDescription;
       remaining = withoutHook(before, handlerOnly, path, t);
     }
-  } else if (desiredOwned !== null) {
-    throw new ConfigError(t.errors.ownershipConflict(path));
+  } else if (desiredOwned !== null && !adopting) {
+    throw new OwnershipConflict(t.errors.ownershipConflict(path));
   }
   const previousDescription = (prior ?? wiring.resources[resourceKey(planned.realPath, "hook")])?.documentDescription;
   const descriptionBefore = tool === "antigravity" ? undefined : hookDocumentDescription(remaining, path, t);
   const ownsDescription = (desired.documentDescription !== undefined && descriptionBefore === undefined) ||
-    (previousDescription !== undefined && descriptionBefore === previousDescription);
-  if (reuseInherited && before === null) throw new ConfigError(t.errors.ownershipConflict(path));
-  let after = reuseInherited ? before! : withHook(remaining, desired, path, t);
-  if (tool === "antigravity" && !reuseInherited && previous && before !== null) {
+    (previousDescription !== undefined && descriptionBefore === previousDescription) ||
+    (adopting && descriptionBefore === desired.documentDescription);
+  let after = adopting ? before! : withHook(remaining, desired, path, t);
+  if (tool === "antigravity" && previous && before !== null) {
     const enabled = JSON.parse(before).tonedial?.enabled;
     if (enabled !== undefined) {
       const document = JSON.parse(after);
@@ -304,6 +284,8 @@ export function planOrderedDelivery(
   const descriptionAfter = tool === "antigravity" ? undefined : hookDocumentDescription(change.after, path, t);
   if (ownsDescription && typeof descriptionAfter === "string") recorded.documentDescription = descriptionAfter;
   else delete recorded.documentDescription;
+  // A file that is exactly what setup would create is one disconnect may delete again.
+  if (adopting) recorded.created ||= before === withHook(null, desired, path, t);
   // Carry the retired record's creation fact onto the resource, not onto the `Change`.
   //
   // The two answer different questions with the same word. Ownership asks whether this tool ever
@@ -317,8 +299,8 @@ export function planOrderedDelivery(
     carried.created = legacy.created;
     carried.createdDir = legacy.createdDir;
   }
-  // Inherited registrations share one physical handler. Refresh their identities together;
-  // otherwise the next scoped disconnect would compare the new bytes with an old command.
+  // Project registrations an earlier version recorded on this handler share it. Refresh their
+  // identities together; otherwise the next scoped disconnect would compare new bytes with an old command.
   if (prior && previous) {
     const shared = next.resources[resourceKey(change.realPath, "hook")]!;
     for (const consumer of prior.consumers) {
@@ -332,7 +314,6 @@ export function planOrderedDelivery(
     checks,
     replacesLegacy,
     wiring: next,
-    inherited: !agent.live && path !== agent.hookFile(tool),
     duplicates: projectDuplicates(next, tool, id, desired, paths.root, agent.live),
   };
 }
@@ -351,7 +332,7 @@ export function planOrderedDelivery(
  * recorded against an older runtime path; anything else is a different delivery, not a second
  * copy of this one.
  */
-function projectDuplicates(
+export function projectDuplicates(
   wiring: WiringV2,
   tool: AgentTool,
   selfId: string,
@@ -365,7 +346,8 @@ function projectDuplicates(
     if (id === selfId || registration.target !== tool || registration.scope !== "project") continue;
     const hook = registration.resourceIds.map((key) => wiring.resources[key]).find((resource) => resource?.kind === "hook");
     const recorded = hook ? recordedHook(hook, id) : null;
-    if (!hook || !recorded) continue;
+    // A project an earlier version recorded on this hook shares its resource; one delivery, not two.
+    if (!hook || !recorded || hook.consumers.includes(selfId)) continue;
     const runtime = hook.managedByRegistration?.[id]?.runtime;
     const current = sameDelivery(recorded, desired);
     const stale = !current && runtime !== undefined &&
@@ -399,7 +381,7 @@ export function planLegacyDeliveryRemoval(
   if (recordedHook(resource, id)) return null;
   const path = resource.accessPaths?.[id]?.path ?? resource.path;
   if (resource.managed.version !== 1 || resource.consumers.some((consumer) => consumer !== id)) {
-    throw new ConfigError(t.errors.ownershipConflict(path));
+    throw new OwnershipConflict(t.errors.ownershipConflict(path));
   }
   const where = wiredAt(join(paths.root, LEGACY_CONTEXT_ARTIFACT_FILENAME), env);
   const planned = planChange(path, (before) => {
@@ -407,7 +389,7 @@ export function planLegacyDeliveryRemoval(
     const owned = ownedDelivery(TARGETS[tool], before, where, path, t);
     const remaining = wiringRemoved(TARGETS[tool], before, where, path, t);
     if (owned === null || contentHash(owned) !== resource.managed.handlerSha256 || remaining === before) {
-      throw new ConfigError(t.errors.ownershipConflict(path));
+      throw new OwnershipConflict(t.errors.ownershipConflict(path));
     }
     return remaining;
   }, t);
@@ -447,7 +429,7 @@ export function assertDistinctHookTargets(
   const owners = new Map<string, AgentTool>();
   for (const { tool, change } of planned) {
     const owner = owners.get(change.realPath);
-    if (owner !== undefined && owner !== tool) throw new ConfigError(t.errors.ownershipConflict(change.path));
+    if (owner !== undefined && owner !== tool) throw new OwnershipConflict(t.errors.ownershipConflict(change.path));
     owners.set(change.realPath, tool);
   }
 }

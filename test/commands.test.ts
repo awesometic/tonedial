@@ -593,6 +593,151 @@ test("bare set commits an interactive dial change through the command path", asy
   assert.equal(tone(), compile(toCompileInput(saved)), "the generated artifact does not match saved settings");
 });
 
+test("an interactive init that is previewed or declined has no result heading", async () => {
+  const entry = join(dirname(fileURLToPath(import.meta.url)), "..", "src", "cli.ts");
+  // A terminal-shaped stdin drives the real command path. "Ready" heads a run that finished; a
+  // preview or a declined approval is only its status, and the shape of the heading must not make
+  // an unfinished run read as complete.
+  const interactive = (args: string[], input: string) => spawnSync(process.execPath, ["--input-type=module", "-e", `
+    Object.defineProperty(process.stdin, "isTTY", { value: true });
+    Object.defineProperty(process.stdout, "isTTY", { value: true });
+    process.stdin.setRawMode = () => process.stdin;
+    const { run } = await import(${JSON.stringify(pathToFileURL(entry).href)});
+    process.exitCode = await run(${JSON.stringify(args)});
+  `], { cwd: join(home, "project"), env: { ...commandEnv(), NO_COLOR: "1", TERM: "xterm" }, input, encoding: "utf8", timeout: 10_000 });
+  for (const language of ["en", "ko"] as const) {
+    const copy = catalogue(language);
+    const preview = interactive(["init", "--here", "--tools", "none", "--lang", language, "--dry-run"], "");
+    assert.equal(preview.status, 0, preview.stderr);
+    assert.ok(preview.stdout.includes(copy.cli.wiring.dryRun), preview.stdout);
+    assert.ok(!preview.stdout.includes(copy.init.resultHeading), `${language}: a preview is not ready`);
+
+    // An existing root whose bundled files are stale asks before it refreshes them.
+    await initializeState();
+    const saved = config();
+    const raw = JSON.parse(readFileSync(paths().config, "utf8"));
+    raw.managedSeeds["preset/bratty-kid"].version = 0;
+    writeFileSync(paths().config, JSON.stringify(raw));
+    const declined = interactive(["init", "--here", "--lang", language], "n\n");
+    assert.equal(declined.status, 0, declined.stderr);
+    assert.ok(declined.stdout.includes(copy.cli.wiring.declined), declined.stdout);
+    assert.ok(!declined.stdout.includes(copy.init.resultHeading), `${language}: a declined refresh is not ready`);
+    assert.equal(config().language, saved.language);
+    rmSync(join(home, "state"), { recursive: true, force: true });
+  }
+});
+
+test("use says what it replaced when the tone had unsaved edits, and how to keep them next time", async () => {
+  // A preset matching its saved definition has nothing to lose: no note.
+  assert.equal(await cli("init", "--here", "--tools", "none", "--auto"), 0, stderr());
+  out = [];
+  assert.equal(await cli("use", "ego-sword"), 0, stderr());
+  assert.doesNotMatch(stdout(), /Replaced unsaved|save first/);
+
+  // Edits on a bundled preset are saved as a new preset; the receipt names the one they were on.
+  assert.equal(await cli("set", "warmth=4"), 0, stderr());
+  out = [];
+  assert.equal(await cli("use", "royal-advisor"), 0, stderr());
+  const rows = stdout().split("\n").map((row) => row.trim());
+  assert.ok(rows.includes(EN.preset.replacedUnsaved("Ego Sword")), stdout());
+  assert.equal(rows[rows.indexOf(EN.preset.saveFirst) + 1], 'tonedial save "My Tone"');
+  assert.equal(config().preset, "royal-advisor");
+
+  // A user preset is updated in place, so the command is plain `save`, and saved edits are no loss.
+  assert.equal(await cli("save", "Mine"), 0, stderr());
+  out = [];
+  assert.equal(await cli("use", "ego-sword"), 0, stderr());
+  assert.doesNotMatch(stdout(), /Replaced unsaved/);
+  assert.equal(await cli("use", "mine"), 0, stderr());
+  assert.equal(await cli("set", "care=1"), 0, stderr());
+  out = [];
+  assert.equal(await cli("use", "mine"), 0, stderr());
+  const again = stdout().split("\n").map((row) => row.trim());
+  assert.ok(again.includes(EN.preset.replacedUnsaved("Mine")), "choosing the same preset again discards the edits too");
+  assert.equal(again[again.indexOf(EN.preset.saveFirst) + 1], "tonedial save");
+
+  // A legacy axis-only preset leaves a separate persona edit intact.
+  assert.equal(await cli("use", "tough-love"), 0, stderr());
+  assert.equal(await cli("set", "persona.agent=Fictional reviewer"), 0, stderr());
+  const before = config();
+  out = [];
+  assert.equal(await cli("use", "tough-love"), 0, stderr());
+  assert.deepEqual(config().axes, before.axes);
+  assert.deepEqual(config().persona, before.persona);
+  assert.doesNotMatch(stdout(), /Replaced unsaved|save first/);
+
+  // Machine output has no new field for it.
+  assert.equal(await cli("set", "care=2"), 0, stderr());
+  out = [];
+  assert.equal(await cli("use", "ego-sword", "--json"), 0, stderr());
+  assert.deepEqual(Object.keys(JSON.parse(stdout())).sort(),
+    ["axes", "chars", "displayName", "notice", "ok", "preset", "project", "riskAxes", "safeword", "schema", "warnings"]);
+});
+
+test("a full reset ends with the way back to the saved preset and says what that cannot restore", async () => {
+  const lines = () => stdout().split("\n").map((row) => row.trim()).filter(Boolean);
+  assert.equal(await cli("init", "--here", "--tools", "none", "--auto"), 0, stderr());
+
+  // Nothing was edited: the saved preset is exactly what the reset replaced.
+  out = [];
+  assert.equal(await cli("reset"), 0, stderr());
+  let rows = lines();
+  assert.deepEqual(rows.slice(-2), [EN.axis.resetRestore, "tonedial use caring-brother"], stdout());
+
+  // With edits on top of the saved preset, the way back does not bring them back.
+  assert.equal(await cli("use", "caring-brother"), 0, stderr());
+  assert.equal(await cli("set", "warmth=2"), 0, stderr());
+  out = [];
+  assert.equal(await cli("reset"), 0, stderr());
+  rows = lines();
+  assert.deepEqual(rows.slice(-2), [EN.axis.resetRestoreUnsaved, "tonedial use caring-brother"], stdout());
+
+  // No preset is selected any more, so there is nothing to return to; one axis keeps the selection.
+  out = [];
+  assert.equal(await cli("reset"), 0, stderr());
+  assert.doesNotMatch(stdout(), /tonedial use|return to the saved preset/);
+  assert.equal(await cli("use", "ego-sword"), 0, stderr());
+  out = [];
+  assert.equal(await cli("reset", "warmth"), 0, stderr());
+  assert.doesNotMatch(stdout(), /tonedial use|return to the saved preset/);
+
+  // While delivery is paused its notice stays the last thing, after the way back.
+  assert.equal(await cli("use", "ego-sword"), 0, stderr());
+  assert.equal(await cli("off"), 0, stderr());
+  out = [];
+  assert.equal(await cli("reset"), 0, stderr());
+  rows = lines();
+  assert.equal(rows.at(-1), "tonedial on");
+  assert.ok(rows.indexOf("tonedial use ego-sword") > 0 && rows.indexOf("tonedial use ego-sword") < rows.indexOf("tonedial on"), stdout());
+
+  out = [];
+  assert.equal(await cli("use", "ego-sword"), 0, stderr());
+  out = [];
+  assert.equal(await cli("reset", "--json"), 0, stderr());
+  assert.deepEqual(Object.keys(JSON.parse(stdout())).sort(), ["chars", "ok", "reset", "schema", "warnings"]);
+});
+
+test("use names the command that sets a safeword only when none is set, and keeps its JSON notice", async () => {
+  assert.equal(await cli("init", "--here", "--tools", "none", "--auto"), 0, stderr());
+  out = [];
+  assert.equal(await cli("use", "ego-sword"), 0, stderr());
+  const rows = stdout().split("\n").map((row) => row.trim());
+  // The command stands alone on its line, so it can be copied whole.
+  assert.equal(rows[rows.indexOf(EN.settings.noSafewordSet) + 1], 'tonedial set "safeword=plain answer please"');
+
+  out = [];
+  assert.equal(await cli("use", "ego-sword", "--json"), 0, stderr());
+  assert.equal(JSON.parse(stdout()).notice.safeword, EN.settings.noSafeword, "machine output keeps its plain notice");
+
+  // A preset carries its safeword, so one saved with a safeword brings it along.
+  assert.equal(await cli("set", "safeword=stop the act"), 0, stderr());
+  assert.equal(await cli("save", "With Word"), 0, stderr());
+  out = [];
+  assert.equal(await cli("use", "with-word"), 0, stderr());
+  assert.match(stdout(), /safeword stop the act/);
+  assert.doesNotMatch(stdout(), /to set one|tonedial set/);
+});
+
 test("the interface language is settable after init, not only during it", async () => {
   await initializeState();
   // It used to be reachable through `init --lang` alone, so changing your mind about it meant
@@ -1144,6 +1289,54 @@ test("show refusing a preset name lists the ones it would have taken", async () 
   for (const { slug } of BUNDLED) assert.match(said, new RegExp(slug), `${slug} is missing from the list`);
 });
 
+test("a --project that is not a folder is reported by the command that uses it", async () => {
+  await initializeState();
+  mkdirSync(join(home, "project"), { recursive: true });
+  const file = join(home, "not-a-folder");
+  writeFileSync(file, "");
+  err = [];
+  assert.equal(await cli("test", "codex", "--dry-run", "--project", file), 1);
+  assert.ok(stderr().startsWith(EN.test.targetUnavailable(file).split("\n")[0]!), stderr());
+  err = [];
+  assert.equal(await cli("wire", "codex", "--project", file, "--auto"), 1);
+  assert.match(stderr(), /is not a directory/);
+  assert.doesNotMatch(stderr(), /\n\s+at /);
+});
+
+test("a misspelled preset is answered with the nearest slug as the same command", async () => {
+  await initializeState();
+  assert.equal(await cli("save", "My Tone"), 0, stderr());
+  mkdirSync(join(home, "project"), { recursive: true });
+  // Each caller offers its own command with the slug swapped and its other options kept; a dry
+  // run stays one, and `test` carries the slug in --preset.
+  for (const [argv, offered] of [
+    [["use", "ego-swrod", "--project", "."], "tonedial use ego-sword --project ."],
+    [["use", "Ego Sword"], "tonedial use ego-sword"],
+    [["show", "ego-swrod", "--explain"], "tonedial show ego-sword --explain"],
+    [["export", "ego-swrod"], "tonedial export ego-sword"],
+    [["edit", "preset", "my-ton", "--dry-run"], "tonedial edit preset my-tone --dry-run"],
+    [["test", "codex", "--dry-run", "--preset", "ego-swrod"], "tonedial test codex --preset ego-sword --dry-run"],
+    [["test", "codex", "--accept-usage", "--dry-run", "--preset", "ego-swrod"], "tonedial test codex --preset ego-sword --dry-run"],
+  ] as const) {
+    err = [];
+    assert.equal(await cli(...argv), 1, argv.join(" "));
+    const lines = stderr().trimEnd().split("\n");
+    assert.equal(lines.at(-1), `  ${offered}`, argv.join(" "));
+    assert.match(lines.at(-2)!, /^Did you mean (ego-sword|my-tone)\?$/, argv.join(" "));
+  }
+  // `edit` cannot open a bundled preset, so it never offers one; a far miss offers nothing.
+  for (const argv of [["edit", "preset", "ego-swrod"], ["use", "zzzzzzzzzzzz"]]) {
+    err = [];
+    assert.equal(await cli(...argv), 1, argv.join(" "));
+    assert.doesNotMatch(stderr(), /Did you mean|tonedial (use|edit)/, argv.join(" "));
+  }
+  out = [];
+  assert.equal(await cli("use", "ego-swrod", "--json"), 1);
+  const refusal = JSON.parse(stdout());
+  assert.match(refusal.error, /Did you mean ego-sword\?\n {2}tonedial use ego-sword$/);
+  assert.equal(refusal.reason, undefined, "the suggestion is prose, not a reason");
+});
+
 test("reset with no argument clears the axes and leaves persona and safeword alone", async () => {
   await initializeState();
   assert.equal(await cli("use", "eager-sycophant"), 0);
@@ -1179,6 +1372,31 @@ test("a malformed config is refused by field rather than silently defaulted", as
   }
 });
 
+test("unreadable settings name the doctor --fix of the scope the command ran in, on a line of its own", async () => {
+  await initializeState();
+  writeFileSync(paths().config, "{ broken");
+  // A connection command keeps its own scope; every other command falls back to global.
+  for (const [argv, scope] of [
+    [["show"], "--global"], [["set", "warmth=2"], "--global"], [["test", "codex", "--dry-run"], "--global"],
+    [["wire", "codex", "--here"], "--here"], [["compile"], "--global"],
+  ] as const) {
+    err = [];
+    assert.equal(await cli(...argv), 1, argv.join(" "));
+    assert.equal(stderr().trimEnd().split("\n").at(-1), `  tonedial doctor --fix ${scope}`, argv.join(" "));
+    out = [];
+    assert.equal(await cli(...argv, "--json"), 1, argv.join(" "));
+    const refusal = JSON.parse(stdout());
+    assert.equal(refusal.reason, "settings-unreadable", argv.join(" "));
+    assert.deepEqual(refusal.commands, [`tonedial doctor --fix ${scope}`], argv.join(" "));
+  }
+  // Inside doctor the command is the check's repair, not a sentence in its detail.
+  out = [];
+  assert.equal(await cli("doctor", "--global", "--json"), 0, stderr());
+  const check = JSON.parse(stdout()).checks.find((entry: { name: string }) => entry.name === "context");
+  assert.equal(check.repair, "tonedial doctor --fix --global");
+  assert.doesNotMatch(check.detail, /doctor --fix/);
+});
+
 test("a name that is not a command is refused, including one the prototype answers for", async () => {
   // `COMMANDS` is an object literal, so a truthiness check on `COMMANDS[name]` accepts every
   // `Object.prototype` member. `tonedial toString` got past that guard and died on
@@ -1201,6 +1419,27 @@ test("a name that is not a command is refused, including one the prototype answe
   const withoutName = (text: string, name: string) => text.replace(/\s+/g, " ").replace(name, "").trim();
   assert.notEqual(withoutName(nearMiss, "ejct"), withoutName(stderr(), "zzzzzzzzzzzz"),
     "a near miss is answered differently from a name nothing resembles");
+});
+
+test("help <command> points to that command's --help, and anything else to the option that exists", async () => {
+  // `help doctor` named `tonedial --help`, which answers a different question. `version` and
+  // `help <not a command>` keep the bare option: `tonedial nosuch --help` is itself an error.
+  for (const [argv, option] of [
+    [["help", "doctor"], "tonedial doctor --help"], [["help", "set", "warmth"], "tonedial set --help"],
+    [["help"], "tonedial --help"], [["help", "nosuch"], "tonedial --help"], [["help", "help"], "tonedial --help"],
+    [["version", "doctor"], "tonedial --version"],
+  ] as const) {
+    err = [];
+    assert.equal(await cli(...argv), 2, argv.join(" "));
+    assert.equal(stderr().trimEnd().split("\n").at(-1), `  ${option}`, argv.join(" "));
+  }
+  out = [];
+  err = [];
+  assert.equal(await cli("help", "doctor", "--json"), 2);
+  const refusal = JSON.parse(stdout());
+  assert.equal(refusal.ok, false);
+  assert.ok(refusal.error.endsWith("tonedial doctor --help"));
+  assert.equal(refusal.reason, undefined, "the refusal is prose only");
 });
 
 test("a stopping synonym points to off instead of the nearest command", async () => {
@@ -1229,7 +1468,7 @@ test("show on a root with nothing in it names the command that works there", asy
   assert.ok(stdout().includes(EN.artifact.notSetUp));
   assert.ok(stdout().startsWith(`ToneDial · show · (${EN.artifact.notSetUpTitle})`), "a fresh root claims no unsaved changes");
   assert.equal(stdout().trimEnd().split("\n").at(-1)!.trim(), "tonedial init --tools none --global");
-  assert.equal(stdout().includes(EN.artifact.notWritten), false);
+  assert.equal(stdout().includes(EN.artifact.notWritten.split("\n")[0]!), false);
   assert.deepEqual(snapshot(paths().root), [], "and reading the state created none of it");
   err = [];
   assert.equal(await cli("compile"), 1, "compile really is refused here");
@@ -1241,8 +1480,21 @@ test("show on a root with nothing in it names the command that works there", asy
   rmSync(paths().tone);
   out = [];
   assert.equal(await cli("show"), 0, stderr());
-  assert.ok(stdout().includes(EN.artifact.notWritten));
+  const advice = stdout().split("\n").map((line) => line.trim());
+  assert.deepEqual(advice.slice(advice.indexOf(EN.artifact.notWritten.split("\n")[0]!)).slice(0, 2), EN.artifact.notWritten.split("\n"),
+    "the missing file is named, then the command that writes it on its own line");
   assert.equal(stdout().includes(EN.artifact.notSetUp), false);
+});
+
+test("compile --check on a TONE.md it cannot compare points to doctor, not to an overwrite", async () => {
+  assert.equal(await cli("init", "--here", "--tools", "none", "--auto"), 0, stderr());
+  rmSync(paths().tone);
+  symlinkSync("elsewhere", paths().tone);
+  out = [];
+  assert.equal(await cli("compile", "--check"), 0, stderr());
+  const lines = stdout().trimEnd().split("\n").map((line) => line.trim());
+  assert.ok(lines.includes(EN.artifact.uninspected), "the status says it could not be compared");
+  assert.equal(lines.at(-1), "tonedial doctor", "and the next step is the diagnosis; compile would replace what it could not read");
 });
 
 test("show directs a config-only legacy root to read-only diagnosis without changing it", async () => {
@@ -2212,16 +2464,20 @@ test("wire without an agent outside a terminal gives a runnable example", async 
   err = [];
   assert.equal(await cli("wire", "--global", "--auto"), 1);
   assert.ok(stderr().includes(EN.errors.wireToolsRequired("tonedial wire codex --global", true)), stderr());
+  assert.ok(stderr().endsWith("\n  tonedial wire codex --global\n"), "the example command comes last");
+  err = [];
+  assert.equal(await cli("unwire", "--global", "--auto"), 1);
+  assert.ok(stderr().endsWith("\n  tonedial eject --global\n"), `the commands come last:\n${stderr()}`);
 });
 
-test("a risk warning on stderr carries one marker while JSON keeps the notice text", async () => {
+test("a risk warning on stderr keeps the notice's own mark while JSON keeps the notice text", async () => {
   await initializeState();
   assert.equal(await cli("use", "ego-sword"), 0, stderr());
   err = [];
   assert.equal(await cli("set", "warmth=4"), 0, stderr());
   const risk = EN.notice.riskAxes(["critique"]);
-  assert.ok(stderr().includes(`⚠ ${risk.replace(/^! /, "")}`), stderr());
-  assert.doesNotMatch(stderr(), /⚠ !/);
+  assert.ok(stderr().includes(`  ${risk}`), stderr());
+  assert.doesNotMatch(stderr(), /⚠|! !/, "one mark, and not the warning sign other notices carry");
   out = [];
   assert.equal(await cli("set", "warmth=3", "--json"), 0, stderr());
   assert.ok(JSON.parse(stdout()).warnings.includes(risk), "JSON warnings are unchanged");

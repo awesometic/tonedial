@@ -1,11 +1,11 @@
 status: 0
---- stdout --- [bytes=451; endsWithNewline=true]
+--- stdout --- [bytes=401; endsWithNewline=true]
 ToneDial · doctor
 
-  Inspection scope: project
+  Project scope
   <ROOT>/project
 
-  Application: healthy
+  1 problem
 
   Checks
   · Agent hooks
@@ -17,8 +17,6 @@ ToneDial · doctor
     Find the global prefix:
     npm prefix -g
     Then add its bin directory to PATH (macOS/Linux).
-
-  1 check needs attention
 
   tonedial wire --here
 --- stderr --- [bytes=0; endsWithNewline=false]
