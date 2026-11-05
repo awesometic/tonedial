@@ -283,6 +283,8 @@ export type Messages = {
     safewordShort: (phrase: string) => string;
     safewordSet: (phrase: string) => string;
     noSafeword: string;
+    /** `use`'s receipt when none is set: the label before the command that sets one, on its own line. */
+    noSafewordSet: string;
     register: (level: SpeechLevel) => string;
   };
   artifact: {
@@ -909,6 +911,7 @@ const enMessages: Messages = {
     safewordSet: (phrase) =>
       `safeword ${phrase}`,
     noSafeword: "no safeword",
+    noSafewordSet: "no safeword · to set one:",
     register: (level) => `register ${level} (${({ auto: "contextual", polite: "honorific", plain: "non-honorific", rough: "curt, blunt non-honorific" })[level]})`,
   },
   artifact: {
@@ -1723,6 +1726,7 @@ const koMessages: Messages = {
     safewordShort: (phrase) => `세이프워드 ${phrase}: 너무 짧아 실수로 작동할 수 있습니다`,
     safewordSet: (phrase) => `세이프워드 ${phrase}`,
     noSafeword: "세이프워드 없음",
+    noSafewordSet: "세이프워드 없음 · 정하려면:",
     register: (level) => `말씨 ${level} (${({ auto: "관계에 맞게 선택", polite: "존댓말", plain: "일반 반말", rough: "짧고 퉁명스러운 반말" })[level]})`,
   },
   artifact: {

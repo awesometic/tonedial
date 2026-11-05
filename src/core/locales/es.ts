@@ -205,6 +205,7 @@ const messages: Messages = {
     safewordSet: (phrase) =>
       `Palabra clave ${phrase}`,
     noSafeword: "sin palabra clave",
+    noSafewordSet: "sin palabra clave · para definir una:",
     register: (level) => `registro ${level} (${({ auto: "según la relación", polite: "formas honoríficas", plain: "formas normales sin honoríficos", rough: "formas no honoríficas cortas y tajantes" })[level]})`,
   },
   artifact: {

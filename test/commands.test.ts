@@ -707,6 +707,27 @@ test("a full reset ends with the way back to the saved preset and says what that
   assert.deepEqual(Object.keys(JSON.parse(stdout())).sort(), ["chars", "ok", "reset", "schema", "warnings"]);
 });
 
+test("use names the command that sets a safeword only when none is set, and keeps its JSON notice", async () => {
+  assert.equal(await cli("init", "--here", "--tools", "none", "--auto"), 0, stderr());
+  out = [];
+  assert.equal(await cli("use", "ego-sword"), 0, stderr());
+  const rows = stdout().split("\n").map((row) => row.trim());
+  // The command stands alone on its line, so it can be copied whole.
+  assert.equal(rows[rows.indexOf(EN.settings.noSafewordSet) + 1], 'tonedial set "safeword=plain answer please"');
+
+  out = [];
+  assert.equal(await cli("use", "ego-sword", "--json"), 0, stderr());
+  assert.equal(JSON.parse(stdout()).notice.safeword, EN.settings.noSafeword, "machine output keeps its plain notice");
+
+  // A preset carries its safeword, so one saved with a safeword brings it along.
+  assert.equal(await cli("set", "safeword=stop the act"), 0, stderr());
+  assert.equal(await cli("save", "With Word"), 0, stderr());
+  out = [];
+  assert.equal(await cli("use", "with-word"), 0, stderr());
+  assert.match(stdout(), /safeword stop the act/);
+  assert.doesNotMatch(stdout(), /to set one|tonedial set/);
+});
+
 test("the interface language is settable after init, not only during it", async () => {
   await initializeState();
   // It used to be reachable through `init --lang` alone, so changing your mind about it meant

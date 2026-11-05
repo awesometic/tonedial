@@ -1,9 +1,10 @@
 status: 0
---- stdout --- [bytes=121; endsWithNewline=true]
+--- stdout --- [bytes=184; endsWithNewline=true]
   Ego Sword 적용됨
   TONE.md 생성됨
 
-  세이프워드 없음
+  세이프워드 없음 · 정하려면:
+  tonedial set "safeword=plain answer please"
   ! critique · 거친 표현
 
   tonedial test codex

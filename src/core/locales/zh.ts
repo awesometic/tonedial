@@ -205,6 +205,7 @@ const messages: Messages = {
     safewordSet: (phrase) =>
       `安全词 ${phrase}`,
     noSafeword: "未设置安全词",
+    noSafewordSet: "未设置安全词 · 要设置：",
     register: (level) => `敬语形式 ${level} (${({ auto: "按关系选择", polite: "敬语", plain: "普通非敬语", rough: "简短生硬的非敬语" })[level]})`,
   },
   artifact: {

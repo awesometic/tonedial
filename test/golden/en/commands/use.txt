@@ -1,9 +1,10 @@
 status: 0
---- stdout --- [bytes=108; endsWithNewline=true]
+--- stdout --- [bytes=169; endsWithNewline=true]
   Ego Sword active
   TONE.md generated
 
-  no safeword
+  no safeword · to set one:
+  tonedial set "safeword=plain answer please"
   ! critique · harsh language
 
   tonedial test codex

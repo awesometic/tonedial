@@ -276,6 +276,7 @@ While delivery is off, `set`, `use`, `reset`, `show` and `doctor` say that new c
 After updating an older installation, refresh its existing tools and scope through the normal
 previewed `init` flow before using `off`; an older installed reader does not recognize the marker.
 The safeword requests one plain answer without persona, flattery or jokes, then the saved tone resumes.
+When `use` applies a preset with no safeword, its receipt says so and shows `tonedial set "safeword=plain answer please"`; JSON keeps `notice.safeword` as `no safeword`.
 It authorizes no action or intense tone and may not be followed by the model.
 ToneDial adds no factuality, visible-refusal, flattery-honesty or emergency-register guard; host permissions and file-change consent still apply.
 

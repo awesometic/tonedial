@@ -15,6 +15,9 @@ import { planChange, rawReadCheck } from "../wiring/apply.ts";
 import { artifactSize, combination, humanText, nextStep, offNotice, riskNotice } from "../ui/format.ts";
 import { truncate, wrap } from "../ui/width.ts";
 
+/** The example `USAGE` gives for setting a safeword. */
+const SAFEWORD_EXAMPLE = 'tonedial set "safeword=plain answer please"';
+
 /**
  * How much of a preset's name this screen shows. `list` and `show` already truncate; this line
  * did not, so a name from a file written before the cap existed pushed the row past the budget
@@ -81,7 +84,12 @@ export async function runUse(ctx: Ctx, args: string[]): Promise<CommandResult> {
     risk: ctx.t.notice.risk,
     roleplay: config.axes.playfulness >= 4 ? ctx.t.notice.roleplay : null,
   };
-  const notices = [notice.safeword, ...(notice.riskAxes ? [notice.riskAxes] : [])];
+  // The human receipt names the command that sets a safeword when none is set; the JSON notice
+  // keeps its plain "no safeword". The label and the command are separate lines, so the command
+  // stays whole and copyable.
+  const safeword = config.safeword
+    ? wrap(humanText(notice.safeword), ui.width - 2).map((line) => `  ${line}`)
+    : [`  ${ctx.t.settings.noSafewordSet}`, ...nextStep(SAFEWORD_EXAMPLE, ui).slice(1)];
 
   const lines = [
     ...wrap(ctx.t.preset.active(truncate(humanText(preset.displayName), ui.width - 12)), ui.width - 2)
@@ -95,7 +103,8 @@ export async function runUse(ctx: Ctx, args: string[]): Promise<CommandResult> {
     // Folded here rather than at the printer: `lines` are laid out by the command that built
     // them, and a printer that reflowed them would break every column in the gauge block.
     "",
-    ...notices.flatMap((n) => wrap(humanText(n), ui.width - 2).map((folded) => `  ${n === notice.riskAxes ? riskNotice(folded, ui) : folded}`)),
+    ...safeword,
+    ...(notice.riskAxes ? wrap(humanText(notice.riskAxes), ui.width - 2).map((folded) => `  ${riskNotice(folded, ui)}`) : []),
     ...project,
     ...(config.enabled ? nextStep(activationStep(ctx, config) ?? "tonedial show", ui) : offNotice(false, ctx.t, ui)),
   ];

@@ -205,6 +205,7 @@ const messages: Messages = {
     safewordSet: (phrase) =>
       `合言葉 ${phrase}`,
     noSafeword: "合言葉なし",
+    noSafewordSet: "合言葉なし · 設定するには：",
     register: (level) => `敬語区分 ${level} (${({ auto: "関係に合わせる", polite: "敬語", plain: "通常の常体", rough: "短くぶっきらぼうな常体" })[level]})`,
   },
   artifact: {
