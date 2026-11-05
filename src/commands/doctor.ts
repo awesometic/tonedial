@@ -63,6 +63,7 @@ type Check = {
   /** Lines shown as written, unwrapped, so they can be copied back into a file. */
   verbatim?: readonly string[];
   files?: { path: string; reason: Exclude<SeedState, "current"> }[];
+  inspectionFailurePath?: string;
 };
 
 type BoundedChange =
@@ -417,9 +418,11 @@ function diagnoseNative(
   let repairable = false;
   let detail = ctx.t.doctor.nativeForeign;
   let edited = false;
+  let inspectionFailurePath: string | undefined;
   const change = inspected.change;
 
   if (change === null) {
+    inspectionFailurePath = route.path;
     // The target could not be read inside its bounds. Preserved and reported, never repaired.
   } else if (change.before === null || resource === undefined || metadata === undefined || installed === null) {
     // Our entry is absent — either the file is not there, or it is someone else's file and this
@@ -450,6 +453,7 @@ function diagnoseNative(
       // A recorded file that no longer parses is a broken file, not an edit of ToneDial's entries.
       if (edited && error instanceof ConfigError) {
         edited = false;
+        inspectionFailurePath = route.path;
         detail = `${error.message}\n${repairCommand(ctx, "doctor")}`;
       }
     }
@@ -567,6 +571,7 @@ function diagnoseNative(
       state,
       detail: `${detail} ${ctx.t.doctor.nativeActivationUnverified(trust !== "unknown")}`,
       humanDetail,
+      ...(inspectionFailurePath ? { inspectionFailurePath } : {}),
       ...(repair ? { repair } : {}),
       ...(verbatim ? { verbatim } : {}),
     },
@@ -984,8 +989,8 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true): Promise<Comm
       findings.filter((check) => check.state === "note" && check.detail !== ctx.t.doctor.hookNotConnected).length +
       integrations.reduce((count, integration) => count + integration.duplicates.length, 0) + (folder.length ? 1 : 0) +
       // A settings file that could not be inspected has no check of its own when its agent is not
-      // connected. A problem already says the headline's part, and the file is named below it.
-      (inspectionFailure && !findings.some((check) => check.state === "problem") ? 1 : 0)),
+      // connected. Count it unless a problem already reports that same file's inspection failure.
+      (inspectionFailure && !findings.some((check) => check.state === "problem" && check.inspectionFailurePath === inspectionFailure.path) ? 1 : 0)),
     // One health statement: the headline. A row follows it only when there is something to fix.
     ...(appHealthy ? [] : [`  ${ctx.ui.bold(ctx.ui.warn(ctx.t.doctor.applicationHealth))}`]),
     // A healthy setup sends no tone while paused; that is the first thing to know.
@@ -1275,7 +1280,7 @@ function wiringCheck(ctx: Ctx, tool: AgentTool, shownPath: WiredAt, registered: 
   // throw past `doctor --json`.
   const inspected = boundedChange(ctx, path, (before) => before);
   if (inspected.change === null) {
-    return { name, state: "problem", detail: inspected.error };
+    return { name, state: "problem", detail: inspected.error, inspectionFailurePath: path };
   }
   const text = inspected.change.before;
 
@@ -1300,6 +1305,7 @@ function wiringCheck(ctx: Ctx, tool: AgentTool, shownPath: WiredAt, registered: 
         name,
         state: "problem",
         detail: ctx.t.errors.unreadableTarget(path, "invalid hook settings"),
+        inspectionFailurePath: path,
       };
     }
     if (present) {
@@ -1327,6 +1333,7 @@ function wiringCheck(ctx: Ctx, tool: AgentTool, shownPath: WiredAt, registered: 
       name,
       state: "problem",
       detail: ctx.t.doctor.damagedRegion(path, (cause as RegionError).message),
+      inspectionFailurePath: path,
     };
   }
 

@@ -306,6 +306,16 @@ test("an unreadable settings file that is already a problem is not counted again
   assert.ok(lines.includes(join(home, ".codex", "hooks.json")), "the file is still named");
 });
 
+test("an unrelated problem does not hide an unreadable settings notice", async () => {
+  assert.equal((await human(["init", "--tools", "none", "--global", "--auto"])).code, 0);
+  mkdirSync(join(home, ".claude"));
+  const settings = join(home, ".claude", "settings.json");
+  writeFileSync(settings, "{ not json");
+  const lines = (await human(["doctor", "--global"])).out.split("\n").map((line) => line.trim());
+  assert.ok(lines.includes("1 problem · 1 notice"), lines.join("\n"));
+  assert.ok(lines.includes(settings), "the file is still named");
+});
+
 test("a project recorded on the global hook is not reported as a duplicate", async () => {
   assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
   await addLegacyRider(env, "codex", project);
