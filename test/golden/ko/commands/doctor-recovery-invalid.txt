@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=537; endsWithNewline=true]
+--- stdout --- [bytes=549; endsWithNewline=true]
 ToneDial · doctor
 
   전역 범위(모든 프로젝트 공유)
@@ -9,8 +9,8 @@ ToneDial · doctor
   파일을 바꾸지 않았습니다.
   ffffffffffffffffffffffffffffffff  잘못된 기록
 
-  읽을 수 없는 작업 기록이 1개 남았습니다. 앱을 복구하려면 이 기록을 먼저
-  격리하세요. 원본 바이트는 롤백 기록에 보존됩니다.
+  읽을 수 없는 작업 기록이 1개 남았습니다. ToneDial 파일을 복구하려면 이 기록을
+  먼저 격리하세요. 원본 바이트는 롤백 기록에 보존됩니다.
   tonedial doctor --fix --quarantine-operation ffffffffffffffffffffffffffffffff --global
 --- stderr --- [bytes=0; endsWithNewline=false]
 

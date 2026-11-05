@@ -399,8 +399,8 @@ export type Messages = {
   doctor: {
     connectionsHeading: string;
     checksHeading: string;
-    applicationHealth: (healthy: boolean) => string;
-    connectionHealth: (attention: boolean) => string;
+    applicationHealth: string;
+    connectionHealth: string;
     healthy: string;
     /** Registrations outside the scope being inspected. Reported, never repaired. */
     wiredElsewhere: string;
@@ -811,7 +811,7 @@ const enMessages: Messages = {
     reviewHeading: "Preset to save",
   },
   recovery: {
-    heading: "Application recovery",
+    heading: "ToneDial file recovery",
     source: { settings: "saved settings", snapshot: "selected operation snapshot", artifact: "recognized older tone", preset: "selected preset" },
     choosePreset: "Choose a preset for values with no valid saved source:",
     sourceRequired: (command) => `Saved values are incomplete. To choose a source, run this in a terminal:\n  ${command}\nFor unattended recovery, select --from-preset SLUG or --from-operation ID.`,
@@ -823,13 +823,13 @@ const enMessages: Messages = {
     missing: (fields) => `Values requiring a selected source or defaults: ${fields.join(", ")}`,
     copies: (slugs) => `Preserved definitions can be loaded as: ${slugs.join(", ")}`,
     activeChoice: (slug) => `${slug}: choose which definition the saved axes should name.`,
-    rebuilt: "Application restored",
-    unchanged: "Application files current",
+    rebuilt: "ToneDial files restored",
+    unchanged: "ToneDial files current",
     nativePending: "Agent connections need separate attention; settings and presets remain usable.",
     otherScopes: "Connections in other scopes need their own repair:",
     nativeApproval: (command) => `Agent connections not repaired · approval required. To review and approve the changes, rerun in a terminal:\n  ${command}\nOr preview them, then approve without prompting:\n  ${command} --dry-run\n  ${command} --auto`,
     rollback: (id) => `To restore the previous files:\ntonedial doctor --fix --rollback ${id}`,
-    rollbackOrder: "Restore connections first, then application files:",
+    rollbackOrder: "Restore connections first, then ToneDial files:",
     noSnapshot: (id) => `${id}: no valid settings snapshot for this state root`,
     quarantineCandidate: (id) => `Operation ID:\n${id}\nQuarantine it before rebuilding; the original bytes remain available through rollback.`,
     quarantineQuestion: "Type the full operation ID above to quarantine it; Enter cancels:",
@@ -838,14 +838,14 @@ const enMessages: Messages = {
     quarantine: (id) => `Quarantine unreadable operation ${id}; keep its original bytes in rollback history.`,
     quarantineComplete: (id) => `Unreadable operation ${id} quarantined.`,
     quarantineRemaining: (count) => count === 1
-      ? "1 unreadable operation record remains. Quarantine it before repairing the application; its original bytes stay available for rollback."
-      : `${count} unreadable operation records remain. Quarantine the next record before repairing the application.`,
-    retire: (id) => `Retire stopped operation ${id} as history before a new application rebuild. Its external changes are not certified or undone.`,
+      ? "1 unreadable operation record remains. Quarantine it before repairing the ToneDial files; its original bytes stay available for rollback."
+      : `${count} unreadable operation records remain. Quarantine the next record before repairing the ToneDial files.`,
+    retire: (id) => `Retire stopped operation ${id} as history before a new ToneDial file rebuild. Its external changes are not certified or undone.`,
     resumeOperation: (id) => `Stopped operation:\n${id}`,
     resumeQuestion: "Type the full operation ID above to continue; Enter cancels:",
     cancelled: "Recovery cancelled. No files were changed.",
     operationMismatch: "The operation ID did not match. No files were changed.",
-    failure: (id, phase, path, code) => `Application recovery failed during ${({ prepare: "preparation", write: "file writes", verify: "verification", finalize: "completion" })[phase]} (${code}).${path ? `\n${path}` : ""}\nSome file changes may already be applied. Keep this operation record:\n${id}`,
+    failure: (id, phase, path, code) => `ToneDial file recovery failed during ${({ prepare: "preparation", write: "file writes", verify: "verification", finalize: "completion" })[phase]} (${code}).${path ? `\n${path}` : ""}\nSome file changes may already be applied. Keep this operation record:\n${id}`,
   },
   persona: {
     defaults: role("I", "you", "The person requesting help with a task.", "A general-purpose assistant helping with the requested task."),
@@ -1021,8 +1021,8 @@ const enMessages: Messages = {
   doctor: {
     connectionsHeading: "Connections",
     checksHeading: "Checks",
-    applicationHealth: (healthy) => `Application: ${healthy ? "healthy" : "needs attention"}`,
-    connectionHealth: (attention) => `Connection files: ${attention ? "attention needed" : "no issues in selected scope"}`,
+    applicationHealth: "ToneDial files: needs attention",
+    connectionHealth: "Connection files: attention needed",
     healthy: "No problems found",
     wiredElsewhere: "Also connected elsewhere",
     folderConnections: (targets, command) => `This folder has its own connections (${targets.join(", ")}). To check them instead of the global ones:\n${command}`,
@@ -1194,7 +1194,7 @@ const enMessages: Messages = {
       unsafe: "Saved settings cannot be read safely. Check links and file types.",
       changed: "Saved settings changed during inspection. Retry after changes stop.",
       invalid: "Saved settings are invalid.",
-      unreadable: "Application state could not be read. Check the path and permissions.",
+      unreadable: "ToneDial state could not be read. Check the path and permissions.",
     },
     fetching: (registry) => `checking · ${registry}`,
     found: (version, bytes) => `${version}, ${bytes.toLocaleString("en")} bytes`,
@@ -1370,7 +1370,7 @@ const enMessages: Messages = {
     legacyConsumers: (destinations) => `Other or unrecorded connections still read tone.md:\n${destinations.join("\n")}\nNothing was written. Unwire each scope before retrying init, then reconnect after the transition.`,
     contextLayout: (kind, path, doctorCommand = "tonedial doctor --json", fixCommand = "tonedial doctor --fix") => kind === "fresh"
       ? `ToneDial is not set up yet:\n${path}\nSet it up, then rerun this command:\n  tonedial init --tools none --global`
-      : `ToneDial needs application recovery for this ${kind} layout:\n${path}\nNothing was written. Inspect the same scope with:\n${doctorCommand}\nKeep this root. To preserve saved settings and rebuild generated files:\n${fixCommand}`,
+      : `ToneDial needs file recovery for this ${kind} layout:\n${path}\nNothing was written. Inspect the same scope with:\n${doctorCommand}\nKeep this root. To preserve saved settings and rebuild generated files:\n${fixCommand}`,
     unreadableConfigFile: (path, command) => `Cannot read valid settings from:\n${path}\nKeep the original.` +
       `${command === null ? "" : `\nTo choose a saved source or disclosed defaults:\n  ${command}`}`,
     editConflict: (path) => `The original file changed while the editor was open. Your edited copy is preserved here:\n${path}\nCompare the files before trying again.`,
@@ -1615,7 +1615,7 @@ const koMessages: Messages = {
     reviewHeading: "저장할 프리셋",
   },
   recovery: {
-    heading: "앱 복구",
+    heading: "ToneDial 파일 복구",
     source: { settings: "저장된 설정", snapshot: "선택한 작업의 설정", artifact: "인식한 이전 말투 파일", preset: "선택한 프리셋" },
     choosePreset: "저장된 값이 없는 항목에 사용할 프리셋을 선택하세요:",
     sourceRequired: (command) => `저장된 값이 부족합니다. 원본을 고르려면 터미널에서 실행하세요:\n  ${command}\n자동 복구에서는 --from-preset SLUG 또는 --from-operation ID를 선택하세요.`,
@@ -1627,29 +1627,29 @@ const koMessages: Messages = {
     missing: (fields) => `원본이나 기본값을 선택할 항목: ${fields.join(", ")}`,
     copies: (slugs) => `보존한 값을 불러올 이름: ${slugs.join(", ")}`,
     activeChoice: (slug) => `${slug}: 저장된 축 값에 연결할 프리셋을 선택하세요.`,
-    rebuilt: "앱 복구 완료",
-    unchanged: "앱 최신 상태",
+    rebuilt: "ToneDial 파일 복구 완료",
+    unchanged: "ToneDial 파일 최신 상태",
     nativePending: "에이전트 연결은 따로 확인해 주세요. 설정과 프리셋은 계속 쓸 수 있습니다.",
     otherScopes: "다른 범위의 연결은 따로 복구해야 합니다:",
     nativeApproval: (command) => `에이전트 연결은 승인이 필요해 복구하지 않았습니다. 변경 내용을 확인하고 승인하려면 터미널에서 다시 실행하세요:\n  ${command}\n또는 먼저 미리 본 뒤 확인 질문 없이 승인하세요:\n  ${command} --dry-run\n  ${command} --auto`,
     rollback: (id) => `이전 파일로 되돌리려면:\ntonedial doctor --fix --rollback ${id}`,
-    rollbackOrder: "연결 파일을 먼저 되돌린 뒤 앱 파일을 되돌리세요:",
+    rollbackOrder: "연결 파일을 먼저 되돌린 뒤 ToneDial 파일을 되돌리세요:",
     noSnapshot: (id) => `${id}: 이 상태 경로에서 쓸 수 있는 설정 기록이 없습니다`,
-    quarantineCandidate: (id) => `작업 ID:\n${id}\n앱을 복구하려면 이 기록을 먼저 격리해야 합니다. 원본 바이트는 롤백 기록에 보존됩니다.`,
+    quarantineCandidate: (id) => `작업 ID:\n${id}\nToneDial 파일을 복구하려면 이 기록을 먼저 격리해야 합니다. 원본 바이트는 롤백 기록에 보존됩니다.`,
     quarantineQuestion: "격리하려면 위 작업 ID 전체를 입력하세요. Enter를 누르면 취소합니다:",
     quarantineRequired: (id, command) => `${id}: 복구 전에 읽을 수 없는 작업 기록을 명시적으로 격리해야 합니다. 파일은 바꾸지 않았습니다.\n${command}`,
     quarantineUnavailable: (id) => `${id}: 격리할 수 있는 읽기 불가 작업 기록을 찾지 못했습니다. 파일은 바꾸지 않았습니다.`,
     quarantine: (id) => `읽을 수 없는 작업 ${id}를 격리합니다. 원본 바이트는 롤백 기록에 보존합니다.`,
     quarantineComplete: (id) => `읽을 수 없는 작업 ${id}를 격리했습니다.`,
     quarantineRemaining: (count) => count === 1
-      ? "읽을 수 없는 작업 기록이 1개 남았습니다. 앱을 복구하려면 이 기록을 먼저 격리하세요. 원본 바이트는 롤백 기록에 보존됩니다."
+      ? "읽을 수 없는 작업 기록이 1개 남았습니다. ToneDial 파일을 복구하려면 이 기록을 먼저 격리하세요. 원본 바이트는 롤백 기록에 보존됩니다."
       : `읽을 수 없는 작업 기록 ${count}개가 남았습니다. 다음 기록을 격리한 뒤 복구를 계속하세요.`,
-    retire: (id) => `중단된 작업 ${id}를 기록으로 보관한 뒤 새 앱 복구를 시작합니다. 그 작업의 외부 파일 변경은 확인하거나 되돌리지 않습니다.`,
+    retire: (id) => `중단된 작업 ${id}를 기록으로 보관한 뒤 새 ToneDial 파일 복구를 시작합니다. 그 작업의 외부 파일 변경은 확인하거나 되돌리지 않습니다.`,
     resumeOperation: (id) => `중단된 작업:\n${id}`,
     resumeQuestion: "계속하려면 위 작업 ID 전체를 입력하세요. Enter를 누르면 취소합니다:",
     cancelled: "복구를 취소했습니다. 파일은 바꾸지 않았습니다.",
     operationMismatch: "작업 ID가 일치하지 않습니다. 파일은 바꾸지 않았습니다.",
-    failure: (id, phase, path, code) => `앱 복구의 ${({ prepare: "준비", write: "파일 쓰기", verify: "결과 검증", finalize: "완료 처리" })[phase]} 단계에서 실패했습니다 (${code}).${path ? `\n${path}` : ""}\n일부 파일 변경이 이미 적용되었을 수 있습니다. 다음 작업 기록을 보존해 주세요:\n${id}`,
+    failure: (id, phase, path, code) => `ToneDial 파일 복구의 ${({ prepare: "준비", write: "파일 쓰기", verify: "결과 검증", finalize: "완료 처리" })[phase]} 단계에서 실패했습니다 (${code}).${path ? `\n${path}` : ""}\n일부 파일 변경이 이미 적용되었을 수 있습니다. 다음 작업 기록을 보존해 주세요:\n${id}`,
   },
   persona: {
     defaults: role("저", "사용자님", "작업에 필요한 도움을 요청하는 사용자.", "요청한 작업을 돕는 범용 조수."),
@@ -1827,8 +1827,8 @@ const koMessages: Messages = {
   doctor: {
     connectionsHeading: "연결",
     checksHeading: "검사",
-    applicationHealth: (healthy) => `앱 상태: ${healthy ? "정상" : "점검 필요"}`,
-    connectionHealth: (attention) => `연결 파일: ${attention ? "점검 필요" : "선택한 범위에서 문제 없음"}`,
+    applicationHealth: "ToneDial 파일: 점검 필요",
+    connectionHealth: "연결 파일: 점검 필요",
     healthy: "문제 없음",
     wiredElsewhere: "다른 범위의 연결",
     folderConnections: (targets, command) => `이 폴더에는 따로 등록된 연결(${targets.join(", ")})이 있습니다. 전역 연결 대신 이 폴더의 연결을 점검하려면:\n${command}`,
@@ -1874,7 +1874,7 @@ const koMessages: Messages = {
       changed: "검사 중 전달 스크립트나 설정이 바뀌었습니다. 변경이 끝난 뒤 다시 시도해 주세요.",
       probe: "제어된 검사에 실패했습니다. Node와 임시 디렉터리 접근 권한을 확인한 뒤 doctor를 다시 실행해 주세요.",
     },
-    operationState: { pending: "미완료", complete: "완료", "rolled-back": "되돌림", "retired-for-app-rebuild": "앱 복구를 위해 보관됨", quarantined: "격리됨", invalid: "잘못된 기록" },
+    operationState: { pending: "미완료", complete: "완료", "rolled-back": "되돌림", "retired-for-app-rebuild": "복구를 위해 보관됨", quarantined: "격리됨", invalid: "잘못된 기록" },
     rollbackStatus: {
       ready: "승인하면 선택한 작업을 복구합니다.",
       busy: "아직 진행 중인 작업입니다. 작업이 끝날 때까지 기다려 주세요.",
@@ -2000,7 +2000,7 @@ const koMessages: Messages = {
       unsafe: "저장된 설정을 안전하게 읽을 수 없습니다. 링크와 파일 형식을 확인해 주세요.",
       changed: "검사 중 저장된 설정이 바뀌었습니다. 변경이 끝난 뒤 다시 시도해 주세요.",
       invalid: "저장된 설정이 올바르지 않습니다.",
-      unreadable: "앱 상태를 읽지 못했습니다. 경로와 접근 권한을 확인해 주세요.",
+      unreadable: "ToneDial 상태를 읽지 못했습니다. 경로와 접근 권한을 확인해 주세요.",
     },
     fetching: (registry) => `확인 중 · ${registry}`,
     found: (version, bytes) => `${version}, ${bytes.toLocaleString("ko")}바이트`,
@@ -2177,7 +2177,7 @@ const koMessages: Messages = {
     legacyConsumers: (destinations) => `다른 연결이나 기록되지 않은 연결이 아직 tone.md를 읽습니다:\n${destinations.join("\n")}\n아무것도 쓰지 않았습니다. 각 범위에서 먼저 unwire한 뒤 init을 다시 실행하세요. 전환이 끝나면 다시 연결해 주세요.`,
     contextLayout: (kind, path, doctorCommand = "tonedial doctor --json", fixCommand = "tonedial doctor --fix") => kind === "fresh"
       ? `ToneDial 초기 설정이 아직 없습니다:\n${path}\n초기 설정 후 이 명령을 다시 실행해 주세요:\n  tonedial init --tools none --global`
-      : `이 구성은 앱 복구가 필요합니다 (${kind}):\n${path}\n아무것도 쓰지 않았습니다. 같은 범위를 확인하려면 실행하세요:\n${doctorCommand}\n이 경로는 그대로 두세요. 저장된 설정을 보존하고 앱 생성 파일을 다시 준비하려면:\n${fixCommand}`,
+      : `이 구성은 ToneDial 파일 복구가 필요합니다 (${kind}):\n${path}\n아무것도 쓰지 않았습니다. 같은 범위를 확인하려면 실행하세요:\n${doctorCommand}\n이 경로는 그대로 두세요. 저장된 설정을 보존하고 생성 파일을 다시 준비하려면:\n${fixCommand}`,
     unreadableConfigFile: (path, command) => `이 파일에서 올바른 설정을 읽지 못했습니다:\n${path}\n원본은 그대로 두세요.` +
       `${command === null ? "" : `\n저장된 원본이나 안내한 기본값을 고르려면:\n  ${command}`}`,
     editConflict: (path) => `편집기가 열린 동안 원본 파일이 바뀌었습니다. 편집한 사본은 여기에 보존했습니다:\n${path}\n두 파일을 비교한 뒤 다시 시도해 주세요.`,

@@ -289,7 +289,7 @@ test("an unconnected agent's unreadable settings file is named, and nothing is c
   const lines = shown.out.split("\n");
   assert.ok(lines.includes(`  ${settings}`), `the file that cannot be inspected is not named:\n${shown.out}`);
   assert.equal(lines.filter((line) => line.trim() !== "")[3]!.trim(), "No problems · 1 notice", shown.out);
-  assert.doesNotMatch(shown.out, /Application:|Hook states above/);
+  assert.doesNotMatch(shown.out, /ToneDial files:|Hook states above/);
   const machine = await json(["doctor", "--global"]);
   assert.equal(machine.value.nativeAttention, true);
   assert.equal(machine.value.healthy, true, "a notice is not a problem");
@@ -420,7 +420,7 @@ test("an interactive repair reports the application phase before the agent phase
     cwd: home, env: { ...env, NO_COLOR: "1" }, input: "y\n", encoding: "utf8", timeout: 10_000,
   });
   assert.equal(result.status, 0, result.stderr);
-  const restored = result.stdout.indexOf("Application restored");
+  const restored = result.stdout.indexOf("ToneDial files restored");
   const native = result.stdout.indexOf("Connect agents");
   assert.ok(restored >= 0 && native >= 0, result.stdout);
   assert.ok(restored < native, `the application receipt came after the agent phase:\n${result.stdout}`);

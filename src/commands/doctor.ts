@@ -987,14 +987,14 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true): Promise<Comm
       // connected. A problem already says the headline's part, and the file is named below it.
       (inspectionFailure && !findings.some((check) => check.state === "problem") ? 1 : 0)),
     // One health statement: the headline. A row follows it only when there is something to fix.
-    ...(appHealthy ? [] : [`  ${ctx.ui.bold(ctx.ui.warn(ctx.t.doctor.applicationHealth(false)))}`]),
+    ...(appHealthy ? [] : [`  ${ctx.ui.bold(ctx.ui.warn(ctx.t.doctor.applicationHealth))}`]),
     // A healthy setup sends no tone while paused; that is the first thing to know.
     ...offNotice(config.enabled, ctx.t, ctx.ui),
     ...(folder.length ? ["", ...paintLines(ctx.t.doctor.folderConnections(folder.map(({ target }) => target), "tonedial doctor --here"),
       ctx.ui.width - 2, ctx).map((line) => `  ${line}`)] : []),
     ...(nativeAttention ? [
       ...section(ctx.t.doctor.connectionsHeading, ctx.ui),
-      ...wrap(ctx.t.doctor.connectionHealth(true), ctx.ui.width - 2).map((line) => `  ${ctx.ui.warn(line)}`),
+      ...wrap(ctx.t.doctor.connectionHealth, ctx.ui.width - 2).map((line) => `  ${ctx.ui.warn(line)}`),
       ...(inspectionFailure ? paintLines(ctx.t.errors.contextInspectionFailure(inspectionFailure.path, inspectionFailure.reason),
         ctx.ui.width - 2, ctx).map((line) => `  ${line}`) : []),
     ] : []),

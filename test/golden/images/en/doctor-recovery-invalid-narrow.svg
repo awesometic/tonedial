@@ -10,8 +10,8 @@
   ffffffffffffffffffffffffffffffff  invalid record
 
   1 unreadable operation record remains. Quarantine it
-  before repairing the application; its original bytes stay
-  available for rollback.
+  before repairing the ToneDial files; its original bytes
+  stay available for rollback.
   tonedial doctor --fix --quarantine-operation ffffffffffffffffffffffffffffffff --global
 </desc>
 <rect width="100%" height="100%" rx="16" fill="#171b20"/>
@@ -23,7 +23,7 @@
 <text x="60" y="244" fill="#edf3f6" font-weight="400" opacity="1">ffffffffffffffffffffffffffffffff</text>
 <text x="536" y="244" fill="#edf3f6" font-weight="400" opacity="1">invalid record</text>
 <text x="60" y="300" fill="#edf3f6" font-weight="400" opacity="1">1 unreadable operation record remains. Quarantine it</text>
-<text x="60" y="328" fill="#edf3f6" font-weight="400" opacity="1">before repairing the application; its original bytes stay</text>
-<text x="60" y="356" fill="#edf3f6" font-weight="400" opacity="1">available for rollback.</text>
+<text x="60" y="328" fill="#edf3f6" font-weight="400" opacity="1">before repairing the ToneDial files; its original bytes</text>
+<text x="60" y="356" fill="#edf3f6" font-weight="400" opacity="1">stay available for rollback.</text>
 <text x="60" y="384" fill="#edf3f6" font-weight="400" opacity="1">tonedial doctor --fix --quarantine-operation ffffffffffffffffffffffffffffffff --global</text></g>
 </svg>

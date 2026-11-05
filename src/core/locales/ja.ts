@@ -121,7 +121,7 @@ const messages: Messages = {
     reviewHeading: "保存するプリセット",
   },
   recovery: {
-    heading: "アプリケーションの復旧",
+    heading: "ToneDialファイルの復旧",
     source: { settings: "保存済み設定", snapshot: "選択した操作のスナップショット", artifact: "認識できる旧形式の口調", preset: "選択したプリセット" },
     choosePreset: "有効な保存元がない値の復元用プリセットを選んでください：",
     sourceRequired: (command) => `保存値が不完全です。保存元を選ぶには、ターミナルで実行してください：\n  ${command}\n無人復旧では --from-preset SLUG または --from-operation ID を選んでください。`,
@@ -133,13 +133,13 @@ const messages: Messages = {
     missing: (fields) => `復旧元か既定値の選択が必要な項目：${fields.join(", ")}`,
     copies: (slugs) => `保持した定義は次の名前で読み込めます：${slugs.join(", ")}`,
     activeChoice: (slug) => `${slug}: 保存済みの軸が参照する定義を選んでください。`,
-    rebuilt: "アプリケーションを復旧しました",
-    unchanged: "アプリケーションのファイルは最新です",
+    rebuilt: "ToneDialファイルを復旧しました",
+    unchanged: "ToneDialファイルは最新です",
     nativePending: "エージェント接続は別途確認してください。設定とプリセットは引き続き使えます。",
     otherScopes: "ほかの範囲の接続は、それぞれの範囲で修復が必要です：",
     nativeApproval: (command) => `エージェント接続の承認が必要です。修復は実行していません。変更を確認して承認するには、ターミナルで再実行してください：\n  ${command}\nまたは、プレビューしてから確認なしで承認するには：\n  ${command} --dry-run\n  ${command} --auto`,
     rollback: (id) => `以前のファイルに戻すには：\ntonedial doctor --fix --rollback ${id}`,
-    rollbackOrder: "先に接続を復元し、その後アプリケーションのファイルを復元してください：",
+    rollbackOrder: "先に接続を復元し、その後ToneDialファイルを復元してください：",
     noSnapshot: (id) => `${id}: この状態ルート用の有効な設定スナップショットがありません`,
     quarantineCandidate: (id) => `操作ID：\n${id}\n再構築するには、先にこの記録を隔離する必要があります。元のバイト列はロールバック履歴に保持されます。`,
     quarantineQuestion: "隔離するには上の操作ID全体を入力してください。Enterで中止：",
@@ -148,14 +148,14 @@ const messages: Messages = {
     quarantine: (id) => `読み取れない操作 ${id} を隔離し、元のバイト列をロールバック履歴に保持します。`,
     quarantineComplete: (id) => `読み取れない操作 ${id} を隔離しました。`,
     quarantineRemaining: (count) => count === 1
-      ? "読み取れない操作記録が 1 件残っています。アプリを復旧するには先にこの記録を隔離してください。元のバイト列はロールバック履歴に保持されます。"
+      ? "読み取れない操作記録が 1 件残っています。ToneDialファイルを復旧するには先にこの記録を隔離してください。元のバイト列はロールバック履歴に保持されます。"
       : `読み取れない操作記録が ${count} 件残っています。次の記録を隔離してから復旧を続けてください。`,
     retire: (id) => `停止した操作 ${id} を履歴に移してから再構築してください。外部への変更は検証も取り消しもされません。`,
     resumeOperation: (id) => `停止した操作:\n${id}`,
     resumeQuestion: "続行するには上の操作ID全体を入力してください。Enterで中止:",
     cancelled: "復旧を中止しました。ファイルは変更していません。",
     operationMismatch: "操作IDが一致しません。ファイルは変更していません。",
-    failure: (id, phase, path, code) => `アプリ復旧の${({ prepare: "準備", write: "ファイル書き込み", verify: "結果の検証", finalize: "完了処理" })[phase]}で失敗しました (${code})。${path ? `\n${path}` : ""}\n一部のファイル変更が適用済みの場合があります。次の操作記録を保持してください：\n${id}`,
+    failure: (id, phase, path, code) => `ToneDialファイル復旧の${({ prepare: "準備", write: "ファイル書き込み", verify: "結果の検証", finalize: "完了処理" })[phase]}で失敗しました (${code})。${path ? `\n${path}` : ""}\n一部のファイル変更が適用済みの場合があります。次の操作記録を保持してください：\n${id}`,
   },
   persona: {
     defaults: role("私", "あなた", "作業の支援を求めている利用者。", "依頼された作業を手伝う汎用アシスタント。"),
@@ -331,8 +331,8 @@ const messages: Messages = {
   doctor: {
     connectionsHeading: "接続",
     checksHeading: "確認項目",
-    applicationHealth: (healthy) => `アプリ：${healthy ? "正常" : "要確認"}`,
-    connectionHealth: (attention) => `接続ファイル：${attention ? "要確認" : "選択範囲に問題なし"}`,
+    applicationHealth: "ToneDialファイル：要確認",
+    connectionHealth: "接続ファイル：要確認",
     healthy: "問題は見つかりませんでした",
     wiredElsewhere: "他の範囲の接続",
     folderConnections: (targets, command) => `このフォルダーには独自の接続（${targets.join(", ")}）があります。グローバルの接続ではなくこちらを確認するには：\n${command}`,
@@ -500,7 +500,7 @@ const messages: Messages = {
       unsafe: "保存済み設定を安全に読み取れません。リンクとファイル形式を確認してください。",
       changed: "確認中に保存済み設定が変更されました。変更が終わってから再試行してください。",
       invalid: "保存済み設定が無効です。",
-      unreadable: "アプリの状態を読み取れません。パスとアクセス権を確認してください。",
+      unreadable: "ToneDialの状態を読み取れません。パスとアクセス権を確認してください。",
     },
     fetching: (registry) => `確認中 · ${registry}`,
     found: (version, bytes) => `${version}、${bytes.toLocaleString("ja")}バイト`,
@@ -671,7 +671,7 @@ const messages: Messages = {
     legacyConsumers: (destinations) => `他の接続か未記録の接続がまだ tone.md を読みます：\n${destinations.join("\n")}\n書き込みはしていません。各範囲で解除して init を再試行し、移行後に再接続してください。`,
     contextLayout: (kind, path, doctorCommand = "tonedial doctor --json", fixCommand = "tonedial doctor --fix") => kind === "fresh"
       ? `ToneDialはまだ初期設定されていません：\n${path}\n初期設定してから、このコマンドを再実行してください：\n  tonedial init --tools none --global`
-      : `${kind} 構成のアプリ復旧が必要です：\n${path}\n書き込みはしていません。同じ範囲を確認：\n${doctorCommand}\nこのルートは保持してください。保存設定を保護して生成ファイルを再構築するには：\n${fixCommand}`,
+      : `${kind} 構成のToneDialファイル復旧が必要です：\n${path}\n書き込みはしていません。同じ範囲を確認：\n${doctorCommand}\nこのルートは保持してください。保存設定を保護して生成ファイルを再構築するには：\n${fixCommand}`,
     unreadableConfigFile: (path, command) => `有効な設定を読み取れません：\n${path}\n原本は保持してください。` +
       `${command === null ? "" : `\n保存元か明示された既定値を選ぶには：\n  ${command}`}`,
     editConflict: (path) => `エディターを開いている間に原本が変更されました。編集コピーはここに保持しました：\n${path}\n比較してから再試行してください。`,

@@ -500,7 +500,7 @@ Use [actual-host trials](./TESTING.md#actual-host-and-one-day-trial) for deliver
 Human diagnosis always shows the selected scope/directory, without needing `--verbose`.
 It then opens with a count of problems and notices; doctor exits 0 either way, and JSON `healthy` reports problems.
 That count is the one health statement.
-The application and connection-file rows follow it only when they need attention, and a settings file that could not be inspected is named under the second.
+The ToneDial files and connection files rows follow it only when they need attention, and a settings file that could not be inspected is named under the second.
 When hook states are shown, the report closes with the note that they come from the inspected settings files only.
 Each finding appears once and ends with the command that fixes it; `tonedial doctor --fix` with the same scope when `--fix` repairs it.
 JSON gives a check's repair command in `checks[].repair` when it has one.
@@ -741,12 +741,12 @@ tonedial doctor --fix --quarantine-operation <id> --global
 ```
 
 Quarantine replaces only the selected unreadable record with a nonblocking marker.
-When several records are unreadable, doctor reports the next ID and command; repeat until the last command continues the application rebuild.
+When several records are unreadable, doctor reports the next ID and command; repeat until the last command continues the ToneDial file rebuild.
 Each repair journal retains that record's original bytes and mode for explicit rollback; never delete records by hand.
 
 For a stopped valid operation, use the exact `--from-operation` command shown by doctor.
 Preview it with `--dry-run`, then review and approve the proposed repair.
-This continues application repair with valid current settings first; it does not undo the previous changes.
+This continues ToneDial file repair with valid current settings first; it does not undo the previous changes.
 To undo the stopped operation's changes instead, use the `--rollback` command doctor shows beside it.
 A setting change or connection command refused while the operation is stopped ends with the same two commands;
 JSON reports them in `commands` with `reason: "recovery-pending"`.
@@ -768,7 +768,7 @@ A file whose ToneDial entries changed outside ToneDial is named with the reason 
 A rebuilt config records no connections, so the hooks it no longer records keep delivering the tone and `doctor` reports them.
 `doctor --fix --tools <tool>` with the same scope records entries that are exactly what ToneDial writes, after the usual preview and without changing the file.
 Keep rollback IDs and originals.
-If both native and app phases changed files, roll back **native first, then app**, using each reported ID:
+If both native and ToneDial file phases changed files, roll back **native first, then ToneDial files**, using each reported ID:
 
 ```bash
 printf 'Reported mutation operation ID: '
@@ -786,8 +786,8 @@ Any `operations.lock` entry suppresses native reader delivery; removing it exter
 <details>
 <summary>If the command itself cannot run</summary>
 
-Package and application repair are separate.
-Npm users reinstall through npm, then use `doctor --fix` to repair application files.
+Package and ToneDial file repair are separate.
+Npm users reinstall through npm, then use `doctor --fix` to repair ToneDial files.
 Curl users run a fresh `install.sh --repair` at the same root, retain program archives and approve required component/source choices.
 Unknown components stay protected without their named archive choice; retry failed state repair with the new command.
 Curl PATH repair covers only the recorded global profile/owned region; changed/foreign content is protected and npm owns its PATH setup.

@@ -61,7 +61,7 @@ test("legacy mutation gates run before editor launch or import network access", 
     for (const args of mutations) {
       const result = await invoke(args);
       assert.equal(result.code, 1, args.join(" "));
-      assert.match(result.value.error, /application recovery.*legacy layout/);
+      assert.match(result.value.error, /file recovery.*legacy layout/);
       assert.match(result.value.error, /tonedial doctor --fix/);
       assert.equal(readFileSync(paths.config, "utf8"), config);
       assert.equal(readFileSync(join(paths.root, "tone.md"), "utf8"), artifact);

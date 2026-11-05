@@ -6,7 +6,7 @@
   &lt;ROOT&gt;
 
   1 problem
-  Application: needs attention
+  ToneDial files: needs attention
 
   Checks
   · Agent hooks
@@ -34,7 +34,7 @@
 <text x="60" y="104" fill="#edf3f6" font-weight="400" opacity="1">Global scope (all projects)</text>
 <text x="60" y="132" fill="#edf3f6" font-weight="400" opacity="1">&lt;ROOT&gt;</text>
 <text x="60" y="188" fill="#edf3f6" font-weight="400" opacity="1">1 problem</text>
-<text x="60" y="216" fill="#edf3f6" font-weight="400" opacity="1">Application: needs attention</text>
+<text x="60" y="216" fill="#edf3f6" font-weight="400" opacity="1">ToneDial files: needs attention</text>
 <text x="60" y="272" fill="#edf3f6" font-weight="400" opacity="1">Checks</text>
 <text x="60" y="300" fill="#edf3f6" font-weight="400" opacity="1">· Agent hooks</text>
 <text x="88" y="328" fill="#edf3f6" font-weight="400" opacity="1">Not connected: Claude Code, Antigravity IDE/Desktop, Codex CLI.</text>

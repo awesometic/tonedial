@@ -9,9 +9,9 @@
   이번 실행에서는 파일을 바꾸지 않았습니다.
   ffffffffffffffffffffffffffffffff  잘못된 기록
 
-  읽을 수 없는 작업 기록이 1개 남았습니다. 앱을 복구하려면
-  이 기록을 먼저 격리하세요. 원본 바이트는 롤백 기록에
-  보존됩니다.
+  읽을 수 없는 작업 기록이 1개 남았습니다. ToneDial 파일을
+  복구하려면 이 기록을 먼저 격리하세요. 원본 바이트는 롤백
+  기록에 보존됩니다.
   tonedial doctor --fix --quarantine-operation ffffffffffffffffffffffffffffffff --global
 </desc>
 <rect width="100%" height="100%" rx="16" fill="#171b20"/>
@@ -22,8 +22,8 @@
 <text x="60" y="216" fill="#edf3f6" font-weight="400" opacity="1">이번 실행에서는 파일을 바꾸지 않았습니다.</text>
 <text x="60" y="244" fill="#edf3f6" font-weight="400" opacity="1">ffffffffffffffffffffffffffffffff</text>
 <text x="536" y="244" fill="#edf3f6" font-weight="400" opacity="1">잘못된 기록</text>
-<text x="60" y="300" fill="#edf3f6" font-weight="400" opacity="1">읽을 수 없는 작업 기록이 1개 남았습니다. 앱을 복구하려면</text>
-<text x="60" y="328" fill="#edf3f6" font-weight="400" opacity="1">이 기록을 먼저 격리하세요. 원본 바이트는 롤백 기록에</text>
-<text x="60" y="356" fill="#edf3f6" font-weight="400" opacity="1">보존됩니다.</text>
+<text x="60" y="300" fill="#edf3f6" font-weight="400" opacity="1">읽을 수 없는 작업 기록이 1개 남았습니다. ToneDial 파일을</text>
+<text x="60" y="328" fill="#edf3f6" font-weight="400" opacity="1">복구하려면 이 기록을 먼저 격리하세요. 원본 바이트는 롤백</text>
+<text x="60" y="356" fill="#edf3f6" font-weight="400" opacity="1">기록에 보존됩니다.</text>
 <text x="60" y="384" fill="#edf3f6" font-weight="400" opacity="1">tonedial doctor --fix --quarantine-operation ffffffffffffffffffffffffffffffff --global</text></g>
 </svg>

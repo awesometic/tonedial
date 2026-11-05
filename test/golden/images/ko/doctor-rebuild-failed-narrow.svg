@@ -1,6 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="834" height="232" viewBox="0 0 834 232" role="img" aria-labelledby="title description">
+<svg xmlns="http://www.w3.org/2000/svg" width="834" height="260" viewBox="0 0 834 260" role="img" aria-labelledby="title description">
 <title id="title">ToneDial screen (ko · doctor-rebuild-failed-narrow)</title>
-<desc id="description">앱 복구의 파일 쓰기 단계에서 실패했습니다 (EACCES).
+<desc id="description">ToneDial 파일 복구의 파일 쓰기 단계에서 실패했습니다
+(EACCES).
 &lt;ROOT&gt;/state/skill/tonedial/SKILL.md
 일부 파일 변경이 이미 적용되었을 수 있습니다. 다음 작업
 기록을 보존해 주세요:
@@ -8,10 +9,11 @@
 tonedial doctor --global --json
 </desc>
 <rect width="100%" height="100%" rx="16" fill="#171b20"/>
-<g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, system-ui" font-size="22"><text x="32" y="48" fill="#edf3f6" font-weight="400" opacity="1">앱 복구의 파일 쓰기 단계에서 실패했습니다 (EACCES).</text>
-<text x="32" y="76" fill="#edf3f6" font-weight="400" opacity="1">&lt;ROOT&gt;/state/skill/tonedial/SKILL.md</text>
-<text x="32" y="104" fill="#edf3f6" font-weight="400" opacity="1">일부 파일 변경이 이미 적용되었을 수 있습니다. 다음 작업</text>
-<text x="32" y="132" fill="#edf3f6" font-weight="400" opacity="1">기록을 보존해 주세요:</text>
-<text x="32" y="160" fill="#edf3f6" font-weight="400" opacity="1">&lt;OPERATION_ID&gt;</text>
-<text x="32" y="188" fill="#edf3f6" font-weight="400" opacity="1">tonedial doctor --global --json</text></g>
+<g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, system-ui" font-size="22"><text x="32" y="48" fill="#edf3f6" font-weight="400" opacity="1">ToneDial 파일 복구의 파일 쓰기 단계에서 실패했습니다</text>
+<text x="32" y="76" fill="#edf3f6" font-weight="400" opacity="1">(EACCES).</text>
+<text x="32" y="104" fill="#edf3f6" font-weight="400" opacity="1">&lt;ROOT&gt;/state/skill/tonedial/SKILL.md</text>
+<text x="32" y="132" fill="#edf3f6" font-weight="400" opacity="1">일부 파일 변경이 이미 적용되었을 수 있습니다. 다음 작업</text>
+<text x="32" y="160" fill="#edf3f6" font-weight="400" opacity="1">기록을 보존해 주세요:</text>
+<text x="32" y="188" fill="#edf3f6" font-weight="400" opacity="1">&lt;OPERATION_ID&gt;</text>
+<text x="32" y="216" fill="#edf3f6" font-weight="400" opacity="1">tonedial doctor --global --json</text></g>
 </svg>

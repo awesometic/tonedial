@@ -121,7 +121,7 @@ const messages: Messages = {
     reviewHeading: "Preajuste que se guardará",
   },
   recovery: {
-    heading: "Recuperación de la aplicación",
+    heading: "Recuperación de los archivos de ToneDial",
     source: { settings: "ajustes guardados", snapshot: "instantánea de la operación elegida", artifact: "tono antiguo reconocido", preset: "preajuste elegido" },
     choosePreset: "Elige un preajuste para los valores sin un origen guardado válido:",
     sourceRequired: (command) => `Los valores guardados están incompletos. Para elegir un origen, ejecuta esto en un terminal:\n  ${command}\nPara recuperar sin interacción, selecciona --from-preset SLUG o --from-operation ID.`,
@@ -133,13 +133,13 @@ const messages: Messages = {
     missing: (fields) => `Valores que necesitan un origen o valores predeterminados: ${fields.join(", ")}`,
     copies: (slugs) => `Las definiciones conservadas pueden cargarse como: ${slugs.join(", ")}`,
     activeChoice: (slug) => `${slug}: elige a qué definición deben apuntar los ejes guardados.`,
-    rebuilt: "Aplicación restaurada",
-    unchanged: "Archivos de la aplicación al día",
+    rebuilt: "Archivos de ToneDial restaurados",
+    unchanged: "Archivos de ToneDial al día",
     nativePending: "Las conexiones de agentes necesitan atención aparte; los ajustes y preajustes siguen disponibles.",
     otherScopes: "Las conexiones de otros ámbitos necesitan su propia reparación:",
     nativeApproval: (command) => `Las conexiones de agentes necesitan aprobación y no se han reparado. Para revisar y aprobar los cambios, vuelve a ejecutar en una terminal:\n  ${command}\nO revísalos primero y apruébalos sin preguntar:\n  ${command} --dry-run\n  ${command} --auto`,
     rollback: (id) => `Para restaurar los archivos anteriores:\ntonedial doctor --fix --rollback ${id}`,
-    rollbackOrder: "Restaura primero las conexiones y después los archivos de la aplicación:",
+    rollbackOrder: "Restaura primero las conexiones y después los archivos de ToneDial:",
     noSnapshot: (id) => `${id}: no hay una instantánea válida para este directorio de estado`,
     quarantineCandidate: (id) => `ID de operación:\n${id}\nPara reconstruir, primero debes poner este registro en cuarentena; los bytes originales quedarán en el historial de reversión.`,
     quarantineQuestion: "Escribe el ID completo de arriba para ponerlo en cuarentena; Enter cancela:",
@@ -148,7 +148,7 @@ const messages: Messages = {
     quarantine: (id) => `Pon en cuarentena la operación ilegible ${id}; conserva sus bytes originales en el historial de reversión.`,
     quarantineComplete: (id) => `La operación ilegible ${id} quedó en cuarentena.`,
     quarantineRemaining: (count) => count === 1
-      ? "Queda 1 registro de operación ilegible. Ponlo en cuarentena antes de reparar la aplicación; los bytes originales quedarán en el historial de reversión."
+      ? "Queda 1 registro de operación ilegible. Ponlo en cuarentena antes de reparar los archivos de ToneDial; los bytes originales quedarán en el historial de reversión."
       : `Quedan ${count} registros de operación ilegibles. Pon el siguiente en cuarentena antes de continuar la recuperación.`,
     retire: (id) => `Archiva la operación detenida ${id} antes de reconstruir. Sus cambios externos no se certifican ni se deshacen.`,
     resumeOperation: (id) => `Operación detenida:\n${id}`,
@@ -331,8 +331,8 @@ const messages: Messages = {
   doctor: {
     connectionsHeading: "Conexiones",
     checksHeading: "Comprobaciones",
-    applicationHealth: (healthy) => `Aplicación: ${healthy ? "correcta" : "requiere atención"}`,
-    connectionHealth: (attention) => `Archivos de conexión: ${attention ? "requieren atención" : "sin problemas en este ámbito"}`,
+    applicationHealth: "Archivos de ToneDial: requieren atención",
+    connectionHealth: "Archivos de conexión: requieren atención",
     healthy: "No se encontraron problemas",
     wiredElsewhere: "Conexiones en otros ámbitos",
     folderConnections: (targets, command) => `Esta carpeta tiene sus propias conexiones (${targets.join(", ")}). Para revisarlas en lugar de las globales:\n${command}`,
@@ -500,7 +500,7 @@ const messages: Messages = {
       unsafe: "No se pueden leer los ajustes con seguridad. Comprueba los enlaces y los tipos de archivo.",
       changed: "Los ajustes cambiaron durante la inspección. Reintenta cuando terminen los cambios.",
       invalid: "Los ajustes guardados no son válidos.",
-      unreadable: "No se pudo leer el estado de la aplicación. Comprueba la ruta y los permisos.",
+      unreadable: "No se pudo leer el estado de ToneDial. Comprueba la ruta y los permisos.",
     },
     fetching: (registry) => `consultando · ${registry}`,
     found: (version, bytes) => `${version}, ${bytes.toLocaleString("es")} bytes`,
@@ -671,7 +671,7 @@ const messages: Messages = {
     legacyConsumers: (destinations) => `Otras conexiones, o conexiones sin registrar, siguen leyendo tone.md:\n${destinations.join("\n")}\nNo se escribió nada. Desconecta cada ámbito antes de repetir init y reconecta tras la transición.`,
     contextLayout: (kind, path, doctorCommand = "tonedial doctor --json", fixCommand = "tonedial doctor --fix") => kind === "fresh"
       ? `ToneDial aún no está configurado:\n${path}\nConfigúralo y vuelve a ejecutar este comando:\n  tonedial init --tools none --global`
-      : `Esta estructura ${kind} necesita recuperar la aplicación:\n${path}\nNo se escribió nada. Inspecciona el mismo ámbito con:\n${doctorCommand}\nConserva esta raíz. Para mantener los ajustes y reconstruir los archivos generados:\n${fixCommand}`,
+      : `Esta estructura ${kind} necesita recuperar los archivos de ToneDial:\n${path}\nNo se escribió nada. Inspecciona el mismo ámbito con:\n${doctorCommand}\nConserva esta raíz. Para mantener los ajustes y reconstruir los archivos generados:\n${fixCommand}`,
     unreadableConfigFile: (path, command) => `No se pueden leer ajustes válidos de:\n${path}\nConserva el original.` +
       `${command === null ? "" : `\nPara elegir un origen guardado o valores predeterminados declarados:\n  ${command}`}`,
     editConflict: (path) => `El original cambió mientras el editor estaba abierto. Tu copia se conserva en:\n${path}\nCompara los archivos antes de reintentar.`,
