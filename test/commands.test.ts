@@ -1144,6 +1144,20 @@ test("show refusing a preset name lists the ones it would have taken", async () 
   for (const { slug } of BUNDLED) assert.match(said, new RegExp(slug), `${slug} is missing from the list`);
 });
 
+test("a --project that is not a folder is reported by the command that uses it", async () => {
+  await initializeState();
+  mkdirSync(join(home, "project"), { recursive: true });
+  const file = join(home, "not-a-folder");
+  writeFileSync(file, "");
+  err = [];
+  assert.equal(await cli("test", "codex", "--dry-run", "--project", file), 1);
+  assert.ok(stderr().startsWith(EN.test.targetUnavailable(file).split("\n")[0]!), stderr());
+  err = [];
+  assert.equal(await cli("wire", "codex", "--project", file, "--auto"), 1);
+  assert.match(stderr(), /is not a directory/);
+  assert.doesNotMatch(stderr(), /\n\s+at /);
+});
+
 test("a misspelled preset is answered with the nearest slug as the same command", async () => {
   await initializeState();
   assert.equal(await cli("save", "My Tone"), 0, stderr());

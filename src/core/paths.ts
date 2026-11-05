@@ -165,6 +165,15 @@ export type AgentPaths = {
 
 // Scope selects the wiring destination, not another state root.
 // TONEDIAL_AGENT_HOME overrides either scope without granting sandbox isolation.
+/** A path that is not a folder stays as typed, for the command that uses it to report in its own words. */
+function realProjectRoot(path: string): string {
+  try {
+    return canonicalDestination(path);
+  } catch {
+    return path;
+  }
+}
+
 export function resolveAgentPaths(
   where: { global: boolean; project: string | null; here?: boolean },
   env: NodeJS.ProcessEnv = process.env,
@@ -185,7 +194,7 @@ export function resolveAgentPaths(
   // Resolved against the working directory, so `--project ../sibling` means what it reads as and
   // no downstream caller has to remember which paths are still relative. A symlink resolves to its
   // real folder, the same path `--here` gives from inside it, so one project has one spelling.
-  const root = override ?? (live ? userHome : where.project !== null ? canonicalDestination(resolve(cwd, where.project)) : cwd);
+  const root = override ?? (live ? userHome : where.project !== null ? realProjectRoot(resolve(cwd, where.project)) : cwd);
 
   const home = (tool: AgentTool) => tool === "antigravity" && where.global
     ? join(root, ".gemini", "config") : join(root, AGENT_LAYOUT[tool].dir);
