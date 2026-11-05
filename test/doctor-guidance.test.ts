@@ -219,6 +219,29 @@ test("doctor reports a project hook that duplicates the global one, in both scop
   }
 });
 
+test("doctor dims only status facts: the remaining step and the notice stay readable and commands stand out", async () => {
+  const DIM = "\x1b[2m";
+  const ACCENT = "\x1b[36m";
+  const WARN = "\x1b[33m";
+  env.COLUMNS = "140";
+  assert.equal((await human(["init", "--tools", "codex", "--here", "--auto"], project)).code, 0);
+  assert.equal((await human(["wire", "codex", "--global", "--auto"])).code, 0);
+  const lines = (await human(["doctor", "--global", "--color=always"])).out.split("\n");
+  const line = (text: string) => lines.find((candidate) => candidate.includes(text)) ?? assert.fail(`no line with ${text}`);
+
+  assert.ok(line("Connected · SessionStart").includes(DIM), "a status fact is dim");
+  assert.ok(!line("open /hooks → SessionStart").includes(DIM), "the step the user still has to take is not");
+  assert.ok(!line("both hooks are present").includes(DIM), "neither is the notice the headline counts");
+  assert.ok(line("tonedial unwire codex").includes(ACCENT), "a command the notice gives is accented");
+  assert.ok(line(project).includes(ACCENT), "so is the project path the notice names");
+
+  // A failed check is marked in the headline's colour, not in the colour of a command failure.
+  rmSync(join(home, ".codex", "hooks.json"));
+  const broken = (await human(["doctor", "--global", "--color=always"])).out.split("\n");
+  assert.ok(broken.find((candidate) => /\d+ problems?/.test(candidate))?.includes(WARN));
+  assert.ok(broken.some((candidate) => candidate.includes(`${WARN}!`) && candidate.includes("Codex CLI")), broken.join("\n"));
+});
+
 test("a project recorded on the global hook is not reported as a duplicate", async () => {
   assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
   await addLegacyRider(env, "codex", project);

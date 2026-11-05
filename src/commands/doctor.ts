@@ -29,7 +29,8 @@ import {
   type SeedState,
 } from "../core/seeds.ts";
 import { toCompileInput } from "../core/resolve.ts";
-import { artifactSize, claudeContextCap, humanText, nextStep, offNotice, receiptLines, recoveryRollbackLines, section } from "../ui/format.ts";
+import { artifactSize, claudeContextCap, humanText, isCopyableLine, nextStep, offNotice, receiptLines, recoveryRollbackLines, section } from "../ui/format.ts";
+import type { Paint } from "../ui/style.ts";
 import { wrap } from "../ui/width.ts";
 import { ApprovalRequired, applyRollback, assertFresh, planChange, previewRollback, type Change } from "../wiring/apply.ts";
 import { confirm } from "../ui/prompt.ts";
@@ -977,8 +978,8 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true): Promise<Comm
     `  ${ctx.ui.bold((appHealthy ? ctx.ui.success : ctx.ui.warn)(ctx.t.doctor.applicationHealth(appHealthy)))}`,
     // A healthy setup sends no tone while paused; that is the first thing to know.
     ...offNotice(config.enabled, ctx.t, ctx.ui),
-    ...(folder.length ? ["", ...receiptLines(ctx.t.doctor.folderConnections(folder.map(({ target }) => target), "tonedial doctor --here"),
-      ctx.ui.width - 2).map((line) => `  ${line}`)] : []),
+    ...(folder.length ? ["", ...paintLines(ctx.t.doctor.folderConnections(folder.map(({ target }) => target), "tonedial doctor --here"),
+      ctx.ui.width - 2, ctx).map((line) => `  ${line}`)] : []),
     ...(integrations.length || nativeAttention ? [
       ...section(ctx.t.doctor.connectionsHeading, ctx.ui),
       ...wrap(ctx.t.doctor.connectionHealth(nativeAttention), ctx.ui.width - 2).map((line) =>
@@ -1368,16 +1369,31 @@ function elsewhereReport(rows: Elsewhere[], ctx: Ctx): string[] {
   return lines;
 }
 
+/**
+ * A line that is a command or a path stays whole and takes the accent; prose wraps. The kind is
+ * decided before wrapping, because a wrapped continuation can begin with `tonedial `.
+ */
+function paintLines(text: string, width: number, ctx: Ctx, prose: Paint = (line) => line): string[] {
+  return text.split("\n").flatMap((line) => {
+    const shown = humanText(line);
+    return isCopyableLine(shown) ? [ctx.ui.accent(shown)] : wrap(shown, width).map(prose);
+  });
+}
+
 function report(check: Check, ctx: Ctx): string[] {
   const paint =
-    check.state === "problem" ? ctx.ui.error : check.state === "ok" ? ctx.ui.success : ctx.ui.dim;
+    check.state === "problem" ? ctx.ui.warn : check.state === "ok" ? ctx.ui.success : ctx.ui.dim;
   const head = `  ${paint(MARK[check.state])} ${ctx.ui.bold(humanText(checkHeading(check.name, ctx)))}`;
   // Keep the marker and check name together, then give every detail a stable four-cell hanging
   // indent. A fixed name column made a narrow doctor report spend most of its width on padding.
-  const body = (check.files?.length ? [] : [...(check.humanDetail ?? [check.detail]), ...(check.guidance ?? []), ...(check.notices ?? [])])
-    .flatMap(detail => detail.split("\n"))
-    .flatMap(line => receiptLines(humanText(line), ctx.ui.width - 6));
-  const lines = [head, ...body.map((line) => `    ${check.state === "ok" ? ctx.ui.dim(line) : line}`),
+  // Only the status facts of a healthy check recede; what the user still has to do, and any
+  // notice the headline counts, stays at normal weight.
+  const width = ctx.ui.width - 6;
+  const body = check.files?.length ? [] : [
+    ...(check.humanDetail ?? [check.detail]).flatMap((text) => paintLines(text, width, ctx, check.state === "ok" ? ctx.ui.dim : undefined)),
+    ...[...(check.guidance ?? []), ...(check.notices ?? [])].flatMap((text) => paintLines(text, width, ctx)),
+  ];
+  const lines = [head, ...body.map((line) => `    ${line}`),
     ...(check.verbatim ?? []).map((line) => `      ${humanText(line)}`)];
   if (check.files?.length) {
     lines.push(`    ${humanText(ctx.paths.root)}`);
