@@ -6,7 +6,7 @@ import { homedir } from "node:os";
 
 import { ConfigError, isConfigV2, type Config, type ConfigV2, type WiringScope } from "../core/config.ts";
 import type { Messages } from "../core/i18n.ts";
-import { AGENT_TOOLS, canonicalDestination, resolveAgentPaths, type AgentPaths, type AgentTool } from "../core/paths.ts";
+import { AGENT_TOOLS, canonicalDestination, canonicalResourcePath, resolveAgentPaths, type AgentPaths, type AgentTool } from "../core/paths.ts";
 import { registrationKey } from "./ownership.ts";
 
 /** A legacy record names its target only; its scope and directory stay unknown. */
@@ -121,6 +121,14 @@ function hookAccess(config: ConfigV2, id: string): string | null {
   return hook ? hook.accessPaths?.[id]?.path ?? hook.path : null;
 }
 
+function sameHook(path: string | null, hookFile: string): boolean {
+  try {
+    return path !== null && canonicalResourcePath(path) === canonicalResourcePath(hookFile);
+  } catch {
+    return false;
+  }
+}
+
 /** This home's global destination, whatever `TONEDIAL_AGENT_HOME` redirects. */
 function globalAgent(env: NodeJS.ProcessEnv, cwd: string): AgentPaths {
   return resolveAgentPaths({ global: true, project: null }, { ...env, TONEDIAL_AGENT_HOME: undefined }, cwd);
@@ -138,7 +146,7 @@ export function globalCover(config: Config, agent: AgentPaths, tool: AgentTool, 
   if (agent.live || !isConfigV2(config)) return null;
   const global = globalAgent(env, agent.root);
   const own = hookAccess(config, registrationKey(tool, "project", canonicalDestination(agent.root)));
-  if (own === global.hookFile(tool)) return own;
+  if (sameHook(own, global.hookFile(tool))) return own;
   const cover = hookAccess(config, registrationKey(tool, "global", canonicalDestination(global.root)));
   return own === null ? cover : null;
 }
@@ -148,5 +156,5 @@ export function riders(config: Config, tool: AgentTool, env: NodeJS.ProcessEnv, 
   if (!isConfigV2(config)) return [];
   const hookFile = globalAgent(env, cwd).hookFile(tool);
   return connections(config).filter((connection) => connection.target === tool && connection.scope === "project" &&
-    hookAccess(config, registrationKey(tool, "project", connection.destination!)) === hookFile);
+    sameHook(hookAccess(config, registrationKey(tool, "project", connection.destination!)), hookFile));
 }

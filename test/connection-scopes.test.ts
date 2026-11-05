@@ -760,7 +760,7 @@ test("a state root under a regular file refuses a disconnect in one line, not a 
   }
 });
 
-test("a global connection is removed when the home is spelled differently than when it was made", async () => {
+test("a global connection and its legacy riders are removed when the home spelling changes", async () => {
   // Only the agent files move with the home, so the state root stays put between the two spellings.
   const real = join(scratch, "real-parent", "home");
   mkdirSync(real, { recursive: true });
@@ -770,10 +770,19 @@ test("a global connection is removed when the home is spelled differently than w
     env.HOME = wired;
     const wire = await invoke(["init", "--global", "--tools", "codex", "--auto"]);
     assert.equal(wire.code, 0, JSON.stringify(wire.value));
+    await addLegacyRider(env, "codex", project);
+    recordThroughAlias(env, real, wired!);
     assert.equal(existsSync(join(real, ".agents", "skills", "tonedial")), true);
     env.HOME = unwired;
+    const covered = await invoke(["wire", "codex", "--here", "--auto"]);
+    assert.equal(covered.code, 0, JSON.stringify(covered.value));
+    assert.equal(covered.value.tools[0].covered, true, "the legacy rider still uses the global hook");
     const unwire = await invoke(["unwire", "codex", "--global", "--auto"]);
     assert.equal(unwire.code, 0, `${wired} then ${unwired}: ${JSON.stringify(unwire.value)}`);
+    assert.deepEqual(unwire.value.alsoDisconnected, [{ target: "codex", scope: "project", destination: project }]);
+    assert.equal(existsSync(join(real, ".codex", "hooks.json")), false);
     assert.equal(existsSync(join(real, ".agents", "skills", "tonedial")), false);
+    assert.deepEqual(readdirSync(project), [], "the rider's skill link goes with it");
+    assert.deepEqual((await invoke(["show"])).value.connections, []);
   }
 });
