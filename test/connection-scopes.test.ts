@@ -337,6 +337,18 @@ test("an init preview prints the project's root once, in its introduction", asyn
   const preview = await human(["init", "--here", "--tools", "codex", "--dry-run"]);
   assert.equal(preview.output.split(root).length - 1, 1, preview.output);
   assert.match(preview.output, /^ {2}Project files\n {4}\.codex\/hooks\.json {2}\(new file\)$/m);
+  assert.equal((await invoke(["init", "--global", "--tools", "none", "--auto"])).code, 0);
+  const existing = await human(["init", "--here", "--tools", "codex", "--dry-run"]);
+  assert.equal(existing.code, 0, existing.errors);
+  assert.equal(existing.output.split(root).length - 1, 1, existing.output);
+  assert.match(existing.output, /^ {2}Project files\n {4}\.codex\/hooks\.json {2}\(new file\)$/m);
+  const verbose = await human(["init", "--here", "--tools", "codex", "--dry-run", "--verbose"]);
+  assert.equal(verbose.output.split(root).length - 1, 2, verbose.output);
+  assert.ok(verbose.output.includes(`  Project files\n  ${root}\n`), verbose.output);
+  assert.equal((await human(["init", "--here", "--tools", "codex", "--auto"])).code, 0);
+  const again = await human(["init", "--here", "--tools", "codex", "--auto"]);
+  assert.equal(again.code, 0, again.errors);
+  assert.ok(again.output.includes(`  ${root}\n`), again.output);
 });
 
 test("a connection preview prints the scope's root once, in the introduction, and lists its files by heading", async () => {

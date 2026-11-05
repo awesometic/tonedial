@@ -300,7 +300,7 @@ async function rebuildExisting(entry: Ctx): Promise<CommandResult> {
   if (selection === null && (entry.flags.auto || !entry.canPrompt)) throw new ToolsRequired(entry.t);
   const language = chooseLanguage(entry);
   const copy = catalogue(language);
-  const ctx: Ctx = { ...entry, t: copy.cli };
+  const ctx: Ctx = { ...entry, t: copy.cli, scopeShown: !entry.flags.verbose };
   if (ctx.flags.commands && selection !== null && !selection.includes("claude")) throw new ConfigError(ctx.t.errors.commandsNeedClaude);
   const introduction = scopeIntroduction(ctx);
   if (ctx.canPrompt) process.stdout.write(`${introduction.join("\n")}\n`);
