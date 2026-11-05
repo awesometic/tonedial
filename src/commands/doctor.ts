@@ -983,8 +983,9 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true): Promise<Comm
       // Agents that are simply not connected are grouped into one row and are not a notice.
       findings.filter((check) => check.state === "note" && check.detail !== ctx.t.doctor.hookNotConnected).length +
       integrations.reduce((count, integration) => count + integration.duplicates.length, 0) + (folder.length ? 1 : 0) +
-      // A settings file that could not be inspected has no check of its own to count.
-      (inspectionFailure ? 1 : 0)),
+      // A settings file that could not be inspected has no check of its own when its agent is not
+      // connected. A problem already says the headline's part, and the file is named below it.
+      (inspectionFailure && !findings.some((check) => check.state === "problem") ? 1 : 0)),
     // One health statement: the headline. A row follows it only when there is something to fix.
     ...(appHealthy ? [] : [`  ${ctx.ui.bold(ctx.ui.warn(ctx.t.doctor.applicationHealth(false)))}`]),
     // A healthy setup sends no tone while paused; that is the first thing to know.

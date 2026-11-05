@@ -295,6 +295,17 @@ test("an unconnected agent's unreadable settings file is named, and nothing is c
   assert.equal(machine.value.healthy, true, "a notice is not a problem");
 });
 
+test("an unreadable settings file that is already a problem is not counted again as a notice", async () => {
+  assert.equal((await human(["init", "--tools", "none", "--global", "--auto"])).code, 0);
+  writeFileSync(join(home, ".codex", "hooks.json"), "{ not json");
+  mkdirSync(join(scratch, "bin"));
+  writeFileSync(join(scratch, "bin", "tonedial"), "#!/bin/sh\n", { mode: 0o755 });
+  env.PATH = join(scratch, "bin");
+  const lines = (await human(["doctor", "--global"])).out.split("\n").map((line) => line.trim());
+  assert.ok(lines.includes("1 problem"), lines.join("\n"));
+  assert.ok(lines.includes(join(home, ".codex", "hooks.json")), "the file is still named");
+});
+
 test("a project recorded on the global hook is not reported as a duplicate", async () => {
   assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
   await addLegacyRider(env, "codex", project);
