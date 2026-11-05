@@ -7,7 +7,6 @@ const role = (self_ref: string, user_ref: string, user: string, agent: string): 
 const messages: Messages = {
   test: {
     missingConfig: "ToneDialはまだ初期設定されていません。初期設定してから、このコマンドを再実行してください：\n  tonedial init --tools none --global",
-    invalidConfig: "保存済み設定を安全に読み取れません。復旧方法を選ぶ前に tonedial doctor --json を実行してください。",
     unsupportedProvider: (provider) => `${provider}: 会話プレビューは claude または codex に対応しています。`,
     noProvider: "PATHにClaude CodeもCodexも見つかりません。",
     providerRequired: "プロバイダーを明示的に選択してください：tonedial test claude または tonedial test codex。",
@@ -675,8 +674,8 @@ const messages: Messages = {
     contextLayout: (kind, path, doctorCommand = "tonedial doctor --json") => kind === "fresh"
       ? `ToneDialはまだ初期設定されていません：\n${path}\n初期設定してから、このコマンドを再実行してください：\n  tonedial init --tools none --global`
       : `${kind} 構成のアプリ復旧が必要です：\n${path}\n書き込みはしていません。同じ範囲を確認：\n${doctorCommand}\nこのルートを保持し、tonedial doctor --fix で保存設定を保護して生成ファイルを再構築してください。`,
-    unreadableConfigFile: (path) => `有効な設定を読み取れません：\n${path}\n原本を保持し、tonedial doctor --fix で保存元か明示された既定値を選んでください。`,
-    fixUnreadableConfig: (path) => `設定には復旧元が必要です：\n${path}\n書き込みはしていません。tonedial doctor --fix を対話的に実行するか --from-operation ID または --from-preset SLUG を指定してください。`,
+    unreadableConfigFile: (path, command) => `有効な設定を読み取れません：\n${path}\n原本は保持してください。` +
+      `${command === null ? "" : `\n保存元か明示された既定値を選ぶには：\n  ${command}`}`,
     editConflict: (path) => `エディターを開いている間に原本が変更されました。編集コピーはここに保持しました：\n${path}\n比較してから再試行してください。`,
     traitsNotOnDisk:
       "編集用の軸ファイルはありません。基準文はパッケージに組み込まれており、ホームには書き出しません。" +

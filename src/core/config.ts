@@ -220,6 +220,20 @@ export class ToolsRequired extends ConfigError {
 }
 
 /**
+ * Saved settings that cannot be read. The CLI names the `doctor --fix` of the scope it ran in,
+ * which the commands that read settings do not know; `message` is the parser's own reason.
+ */
+export class SettingsUnreadable extends ConfigError {
+  readonly t: Messages;
+  readonly path: string;
+  constructor(message: string, path: string, t: Messages, cause: unknown) {
+    super(message, { cause, reason: "settings-unreadable" });
+    this.t = t;
+    this.path = path;
+  }
+}
+
+/**
  * A preset slug nothing matches. The nearest slug is offered as the caller's own command, which
  * only the CLI can word, since it knows the invocation. `suggestable` narrows what may be offered
  * (`edit` cannot open a bundled preset).

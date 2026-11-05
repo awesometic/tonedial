@@ -1212,6 +1212,31 @@ test("a malformed config is refused by field rather than silently defaulted", as
   }
 });
 
+test("unreadable settings name the doctor --fix of the scope the command ran in, on a line of its own", async () => {
+  await initializeState();
+  writeFileSync(paths().config, "{ broken");
+  // A connection command keeps its own scope; every other command falls back to global.
+  for (const [argv, scope] of [
+    [["show"], "--global"], [["set", "warmth=2"], "--global"], [["test", "codex", "--dry-run"], "--global"],
+    [["wire", "codex", "--here"], "--here"], [["compile"], "--global"],
+  ] as const) {
+    err = [];
+    assert.equal(await cli(...argv), 1, argv.join(" "));
+    assert.equal(stderr().trimEnd().split("\n").at(-1), `  tonedial doctor --fix ${scope}`, argv.join(" "));
+    out = [];
+    assert.equal(await cli(...argv, "--json"), 1, argv.join(" "));
+    const refusal = JSON.parse(stdout());
+    assert.equal(refusal.reason, "settings-unreadable", argv.join(" "));
+    assert.deepEqual(refusal.commands, [`tonedial doctor --fix ${scope}`], argv.join(" "));
+  }
+  // Inside doctor the command is the check's repair, not a sentence in its detail.
+  out = [];
+  assert.equal(await cli("doctor", "--global", "--json"), 0, stderr());
+  const check = JSON.parse(stdout()).checks.find((entry: { name: string }) => entry.name === "context");
+  assert.equal(check.repair, "tonedial doctor --fix --global");
+  assert.doesNotMatch(check.detail, /doctor --fix/);
+});
+
 test("a name that is not a command is refused, including one the prototype answers for", async () => {
   // `COMMANDS` is an object literal, so a truthiness check on `COMMANDS[name]` accepts every
   // `Object.prototype` member. `tonedial toString` got past that guard and died on

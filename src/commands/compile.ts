@@ -3,7 +3,7 @@
 import type { CommandResult, Ctx } from "../cli.ts";
 import { lstatSync } from "node:fs";
 import { compile, measure, type SizeReport } from "../core/compile.ts";
-import { ConfigError, defaultConfig, isConfigV2, parseConfig, type Config } from "../core/config.ts";
+import { ConfigError, SettingsUnreadable, defaultConfig, isConfigV2, parseConfig, type Config } from "../core/config.ts";
 import { toCompileInput } from "../core/resolve.ts";
 import { contextArtifactTargets, GUIDE_MD } from "../core/seeds.ts";
 import { claudeContextCap, humanText, nextStep, num } from "../ui/format.ts";
@@ -26,8 +26,8 @@ export function planConfig(ctx: Ctx): { change: Change; config: Config } {
     const config = change.before === null ? defaultConfig() : parseConfig(change.before, ctx.t);
     return { change, config };
   } catch (cause) {
-    // The parser names the bad field; the recovery route is what the user can act on.
-    if (cause instanceof ConfigError) throw new ConfigError(`${cause.message}\n${ctx.t.errors.unreadableConfigFile(ctx.paths.config)}`, { cause });
+    // The parser names the bad field; the CLI adds the recovery route the user can act on.
+    if (cause instanceof ConfigError) throw new SettingsUnreadable(cause.message, ctx.paths.config, ctx.t, cause);
     throw cause;
   }
 }

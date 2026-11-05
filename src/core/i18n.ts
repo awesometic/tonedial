@@ -90,7 +90,6 @@ export type Catalogue = {
 export type Messages = {
   test: {
     missingConfig: string;
-    invalidConfig: string;
     unsupportedProvider: (provider: string) => string;
     noProvider: string;
     providerRequired: string;
@@ -647,9 +646,8 @@ export type Messages = {
     stateInstructionOverlap: (path: string) => string;
     contextLayout: (kind: "fresh" | "current" | "legacy" | "conflict", path: string, doctorCommand?: string) => string;
     /** The config is there and could not be read back. Never carries the file's own bytes. */
-    unreadableConfigFile: (path: string) => string;
+    unreadableConfigFile: (path: string, command: string | null) => string;
     /** The same refusal on `doctor --fix`, which repairs nothing and writes nothing. */
-    fixUnreadableConfig: (path: string) => string;
     legacyConsumers: (destinations: readonly string[]) => string;
     editConflict: (path: string) => string;
     editNotApplied: (path: string, reason: string) => string;
@@ -703,7 +701,6 @@ export type Messages = {
 const enMessages: Messages = {
   test: {
     missingConfig: "ToneDial is not set up yet. Set it up, then rerun this command:\n  tonedial init --tools none --global",
-    invalidConfig: "Saved settings cannot be read safely. Run tonedial doctor --json before choosing recovery.",
     unsupportedProvider: (provider) => `${provider}: conversation preview supports claude or codex.`,
     noProvider: "Neither Claude Code nor Codex is installed on PATH.",
     providerRequired: "Choose a provider explicitly: tonedial test claude or tonedial test codex.",
@@ -1380,8 +1377,8 @@ const enMessages: Messages = {
     contextLayout: (kind, path, doctorCommand = "tonedial doctor --json") => kind === "fresh"
       ? `ToneDial is not set up yet:\n${path}\nSet it up, then rerun this command:\n  tonedial init --tools none --global`
       : `ToneDial needs application recovery for this ${kind} layout:\n${path}\nNothing was written. Inspect the same scope with:\n${doctorCommand}\nKeep this root and run tonedial doctor --fix to preserve saved settings and rebuild generated files.`,
-    unreadableConfigFile: (path) => `Cannot read valid settings from:\n${path}\nKeep the original and run tonedial doctor --fix to choose a saved source or disclosed defaults.`,
-    fixUnreadableConfig: (path) => `Settings need a recovery source:\n${path}\nNothing was written. Run tonedial doctor --fix interactively or select --from-operation ID or --from-preset SLUG.`,
+    unreadableConfigFile: (path, command) => `Cannot read valid settings from:\n${path}\nKeep the original.` +
+      `${command === null ? "" : `\nTo choose a saved source or disclosed defaults:\n  ${command}`}`,
     editConflict: (path) => `The original file changed while the editor was open. Your edited copy is preserved here:\n${path}\nCompare the files before trying again.`,
     traitsNotOnDisk:
       "There are no trait files to edit. Anchors are compiled into the package, not written to " +
@@ -1511,7 +1508,6 @@ const en: Catalogue = {
 const koMessages: Messages = {
   test: {
     missingConfig: "ToneDial 초기 설정이 아직 없습니다. 초기 설정 후 이 명령을 다시 실행해 주세요:\n  tonedial init --tools none --global",
-    invalidConfig: "저장된 설정을 안전하게 읽을 수 없습니다. tonedial doctor --json으로 확인한 뒤 복구 방법을 골라 주세요.",
     unsupportedProvider: (provider) => `${provider}: 대화 미리보기는 claude 또는 codex로 실행해 주세요.`,
     noProvider: "PATH에서 Claude Code나 Codex를 찾지 못했습니다.",
     providerRequired: "사용할 에이전트를 선택해 주세요: tonedial test claude 또는 tonedial test codex.",
@@ -2191,8 +2187,8 @@ const koMessages: Messages = {
     contextLayout: (kind, path, doctorCommand = "tonedial doctor --json") => kind === "fresh"
       ? `ToneDial 초기 설정이 아직 없습니다:\n${path}\n초기 설정 후 이 명령을 다시 실행해 주세요:\n  tonedial init --tools none --global`
       : `이 구성은 앱 복구가 필요합니다 (${kind}):\n${path}\n아무것도 쓰지 않았습니다. 같은 범위를 확인하려면 실행하세요:\n${doctorCommand}\n이 경로를 유지하고 tonedial doctor --fix를 실행하세요. 저장된 설정을 보존하고 앱 생성 파일을 다시 준비합니다.`,
-    unreadableConfigFile: (path) => `이 파일에서 올바른 설정을 읽지 못했습니다:\n${path}\n원본을 보존하고 tonedial doctor --fix에서 저장된 원본이나 안내한 기본값을 선택하세요.`,
-    fixUnreadableConfig: (path) => `설정을 복구할 원본이 필요합니다:\n${path}\n아무것도 쓰지 않았습니다. 터미널에서 tonedial doctor --fix를 실행하거나 --from-operation ID 또는 --from-preset SLUG를 선택하세요.`,
+    unreadableConfigFile: (path, command) => `이 파일에서 올바른 설정을 읽지 못했습니다:\n${path}\n원본은 그대로 두세요.` +
+      `${command === null ? "" : `\n저장된 원본이나 안내한 기본값을 고르려면:\n  ${command}`}`,
     editConflict: (path) => `편집기가 열린 동안 원본 파일이 바뀌었습니다. 편집한 사본은 여기에 보존했습니다:\n${path}\n두 파일을 비교한 뒤 다시 시도해 주세요.`,
     traitsNotOnDisk:
       "편집할 트레이트 파일이 없습니다. 앵커는 패키지에 들어 있으며 홈에는 쓰지 않습니다. " +

@@ -2,7 +2,7 @@
 
 import { parseArgs } from "node:util";
 
-import { ConfigError, OwnershipConflict, PresetNotFound, SETTING_KEYS, ToolsRequired, isConfigV2, nearest } from "./core/config.ts";
+import { ConfigError, OwnershipConflict, PresetNotFound, SETTING_KEYS, SettingsUnreadable, ToolsRequired, isConfigV2, nearest } from "./core/config.ts";
 import { AXIS_ORDER } from "./core/anchors.ts";
 import { compile } from "./core/compile.ts";
 import { toCompileInput } from "./core/resolve.ts";
@@ -726,6 +726,12 @@ export async function run(
       const here = projectIsHome(resolveAgentPaths({ global: false, project: null, here: true }, env, cwd), env);
       const commands = (here ? ["--global"] : ["--global", "--here"]).map((scope) => `${rerunCommand(name, rest, flags, scope)} --auto`);
       return fail(asJson, cause.t.errors.scopeRequired(commands), 1, uiErr, { reason: cause.reason, commands });
+    }
+    if (cause instanceof SettingsUnreadable && ctx !== null) {
+      // The scope a plain `doctor` from here inspects: the command's own, or global.
+      const command = `tonedial doctor --fix ${CONNECTION_COMMANDS.includes(name) ? connectionScopeFlag(ctx.agent, cwd) : "--global"}`;
+      return fail(asJson, `${cause.message}\n${cause.t.errors.unreadableConfigFile(cause.path, command)}`, 1, uiErr,
+        { reason: cause.reason, commands: [command] });
     }
     if (cause instanceof ToolsRequired && ctx !== null) {
       // This invocation with each way of choosing agents. `--commands` needs claude, so it is not carried.

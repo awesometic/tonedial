@@ -720,7 +720,8 @@ in a terminal, or previewed with `--dry-run` and then approved with `--auto`.
 JSON reports `native.reason: "approval-required"`.
 Rebuild replaces generated files while preserving valid settings, unsaved profile changes and custom profiles.
 Healthy profiles remain listable/exportable with damaged config; one bad profile does not hide others.
-Other commands that read damaged config, `show` and `get` included, name the file and the `doctor --fix` that recovers it.
+Other commands that read damaged config, `show` and `get` included, name the file and the `doctor --fix` that recovers it, with the scope of the command that failed (global for commands that have none), on a line of its own.
+JSON reports it as `reason: "settings-unreadable"` with that command in `commands`.
 Flat user presets stay readable; conflicts receive a reported recovered copy without overwriting originals.
 
 After a failed repair, the error identifies the phase, affected path when known, safe error code and operation ID.
@@ -835,7 +836,7 @@ Ordinary changes compile automatically; `compile --check --json` also supplies r
 | Machine contract | Behavior |
 |---|---|
 | Envelope | Every command accepts `--json`; integer `schema: 3`, including version/errors |
-| Refusals | `ok: false` with the message in `error`; a named refusal adds a stable `reason` (`scope-required`, `home-directory`, `tools-required`, `approval-required`, `ownership-conflict`, `recovery-pending`) and the `commands` it prints |
+| Refusals | `ok: false` with the message in `error`; a named refusal adds a stable `reason` (`scope-required`, `home-directory`, `tools-required`, `approval-required`, `ownership-conflict`, `recovery-pending`, `settings-unreadable`) and the `commands` it prints |
 | Delivery state | `get`, `show`, `compile --check`, `on` and `off` report boolean `enabled` |
 | Stored schemas | Config 2; preset 2 with legacy 1 support; operation formats separate |
 | Streams | JSON stdout has no terminal escapes or ToneDial prompts/provider handoff |

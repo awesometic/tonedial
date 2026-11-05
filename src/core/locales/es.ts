@@ -7,7 +7,6 @@ const role = (self_ref: string, user_ref: string, user: string, agent: string): 
 const messages: Messages = {
   test: {
     missingConfig: "ToneDial aún no está configurado. Configúralo y vuelve a ejecutar este comando:\n  tonedial init --tools none --global",
-    invalidConfig: "No se pueden leer los ajustes guardados con seguridad. Ejecuta tonedial doctor --json antes de elegir cómo recuperarlos.",
     unsupportedProvider: (provider) => `${provider}: la vista previa de conversación admite claude o codex.`,
     noProvider: "No se encontró Claude Code ni Codex en PATH.",
     providerRequired: "Elige un proveedor: tonedial test claude o tonedial test codex.",
@@ -675,8 +674,8 @@ const messages: Messages = {
     contextLayout: (kind, path, doctorCommand = "tonedial doctor --json") => kind === "fresh"
       ? `ToneDial aún no está configurado:\n${path}\nConfigúralo y vuelve a ejecutar este comando:\n  tonedial init --tools none --global`
       : `Esta estructura ${kind} necesita recuperar la aplicación:\n${path}\nNo se escribió nada. Inspecciona el mismo ámbito con:\n${doctorCommand}\nConserva esta raíz y ejecuta tonedial doctor --fix para mantener los ajustes y reconstruir los archivos generados.`,
-    unreadableConfigFile: (path) => `No se pueden leer ajustes válidos de:\n${path}\nConserva el original y usa tonedial doctor --fix para elegir un origen guardado o valores predeterminados declarados.`,
-    fixUnreadableConfig: (path) => `Los ajustes necesitan un origen de recuperación:\n${path}\nNo se escribió nada. Ejecuta tonedial doctor --fix de forma interactiva o elige --from-operation ID o --from-preset SLUG.`,
+    unreadableConfigFile: (path, command) => `No se pueden leer ajustes válidos de:\n${path}\nConserva el original.` +
+      `${command === null ? "" : `\nPara elegir un origen guardado o valores predeterminados declarados:\n  ${command}`}`,
     editConflict: (path) => `El original cambió mientras el editor estaba abierto. Tu copia se conserva en:\n${path}\nCompara los archivos antes de reintentar.`,
     traitsNotOnDisk:
       "No hay archivos de rasgos que editar. Los criterios se incluyen en el paquete, no se escriben en " +

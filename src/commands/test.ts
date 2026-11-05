@@ -62,13 +62,7 @@ export async function runTest(ctx: Ctx, args: string[]): Promise<CommandResult> 
   try { targetIsDirectory = statSync(target).isDirectory(); } catch { /* Report the bounded path error below. */ }
   if (!targetIsDirectory) throw new ConfigError(copy.targetUnavailable(displayTarget));
 
-  let saved: ReturnType<typeof planConfig>;
-  try { saved = planConfig(ctx); }
-  catch (cause) {
-    if (!(cause instanceof ConfigError)) throw cause;
-    throw new ConfigError(copy.invalidConfig, { cause });
-  }
-  const { change, config } = saved;
+  const { change, config } = planConfig(ctx);
   if (change.before === null) throw new ConfigError(copy.missingConfig);
   let input = toCompileInput(config);
   let preview: Preset | null = null;

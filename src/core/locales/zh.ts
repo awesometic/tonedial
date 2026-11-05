@@ -7,7 +7,6 @@ const role = (self_ref: string, user_ref: string, user: string, agent: string): 
 const messages: Messages = {
   test: {
     missingConfig: "ToneDial 尚未初始化。请先完成初始化，然后重新运行此命令：\n  tonedial init --tools none --global",
-    invalidConfig: "无法安全读取已保存的设置。选择恢复方式前，请运行 tonedial doctor --json。",
     unsupportedProvider: (provider) => `${provider}：对话预览支持 claude 或 codex。`,
     noProvider: "PATH 中未找到 Claude Code 或 Codex。",
     providerRequired: "请明确选择：tonedial test claude 或 tonedial test codex。",
@@ -675,8 +674,8 @@ const messages: Messages = {
     contextLayout: (kind, path, doctorCommand = "tonedial doctor --json") => kind === "fresh"
       ? `ToneDial 尚未初始化：\n${path}\n请先完成初始化，然后重新运行此命令：\n  tonedial init --tools none --global`
       : `此 ${kind} 布局需要应用恢复：\n${path}\n未写入任何内容。检查同一范围：\n${doctorCommand}\n请保留此根目录，运行 tonedial doctor --fix 保留设置并重建生成文件。`,
-    unreadableConfigFile: (path) => `无法读取有效设置：\n${path}\n请保留原文件，运行 tonedial doctor --fix 选择已保存来源或明确列出的默认值。`,
-    fixUnreadableConfig: (path) => `设置需要恢复来源：\n${path}\n未写入任何内容。请交互运行 tonedial doctor --fix，或选择 --from-operation ID 或 --from-preset SLUG。`,
+    unreadableConfigFile: (path, command) => `无法读取有效设置：\n${path}\n请保留原文件。` +
+      `${command === null ? "" : `\n若要选择已保存来源或明确列出的默认值：\n  ${command}`}`,
     editConflict: (path) => `编辑器打开期间原文件发生变化。编辑副本保留于：\n${path}\n请比较文件后重试。`,
     traitsNotOnDisk:
       "没有可编辑的特征文件。基准文编译在包内，不写入主目录。" +

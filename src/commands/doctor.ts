@@ -632,7 +632,8 @@ function contextCheck(ctx: Ctx, diagnosis: ContextDiagnosis): Check {
     return {
       name: "context",
       state: "problem",
-      detail: ctx.t.errors.unreadableConfigFile(ctx.paths.config),
+      detail: ctx.t.errors.unreadableConfigFile(ctx.paths.config, null),
+      repair: repairCommand(ctx, "doctor --fix"),
     };
   }
   const { kind, cause } = diagnosis.layout;
