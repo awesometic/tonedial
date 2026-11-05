@@ -12,7 +12,7 @@ import { ConfigError, defaultConfig, isConfigV2, parseConfig, type Config, type 
 import { inspectOperations, inspectRollback } from "../core/operations.ts";
 import { join, relative } from "node:path";
 
-import { AGENT_TOOLS, CONTEXT_ARTIFACT_FILENAME, CONTEXT_GUIDE_FILENAME, UPDATE_COMMAND, connectionScopeFlag, onPath, readerPath, resolveAgentPaths, shimScript, installShape, type AgentTool, type InstallShape, type Paths, canonicalDestination, shellQuote} from "../core/paths.ts";
+import { AGENT_TOOLS, CONTEXT_ARTIFACT_FILENAME, CONTEXT_GUIDE_FILENAME, UPDATE_COMMAND, connectionScopeFlag, onPath, readerPath, resolveAgentPaths, shimScript, installShape, type AgentTool, type InstallShape, type Paths, canonicalDestination, canonicalResourcePath, shellQuote} from "../core/paths.ts";
 import { SKILL_NAME } from "../core/skill.ts";
 import { GUIDE_FORMAT_MARKER } from "../core/reader.ts";
 import { DELIVERY_OFF_MARKER } from "../core/anchors.ts";
@@ -346,7 +346,16 @@ function nativeRoute(ctx: Ctx, config: Config, tool: AgentTool): NativeRoute | n
   if (!requestedPair && !inherited) return null;
   const defaultPath = sourceAgent.hookFile(tool);
   const path = resource?.accessPaths?.[sourceId]?.path ?? resource?.path ?? defaultPath;
-  if (!ctx.agent.live && path !== ctx.agent.hookFile(tool)) inherited = true;
+  // The same file is spelled differently when a symlinked parent is on one path and not the other.
+  // A path that cannot be resolved keeps the spelling's answer; reading it reports why.
+  const own = ctx.agent.hookFile(tool);
+  if (!ctx.agent.live && !inherited && path !== own) {
+    try {
+      inherited = canonicalResourcePath(path) !== canonicalResourcePath(own);
+    } catch {
+      inherited = true;
+    }
+  }
   return {
     tool,
     sourceId,

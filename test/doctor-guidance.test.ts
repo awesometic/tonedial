@@ -3,7 +3,7 @@
 
 import assert from "node:assert/strict";
 import { afterEach, beforeEach, test } from "node:test";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, renameSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { spawnSync } from "node:child_process";
 import { dirname, join } from "node:path";
@@ -548,4 +548,58 @@ test("show and get with unreadable settings name doctor, as set does", async () 
     assert.match((await json(args)).value.error, /tonedial doctor --fix/);
   }
   assert.equal(readFileSync(config, "utf8"), "{");
+});
+
+/** A project folder reached both physically and through a symlinked parent, with `init` done. */
+async function aliasedProject() {
+  const real = join(scratch, "real");
+  const physical = join(real, "app");
+  mkdirSync(physical, { recursive: true });
+  symlinkSync(real, join(scratch, "alias"));
+  assert.equal((await human(["init", "--tools", "none", "--global", "--auto"])).code, 0);
+  return { physical, aliased: join(scratch, "alias", "app") };
+}
+
+test("a project's own hook is its own under every spelling of the folder", async () => {
+  const { physical, aliased } = await aliasedProject();
+  for (const [wired, other] of [[aliased, physical], [physical, aliased]] as const) {
+    assert.equal((await human(["wire", "codex", "--project", wired, "--auto"])).code, 0);
+    for (const [args, cwd] of [[["doctor", "--here"], physical], [["doctor", "--project", physical], home],
+      [["doctor", "--project", aliased], home]] as const) {
+      const label = `wired through ${wired}: ${args.join(" ")}`;
+      const route = (await json([...args], cwd)).value.integrations.find((row: { tool: string }) => row.tool === "codex");
+      assert.equal(route.inherited, false, label);
+      const shown = block((await human([...args], cwd)).out, "Codex CLI").join(" ");
+      assert.match(shown, /Connected · SessionStart/, label);
+      assert.doesNotMatch(shown, /global/, label);
+    }
+    assert.equal((await human(["unwire", "codex", "--project", other, "--auto"])).code, 0);
+  }
+});
+
+test("doctor --fix leaves a project's hook as written, and a second run has nothing to do", async () => {
+  const { physical, aliased } = await aliasedProject();
+  assert.equal((await human(["wire", "codex", "--project", aliased, "--auto"])).code, 0);
+  const hook = join(physical, ".codex", "hooks.json");
+  const bytes = readFileSync(hook, "utf8");
+  for (const reason of ["written", "nothing"]) {
+    const fix = await json(["doctor", "--fix", "--project", physical, "--auto"]);
+    assert.equal(fix.code, 0);
+    // The first run only refreshes how the record spells the folder's skill link.
+    assert.equal(fix.value.native.reason, reason);
+    assert.equal(readFileSync(hook, "utf8"), bytes);
+  }
+});
+
+test("doctor reports an unreadable project hook under another spelling of the folder, with no stack trace", async () => {
+  const { physical, aliased } = await aliasedProject();
+  assert.equal((await human(["wire", "codex", "--project", aliased, "--auto"])).code, 0);
+  rmSync(join(physical, ".codex"), { recursive: true });
+  writeFileSync(join(physical, ".codex"), "a file where the hook folder was\n");
+  const shown = await human(["doctor", "--project", physical]);
+  assert.equal(shown.code, 0, shown.err);
+  assert.doesNotMatch(shown.err, /\n\s+at /);
+  assert.match(block(shown.out, "Codex CLI")[0]!, /^! Codex CLI$/, "reported as a finding, not a crash");
+  const check = (await json(["doctor", "--project", physical])).value.checks.find((row: { name: string }) => row.name === "Codex CLI");
+  assert.equal(check.state, "problem");
 });
