@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 import type { CommandResult, Ctx } from "../cli.ts";
-import { ConfigError } from "../core/config.ts";
+import { ConfigError, PresetNotFound } from "../core/config.ts";
 import { decodeUtf8, getBounded, urlIdentity } from "../core/net.ts";
 import { truncate } from "../ui/width.ts";
 import { humanText, nextStep } from "../ui/format.ts";
@@ -20,9 +20,7 @@ export function runExport(ctx: Ctx, args: string[]): CommandResult {
   const library = inspectPresetLibrary(ctx.paths.presets, ctx.t);
   const preset = resolvePreset(ctx.paths.presets, slug, ctx.t, library)?.preset;
   if (!preset) {
-    throw new ConfigError(
-      ctx.t.preset.unknown(slug, library.entries.map((entry) => entry.preset.slug)),
-    );
+    throw new PresetNotFound(ctx.t, slug, library.entries.map((entry) => entry.preset.slug));
   }
   const text = serializePreset(preset);
   return {

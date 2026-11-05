@@ -66,7 +66,8 @@ const messages: Messages = {
     activeConflict: (slug) => `${slug}: 適用中の定義が曖昧です。保存済みの軸は保持しました。tonedial doctor --fix で定義を選んでください。`,
     active: (name) => `${name} を適用中`,
     activeState: "適用中",
-    unknown: (slug, known) => `プリセット ${slug} が見つかりません。選択肢：${known.join(", ")}`,
+    unknown: (slug, known, suggestion) => `プリセット ${slug} が見つかりません。選択肢：${known.join(", ")}` +
+      (suggestion ? `\n${suggestion.slug} のことですか？\n  ${suggestion.command}` : ""),
     saved: (slug, count) => `${slug} を保存 · 既定値と異なる軸 ${count}個`,
     savedTarget: (slug) => `保存したプリセット：${slug}`,
     notApplied: "ライブラリに保存しました。現在の口調は変更していません。",

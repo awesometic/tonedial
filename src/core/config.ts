@@ -219,6 +219,25 @@ export class ToolsRequired extends ConfigError {
   }
 }
 
+/**
+ * A preset slug nothing matches. The nearest slug is offered as the caller's own command, which
+ * only the CLI can word, since it knows the invocation. `suggestable` narrows what may be offered
+ * (`edit` cannot open a bundled preset).
+ */
+export class PresetNotFound extends ConfigError {
+  readonly t: Messages;
+  readonly slug: string;
+  readonly known: string[];
+  readonly near: string | null;
+  constructor(t: Messages, slug: string, known: string[], suggestable: readonly string[] = known) {
+    super(t.preset.unknown(slug, known, null));
+    this.t = t;
+    this.slug = slug;
+    this.known = known;
+    this.near = nearest(slug, suggestable);
+  }
+}
+
 /** An object, and not an array — `typeof [] === "object"`, which let a JSON array through. */
 const isRecord = (v: unknown): v is Record<string, unknown> =>
   typeof v === "object" && v !== null && !Array.isArray(v);

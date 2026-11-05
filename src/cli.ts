@@ -2,7 +2,7 @@
 
 import { parseArgs } from "node:util";
 
-import { ConfigError, OwnershipConflict, SETTING_KEYS, ToolsRequired, isConfigV2, nearest } from "./core/config.ts";
+import { ConfigError, OwnershipConflict, PresetNotFound, SETTING_KEYS, ToolsRequired, isConfigV2, nearest } from "./core/config.ts";
 import { AXIS_ORDER } from "./core/anchors.ts";
 import { compile } from "./core/compile.ts";
 import { toCompileInput } from "./core/resolve.ts";
@@ -732,6 +732,15 @@ export async function run(
       const scope = connectionScopeFlag(ctx.agent, cwd);
       const commands = ["codex", "none"].map((tools) => rerunCommand(name, rest, { ...flags, tools, commands: false }, scope));
       return fail(asJson, cause.t.errors.toolsRequired(commands, flags.auto), 1, uiErr, { reason: cause.reason, commands });
+    }
+    if (cause instanceof PresetNotFound && ctx !== null) {
+      // The failed invocation with the nearest slug in place of the one typed: `show typo` is
+      // answered with `show`, and a dry run stays one. `test` carries the slug in --preset.
+      const near = cause.near;
+      const swapped = rest.map((arg, i) => near !== null && i === rest.lastIndexOf(cause.slug) ? near : arg);
+      const command = near === null ? null : `${rerunCommand(name, name === "test" ? rest : swapped,
+        name === "test" ? { ...flags, preset: near } : flags, null)}${flags.dryRun ? " --dry-run" : ""}`;
+      return fail(asJson, cause.t.preset.unknown(cause.slug, cause.known, near === null ? null : { slug: near, command: command! }), 1, uiErr);
     }
     if (cause instanceof ApprovalRequired && ctx?.rerun !== undefined) {
       const commands = [ctx.rerun, `${ctx.rerun} --dry-run`, `${ctx.rerun} --auto`];

@@ -898,6 +898,7 @@ async function everyLine(columns?: number, language = "en"): Promise<{ line: str
     ["nosuchcommand"],
     ["set", "verbosity=9"],
     ["use", "nosuchpreset"],
+    ["use", "bratty-kd"],
     ["set", "persona.address.user=x"],
     ["--color=maybe"],
     ["--badflag"],

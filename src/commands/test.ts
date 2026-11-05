@@ -11,7 +11,7 @@ import type { CommandResult, Ctx } from "../cli.ts";
 import { withPreset, inspectPresetLibrary, readDisplayName, resolvePreset, type Preset } from "../core/presets.ts";
 import { compile } from "../core/compile.ts";
 import { riskyAxes } from "../core/anchors.ts";
-import { ConfigError, isConfigV2, type Config } from "../core/config.ts";
+import { ConfigError, PresetNotFound, isConfigV2, type Config } from "../core/config.ts";
 import { AGENT_TOOLS, connectionScopeFlag, onPath, shellQuote } from "../core/paths.ts";
 import { toCompileInput } from "../core/resolve.ts";
 import { confirm, guardTerminal } from "../ui/prompt.ts";
@@ -76,7 +76,7 @@ export async function runTest(ctx: Ctx, args: string[]): Promise<CommandResult> 
     const library = inspectPresetLibrary(ctx.paths.presets, ctx.t);
     preview = resolvePreset(ctx.paths.presets, ctx.flags.preset, ctx.t, library)?.preset ?? null;
     if (preview === null) {
-      throw new ConfigError(ctx.t.preset.unknown(ctx.asJson ? ctx.flags.preset : humanText(ctx.flags.preset), library.entries.map((entry) => entry.preset.slug)));
+      throw new PresetNotFound(ctx.t, ctx.flags.preset, library.entries.map((entry) => entry.preset.slug));
     }
     input = toCompileInput(withPreset(config, preview));
   }

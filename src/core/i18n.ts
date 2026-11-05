@@ -152,7 +152,7 @@ export type Messages = {
     active: (name: string) => string;
     /** The state word beside a preset in `list`; `active` names the preset for `use`. */
     activeState: string;
-    unknown: (slug: string, known: string[]) => string;
+    unknown: (slug: string, known: string[], suggestion: { slug: string; command: string } | null) => string;
     saved: (slug: string, count: number) => string;
     savedTarget: (slug: string) => string;
     notApplied: string;
@@ -762,7 +762,8 @@ const enMessages: Messages = {
     activeConflict: (slug) => `${slug}: the active definition is ambiguous; saved axes were kept. Choose the definition during tonedial doctor --fix.`,
     active: (name) => `${name} active`,
     activeState: "active",
-    unknown: (slug, known) => `preset ${slug} not found. Available: ${known.join(", ")}`,
+    unknown: (slug, known, suggestion) => `preset ${slug} not found. Available: ${known.join(", ")}` +
+      (suggestion ? `\nDid you mean ${suggestion.slug}?\n  ${suggestion.command}` : ""),
     saved: (slug, count) => `${slug} saved · ${count} non-default axes`,
     savedTarget: (slug) => `Saved preset: ${slug}`,
     notApplied: "Saved to the library; current tone unchanged.",
@@ -1569,7 +1570,8 @@ const koMessages: Messages = {
     activeConflict: (slug) => `${slug}: 어떤 파일을 적용했는지 알 수 없어 저장된 축 값은 유지했습니다. tonedial doctor --fix에서 사용할 파일을 선택하세요.`,
     active: (name) => `${name} 적용됨`,
     activeState: "적용됨",
-    unknown: (slug, known) => `${slug}: 프리셋을 찾지 못했습니다. 사용 가능: ${known.join(", ")}`,
+    unknown: (slug, known, suggestion) => `${slug}: 프리셋을 찾지 못했습니다. 사용 가능: ${known.join(", ")}` +
+      (suggestion ? `\n비슷한 프리셋: ${suggestion.slug}\n  ${suggestion.command}` : ""),
     saved: (slug, count) => `${slug} 저장됨 · 기본값과 다른 축 ${count}개`,
     savedTarget: (slug) => `저장한 프리셋: ${slug}`,
     notApplied: "보관함에 저장했습니다. 현재 말투는 바꾸지 않았습니다.",

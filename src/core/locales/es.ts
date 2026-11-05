@@ -66,7 +66,8 @@ const messages: Messages = {
     activeConflict: (slug) => `${slug}: la definición activa es ambigua; se conservaron los ejes. Elige la definición con tonedial doctor --fix.`,
     active: (name) => `${name} activo`,
     activeState: "activo",
-    unknown: (slug, known) => `No se encontró el preajuste ${slug}. Disponibles: ${known.join(", ")}`,
+    unknown: (slug, known, suggestion) => `No se encontró el preajuste ${slug}. Disponibles: ${known.join(", ")}` +
+      (suggestion ? `\n¿Querías decir ${suggestion.slug}?\n  ${suggestion.command}` : ""),
     saved: (slug, count) => `${slug} guardado · ${count} ejes distintos del valor predeterminado`,
     savedTarget: (slug) => `Preajuste guardado: ${slug}`,
     notApplied: "Guardado en la biblioteca; el tono actual no cambia.",

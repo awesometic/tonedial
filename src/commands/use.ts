@@ -5,7 +5,7 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { riskyAxes } from "../core/anchors.ts";
 
-import { ConfigError, serializeConfig } from "../core/config.ts";
+import { ConfigError, PresetNotFound, serializeConfig } from "../core/config.ts";
 import { exportAliasesState, projectTonePath } from "../core/paths.ts";
 import { check as checkCombos } from "../core/combos.ts";
 import { withPreset, assertPresetSelection, inspectPresetLibrary, resolvePreset } from "../core/presets.ts";
@@ -26,7 +26,7 @@ export async function runUse(ctx: Ctx, args: string[]): Promise<CommandResult> {
   const library = inspectPresetLibrary(ctx.paths.presets, ctx.t);
   const known = library.entries.map((entry) => entry.preset.slug);
   const selected = resolvePreset(ctx.paths.presets, slug, ctx.t, library);
-  if (selected === null) throw new ConfigError(ctx.t.preset.unknown(slug, known));
+  if (selected === null) throw new PresetNotFound(ctx.t, slug, known);
   assertPresetSelection(selected, ctx.t);
   const preset = selected.preset;
   // The resolver's exact source and precedence reads remain bound through publication.

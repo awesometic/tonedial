@@ -7,7 +7,7 @@ import { stripVTControlCharacters } from "node:util";
 import type { CommandResult, Ctx } from "../cli.ts";
 import { AXIS_DEFAULT, AXIS_GROUP, AXIS_KIND, AXIS_RISK_FROM, riskyAxes } from "../core/anchors.ts";
 import { check as checkCombos, PERSONA_DESCRIPTION_MAX } from "../core/combos.ts";
-import { ConfigError, settingValues } from "../core/config.ts";
+import { PresetNotFound, settingValues } from "../core/config.ts";
 import { compile, measure } from "../core/compile.ts";
 import { withPreset, matchesPreset, inspectPresetLibrary, resolvePreset } from "../core/presets.ts";
 import { toCompileInput } from "../core/resolve.ts";
@@ -33,7 +33,7 @@ export function runShow(ctx: Ctx, args: string[]): CommandResult {
   // The real list, as every other call site passes: an empty one renders "Available:" with
   // nothing after it on a root that has all five bundled presets.
   if (slug && !preview) {
-    throw new ConfigError(ctx.t.preset.unknown(slug, library.entries.map((entry) => entry.preset.slug)));
+    throw new PresetNotFound(ctx.t, slug, library.entries.map((entry) => entry.preset.slug));
   }
   const shown = preview ? withPreset(config, preview) : config;
   const axes = shown.axes;

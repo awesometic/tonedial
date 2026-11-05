@@ -1144,6 +1144,39 @@ test("show refusing a preset name lists the ones it would have taken", async () 
   for (const { slug } of BUNDLED) assert.match(said, new RegExp(slug), `${slug} is missing from the list`);
 });
 
+test("a misspelled preset is answered with the nearest slug as the same command", async () => {
+  await initializeState();
+  assert.equal(await cli("save", "My Tone"), 0, stderr());
+  mkdirSync(join(home, "project"), { recursive: true });
+  // Each caller offers its own command with the slug swapped and its other options kept; a dry
+  // run stays one, and `test` carries the slug in --preset.
+  for (const [argv, offered] of [
+    [["use", "ego-swrod", "--project", "."], "tonedial use ego-sword --project ."],
+    [["use", "Ego Sword"], "tonedial use ego-sword"],
+    [["show", "ego-swrod", "--explain"], "tonedial show ego-sword --explain"],
+    [["export", "ego-swrod"], "tonedial export ego-sword"],
+    [["edit", "preset", "my-ton", "--dry-run"], "tonedial edit preset my-tone --dry-run"],
+    [["test", "codex", "--dry-run", "--preset", "ego-swrod"], "tonedial test codex --preset ego-sword --dry-run"],
+  ] as const) {
+    err = [];
+    assert.equal(await cli(...argv), 1, argv.join(" "));
+    const lines = stderr().trimEnd().split("\n");
+    assert.equal(lines.at(-1), `  ${offered}`, argv.join(" "));
+    assert.match(lines.at(-2)!, /^Did you mean (ego-sword|my-tone)\?$/, argv.join(" "));
+  }
+  // `edit` cannot open a bundled preset, so it never offers one; a far miss offers nothing.
+  for (const argv of [["edit", "preset", "ego-swrod"], ["use", "zzzzzzzzzzzz"]]) {
+    err = [];
+    assert.equal(await cli(...argv), 1, argv.join(" "));
+    assert.doesNotMatch(stderr(), /Did you mean|tonedial (use|edit)/, argv.join(" "));
+  }
+  out = [];
+  assert.equal(await cli("use", "ego-swrod", "--json"), 1);
+  const refusal = JSON.parse(stdout());
+  assert.match(refusal.error, /Did you mean ego-sword\?\n {2}tonedial use ego-sword$/);
+  assert.equal(refusal.reason, undefined, "the suggestion is prose, not a reason");
+});
+
 test("reset with no argument clears the axes and leaves persona and safeword alone", async () => {
   await initializeState();
   assert.equal(await cli("use", "eager-sycophant"), 0);
