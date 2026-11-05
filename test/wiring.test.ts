@@ -552,10 +552,11 @@ test("doctor names what it checked, what it could not, and where it looked", asy
     { TONEDIAL_HOME: home, TONEDIAL_AGENT_HOME: join(work, "output"), PATH: bin },
     work, false, false,
   ), 0);
-  assert.match(stdout(), /Application: healthy/);
+  assert.ok(stdout().includes(`  ${EN.doctor.healthy}\n`), "the headline is the one health statement");
+  assert.ok(!stdout().includes(EN.doctor.applicationHealth(true)), "no second statement that the application is healthy");
+  assert.ok(!stdout().includes(EN.doctor.connectionHealth(false)), "nor a third about connection files");
   assert.ok(stdout().includes(EN.doctor.hookGroupUnknown(["Claude Code", "Antigravity IDE/Desktop", "Codex CLI"])));
   assert.equal(stdout().split(EN.doctor.hookGroupHeading).length - 1, 1, "unconnected agents share one group");
-  assert.ok(!stdout().includes(EN.doctor.connectionHealth(false)), "no connection summary without a configured integration");
   assert.ok(!stdout().includes(EN.doctor.hookSettingScope), "no hook-inspection caveat without a managed hook");
   assert.doesNotMatch(stdout(), /App activation is unverified/);
   assert.doesNotMatch(stdout(), new RegExp(EN.doctor.contextCurrent), "healthy check detail is verbose");

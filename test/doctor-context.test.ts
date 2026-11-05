@@ -629,6 +629,11 @@ test("doctor shares hook setting states and guidance across agents and locales",
     assert.ok(containsWrapped(human.output, t.hookGuidance.claude), human.output);
     assert.equal(human.output.split("/hooks").length - 1, 2, human.output);
     assert.ok(containsWrapped(human.output, t.hookSettingScope), human.output);
+    // The caveat closes the report, after every hook state it covers, in the verbose view too.
+    const closing = (output: string) => output.trimEnd().split(/\n\s*\n/).at(-1)!;
+    assert.ok(containsWrapped(closing(human.output), t.hookSettingScope), human.output);
+    const verbose = await invokeHuman(["doctor", "--global", "--verbose"]);
+    assert.ok(containsWrapped(closing(verbose.output), t.hookSettingScope), verbose.output);
   }
   assert.equal(readFileSync(claudePath, "utf8"), original, "diagnosis must not change host settings");
 

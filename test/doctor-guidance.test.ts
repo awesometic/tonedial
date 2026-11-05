@@ -242,6 +242,26 @@ test("doctor dims only status facts: the remaining step and the notice stay read
   assert.ok(broken.some((candidate) => candidate.includes(`${WARN}!`) && candidate.includes("Codex CLI")), broken.join("\n"));
 });
 
+test("an unconnected agent's unreadable settings file is named, and nothing is claimed about hook states", async () => {
+  assert.equal((await human(["init", "--tools", "none", "--global", "--auto"])).code, 0);
+  mkdirSync(join(home, ".claude"));
+  const settings = join(home, ".claude", "settings.json");
+  writeFileSync(settings, "{ not json");
+  // A tonedial on PATH, so the unreadable file is the only thing the report has to say.
+  mkdirSync(join(scratch, "bin"));
+  writeFileSync(join(scratch, "bin", "tonedial"), "#!/bin/sh\n", { mode: 0o755 });
+  env.PATH = join(scratch, "bin");
+
+  const shown = await human(["doctor", "--global"]);
+  const lines = shown.out.split("\n");
+  assert.ok(lines.includes(`  ${settings}`), `the file that cannot be inspected is not named:\n${shown.out}`);
+  assert.equal(lines.filter((line) => line.trim() !== "")[3]!.trim(), "No problems · 1 notice", shown.out);
+  assert.doesNotMatch(shown.out, /Application:|Hook states above/);
+  const machine = await json(["doctor", "--global"]);
+  assert.equal(machine.value.nativeAttention, true);
+  assert.equal(machine.value.healthy, true, "a notice is not a problem");
+});
+
 test("a project recorded on the global hook is not reported as a duplicate", async () => {
   assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
   await addLegacyRider(env, "codex", project);

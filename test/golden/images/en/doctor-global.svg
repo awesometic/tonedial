@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="624" viewBox="0 0 1100 624" role="img" aria-labelledby="title description">
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="596" viewBox="0 0 1100 596" role="img" aria-labelledby="title description">
 <title id="title">ToneDial screen (en · doctor --global)</title>
 <desc id="description">ToneDial · doctor
 
@@ -6,7 +6,6 @@
   &lt;ROOT&gt;
 
   1 problem
-  Application: healthy
 
   Checks
   · Agent hooks
@@ -26,15 +25,14 @@
 <text x="60" y="104" fill="#edf3f6" font-weight="400" opacity="1">Inspection scope: global</text>
 <text x="60" y="132" fill="#edf3f6" font-weight="400" opacity="1">&lt;ROOT&gt;</text>
 <text x="60" y="188" fill="#edf3f6" font-weight="400" opacity="1">1 problem</text>
-<text x="60" y="216" fill="#edf3f6" font-weight="400" opacity="1">Application: healthy</text>
-<text x="60" y="272" fill="#edf3f6" font-weight="400" opacity="1">Checks</text>
-<text x="60" y="300" fill="#edf3f6" font-weight="400" opacity="1">· Agent hooks</text>
-<text x="88" y="328" fill="#edf3f6" font-weight="400" opacity="1">Not connected: Claude Code, Antigravity IDE/Desktop, Codex CLI.</text>
-<text x="60" y="384" fill="#edf3f6" font-weight="400" opacity="1">! tonedial on PATH</text>
-<text x="88" y="412" fill="#edf3f6" font-weight="400" opacity="1">tonedial is not on PATH, so the skill and the fallback line in TONE.md</text>
-<text x="88" y="440" fill="#edf3f6" font-weight="400" opacity="1">cannot run it.</text>
-<text x="88" y="468" fill="#edf3f6" font-weight="400" opacity="1">Find the global prefix:</text>
-<text x="88" y="496" fill="#edf3f6" font-weight="400" opacity="1">npm prefix -g</text>
-<text x="88" y="524" fill="#edf3f6" font-weight="400" opacity="1">Then add its bin directory to PATH (macOS/Linux).</text>
-<text x="60" y="580" fill="#edf3f6" font-weight="400" opacity="1">tonedial wire --global</text></g>
+<text x="60" y="244" fill="#edf3f6" font-weight="400" opacity="1">Checks</text>
+<text x="60" y="272" fill="#edf3f6" font-weight="400" opacity="1">· Agent hooks</text>
+<text x="88" y="300" fill="#edf3f6" font-weight="400" opacity="1">Not connected: Claude Code, Antigravity IDE/Desktop, Codex CLI.</text>
+<text x="60" y="356" fill="#edf3f6" font-weight="400" opacity="1">! tonedial on PATH</text>
+<text x="88" y="384" fill="#edf3f6" font-weight="400" opacity="1">tonedial is not on PATH, so the skill and the fallback line in TONE.md</text>
+<text x="88" y="412" fill="#edf3f6" font-weight="400" opacity="1">cannot run it.</text>
+<text x="88" y="440" fill="#edf3f6" font-weight="400" opacity="1">Find the global prefix:</text>
+<text x="88" y="468" fill="#edf3f6" font-weight="400" opacity="1">npm prefix -g</text>
+<text x="88" y="496" fill="#edf3f6" font-weight="400" opacity="1">Then add its bin directory to PATH (macOS/Linux).</text>
+<text x="60" y="552" fill="#edf3f6" font-weight="400" opacity="1">tonedial wire --global</text></g>
 </svg>

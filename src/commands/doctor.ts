@@ -954,6 +954,7 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true): Promise<Comm
     diagnosis.layout.nativeAttention?.inspectionFailure != null || integrations.some((integration) =>
       integration.configuration !== "configured" || integration.runtime.state !== "available" ||
       integration.trust === "disabled") || hookSettings.some(setting => setting.state === "disabled");
+  const inspectionFailure = diagnosis.layout.nativeAttention?.inspectionFailure ?? null;
   const elsewhere = wiredElsewhere(config, ctx.agent);
   // Inspecting global from a folder with its own connections: say so and name `doctor --here`.
   const folder = ctx.agent.live ? folderConnections(config, ctx.cwd) : [];
@@ -974,20 +975,23 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true): Promise<Comm
     summaryLine(ctx, findings.filter((check) => check.state === "problem").length,
       // Agents that are simply not connected are grouped into one row and are not a notice.
       findings.filter((check) => check.state === "note" && check.detail !== ctx.t.doctor.hookNotConnected).length +
-      integrations.reduce((count, integration) => count + integration.duplicates.length, 0) + (folder.length ? 1 : 0)),
-    `  ${ctx.ui.bold((appHealthy ? ctx.ui.success : ctx.ui.warn)(ctx.t.doctor.applicationHealth(appHealthy)))}`,
+      integrations.reduce((count, integration) => count + integration.duplicates.length, 0) + (folder.length ? 1 : 0) +
+      // A settings file that could not be inspected has no check of its own to count.
+      (inspectionFailure ? 1 : 0)),
+    // One health statement: the headline. A row follows it only when there is something to fix.
+    ...(appHealthy ? [] : [`  ${ctx.ui.bold(ctx.ui.warn(ctx.t.doctor.applicationHealth(false)))}`]),
     // A healthy setup sends no tone while paused; that is the first thing to know.
     ...offNotice(config.enabled, ctx.t, ctx.ui),
     ...(folder.length ? ["", ...paintLines(ctx.t.doctor.folderConnections(folder.map(({ target }) => target), "tonedial doctor --here"),
       ctx.ui.width - 2, ctx).map((line) => `  ${line}`)] : []),
-    ...(integrations.length || nativeAttention ? [
+    ...(nativeAttention ? [
       ...section(ctx.t.doctor.connectionsHeading, ctx.ui),
-      ...wrap(ctx.t.doctor.connectionHealth(nativeAttention), ctx.ui.width - 2).map((line) =>
-        `  ${nativeAttention ? ctx.ui.warn(line) : line}`),
+      ...wrap(ctx.t.doctor.connectionHealth(true), ctx.ui.width - 2).map((line) => `  ${ctx.ui.warn(line)}`),
+      ...(inspectionFailure ? paintLines(ctx.t.errors.contextInspectionFailure(inspectionFailure.path, inspectionFailure.reason),
+        ctx.ui.width - 2, ctx).map((line) => `  ${line}`) : []),
     ] : []),
     ...section(ctx.t.doctor.checksHeading, ctx.ui),
-    ...renderCheckBlocks(shownChecks, ctx.flags.verbose ? [] : hookSettings, integrations, ctx,
-      integrations.length || nativeAttention ? wrap(ctx.t.doctor.hookSettingScope, ctx.ui.width - 2).map(line => `  ${ctx.ui.dim(line)}`) : []),
+    ...renderCheckBlocks(shownChecks, ctx.flags.verbose ? [] : hookSettings, integrations, ctx),
     // A repair receipt presents its new IDs once in native→app order. Completed operations are
     // history: verbose diagnosis lists their rollback commands, and JSON keeps `recovery`.
     ...(showRollbackCommands && ctx.flags.verbose ? inspected.journals.flatMap(({ operationId, state, journal }) =>
@@ -995,6 +999,8 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true): Promise<Comm
         ? ["", `  ${operationId}  ${ctx.t.doctor.operationState.complete}`, `  tonedial doctor --fix --rollback ${operationId}`]
         : []) : []),
     ...elsewhereReport(elsewhere, ctx),
+    // Last, so it covers every hook state above it; only a connected agent shows one.
+    ...(integrations.length ? ["", ...wrap(ctx.t.doctor.hookSettingScope, ctx.ui.width - 2).map(line => `  ${ctx.ui.dim(line)}`)] : []),
   ];
 
   // Nothing connected anywhere: the one step that lets a conversation receive this tone.
@@ -1464,7 +1470,6 @@ function renderCheckBlocks(
   settings: readonly HookSetting[],
   integrations: readonly NativeIntegration[],
   ctx: Ctx,
-  hookCaveat: string[] = [],
 ): string[] {
   const unconnected = settings.filter((setting) => {
     const check = checks.find(({ name }) => name === TARGETS[setting.tool].label);
@@ -1475,21 +1480,16 @@ function renderCheckBlocks(
   const unconnectedNames = new Set(unconnected.map(({ tool }) => TARGETS[tool].label));
   const grouped = groupSkillChecks(checks, ctx);
   const lastAgentIndex = grouped.findLastIndex((check) => settings.some(({ tool }) => TARGETS[tool].label === check.name));
-  const lastHostIndex = grouped.findLastIndex((check) => AGENT_TOOLS.some((tool) =>
-    TARGETS[tool].label === check.name && integrations.some((integration) => integration.tool === tool)));
   const blocks: string[][] = [];
   for (let index = 0; index < grouped.length; index++) {
     const check = grouped[index]!;
     if (!unconnectedNames.has(check.name)) {
       blocks.push(report(check, ctx));
     }
-    if (index === lastHostIndex && hookCaveat.length) blocks.push(hookCaveat);
     if (index === lastAgentIndex && unconnected.length) {
       blocks.push(unconnectedReport(unconnected, ctx));
     }
   }
-  // No connected host block to sit under: keep the caveat with the connection status.
-  if (lastHostIndex < 0 && hookCaveat.length) blocks.unshift(hookCaveat);
   return blocks.flatMap((block, index) => index === 0 ? block : ["", ...block]);
 }
 

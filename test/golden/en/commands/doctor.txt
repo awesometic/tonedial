@@ -1,12 +1,11 @@
 status: 0
---- stdout --- [bytes=436; endsWithNewline=true]
+--- stdout --- [bytes=413; endsWithNewline=true]
 ToneDial · doctor
 
   Inspection scope: project
   <ROOT>/project
 
   1 problem
-  Application: healthy
 
   Checks
   · Agent hooks

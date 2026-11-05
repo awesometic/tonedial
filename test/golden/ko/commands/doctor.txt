@@ -1,12 +1,11 @@
 status: 0
---- stdout --- [bytes=492; endsWithNewline=true]
+--- stdout --- [bytes=471; endsWithNewline=true]
 ToneDial · doctor
 
   검사 범위: 프로젝트
   <ROOT>/project
 
   문제 1건
-  앱 상태: 정상
 
   검사
   · 에이전트 훅
