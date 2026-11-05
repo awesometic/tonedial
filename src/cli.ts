@@ -569,7 +569,11 @@ export async function run(
     // one: `stop` is two edits from `show` and `delete` three from `reset`, so the match would
     // answer a person trying to leave with the command they were leaving.
     if (STOPPING.includes(name)) return fail(asJson, say.errors.stoppingHelp, 2, uiErr);
-    if (FLAG_WORDS.includes(name)) return fail(asJson, say.errors.isAFlag(name), 2, uiErr);
+    if (FLAG_WORDS.includes(name)) {
+      // `help doctor` asks for `doctor --help`; `version` takes no command.
+      const about = name === "help" && rest[0] !== undefined && Object.hasOwn(COMMANDS, rest[0]) ? rest[0] : null;
+      return fail(asJson, say.errors.isAFlag(name, about), 2, uiErr);
+    }
     return fail(asJson, say.errors.notACommand(asJson ? name : humanText(name), nearest(name, COMMAND_NAMES)), 2, uiErr);
   }
 

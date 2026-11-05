@@ -1203,6 +1203,27 @@ test("a name that is not a command is refused, including one the prototype answe
     "a near miss is answered differently from a name nothing resembles");
 });
 
+test("help <command> points to that command's --help, and anything else to the option that exists", async () => {
+  // `help doctor` named `tonedial --help`, which answers a different question. `version` and
+  // `help <not a command>` keep the bare option: `tonedial nosuch --help` is itself an error.
+  for (const [argv, option] of [
+    [["help", "doctor"], "tonedial doctor --help"], [["help", "set", "warmth"], "tonedial set --help"],
+    [["help"], "tonedial --help"], [["help", "nosuch"], "tonedial --help"], [["help", "help"], "tonedial --help"],
+    [["version", "doctor"], "tonedial --version"],
+  ] as const) {
+    err = [];
+    assert.equal(await cli(...argv), 2, argv.join(" "));
+    assert.equal(stderr().trimEnd().split("\n").at(-1), `  ${option}`, argv.join(" "));
+  }
+  out = [];
+  err = [];
+  assert.equal(await cli("help", "doctor", "--json"), 2);
+  const refusal = JSON.parse(stdout());
+  assert.equal(refusal.ok, false);
+  assert.ok(refusal.error.endsWith("tonedial doctor --help"));
+  assert.equal(refusal.reason, undefined, "the refusal is prose only");
+});
+
 test("a stopping synonym points to off instead of the nearest command", async () => {
   // None of these is a command, and three are inside the spelling match's reach — `stop` is two
   // edits from `show`, `delete` three from `reset`, `quit` two from `edit`. So the table has to

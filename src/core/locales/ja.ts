@@ -597,7 +597,7 @@ const messages: Messages = {
   errors: {
     notACommand: (name, nearest) =>
       `${name} はコマンドではありません。${nearest ? `tonedial ${nearest} のことですか？` : ""}\nコマンド一覧：tonedial --help`,
-    isAFlag: (name) => `${name} はコマンドではなくオプションです：\n  tonedial --${name}`,
+    isAFlag: (name, command) => `${name} はコマンドではなくオプションです：\n  tonedial ${command ? `${command} ` : ""}--${name}`,
     stoppingHelp:
       "設定を残して口調の配信を止めるには（再開は tonedial on）：\n  tonedial off\n" +
       "軸を既定値に戻すには：\n  tonedial reset\n" +

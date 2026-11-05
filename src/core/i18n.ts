@@ -605,7 +605,7 @@ export type Messages = {
   errors: {
     notACommand: (name: string, nearest: string | null) => string;
     /** `help` and `version` typed as commands: they are flags. */
-    isAFlag: (name: string) => string;
+    isAFlag: (name: string, command: string | null) => string;
     /** Guidance for stopping words that are not exact command spellings. */
     stoppingHelp: string;
     notAnOption: (flag: string, command: string | null) => string;
@@ -1297,7 +1297,7 @@ const enMessages: Messages = {
   errors: {
     notACommand: (name, nearest) =>
       `${name} is not a command.${nearest ? ` Did you mean tonedial ${nearest}?` : ""}\nCommands: tonedial --help`,
-    isAFlag: (name) => `${name} is an option, not a command:\n  tonedial --${name}`,
+    isAFlag: (name, command) => `${name} is an option, not a command:\n  tonedial ${command ? `${command} ` : ""}--${name}`,
     stoppingHelp:
       "To pause tone delivery and keep settings (tonedial on resumes it):\n  tonedial off\n" +
       "To restore axis defaults:\n  tonedial reset\n" +
@@ -2107,7 +2107,7 @@ const koMessages: Messages = {
   errors: {
     notACommand: (name, nearest) =>
       `${name}: 없는 명령입니다.${nearest ? ` 비슷한 명령: tonedial ${nearest}` : ""}\n명령 목록: tonedial --help`,
-    isAFlag: (name) => `${name}: 명령이 아니라 옵션입니다. 이렇게 실행하세요:\n  tonedial --${name}`,
+    isAFlag: (name, command) => `${name}: 명령이 아니라 옵션입니다. 이렇게 실행하세요:\n  tonedial ${command ? `${command} ` : ""}--${name}`,
     stoppingHelp:
       "설정은 두고 말투 전달만 멈추려면(다시 켜기: tonedial on):\n  tonedial off\n" +
       "축을 기본값으로 되돌리려면:\n  tonedial reset\n" +

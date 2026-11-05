@@ -597,7 +597,7 @@ const messages: Messages = {
   errors: {
     notACommand: (name, nearest) =>
       `${name} no es un comando.${nearest ? ` ¿Querías decir tonedial ${nearest}?` : ""}\nComandos: tonedial --help`,
-    isAFlag: (name) => `${name} es una opción, no un comando:\n  tonedial --${name}`,
+    isAFlag: (name, command) => `${name} es una opción, no un comando:\n  tonedial ${command ? `${command} ` : ""}--${name}`,
     stoppingHelp:
       "Para pausar la entrega del tono y conservar los ajustes (tonedial on la reanuda):\n  tonedial off\n" +
       "Para restablecer los ejes:\n  tonedial reset\n" +

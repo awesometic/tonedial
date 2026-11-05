@@ -597,7 +597,7 @@ const messages: Messages = {
   errors: {
     notACommand: (name, nearest) =>
       `${name} 不是命令。${nearest ? `是否想输入 tonedial ${nearest}？` : ""}\n命令列表：tonedial --help`,
-    isAFlag: (name) => `${name} 是选项，不是命令：\n  tonedial --${name}`,
+    isAFlag: (name, command) => `${name} 是选项，不是命令：\n  tonedial ${command ? `${command} ` : ""}--${name}`,
     stoppingHelp:
       "要暂停语气投递并保留设置（tonedial on 可恢复）：\n  tonedial off\n" +
       "要恢复语气轴默认值：\n  tonedial reset\n" +
