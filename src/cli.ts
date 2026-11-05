@@ -142,6 +142,8 @@ export type Ctx = {
   canPrompt: boolean;
   /** User intent, distinct from the effective global default and an isolation override. */
   scopeExplicit?: boolean;
+  /** The scope introduction (scope label and root) was printed, so a preview need not print the root again. */
+  scopeShown?: boolean;
   /** This invocation as a command to rerun, offered when approval was needed and nobody could give it. */
   rerun?: string;
   /** Read-only context evidence revalidated with the command's eventual writes. */
@@ -641,6 +643,7 @@ export async function run(
     const scopeLabel = agent.live ? t.wiring.scopeGlobal : t.wiring.scopeHere;
     const introduction = connection && name !== "init" && flags.rollback === null && !asJson
       ? [`  ${scopeLabel}`, `  ${humanText(agent.root)}`] : [];
+    ctx.scopeShown = introduction.length > 0;
     const contextExempt = name === "compile" && flags.check;
     if (command.context !== undefined && command.context !== "setup" && !contextExempt) {
       const { change, config } = planConfig(ctx);

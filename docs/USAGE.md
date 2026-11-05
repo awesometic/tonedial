@@ -410,6 +410,7 @@ Review proposed file changes before approving; `--verbose` includes the diff and
 Without a terminal to approve in, a command writes nothing and prints the commands that rerun it with the same agents, options and scope:
 in a terminal, with `--dry-run`, and with `--auto`; JSON reports them in `commands` with `reason: "approval-required"`.
 The preview prints each root once on its own line under a label: the scope's agent files, then ToneDial state.
+For `wire`, `unwire`, `eject` and `doctor --fix` the scope's own root is already printed in the introduction above, so the agent files appear under their label without repeating it.
 It lists each file relative to its root with the change, such as `new file`, `modified`, `removed`, `new skill link` or `skill link removed`;
 ToneDial's `config.json` says what it records instead, such as `records Codex CLI for this project`.
 Three or more new files in one folder below a root share one row.

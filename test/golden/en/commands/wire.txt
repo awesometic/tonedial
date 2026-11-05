@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=787; endsWithNewline=true]
+--- stdout --- [bytes=770; endsWithNewline=true]
 ToneDial · wire
 
   Project scope
@@ -9,7 +9,6 @@ ToneDial · wire
   Changes: 6
 
   Project files
-  <ROOT>/project
     .codex/hooks.json  (new file)
     .agents/skills/tonedial  (new skill link)
 

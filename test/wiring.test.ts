@@ -436,6 +436,30 @@ test("compact previews name each root once and list its files relative to it; ve
   assert.equal(readFileSync(target, "utf8"), before, "both dry runs leave the file unchanged");
 });
 
+test("a caller that already printed the agent root leaves its path out of the compact preview only", async () => {
+  const actualDir = join(scratch, "external-config");
+  mkdirSync(actualDir);
+  symlinkSync(actualDir, join(scratch, "linked-config"));
+  const plain = planChange(join(scratch, "plain-preview.txt"), () => "one\n", EN);
+  const redirected = planChange(join(scratch, "linked-config", "hooks.json"), () => "{}\n", EN);
+  const state = planChange(join(gatePaths.root, "config.json"), () => "{}\n", EN);
+  const options = { paths: gatePaths, dryRun: true, auto: true, t: EN, ui: palette("never", {}, false),
+    agent: { root: scratch, live: false }, finalChanges: [state] };
+  const lines = async (extra: object) => (await gate([plain, redirected], { ...options, ...extra })).lines;
+
+  // The heading stays and its rows are relative to the root the caller printed above.
+  const shown = await lines({ agentRootShown: true });
+  assert.ok(shown.join("\n").includes(`\n  ${EN.wiring.rootProject}\n    plain-preview.txt  ${EN.wiring.newFile}\n`), shown.join("\n"));
+  assert.ok(!shown.includes(`  ${scratch}`), "the agent root is not printed again");
+  // ToneDial's own root is not the caller's to have printed, and a row that really goes somewhere
+  // else still says where.
+  assert.ok(shown.includes(`  ${gatePaths.root}`));
+  assert.ok(shown.includes(`      → ${join(realpathSync(actualDir), "hooks.json")}`), shown.join("\n"));
+  // Without the option the root is printed as before, and verbose output ignores the option.
+  assert.ok((await lines({})).includes(`  ${scratch}`));
+  assert.deepEqual(await lines({ verbose: true, agentRootShown: true }), await lines({ verbose: true }));
+});
+
 test("approval previews identify final-newline-only changes without altering structured diffs", async () => {
   const cases = [
     { label: "addition", before: "sample", after: "sample\n", notice: EN.wiring.finalNewlineAdded },

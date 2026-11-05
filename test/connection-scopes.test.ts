@@ -280,7 +280,9 @@ test("bare unwire in a terminal asks with the wire picker and marks installed an
   assert.match(result.stdout, /^ +1\. Claude Code \(claude\) · installed$/m);
   assert.match(result.stdout, /^ +2\. Antigravity IDE\/Desktop \(antigravity\)$/m);
   assert.match(result.stdout, /^ +3\. Codex CLI \(codex\) · connected$/m);
-  assert.ok(result.stdout.includes(`\n  ${realpathSync(project)}\n    ${join(".codex", "hooks.json")}  (removed)\n`), result.stdout);
+  // The scope's root is in the introduction above; its files follow their label.
+  assert.ok(result.stdout.includes(`\n  Project scope\n  ${realpathSync(project)}\n`), result.stdout);
+  assert.ok(result.stdout.includes(`\n  Project files\n    ${join(".codex", "hooks.json")}  (removed)\n`), result.stdout);
   assert.match(result.stdout, /--dry-run · nothing written/);
   assert.equal(existsSync(join(project, ".codex", "hooks.json")), true);
 });
@@ -328,6 +330,26 @@ test("project wiring names the version-control choice once and does not list its
   const global = await human(["wire", "claude", "--global", "--auto"]);
   assert.equal(global.code, 0, global.errors);
   assert.doesNotMatch(global.output, /Project files written|paths from this machine/);
+});
+
+test("a connection preview prints the scope's root once, in the introduction, and lists its files by heading", async () => {
+  assert.equal((await invoke(["init", "--global", "--tools", "none", "--auto"])).code, 0);
+  const root = realpathSync(project);
+  const only = (output: string) => assert.equal(output.split(root).length - 1, 1, output);
+  const wire = await human(["wire", "codex", "--here", "--dry-run"]);
+  only(wire.output);
+  assert.match(wire.output, /^  Project files\n    \.codex\/hooks\.json {2}\(new file\)$/m);
+  assert.equal((await human(["wire", "codex", "--here", "--auto"])).code, 0);
+  for (const args of [["unwire", "codex", "--here", "--dry-run"], ["eject", "--here", "--dry-run"]]) {
+    const preview = await human(args);
+    only(preview.output);
+    assert.match(preview.output, /^  Project files\n    \.codex\/hooks\.json {2}\(removed\)$/m, args.join(" "));
+  }
+  // Nothing to change has no preview, so the introduction is its only root.
+  const again = await human(["wire", "codex", "--here", "--auto"]);
+  assert.ok(again.output.includes(`  ${root}\n`));
+  // --verbose keeps its per-file layout.
+  assert.ok((await human(["unwire", "codex", "--here", "--dry-run", "--verbose"])).output.includes(`\n  ${join(root, ".codex", "hooks.json")}\n`));
 });
 
 test("wiring again says each agent is up to date once, with its file and its review step", async () => {

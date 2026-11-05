@@ -514,7 +514,7 @@ function changeKind(change: Change, t: Messages): string {
 type PreviewRow = { path: string; realPath: string; kind: string; removed: boolean; names?: string[] };
 
 /** A preview group: its heading lines and the roots under it. `always` prints a root without rows. */
-type PreviewRoot = { heading: string[]; paths: string[]; always?: boolean };
+type PreviewRoot = { heading: string[]; paths: string[]; always?: boolean; pathShown?: boolean };
 
 /**
  * Rows under the root each one lives in, each root printed once on its own copyable line, in
@@ -531,9 +531,9 @@ function renderRows(rows: PreviewRow[], roots: PreviewRoot[], ui: Palette): stri
     if (root === undefined && !under.has(key)) loose.push({ heading: [], paths: [key] });
     under.set(key, [...under.get(key) ?? [], row]);
   }
-  return [...roots, ...loose].flatMap(({ heading, paths, always }) => {
+  return [...roots, ...loose].flatMap(({ heading, paths, always, pathShown }) => {
     const shown = paths.filter((path) => always === true || under.has(path));
-    return shown.length === 0 ? [] : ["", ...heading, ...shown.flatMap((root) => [`  ${humanText(root)}`,
+    return shown.length === 0 ? [] : ["", ...heading, ...shown.flatMap((root) => [...(pathShown === true ? [] : [`  ${humanText(root)}`]),
       ...(under.get(root) ?? []).flatMap((row) => {
         const path = humanText(`${relative(root, row.path)}${row.names ? sep : ""}`);
         const paint = (kind: string) => row.removed ? ui.warn(kind) : kind;
@@ -2498,6 +2498,8 @@ export type GateOptions = {
   notice?: string[];
   /** This scope's agent root: the compact preview lists its files under it. */
   agent?: { root: string; live: boolean };
+  /** The caller already printed that root, so the compact preview names it by heading and not again by path. */
+  agentRootShown?: boolean;
   /** Further roots, each printed under its heading even when no change falls under it. */
   roots?: { heading: string[]; paths: string[] }[];
   /** Words that replace the change kind of ToneDial's own state files, keyed by path. */
@@ -2587,7 +2589,8 @@ export async function gate(changes: Change[], opts: GateOptions): Promise<GateRe
   } else {
     // The files of this scope's agents first, ToneDial's own state after them.
     const roots: PreviewRoot[] = [
-      ...(opts.agent ? [{ heading: [`  ${opts.ui.bold(opts.agent.live ? opts.t.wiring.rootGlobal : opts.t.wiring.rootProject)}`], paths: [opts.agent.root] }] : []),
+      ...(opts.agent ? [{ heading: [`  ${opts.ui.bold(opts.agent.live ? opts.t.wiring.rootGlobal : opts.t.wiring.rootProject)}`], paths: [opts.agent.root],
+        ...(opts.agentRootShown === true ? { pathShown: true } : {}) }] : []),
       ...(opts.roots ?? []).map((root) => ({ ...root, always: true })),
       { heading: [`  ${opts.ui.bold(opts.t.wiring.rootState)}`], paths: [opts.paths.root] },
     ];

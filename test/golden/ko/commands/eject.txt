@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=437; endsWithNewline=true]
+--- stdout --- [bytes=420; endsWithNewline=true]
 ToneDial · eject
 
   프로젝트 범위
@@ -9,7 +9,6 @@ ToneDial · eject
   변경 3건
 
   프로젝트 파일
-  <ROOT>/project
     .codex/hooks.json  (삭제)
     .agents/skills/tonedial  (스킬 링크 삭제)
 

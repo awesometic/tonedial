@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=364; endsWithNewline=true]
+--- stdout --- [bytes=347; endsWithNewline=true]
 ToneDial · unwire
 
   프로젝트 범위
@@ -9,7 +9,6 @@ ToneDial · unwire
   변경 3건
 
   프로젝트 파일
-  <ROOT>/project
     .codex/hooks.json  (삭제)
     .agents/skills/tonedial  (스킬 링크 삭제)
 

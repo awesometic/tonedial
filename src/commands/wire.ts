@@ -320,6 +320,7 @@ async function wireSelected(ctx: Ctx, requested: AgentTool[], rebuilding?: Nativ
     verbose: ctx.flags.verbose,
     ui: ctx.ui,
     agent: ctx.agent,
+    ...(ctx.scopeShown ? { agentRootShown: true } : {}),
     describe: { [ctx.paths.config]: ctx.t.wiring.configRecords(tools.map((tool) => TARGETS[tool].label).join(", "), ctx.agent.live) },
     notice: doubled,
     heading: ctx.t.wiring.nativeHeading,
@@ -537,6 +538,7 @@ export async function disconnect(ctx: Ctx, tools: AgentTool[], all = false): Pro
     verbose: ctx.flags.verbose,
     ui: ctx.ui,
     agent: ctx.agent,
+    ...(ctx.scopeShown ? { agentRootShown: true } : {}),
     ...(disconnected.length ? { describe: { [ctx.paths.config]: ctx.t.wiring.configRemoves(
       disconnected.map((tool) => TARGETS[tool].label).join(", "), disconnected.length + alsoDisconnected.length) } } : {}),
     roots: tools.flatMap((tool) => {
