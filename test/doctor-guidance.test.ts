@@ -515,7 +515,7 @@ test("a hook left after a damaged config is restored is reported, then adopted e
   assert.equal(existsSync(join(home, ".agents", "skills", "tonedial")), false);
 });
 
-test("an unrecorded ToneDial entry that was edited gets guidance and is never adopted", async () => {
+test("an edited unrecorded entry is preserved and its guidance reconnects after manual cleanup", async () => {
   assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
   const hook = join(home, ".codex", "hooks.json");
   writeFileSync(hook, readFileSync(hook, "utf8").replace('"additionalContextLimit": 0', '"additionalContextLimit": 5'));
@@ -526,12 +526,22 @@ test("an unrecorded ToneDial entry that was edited gets guidance and is never ad
   const codex = block((await human(["doctor", "--global"])).out, "Codex CLI");
   assert.match(codex.join(" "), /differ from what ToneDial writes/);
   assert.ok(codex.includes(hook), codex.join("\n"));
-  assert.equal(codex.at(-1), "tonedial wire codex --global");
+  const command = codex.at(-1)!;
+  assert.ok(command.startsWith("tonedial "), command);
   assert.equal((await json(["doctor", "--global"])).value.checks.find((row: { name: string }) => row.name === "Codex CLI").repair, null);
 
   assert.equal((await human(["doctor", "--fix", "--tools", "codex", "--global", "--auto"])).code, 0);
   assert.equal(readFileSync(hook, "utf8"), edited);
   assert.match(block((await human(["doctor", "--global"])).out, "Codex CLI").join(" "), /differ from what ToneDial writes/);
+
+  // Remove this fixture's ToneDial entries by hand, leaving the unrecorded skill links.
+  writeFileSync(hook, JSON.stringify({ ...JSON.parse(edited), hooks: {} }, null, 2));
+  assert.equal(existsSync(join(home, ".agents", "skills", "tonedial")), true);
+  const reconnected = await human([...command.split(" ").slice(1), "--auto"]);
+  assert.equal(reconnected.code, 0, reconnected.err);
+  const after = await json(["doctor", "--global"]);
+  assert.equal(after.value.integrations.find((row: { tool: string }) => row.tool === "codex").configuration, "configured");
+  assert.equal(after.value.checks.find((row: { name: string }) => row.name === "Codex CLI").state, "ok");
 });
 
 test("doctor names a global hook only an earlier version's project record keeps, with unwire --global", async () => {

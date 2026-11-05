@@ -1254,7 +1254,7 @@ function unownedCheck(ctx: Ctx, config: Config, tool: AgentTool, blocked: boolea
       ? { name, state: "problem", detail: finding(ctx.t.doctor.unrecordedEntries(path), ctx.t.doctor.unrecordedAdopt),
           repair: repairCommand(ctx, `doctor --fix --tools ${tool}`) }
       : { name, state: "problem",
-          detail: finding(ctx.t.doctor.unrecordedEdited(path), ctx.t.doctor.unrecordedEditedNext(repairCommand(ctx, `wire ${tool}`))) };
+          detail: finding(ctx.t.doctor.unrecordedEdited(path), ctx.t.doctor.unrecordedEditedNext(repairCommand(ctx, `doctor --fix --tools ${tool}`))) };
   } catch {
     // A file that does not parse is not evidence of ours; the checks that read it report it.
     return null;
