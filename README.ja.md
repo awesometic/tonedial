@@ -24,14 +24,14 @@ ToneDialは、Claude Code、Codex、Antigravityに自分で選んだ口調を与
 
 ## 同じモデル、より簡潔な計画
 
-`gpt-5.6-sol` / `high` で、一方の新規セッションにはCodexデフォルトを、もう一方には下記の `vibe-coder` プロファイル全体を適用しました。
-`verbosity=1` はこのプロファイルの一要素であり、唯一の違いではありません。
+`gpt-5.6-sol` / `high` で、一方の新規セッションにはCodexデフォルトを、もう一方には下記の `vibe-coder` プリセット全体を適用しました。
+`verbosity=1` はこのプリセットの一要素であり、唯一の違いではありません。
 
 **指示**
 
 > I want to make ToneDial easier for first-time users. The README should get them from installation through `tonedial init` to their first preview with `tonedial test codex --preset <slug>`, and the CLI should make that next step obvious after `init`. Give me a prioritized three-step improvement plan for the README and first-run CLI flow.
 
-<img src="https://raw.githubusercontent.com/awesometic/tonedial/main/docs/media/readme/ja/verbosity-comparison.svg" alt="GPT-5.6 Sol highが同じToneDial改善計画の指示にCodexデフォルトとvibe-coderプロファイル全体で回答した比較。プロファイル側の英文応答は148語から82語になっています" width="760">
+<img src="https://raw.githubusercontent.com/awesometic/tonedial/main/docs/media/readme/ja/verbosity-comparison.svg" alt="GPT-5.6 Sol highが同じToneDial改善計画の指示にCodexデフォルトとvibe-coderプリセット全体で回答した比較。プリセット側の英文応答は148語から82語になっています" width="760">
 
 <sub>同じ指示 · 各新規セッションの最初の完了応答 · 英文応答 148語 → 82語。単一の比較例であり、1軸だけを分離したベンチマークではありません。応答は口調の違いを示す例です。製品の動作とコマンドは下記のガイドを参照してください。 <a href="https://github.com/awesometic/tonedial/blob/main/docs/media/readme/verbosity-comparison.json">入力と生成記録</a>.</sub>
 
@@ -58,8 +58,8 @@ tonedial wire
 
 ## 話し方をコピーする
 
-プロファイル全体をコピーするか、自分の設定の出発点として使えます。
-各コマンドはプロファイル全体を保存して適用し、`--auto` は表示された変更を承認します。
+プリセット全体をコピーするか、自分の設定の出発点として使えます。
+各コマンドはプリセット全体を保存して適用し、`--auto` は表示された変更を承認します。
 
 実際の `tonedial test codex` 応答 · `gpt-6.1-sol` / `high` · 各設定で質問に対する最初の回答をそのまま掲載しています。
 ファイルを編集しない対話テストです。 [入力と生成記録](https://github.com/awesometic/tonedial/blob/main/docs/media/readme/ja/use-cases.json).
@@ -174,7 +174,7 @@ tonedial create '口が悪いほうが好き' --slug rough-but-reliable --auto \
 </details>
 
 Codex が会話を始めたら、上の質問を入力してください。
-モデルと推論強度は ToneDial のプロファイルとは別の Codex 設定です。
+モデルと推論強度は ToneDial のプリセットとは別の Codex 設定です。
 
 ## キャラクターを選ぶ
 
@@ -194,12 +194,12 @@ tonedial set verbosity=1 warmth=3 address_frequency=rarely
 tonedial save "My Sword"
 ```
 
-`tonedial create` で自分のキャラクターも作れます。口調、役割、呼称、敬語区分、合言葉を1つのプロファイルに保存します。
+`tonedial create` で自分のキャラクターも作れます。口調、役割、呼称、敬語区分、合言葉を1つのプリセットに保存します。
 
 `address_frequency` でユーザーの名前や呼称を使う頻度を選べます。
 `none` は省略、`auto` は文脈に合わせる既定値、`rarely` は時々使います。
 `frequently` は内容のある回答で使い、短い続きでは省略します。
-この値もプロファイルに保存されます。[呼称の設定](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#set-address-roles-and-language)。
+この値もプリセットに保存されます。[呼称の設定](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#set-address-roles-and-language)。
 
 ## ダイヤルを回す
 
@@ -221,7 +221,7 @@ Enterで適用すると、`TONE.md` をすぐに再コンパイルします。
 `tonedial wire codex`、`claude`、`antigravity` のいずれかで、エージェントを1つ接続します。
 完了時の案内が示す場所でフックを有効にすると、新しい会話にこの口調が届きます。
 
-インストール済みのCodexかClaude Codeで、保存したプロファイルを新しい会話でプレビューできます。
+インストール済みのCodexかClaude Codeで、保存したプリセットを新しい会話でプレビューできます。
 
 ```bash
 tonedial test codex --preset my-sword

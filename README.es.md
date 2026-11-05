@@ -24,14 +24,14 @@ El tono solo cambia el estilo; los permisos y las solicitudes de aprobación que
 
 ## El mismo modelo. Un plan más directo.
 
-Con `gpt-5.6-sol` / `high`, una sesión nueva usó los valores predeterminados de Codex y otra usó el perfil `vibe-coder` completo que aparece más abajo.
-`verbosity=1` forma parte del perfil, pero no es la única diferencia.
+Con `gpt-5.6-sol` / `high`, una sesión nueva usó los valores predeterminados de Codex y otra usó el preajuste `vibe-coder` completo que aparece más abajo.
+`verbosity=1` forma parte del preajuste, pero no es la única diferencia.
 
 **Instrucción**
 
 > I want to make ToneDial easier for first-time users. The README should get them from installation through `tonedial init` to their first preview with `tonedial test codex --preset <slug>`, and the CLI should make that next step obvious after `init`. Give me a prioritized three-step improvement plan for the README and first-run CLI flow.
 
-<img src="https://raw.githubusercontent.com/awesometic/tonedial/main/docs/media/readme/es/verbosity-comparison.svg" alt="GPT-5.6 Sol high responde a la misma instrucción de mejora de ToneDial con los valores predeterminados de Codex y el perfil vibe-coder completo; la respuesta en inglés baja de 148 palabras a 82" width="760">
+<img src="https://raw.githubusercontent.com/awesometic/tonedial/main/docs/media/readme/es/verbosity-comparison.svg" alt="GPT-5.6 Sol high responde a la misma instrucción de mejora de ToneDial con los valores predeterminados de Codex y el preajuste vibe-coder completo; la respuesta en inglés baja de 148 palabras a 82" width="760">
 
 <sub>Misma instrucción · primera respuesta completa de cada sesión nueva · 148 → 82 palabras de respuesta en inglés. Es una comparación ilustrativa, no una prueba que aísle un solo eje. Las respuestas muestran diferencias de tono; consulta las guías siguientes para el comportamiento del producto y los comandos. <a href="https://github.com/awesometic/tonedial/blob/main/docs/media/readme/verbosity-comparison.json">Entradas y procedencia</a>.</sub>
 
@@ -58,8 +58,8 @@ tonedial wire
 
 ## Copia una voz
 
-Puedes copiar un perfil completo o usarlo como punto de partida.
-Cada comando guarda y aplica un perfil completo; `--auto` aprueba los cambios mostrados.
+Puedes copiar un preajuste completo o usarlo como punto de partida.
+Cada comando guarda y aplica un preajuste completo; `--auto` aprueba los cambios mostrados.
 
 Respuestas reales de `tonedial test codex` · `gpt-6.1-sol` / `high` · primera respuesta a la pregunta, una por receta · solo diálogo, sin editar archivos. [Entradas y procedencia](https://github.com/awesometic/tonedial/blob/main/docs/media/readme/es/use-cases.json).
 
@@ -171,7 +171,7 @@ Prueba este tono: `tonedial test codex --preset rough-but-reliable`
 </details>
 
 Cuando Codex abra la conversación, introduce la pregunta anterior.
-El modelo y el esfuerzo de razonamiento se configuran en Codex, aparte del perfil de ToneDial.
+El modelo y el esfuerzo de razonamiento se configuran en Codex, aparte del preajuste de ToneDial.
 
 ## Elige tu personaje
 
@@ -191,12 +191,12 @@ tonedial set verbosity=1 warmth=3 address_frequency=rarely
 tonedial save "My Sword"
 ```
 
-Crea el tuyo con `tonedial create`. Cada perfil guarda tono, roles, formas de trato, registro y palabra clave.
+Crea el tuyo con `tonedial create`. Cada preajuste guarda tono, roles, formas de trato, registro y palabra clave.
 
 Elige la frecuencia de nombres y tratamientos con `address_frequency`: `none` los omite,
 `auto` (predeterminado) decide según el contexto, `rarely` los usa de vez en cuando y
 `frequently` los usa en respuestas sustantivas y los omite en seguimientos breves.
-La opción también se guarda en el perfil. [Ajustes de tratamiento](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#set-address-roles-and-language).
+La opción también se guarda en el preajuste. [Ajustes de tratamiento](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#set-address-roles-and-language).
 
 ## Ajusta los diales
 
@@ -218,7 +218,7 @@ Tu agente aporta el modelo.
 `tonedial wire codex`, `claude` o `antigravity` conecta un agente.
 Activa su hook donde indique el resumen final; desde entonces, las conversaciones nuevas reciben el tono.
 
-Prueba un perfil guardado en una conversación nueva con un cliente Codex o Claude Code instalado:
+Prueba un preajuste guardado en una conversación nueva con un cliente Codex o Claude Code instalado:
 
 ```bash
 tonedial test codex --preset my-sword

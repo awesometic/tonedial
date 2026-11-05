@@ -2,10 +2,10 @@
 
 [English](./EXAMPLES.md) | **한국어** | [日本語](./EXAMPLES.ja.md) | [简体中文](./EXAMPLES.zh.md) | [Español](./EXAMPLES.es.md)
 
-ToneDial 내장 프로필 7개가 같은 함수명 질문에 답한 실제 Codex 대화입니다.
+ToneDial 내장 프리셋 7개가 같은 함수명 질문에 답한 실제 Codex 대화입니다.
 응답은 원문 그대로이며, 이미지는 스크린샷이 아니라 대화를 정리한 기록입니다.
 
-[Codex 기본값과 `vibe-coder` 전체 프로필 비교는 README에서 볼 수 있습니다.](../README.ko.md#같은-모델-더-간결한-계획)
+[Codex 기본값과 `vibe-coder` 전체 프리셋 비교는 README에서 볼 수 있습니다.](../README.ko.md#같은-모델-더-간결한-계획)
 
 ## 같은 질문
 

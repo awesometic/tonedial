@@ -2,10 +2,10 @@
 
 [English](./EXAMPLES.md) | [한국어](./EXAMPLES.ko.md) | **日本語** | [简体中文](./EXAMPLES.zh.md) | [Español](./EXAMPLES.es.md)
 
-ToneDialの7つの組み込みプロファイルが、同じ関数名の質問に答えた実際のCodex対話です。
+ToneDialの7つの組み込みプリセットが、同じ関数名の質問に答えた実際のCodex対話です。
 応答は原文のままで、画像はスクリーンショットではなく整形した対話記録です。
 
-[Codexデフォルトと `vibe-coder` プロファイル全体の比較はREADMEで確認できます。](../README.ja.md#同じモデルより簡潔な計画)
+[Codexデフォルトと `vibe-coder` プリセット全体の比較はREADMEで確認できます。](../README.ja.md#同じモデルより簡潔な計画)
 
 ## 共通の質問
 

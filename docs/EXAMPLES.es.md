@@ -2,10 +2,10 @@
 
 [English](./EXAMPLES.md) | [한국어](./EXAMPLES.ko.md) | [日本語](./EXAMPLES.ja.md) | [简体中文](./EXAMPLES.zh.md) | **Español**
 
-Los siete perfiles incluidos de ToneDial responden a la misma pregunta sobre nombres de funciones en conversaciones reales de Codex.
+Los siete preajustes incluidos de ToneDial responden a la misma pregunta sobre nombres de funciones en conversaciones reales de Codex.
 Las respuestas son literales; las imágenes son transcripciones formateadas, no capturas de pantalla.
 
-[Compara los valores predeterminados de Codex con el perfil `vibe-coder` completo en el README.](../README.es.md#el-mismo-modelo-un-plan-más-directo)
+[Compara los valores predeterminados de Codex con el preajuste `vibe-coder` completo en el README.](../README.es.md#el-mismo-modelo-un-plan-más-directo)
 
 ## La misma pregunta
 

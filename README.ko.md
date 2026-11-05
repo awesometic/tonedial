@@ -25,14 +25,14 @@ ToneDial은 Claude Code, Codex, Antigravity에 직접 고른 말투를 입혀 �
 
 ## 같은 모델, 더 간결한 계획
 
-`gpt-5.6-sol` / `high`에서 새 세션 하나는 Codex 기본값으로, 다른 하나는 아래 `vibe-coder` 전체 프로필로 실행했습니다.
-`verbosity=1`은 이 프로필의 한 요소이며 유일한 차이는 아닙니다.
+`gpt-5.6-sol` / `high`에서 새 세션 하나는 Codex 기본값으로, 다른 하나는 아래 `vibe-coder` 전체 프리셋으로 실행했습니다.
+`verbosity=1`은 이 프리셋의 한 요소이며 유일한 차이는 아닙니다.
 
 **지침**
 
 > I want to make ToneDial easier for first-time users. The README should get them from installation through `tonedial init` to their first preview with `tonedial test codex --preset <slug>`, and the CLI should make that next step obvious after `init`. Give me a prioritized three-step improvement plan for the README and first-run CLI flow.
 
-<img src="https://raw.githubusercontent.com/awesometic/tonedial/main/docs/media/readme/ko/verbosity-comparison.svg" alt="GPT-5.6 Sol high가 같은 ToneDial 개선 계획 지침에 Codex 기본값과 vibe-coder 전체 프로필로 답한 비교. 프로필의 영문 응답은 148단어에서 82단어로 줄었습니다" width="760">
+<img src="https://raw.githubusercontent.com/awesometic/tonedial/main/docs/media/readme/ko/verbosity-comparison.svg" alt="GPT-5.6 Sol high가 같은 ToneDial 개선 계획 지침에 Codex 기본값과 vibe-coder 전체 프리셋으로 답한 비교. 프리셋의 영문 응답은 148단어에서 82단어로 줄었습니다" width="760">
 
 <sub>같은 지침 · 새 세션마다 첫 완료 응답 · 영문 응답 148단어 → 82단어. 단일 비교 예시이며, 축 하나만 분리한 벤치마크는 아닙니다. 응답은 말투 차이를 보여 주는 예시입니다. 제품 동작과 명령어는 아래 안내 문서를 기준으로 합니다. <a href="https://github.com/awesometic/tonedial/blob/main/docs/media/readme/verbosity-comparison.json">입력과 생성 기록</a>.</sub>
 
@@ -59,8 +59,8 @@ tonedial wire
 
 ## 말투 복사하기
 
-프로필 전체를 복사하거나 원하는 설정의 출발점으로 써 보세요.
-각 명령은 프로필 전체를 저장하고 적용하며, `--auto`는 표시된 변경 내용을 승인합니다.
+프리셋 전체를 복사하거나 원하는 설정의 출발점으로 써 보세요.
+각 명령은 프리셋 전체를 저장하고 적용하며, `--auto`는 표시된 변경 내용을 승인합니다.
 
 실제 `tonedial test codex` 응답 · `gpt-6.1-sol` / `high` · 설정별 질문의 첫 답변을 그대로 실었습니다.
 파일 수정 없는 대화 시험입니다. [입력과 생성 기록](https://github.com/awesometic/tonedial/blob/main/docs/media/readme/ko/use-cases.json).
@@ -175,7 +175,7 @@ tonedial create '거친 게 좋아' --slug rough-but-reliable --auto \
 </details>
 
 Codex가 대화를 연 뒤 위 질문을 입력하세요.
-모델과 추론 강도는 ToneDial 프로필과 별도로 Codex에서 정하는 설정입니다.
+모델과 추론 강도는 ToneDial 프리셋과 별도로 Codex에서 정하는 설정입니다.
 
 ## 캐릭터 고르기
 
@@ -196,12 +196,12 @@ tonedial save "My Sword"
 ```
 
 `tonedial create`로 직접 만들 수도 있습니다.
-말투, 역할, 호칭, 말씨, 세이프워드를 프로필 하나에 함께 저장합니다.
+말투, 역할, 호칭, 말씨, 세이프워드를 프리셋 하나에 함께 저장합니다.
 
 `address_frequency`로 사용자 이름·호칭을 얼마나 자주 쓸지 정합니다.
 `none`은 생략하고 `auto`(기본값)는 문맥에 맞게 선택합니다.
 `rarely`는 드물게, `frequently`는 주요 답변에서 자주 사용하되 짧은 후속 답변에서는 생략합니다.
-선택한 빈도도 프로필에 함께 저장됩니다. [호칭 설정](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#set-address-roles-and-language).
+선택한 빈도도 프리셋에 함께 저장됩니다. [호칭 설정](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#set-address-roles-and-language).
 
 ## 말투 조절하기
 
@@ -223,7 +223,7 @@ Enter를 누르면 바로 적용되고 `TONE.md`도 다시 컴파일됩니다.
 `tonedial wire codex`(또는 `claude`, `antigravity`)로 에이전트 하나를 연결합니다.
 실행 결과에 안내된 위치에서 훅을 켜면, 이후 새 대화부터 말투가 전달됩니다.
 
-설치된 Codex나 Claude Code 클라이언트로 새 대화를 열어 저장한 프로필을 미리 볼 수 있습니다.
+설치된 Codex나 Claude Code 클라이언트로 새 대화를 열어 저장한 프리셋을 미리 볼 수 있습니다.
 
 ```bash
 tonedial test codex --preset my-sword
