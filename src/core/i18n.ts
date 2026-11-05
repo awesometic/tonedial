@@ -310,6 +310,8 @@ export type Messages = {
     connectionRecords: (records: string[]) => string;
     connectionsHeading: string;
     connectionScope: Record<"global" | "project", string>;
+    /** What each axis group is called on the gauge. The ids stay English in `show --json`. */
+    axisGroups: Record<"form" | "target" | "behaviour", string>;
     sharesGlobalHook: (target: string) => string;
     dialTitle: string;
     dialPreview: (presetName: string, changed: boolean) => string;
@@ -917,6 +919,7 @@ const enMessages: Messages = {
     connectionRecords: (records) => `Connections: ${records.length ? records.join(", ") : "none"}`,
     connectionsHeading: "Connections",
     connectionScope: { global: "Global", project: "Project" },
+    axisGroups: { form: "form", target: "target", behaviour: "behavior" },
     sharesGlobalHook: (target) => `${target} · uses the global hook (earlier version)`,
     dialTitle: "ToneDial · shape your agent's voice",
     dialPreview: (presetName, changed) => `${presetName} · ${changed ? "changes pending" : "current voice"}`,
@@ -1723,6 +1726,7 @@ const koMessages: Messages = {
     connectionRecords: (records) => `연결: ${records.length ? records.join(", ") : "없음"}`,
     connectionsHeading: "연결",
     connectionScope: { global: "전역", project: "프로젝트" },
+    axisGroups: { form: "형식", target: "대상", behaviour: "행동" },
     sharesGlobalHook: (target) => `${target} · 전역 훅 사용(이전 버전)`,
     dialTitle: "ToneDial · 내 취향의 말투",
     dialPreview: (presetName, changed) => `${presetName} · ${changed ? "변경 미리보기" : "현재 말투"}`,

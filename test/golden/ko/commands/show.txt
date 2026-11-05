@@ -1,20 +1,20 @@
 status: 0
---- stdout --- [bytes=1253; endsWithNewline=true]
+--- stdout --- [bytes=1194; endsWithNewline=true]
 ToneDial · show · Caring Brother                              TONE.md 4,769자
 
-                         현재      ToneDial 기본값 · ! 위험 말투
-  form      formality    ▮▯▯▯▯  1   *3
-            verbosity    ▮▮▮▮▯  4   *3
-            profanity    ▮▮▯▯▯  2   *1
-            playfulness  ▮▮▮▯▯  3    3
-  target    critique     ▮▮▯▯▯  2   *3
-            flattery     ▮▯▯▯▯  1    1
-            warmth       ▮▮▮▮▮  5   *3
-  behaviour conviction   ▮▮▮▮▯  4   *3
-            care         ▮▮▮▮▮  5   *3
-            compliance   ▮▮▮▯▯  3    3
-            refusal      ▮▯▯▯▯  1    1
-            bravado      ▮▯▯▯▯  1    1
+                    현재      ToneDial 기본값 · ! 위험 말투
+  형식 formality    ▮▯▯▯▯  1   *3
+       verbosity    ▮▮▮▮▯  4   *3
+       profanity    ▮▮▯▯▯  2   *1
+       playfulness  ▮▮▮▯▯  3    3
+  대상 critique     ▮▮▯▯▯  2   *3
+       flattery     ▮▯▯▯▯  1    1
+       warmth       ▮▮▮▮▮  5   *3
+  행동 conviction   ▮▮▮▮▯  4   *3
+       care         ▮▮▮▮▮  5   *3
+       compliance   ▮▮▮▯▯  3    3
+       refusal      ▮▯▯▯▯  1    1
+       bravado      ▮▯▯▯▯  1    1
 
   사용자 설정
   자기 호칭 형 · 사용자 호칭 동생

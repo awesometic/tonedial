@@ -92,7 +92,7 @@ export function runShow(ctx: Ctx, args: string[]): CommandResult {
   const personaSet = Boolean(age || gender || note || selfRef || userRef || user || agent);
   // A preview's values column holds the profile's levels, not the current tone's.
   const headerCopy = preview ? { ...ctx.t, artifact: { ...ctx.t.artifact, currentLevel: ctx.t.artifact.previewLevel } } : ctx.t;
-  const gauges = [gaugeHeader(ui, headerCopy), ...gaugeBlock(axes, ui)];
+  const gauges = [gaugeHeader(ui, headerCopy), ...gaugeBlock(axes, ui, ctx.t)];
   const gaugeWidth = Math.max(...gauges.map((line) => maxCells(stripVTControlCharacters(line))));
   const detailWidth = ui.terminal && ui.width >= 119 ? ui.width - gaugeWidth - 4 : ui.width - 2;
   const details: string[] = [ui.bold(ctx.t.artifact.settingsHeading)];

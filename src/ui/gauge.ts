@@ -10,12 +10,13 @@ import { stripVTControlCharacters } from "node:util";
 
 const bar = (level: number) => "▮".repeat(level) + "▯".repeat(5 - level);
 
-const GROUP_WIDTH = Math.max(...AXIS_ORDER.map((a) => cells(AXIS_GROUP[a])));
 const AXIS_WIDTH = Math.max(...AXIS_ORDER.map((a) => cells(a)));
+/** The gutter fits the widest group name of the interface language, which is not the English one. */
+const groupWidth = (t: Messages) => Math.max(...Object.values(t.artifact.axisGroups).map((label) => cells(label)));
 
 /** Labels for the two numeric columns, shared by static and interactive views. */
 export function gaugeHeader(palette: Palette, t: Messages): string {
-  const gutter = palette.width >= 46 ? GROUP_WIDTH + 1 : 0;
+  const gutter = palette.width >= 46 ? groupWidth(t) + 1 : 0;
   const legend = ` · ${t.artifact.riskMarker}`;
   const prefix = palette.width >= 34
     ? `${" ".repeat(2 + gutter + AXIS_WIDTH + 2)}${padEnd(t.artifact.currentLevel, 10)}`
@@ -29,15 +30,16 @@ export function gaugeHeader(palette: Palette, t: Messages): string {
  * One row per axis, grouped by observable. The group name appears on the first row of its
  * group and nowhere else, which is a level of hierarchy that costs no line of its own.
  */
-export function gaugeBlock(axes: Axes, palette: Palette, cursor = -1): string[] {
+export function gaugeBlock(axes: Axes, palette: Palette, t: Messages, cursor = -1): string[] {
   const lines: string[] = [];
+  const width = groupWidth(t);
   const risks = riskyAxes(axes);
   let lastGroup = "";
 
   for (const [index, axis] of AXIS_ORDER.entries()) {
     const level = axes[axis];
     const group = AXIS_GROUP[axis];
-    const gutter = palette.width < 46 ? "" : `${group === lastGroup ? " ".repeat(GROUP_WIDTH) : padEnd(group, GROUP_WIDTH)} `;
+    const gutter = palette.width < 46 ? "" : `${group === lastGroup ? " ".repeat(width) : padEnd(t.artifact.axisGroups[group], width)} `;
     lastGroup = group;
     // The dial marks its row here rather than rendering its own block, so the interactive
     // screen and the printed one cannot drift apart. `cursor` is -1 for every static caller.
@@ -45,7 +47,7 @@ export function gaugeBlock(axes: Axes, palette: Palette, cursor = -1): string[] 
     const caret = selected ? palette.accent("> ") : "  ";
 
     const moved = level !== AXIS_DEFAULT[axis];
-    const marker = moved ? palette.accent(`  *${AXIS_DEFAULT[axis]}`) : `   ${AXIS_DEFAULT[axis]}`;
+    const marker = moved ? `  *${AXIS_DEFAULT[axis]}` : `   ${AXIS_DEFAULT[axis]}`;
     const risk = risks.includes(axis);
     // Narrow views keep current/default numbers and drop the group gutter, then the bar.
     const nameWidth = Math.min(AXIS_WIDTH, Math.max(2, palette.width - 10));

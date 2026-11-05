@@ -75,6 +75,8 @@ node scripts/demo.ts sycophant ko
 
 Demo scenes are isolated 80-column output; unknown options refuse before rendering/child startup.
 Rasterization is optional development tooling: render ANSI with an image tool and inspect glyph/cell alignment.
+The English PNG is `node scripts/dial-svg.ts en 80` rasterized with `rsvg-convert dial.svg -o dial.png`,
+which keeps the SVG's rounded transparent corners and its width (14 pixels per cell plus a 32-pixel margin each side).
 Regenerate affected assets when the renderer changes; retain each locale's input/frame/image hashes in `dial-example.json`.
 Use terminal cells at column boundaries, keep prose runs together and never stretch glyph outlines to fill cells.
 Run generation/tests with disposable state; layout evidence does not prove native activation or adherence.

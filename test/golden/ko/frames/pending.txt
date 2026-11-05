@@ -1,19 +1,19 @@
   ToneDial · 내 취향의 말투
   Caring Brother · 변경 미리보기
 
-                         현재      기본값 · ! 위험 말투
-  form      formality    ▮▯▯▯▯  1   *3
-            verbosity    ▮▮▮▮▯  4   *3
-            profanity    ▮▮▯▯▯  2   *1
-            playfulness  ▮▮▮▯▯  3    3
-  target    critique     ▮▮▯▯▯  2   *3
-            flattery     ▮▯▯▯▯  1    1
->           warmth       ▮▮▮▮▯  4   *3
-  behaviour conviction   ▮▮▮▮▯  4   *3
-            care         ▮▮▮▮▮  5   *3
-            compliance   ▮▮▮▯▯  3    3
-            refusal      ▮▯▯▯▯  1    1
-            bravado      ▮▯▯▯▯  1    1
+                    현재      기본값 · ! 위험 말투
+  형식 formality    ▮▯▯▯▯  1   *3
+       verbosity    ▮▮▮▮▯  4   *3
+       profanity    ▮▮▯▯▯  2   *1
+       playfulness  ▮▮▮▯▯  3    3
+  대상 critique     ▮▮▯▯▯  2   *3
+       flattery     ▮▯▯▯▯  1    1
+>      warmth       ▮▮▮▮▯  4   *3
+  행동 conviction   ▮▮▮▮▯  4   *3
+       care         ▮▮▮▮▮  5   *3
+       compliance   ▮▮▮▯▯  3    3
+       refusal      ▮▯▯▯▯  1    1
+       bravado      ▮▯▯▯▯  1    1
 
   warmth  사용자에게 보이는 다정함
   1  인사·감정 표현·격려 없음

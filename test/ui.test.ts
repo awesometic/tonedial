@@ -53,7 +53,7 @@ test("the gauge is five cells at every level in every locale", async () => {
   const axes = { ...AXIS_DEFAULT };
   for (let level = 1; level <= 5; level++) {
     for (const axis of AXIS_ORDER) axes[axis] = level as 1 | 2 | 3 | 4 | 5;
-    for (const line of gaugeBlock(axes, PLAIN)) {
+    for (const line of gaugeBlock(axes, PLAIN, EN)) {
       const gauge = /[▮▯]+/.exec(line)![0];
       assert.equal(cells(gauge), 5, `level ${level} narrow`);
       assert.equal(maxCells(gauge), 5, `level ${level} wide`);
@@ -63,7 +63,7 @@ test("the gauge is five cells at every level in every locale", async () => {
 
 test("gauge rows stay aligned whatever the levels are", async () => {
   const axes = { ...AXIS_DEFAULT, formality: 1, playfulness: 5, care: 1, refusal: 4 } as typeof AXIS_DEFAULT;
-  const columns = gaugeBlock(axes, PLAIN).map((l) => maxCells(l.slice(0, l.indexOf("▮") >= 0 ? l.indexOf("▮") : l.indexOf("▯"))));
+  const columns = gaugeBlock(axes, PLAIN, EN).map((l) => maxCells(l.slice(0, l.indexOf("▮") >= 0 ? l.indexOf("▮") : l.indexOf("▯"))));
   assert.equal(new Set(columns).size, 1, "the gauge starts in the same column on every row");
 });
 
@@ -131,15 +131,24 @@ test("colour follows explicit flags, environment precedence and the output strea
 
 test("every signal survives with colour stripped", async () => {
   const axes = { ...AXIS_DEFAULT, warmth: 5 } as typeof AXIS_DEFAULT;
-  const plain = gaugeBlock(axes, PLAIN).join("\n");
+  const plain = gaugeBlock(axes, PLAIN, EN).join("\n");
   assert.match(plain, /\*3/, "the moved-from-default marker survives without colour");
   assert.match(plain, /warmth\s+▮▮▮▮▮\s+5/, "and the level is a digit beside its bar");
+});
+
+test("only the bars that changed take the accent; the default marker beside them is plain", () => {
+  const axes = { ...AXIS_DEFAULT, warmth: 5 } as typeof AXIS_DEFAULT;
+  const rows = gaugeBlock(axes, palette("always", {}, true), EN);
+  const moved = rows[AXIS_ORDER.indexOf("warmth")]!;
+  assert.match(moved, /\x1b\[36m▮▮▮▮▮\x1b\[39m/, "the moved bar takes the accent");
+  assert.match(moved, / {2}\*3$/, "and the default it moved from is plain text");
+  assert.doesNotMatch(rows[AXIS_ORDER.indexOf("care")]!, /\x1b\[36m/, "a bar at its default is not accented");
 });
 
 test("risky levels use theme red while the selected axis remains cyan and monochrome keeps the marker", () => {
   const axes = { ...AXIS_DEFAULT, flattery: 3, critique: 4, refusal: 2, conviction: 5 } as typeof AXIS_DEFAULT;
   const cursor = AXIS_ORDER.indexOf("flattery");
-  const color = gaugeBlock(axes, palette("always", {}, true), cursor);
+  const color = gaugeBlock(axes, palette("always", {}, true), EN, cursor);
   const selected = color[cursor]!;
   assert.match(selected, /^\x1b\[36m> /, "selection caret retains the focus token");
   assert.match(selected, /\x1b\[36mflattery/, "selection label remains cyan");
@@ -147,7 +156,7 @@ test("risky levels use theme red while the selected axis remains cyan and monoch
   assert.match(selected, /\x1b\[31m3!/, "the risky current value pairs red with a marker");
   assert.doesNotMatch(color[AXIS_ORDER.indexOf("warmth")]!, /\x1b\[31m/, "ordinary levels are not risk-colored");
   for (const width of [2, 20, 33, 40, 59, 79]) {
-    const rows = gaugeBlock(axes, palette("auto", { NO_COLOR: "1" }, true, width), cursor);
+    const rows = gaugeBlock(axes, palette("auto", { NO_COLOR: "1" }, true, width), EN, cursor);
     assert.doesNotMatch(rows.join("\n"), /\x1b/);
     for (const [index, axis] of AXIS_ORDER.entries()) {
       assert.ok(maxCells(rows[index]!) <= width, `${width}: ${rows[index]}`);
@@ -171,14 +180,18 @@ test("every axis has a kind and a group, and the groups are the three the produc
   }
   // The effect, not the spelling. Restating the group sequence as a literal would agree with
   // `AXIS_GROUP` by construction and survive any rename; what the grouping is *for* is that the
-  // gutter names each group once, which breaks the moment two groups interleave.
-  const gutters = gaugeBlock({ ...AXIS_DEFAULT }, PLAIN).map((line) => {
-    const [, gutter] = /^ {2}(\S*)/.exec(line) ?? [];
-    return gutter ?? "";
-  });
-  const named = gutters.filter((g) => g !== "");
-  assert.equal(named.length, 3, `each group is labelled once, got ${named.join(", ")}`);
-  assert.deepEqual(new Set(named).size, named.length, "and no label is printed twice");
+  // gutter names each group once, in the interface language, which breaks the moment two groups
+  // interleave or a locale shows another language's name.
+  for (const language of LANGUAGES) {
+    const copy = catalogue(language).cli;
+    const gutters = gaugeBlock({ ...AXIS_DEFAULT }, PLAIN, copy).map((line) => {
+      const [, gutter] = /^ {2}(\S*)/.exec(line) ?? [];
+      return gutter ?? "";
+    });
+    const named = gutters.filter((g) => g !== "");
+    assert.deepEqual(named, [...new Set(AXIS_ORDER.map((axis) => copy.artifact.axisGroups[AXIS_GROUP[axis]]))],
+      `${language}: each group is labelled once, in its own language`);
+  }
   const permission = AXIS_ORDER.filter((a) => AXIS_KIND[a] === "permission");
   assert.deepEqual(permission, ["profanity", "flattery", "refusal", "bravado"]);
   for (const axis of permission) assert.equal(AXIS_DEFAULT[axis], 1, `${axis} floors at 1`);
@@ -707,6 +720,17 @@ test("compact gauges and init notices respect narrow physical budgets", async ()
   }
 });
 
+test("show --json names each axis group by its English id in every interface language", async () => {
+  await initializeState();
+  for (const language of LANGUAGES) {
+    assert.equal(await cli("set", `language=${language}`), 0, err.join(""));
+    out = [];
+    assert.equal(await cli("show", "--json"), 0);
+    // The gauge shows the group's name in the interface language; machine output keeps the id.
+    assert.deepEqual(JSON.parse(out.join("")).groups, AXIS_GROUP, language);
+  }
+});
+
 test("every command's --json envelope keeps the keys a consumer reads", async () => {
   // The skill and the slash command are windows onto this output, and nothing pinned it — which
   // is how `use`'s notice array changed length between milestones without a test noticing.
@@ -1079,7 +1103,9 @@ test("the gauge block leaves room for a wider terminal to be unnecessary", async
   const axes = { ...AXIS_DEFAULT };
   for (let level = 1; level <= 5; level++) {
     for (const axis of AXIS_ORDER) axes[axis] = level as 1 | 2 | 3 | 4 | 5;
-    for (const line of gaugeBlock(axes, PLAIN)) assert.ok(maxCells(line) <= 46, `${maxCells(line)}: ${line}`);
+    for (const language of LANGUAGES) {
+      for (const line of gaugeBlock(axes, PLAIN, catalogue(language).cli)) assert.ok(maxCells(line) <= 46, `${language} ${maxCells(line)}: ${line}`);
+    }
   }
 });
 
@@ -1317,8 +1343,8 @@ test("a Korean install still speaks Korean once its config stops parsing", async
 });
 
 /**
- * Everything that stays English by design, removed before the prose is scanned: axis names and
- * groups (CLI input tokens and a gutter label kept English beside them), preset slugs and
+ * Everything that stays English by design, removed before the prose is scanned: axis names
+ * (CLI input tokens), preset slugs and
  * display names, `tonedial` and its subcommands, flags, filesystem paths, and the artifact's
  * own filename. What is left is sentences, which is what the gate is about.
  */
@@ -1335,7 +1361,7 @@ function stripStable(text: string): string {
     .replace(/\b[a-z0-9]+(-[a-z0-9]+)+\b/g, " ")
     .replace(/\btonedial\b|\bToneDial\b/g, " ")
     .replace(new RegExp(`\\b(${AXIS_ORDER.join("|")})\\b`, "g"), " ")
-    .replace(/\b(form|target|behaviour|tone\.md|config\.json|SKILL\.md|npm|npx|curl|init|show|list|doctor|wire|unwire|eject|compile|export|import|save|reset|edit|update|use|set|none|G1|G2|G3|G4)\b/g, " ")
+    .replace(/\b(tone\.md|config\.json|SKILL\.md|npm|npx|curl|init|show|list|doctor|wire|unwire|eject|compile|export|import|save|reset|edit|update|use|set|none|G1|G2|G3|G4)\b/g, " ")
     // `doctor`'s check names. They are identifiers, not prose: the same strings are the `name`
     // field in `--json`, which the skill reads, and a screen that called a check something
     // other than what the payload calls it would make the two disagree about what was checked.

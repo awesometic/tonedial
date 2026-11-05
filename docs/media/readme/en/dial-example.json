@@ -13,22 +13,22 @@
   "personalStateRead": false,
   "font": "Menlo",
   "fontRedistributed": false,
-  "renderer": "rasterized current dial SVG text at its cell positions with Menlo 22px, regular/bold weights and fixed palette; actual terminal appearance varies",
-  "frameSha256": "f1f2e13ba6f22868fe3033cda016557fb7ff7ef412c3a68332fb2a72b7ce4831",
-  "imageSha256": "0e311df88303f43151c14f46be1da14833d7a37710cdc1d81dfab1d872d35b49",
+  "renderer": "rasterized current dial SVG text at its cell positions with Menlo 22px, regular/bold weights and fixed palette, using rsvg-convert 2.63.2 (cairo 1.18.6, pango 1.58.2); actual terminal appearance varies",
+  "frameSha256": "9a4c6519ac80c304cfc3d86345fbfdfa865c40514d3b0e898bb50e7afe2eab07",
+  "imageSha256": "9aa7c49b03b63b776272215583c1dc382a78501644740897be6f1b26f9bc49b8",
   "inputs": {
     "scripts/dial-frame.ts": "71ba709632f41d76e5d36bdcf7bdcdb864459b56b9e351622d6e54117dc1205a",
-    "src/ui/dial.ts": "0201f9a30bc3b085e9e813e7bdd2306a2e2eb9ad6a8792ca264776800c360efd",
-    "src/ui/gauge.ts": "7b4a8d69780103421c1ec691746be8defae8d1489768367e8b9e0f909f9eca1a",
+    "src/ui/dial.ts": "cbe95dc50b173c82c136dfd53d929b3132adf5f096301d17f29c6dcafc32e92c",
+    "src/ui/gauge.ts": "0e9071973487c256dce7c7ca94201578ae34b6d36fb3987a368f17ae8a9c09cf",
     "src/ui/prompt.ts": "caa537c24bce28b8d7041e33e87149c2554c38861232eed54bd96f17f2d83ccd",
     "src/ui/style.ts": "2dc560ebc69677d391ec8ab39817c3a89545d6b8b603c080a7f6d09a75450a8e",
     "src/ui/width.ts": "eb1013f8511ccfc8b9eca78e3d74433cfcf30096b7faf71ba118a5cd42163acd",
-    "src/core/i18n.ts": "e1c2051dcf84d457fa85dbc92cb1a2ea698fba1042d31708adbd51fcc481e11e",
+    "src/core/i18n.ts": "c9c90db8d3d8b42eedf60330ef5f15d90700c96edf39bb8f8169c4425b74387d",
     "src/core/anchors.ts": "8d342289ba5c52bb26be193bc4bf7bbbb38c5d2c5bc74b735b698eaea3ce573a",
     "src/core/presets.ts": "fca9c7e372d2ad8ee8ef2cfe8254af0438f9b37f390205924bb53ee42ccb215d",
     "scripts/dial-svg.ts": "eb81cde392f472ea8df8b251150afccfcf02e5adf936221a174ab17d965e13a4",
-    "src/core/locales/ja.ts": "640368bc0f471aa55d57fdde3539279eb718bb8a8489cabb73151c55277e12e6",
-    "src/core/locales/zh.ts": "e2a662d001f27c9272b8aaa2dd5e554e862691939b425ec4c663bf71e74ed4e4",
-    "src/core/locales/es.ts": "bd6a56f586e9810de80679cf9fbe72bdae47d91bd010a5c02a78f8fe31cdd1d8"
+    "src/core/locales/ja.ts": "a3d57a61c5de0855323c75daadf1871a7bebcd0b7c54f320d4a32cd2f9eaffd6",
+    "src/core/locales/zh.ts": "ef681997a185356cd7c71f37dc0478bf554a628a997c2d3f8506548dfac8ab5e",
+    "src/core/locales/es.ts": "6bf32537057e34b8f6de7ef43c56ac83eb729554a740d5c05fb522f13c101a6d"
   }
 }

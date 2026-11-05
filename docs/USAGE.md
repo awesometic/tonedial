@@ -251,6 +251,7 @@ Compilation is local and deterministic, with no model call.
 | behaviour | `bravado` | **1** | none · one playful effort overstatement · one credit claim and one boast · two boasts/claims and one dramatic effort remark · credit and dramatized effort in every answer without replacing the persona |
 
 The four bold defaults have a natural floor of 1; setting everything to 3 activates them.
+The Group column holds the ids `show --json` reports as `groups`; the gauge names each group in the interface language.
 
 ```bash
 tonedial show --explain

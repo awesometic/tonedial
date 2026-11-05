@@ -227,6 +227,7 @@ const messages: Messages = {
     connectionRecords: (records) => `Conexiones: ${records.length ? records.join(", ") : "ninguna"}`,
     connectionsHeading: "Conexiones",
     connectionScope: { global: "Global", project: "Proyecto" },
+    axisGroups: { form: "forma", target: "destino", behaviour: "conducta" },
     sharesGlobalHook: (target) => `${target} · usa el hook global (versión anterior)`,
     dialTitle: "ToneDial · ajusta la voz de tu agente",
     dialPreview: (presetName, changed) => `${presetName} · ${changed ? "cambios pendientes" : "tono actual"}`,
