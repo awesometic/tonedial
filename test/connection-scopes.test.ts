@@ -302,7 +302,7 @@ test("a project scope in the home directory refuses for every connection command
     [["wire", "codex", "--here", "--auto"], home, "tonedial wire codex --global"],
     [["wire", "claude", "--here", "--dry-run"], home, "tonedial wire claude --global"],
     [["wire", "claude", "--project", home, "--auto"], project, "tonedial wire claude --global"],
-    // Disconnecting there would otherwise report "already disconnected" beside a live global hook.
+    // Disconnecting there would otherwise report "not connected" beside a live global hook.
     [["unwire", "codex", "--here", "--auto"], home, "tonedial unwire codex --global"],
     [["unwire", "--here"], home, "tonedial unwire --global"],
     [["eject", "--here", "--dry-run"], home, "tonedial eject --global"],
@@ -310,7 +310,7 @@ test("a project scope in the home directory refuses for every connection command
   ] as const) {
     const refused = await human([...args], {}, cwd);
     assert.equal(refused.code, 1, args.join(" "));
-    assert.doesNotMatch(refused.errors, /Ownership is unknown|already disconnected/);
+    assert.doesNotMatch(refused.errors, /Ownership is unknown|not connected · nothing to change/);
     assert.match(refused.errors, /home directory/);
     assert.match(refused.errors, new RegExp(`^  ${global}$`, "m"), args.join(" "));
   }

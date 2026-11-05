@@ -265,7 +265,7 @@ test("disconnect receipts report removal and no-op separately while retaining sh
   const retained = readFileSync(join(home, "config.json"));
   out = [];
   assert.equal(await cli("unwire", "claude", "--here"), 0, err.join(""));
-  assert.match(collapsed(stdout()), /Claude Code: already disconnected/);
+  assert.match(collapsed(stdout()), /Claude Code: not connected · nothing to change/);
   assert.deepEqual(readFileSync(join(home, "config.json")), retained);
   assert.equal(existsSync(join(home, "TONE.md")), true);
   assert.equal(existsSync(join(home, "presets")), true);

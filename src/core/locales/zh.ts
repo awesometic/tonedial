@@ -302,7 +302,7 @@ const messages: Messages = {
     claudeOpenSteps: "Claude Code 将在此终端打开。如果它询问是否信任此文件夹，请在那里回答，退出后即可返回。",
     scopeHere: "项目范围",
     alreadyMatch: (tools) => `${tools}：已是最新，无变更`,
-    alreadyDisconnected: (tools) => `${tools}：已断开，无变更`,
+    alreadyDisconnected: (tools) => `${tools}：未连接，无变更`,
     dryRun: "--dry-run · 未写入任何内容",
     declined: "已取消 · 未写入任何内容",
     disconnected: (tools) => `${tools}：已断开连接`,

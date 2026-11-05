@@ -513,13 +513,13 @@ test("eject and unwire receipts name only the connected agents that were disconn
   assert.doesNotMatch(receipt, /Antigravity.*: disconnected/);
 });
 
-test("empty disconnect reports already disconnected when only config formatting changes", async () => {
+test("empty disconnect reports not connected when only config formatting changes", async () => {
   mkdirSync(join(home, "project"));
   await initializeState();
   const path = join(home, "state", "config.json");
   const original = JSON.parse(readFileSync(path, "utf8"));
   assert.deepEqual(original.wiring.registrations, {});
-  for (const [command, empty] of [[["unwire", "codex"], /Codex CLI: already disconnected/], [["eject"], /nothing to disconnect/]] as const) {
+  for (const [command, empty] of [[["unwire", "codex"], /Codex CLI: not connected · nothing to change/], [["eject"], /nothing to disconnect/]] as const) {
     for (const json of [false, true]) {
       writeFileSync(path, JSON.stringify(original));
       out = [];

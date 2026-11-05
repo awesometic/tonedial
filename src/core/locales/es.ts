@@ -302,7 +302,7 @@ const messages: Messages = {
     claudeOpenSteps: "Claude Code se abre en este terminal. Si te pregunta si confías en esta carpeta, responde allí y sal para volver.",
     scopeHere: "Ámbito del proyecto",
     alreadyMatch: (tools) => `${tools}: ya están al día · sin cambios`,
-    alreadyDisconnected: (tools) => `${tools}: ya desconectados · sin cambios`,
+    alreadyDisconnected: (tools) => `${tools}: sin conectar · nada que cambiar`,
     dryRun: "--dry-run · no se escribió nada",
     declined: "cancelado · no se escribió nada",
     disconnected: (tools) => `${tools}: desconectados`,
