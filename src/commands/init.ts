@@ -5,9 +5,8 @@ import { dirname, join, resolve } from "node:path";
 import { lstatSync, readdirSync } from "node:fs";
 
 import type { CommandResult, Ctx } from "../cli.ts";
-import { runAppRebuild } from "./rebuild.ts";
+import { recoveryPendingError, runAppRebuild } from "./rebuild.ts";
 import { runRebuildNative } from "./wire.ts";
-import { recoveryPendingError } from "./doctor.ts";
 import { ScopeRequired, refuseHomeProject } from "../wiring/scopes.ts";
 import { activationStep } from "./test.ts";
 import { ConfigError, OwnershipConflict, defaultConfig, requireConfigV2, safewordRejection, serializeConfig } from "../core/config.ts";

@@ -13,7 +13,7 @@ import { compile } from "../core/compile.ts";
 import { toCompileInput } from "../core/resolve.ts";
 import { isLanguage, LANGUAGES, type Messages } from "../core/i18n.ts";
 import { recoverLegacyTone } from "../core/legacy-tone.ts";
-import { connectionScopeFlag, exportAliasesState, stateOverlapsInstructions } from "../core/paths.ts";
+import { connectionScopeFlag, exportAliasesState, stateOverlapsInstructions, type Paths } from "../core/paths.ts";
 import {
   applyPreset, matchesPreset, assertPresetSelection, BUNDLED, customPresetDir, inspectPresetLibrary, parsePreset, PRESET_MAX_BYTES,
   resolvePreset, serializePreset, SLUG_PATTERN, type PresetEntry, type PresetLibrary,
@@ -22,11 +22,11 @@ import {
   contextArtifactTargets, generatedSeedSelection, planGeneratedSeedRebuild, seedFiles, SEED_VERSION,
 } from "../core/seeds.ts";
 import {
-  inspectOperations, readJournal, retireOperationForAppRebuild, serializeOperationQuarantine, type JsonValue,
+  inspectOperations, inspectRollback, readJournal, retireOperationForAppRebuild, serializeOperationQuarantine, type JsonValue,
   type OperationAction, type OperationJournal, type RecoveryPhase,
 } from "../core/operations.ts";
 import {
-  assertFresh, captureRawEntry, gate, planEntryRebuild, rawReadCheck, validateFileAction,
+  assertFresh, captureRawEntry, gate, planEntryRebuild, previewRollback, rawReadCheck, validateFileAction,
   type Change, type PlannedOperationAction, type RawEntryCapture,
 } from "../wiring/apply.ts";
 import { confirm } from "../ui/prompt.ts";
@@ -34,6 +34,34 @@ import { wrap } from "../ui/width.ts";
 import { parseToolSelection } from "../wiring/targets.ts";
 import { ScopeRequired } from "../wiring/scopes.ts";
 import { receiptLines, riskWarnings } from "../ui/format.ts";
+
+/** Doctor's commands for a stopped operation: continue its repair, undo it, both or neither. */
+export function stoppedOperationSteps(paths: Paths, t: Ctx["t"], scope: string, inspected = inspectOperations(paths)):
+  { resume: string | null; rollback: string | null } {
+  const steps = { resume: null as string | null, rollback: null as string | null };
+  const owner = inspected.lock.owner;
+  if (inspected.lock.state !== "dead" || owner?.kind !== "mutation") return steps;
+  const entry = inspected.journals.find(({ operationId }) => operationId === owner.operationId);
+  if (!entry?.journal || entry.journal.owner.nonce !== owner.nonce) return steps;
+  const blocking = inspected.journals.filter(({ state }) => state === "pending" || state === "invalid");
+  if (entry.state === "pending" && !inspectRollback(paths, owner.operationId).synthetic &&
+    blocking.every(({ operationId, journal }) => operationId === owner.operationId && journal !== null)) {
+    steps.resume = `tonedial doctor --fix --from-operation ${owner.operationId} ${scope}`;
+  }
+  if (previewRollback(paths, owner.operationId, t).status === "ready") steps.rollback = `tonedial doctor --fix --rollback ${owner.operationId}`;
+  return steps;
+}
+
+/** A command refused while an operation needs recovery ends with what doctor offers for it. */
+export function recoveryPendingError(paths: Paths, t: Ctx["t"], scope: string): ConfigError {
+  const { resume, rollback } = stoppedOperationSteps(paths, t, scope);
+  const steps = [...(resume === null ? [] : [t.doctor.resumeOperation, `  ${resume}`]),
+    ...(rollback === null ? [] : [t.doctor.undoOperation, `  ${rollback}`])];
+  // Neither applies while its owner may still run, or to an unreadable record: diagnose first.
+  const commands = steps.length ? [resume, rollback].filter((command) => command !== null) : [`tonedial doctor ${scope}`];
+  return new ConfigError([t.doctor.recoveryPending, ...(steps.length ? steps : [`  ${commands[0]}`])].join("\n"),
+    { reason: "recovery-pending", commands });
+}
 
 export type AppRebuildResult = CommandResult & ({
   quarantineOnly: true;
