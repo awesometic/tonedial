@@ -26,7 +26,7 @@ import { TARGETS, assertDistinctHookTargets, ownedDelivery, parseToolSelection, 
 import { hookCommand, ownedHook, withHook, withoutHook, type HookSpec } from "../wiring/hooks.ts";
 import { assertRecordedTextAccess, assertRegisteredFileChange, contentHash, detachRegistration, recordFileChange, registrationKey } from "../wiring/ownership.ts";
 import { pathLineState, rcPath, withPathLine } from "../wiring/shell.ts";
-import { humanText, nativeSetup, receiptLines } from "../ui/format.ts";
+import { hookDuplicateNotice, humanText, nativeSetup, receiptLines } from "../ui/format.ts";
 import { pickTools } from "../ui/prompt.ts";
 import { ScopeRequired, connectionsInScope, folderConnections, globalCover, refuseHomeProject, refuseUnscopedDisconnect, riders, wiredElsewhere, type Connection } from "../wiring/scopes.ts";
 import { planConfig } from "./compile.ts";
@@ -300,9 +300,10 @@ async function wireSelected(ctx: Ctx, requested: AgentTool[], rebuilding?: Nativ
   const operationActions = [...skillPlan.actions, ...(configRebuild?.changed ? [configRebuild.action] : [])];
   let pendingOperation: string | null = null;
   // The preview names a project hook this connection doubles; without a preview the receipt does.
-  const doubled = plans.flatMap((plan, index) => plan.duplicates.flatMap(({ destination, state }) => ["",
-    ...receiptLines(ctx.t.wiring.hookDuplicate(tools[index]!, humanText(destination), state === "stale-duplicate"), ctx.ui.width - 2)
-      .map((line) => `  ${line}`)]));
+  const doubled = plans.flatMap((plan, index) => {
+    const notice = hookDuplicateNotice(ctx.t, tools[index]!, plan.duplicates, ctx.cwd);
+    return notice === null ? [] : ["", ...receiptLines(notice, ctx.ui.width - 2).map((line) => `  ${line}`)];
+  });
 
   const result = await gate([...(ctx.contextChecks ?? []), ...(artifactChange ? [artifactChange] : []), ...seeds.changes, ...changes, ...removals,
     ...(commandChange ? [commandChange] : []), ...(shellChange ? [shellChange] : [])], {
@@ -342,7 +343,7 @@ async function wireSelected(ctx: Ctx, requested: AgentTool[], rebuilding?: Nativ
   // In a repair receipt, an agent the repair left as it was has its one state in the headline.
   const setup = configured && !rebuilding?.preview && !(rebuilding && result.reason === "nothing")
     ? nativeSetupLines(ctx, nativeSetup(ctx.t, result.reason === "nothing" ? routes : routes.map(({ duplicates, ...route }) => route),
-      ctx.agent.live, !rebuilding), result.reason === "written") : [];
+      ctx.agent.live, ctx.cwd, !rebuilding), result.reason === "written") : [];
   // Project hooks name this machine's runtime and state paths, so committing them is a choice.
   const projectFiles = !ctx.agent.live && !rebuilding && result.reason === "written"
     ? result.diff.filter((change) => !inside(change.path, ctx.paths.root)).map((change) => relative(ctx.agent.root, change.path))

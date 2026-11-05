@@ -262,7 +262,16 @@ const messages: Messages = {
       ? "Para conectar solo este proyecto, desconecta primero la conexión global y luego conecta esta carpeta:"
       : "Para conectar solo ese proyecto, desconecta primero la conexión global y luego ejecuta esto dentro de esa carpeta:",
     alsoDisconnects: (tool) => `También desconecta ${tool} en estos proyectos, que una versión anterior registró en el hook global:`,
-    hookDuplicate: (tool, destination, stale) => `${tool}: el proyecto también configura el tono y existen ambos hooks${stale ? ". El hook del proyecto apunta a un entorno antiguo" : ""}:\n${destination}\nPara usar solo el global, ejecuta desde ese directorio:\ntonedial unwire ${tool} --here`,
+    hookDuplicate: (label, projects, globalHook) => [
+      projects.length === 1
+        ? `${label}: existen el hook global y un hook de proyecto, así que ambos están presentes:`
+        : `${label}: existen el hook global y ${projects.length} hooks de proyecto, así que todos están presentes:`,
+      ...(globalHook === null ? [] : ["Hook global", globalHook]),
+      projects.length === 1 ? "Hook de proyecto" : "Hooks de proyecto",
+      ...projects.flatMap(({ hook, stale }) => [hook, ...(stale ? ["Este hook apunta a un entorno antiguo."] : [])]),
+      `Para usar solo el hook global, desconecta ${projects.length === 1 ? "el de proyecto" : "los de proyecto"}:`,
+      ...projects.map(({ command }) => command),
+    ].join("\n"),
     migrationRollback: (operationId) => `Restaura los archivos y ajustes registrados en esta migración:\ntonedial doctor --fix --rollback ${operationId}`,
     migrationQuestion: "¿Apruebas esta migración con los ajustes guardados en una operación recuperable?",
     migrationNotNeeded: "La estructura de contexto propia está al día; no necesita migración.",

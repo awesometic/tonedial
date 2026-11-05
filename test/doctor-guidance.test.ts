@@ -216,15 +216,40 @@ test("plain doctor in a folder with its own connections points to doctor --here"
 test("doctor reports a project hook that duplicates the global one, in both scopes", async () => {
   assert.equal((await human(["init", "--tools", "codex", "--here", "--auto"], project)).code, 0);
   assert.equal((await human(["wire", "codex", "--global", "--auto"])).code, 0);
-  for (const [args, cwd] of [[["doctor", "--global"], home], [["doctor", "--here"], project]] as const) {
+  const globalHook = join(home, ".codex", "hooks.json");
+  const projectHook = join(project, ".codex", "hooks.json");
+  // The command names the project the way it can be run from where the user is.
+  for (const [args, cwd, scope] of [[["doctor", "--global"], home, `--project "${project}"`], [["doctor", "--here"], project, "--here"]] as const) {
     const codex = block((await human([...args], cwd)).out, "Codex CLI");
-    assert.ok(codex.includes(project), codex.join("\n"));
-    assert.match(codex.join(" "), /both hooks are present/);
-    assert.equal(codex.at(-1), "tonedial unwire codex --here");
+    assert.match(codex.join(" "), /Codex CLI has a global and a project hook, so both hooks are present/);
+    assert.ok(codex.includes(globalHook) && codex.indexOf(projectHook) > codex.indexOf(globalHook), codex.join("\n"));
+    assert.equal(codex.at(-1), `tonedial unwire codex ${scope}`);
+    assert.doesNotMatch(codex.join(" "), /run from that directory/);
     const machine = await json([...args], cwd);
     const integration = machine.value.integrations.find((row: { tool: string }) => row.tool === "codex");
     assert.deepEqual(integration.duplicates.map((row: { destination: string }) => row.destination), [project]);
   }
+});
+
+test("project hooks that repeat the global one share one notice, with one command for each project", async () => {
+  const other = join(home, "other");
+  mkdirSync(other);
+  assert.equal((await human(["init", "--tools", "codex", "--here", "--auto"], project)).code, 0);
+  assert.equal((await human(["init", "--tools", "codex", "--here", "--auto"], other)).code, 0);
+  assert.equal((await human(["wire", "codex", "--global", "--auto"])).code, 0);
+
+  const codex = block((await human(["doctor", "--global"])).out, "Codex CLI");
+  assert.match(codex.join(" "), /global hook and 2 project hooks, so all hooks are present/);
+  assert.equal(codex.filter((line) => line === join(home, ".codex", "hooks.json")).length, 1, "the global hook is named once");
+  const commands = codex.filter((line) => line.startsWith("tonedial unwire codex"));
+  // In the order the projects are listed in: by folder.
+  assert.deepEqual(commands, [other, project].map((dir) => `tonedial unwire codex --project "${dir}"`));
+  for (const dir of [project, other]) assert.ok(codex.includes(join(dir, ".codex", "hooks.json")), codex.join("\n"));
+
+  // Seen from one of the projects, only its own hook doubles the global one, and its command is --here.
+  const here = block((await human(["doctor", "--here"], other)).out, "Codex CLI");
+  assert.equal(here.at(-1), "tonedial unwire codex --here");
+  assert.equal(here.filter((line) => line.startsWith("tonedial unwire")).length, 1, here.join("\n"));
 });
 
 test("doctor dims only status facts: the remaining step and the notice stay readable and commands stand out", async () => {
@@ -397,7 +422,13 @@ test("a global wire names a project hook it would double in the preview, and onc
   const shown = preview.out.split("\n");
   const notice = shown.findIndex((line) => /both hooks are present/.test(line));
   assert.ok(notice >= 0, `the preview did not name the duplicate:\n${preview.out}`);
-  assert.ok(shown.includes("  tonedial unwire codex --here"), preview.out);
+  assert.match(shown[notice]!, /^ {2}Codex CLI has /);
+  assert.ok(shown.includes(`  ${join(project, ".codex", "hooks.json")}`), preview.out);
+  // From another folder the command names the project; inside it, `--here` is already the project.
+  assert.ok(shown.includes(`  tonedial unwire codex --project "${project}"`), preview.out);
+  const inside = await human(["wire", "codex", "--global", "--dry-run"], project);
+  assert.ok(inside.out.split("\n").includes("  tonedial unwire codex --here"), inside.out);
+  assert.doesNotMatch(inside.out, /run from that directory/);
   const applied = await human(["wire", "codex", "--global", "--auto"]);
   assert.equal(applied.code, 0, applied.err);
   assert.equal(applied.out.match(/both hooks are present/g)?.length, 1, applied.out);

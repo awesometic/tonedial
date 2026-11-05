@@ -334,7 +334,8 @@ export type Messages = {
     keepProjectOnly: (here: boolean) => string;
     /** Heads the project folders an unwire --global also disconnects. */
     alsoDisconnects: (tool: string) => string;
-    hookDuplicate: (tool: string, destination: string, stale: boolean) => string;
+    /** One agent's project hooks that repeat its global hook; `globalHook` is null where the screen already names it. */
+    hookDuplicate: (label: string, projects: readonly { hook: string; command: string; stale: boolean }[], globalHook: string | null) => string;
     migrationRollback: (operationId: string) => string;
     migrationQuestion: string;
     migrationNotNeeded: string;
@@ -955,7 +956,16 @@ const enMessages: Messages = {
       ? "To connect only this project, disconnect the global connection first, then connect this folder:"
       : "To connect only that project, disconnect the global connection first, then run this from inside it:",
     alsoDisconnects: (tool) => `Also disconnects ${tool} in these projects, which an earlier version recorded on the global hook:`,
-    hookDuplicate: (tool, destination, stale) => `${tool}: this project also configures tone delivery, so both hooks are present${stale ? ". The project hook points to an older runtime" : ""}:\n${destination}\nTo use only the global hook, run from that directory:\ntonedial unwire ${tool} --here`,
+    hookDuplicate: (label, projects, globalHook) => [
+      projects.length === 1
+        ? `${label} has a global and a project hook, so both hooks are present:`
+        : `${label} has a global hook and ${projects.length} project hooks, so all hooks are present:`,
+      ...(globalHook === null ? [] : ["Global hook", globalHook]),
+      projects.length === 1 ? "Project hook" : "Project hooks",
+      ...projects.flatMap(({ hook, stale }) => [hook, ...(stale ? ["This hook points to an older runtime."] : [])]),
+      `To use only the global hook, disconnect the project hook${projects.length === 1 ? "" : "s"}:`,
+      ...projects.map(({ command }) => command),
+    ].join("\n"),
     migrationRollback: (operationId) => `Restore this migration's recorded files and settings with:\ntonedial doctor --fix --rollback ${operationId}`,
     migrationQuestion: "Approve this legacy migration with the saved settings and one recoverable operation?",
     migrationNotNeeded: "The owned context layout is current; no legacy migration is needed.",
@@ -1755,7 +1765,16 @@ const koMessages: Messages = {
       ? "이 프로젝트에만 연결하려면 먼저 전역 연결을 해제한 뒤 이 폴더를 연결하세요:"
       : "그 프로젝트에만 연결하려면 먼저 전역 연결을 해제한 뒤 그 폴더 안에서 실행하세요:",
     alsoDisconnects: (tool) => `이전 버전이 전역 훅에 기록한 다음 프로젝트의 ${tool} 연결도 함께 해제합니다:`,
-    hookDuplicate: (tool, destination, stale) => `${tool}: 이 프로젝트에도 톤 전달 훅이 있어 설정이 중복됩니다${stale ? ". 프로젝트 훅은 이전 런타임 경로를 가리킵니다" : ""}:\n${destination}\n전역 훅만 쓰려면 위 프로젝트 위치에서 실행하세요:\ntonedial unwire ${tool} --here`,
+    hookDuplicate: (label, projects, globalHook) => [
+      projects.length === 1
+        ? `${label}에 전역 훅과 프로젝트 훅이 모두 있습니다:`
+        : `${label}에 전역 훅과 프로젝트 훅 ${projects.length}개가 모두 있습니다:`,
+      ...(globalHook === null ? [] : ["전역 훅", globalHook]),
+      "프로젝트 훅",
+      ...projects.flatMap(({ hook, stale }) => [hook, ...(stale ? ["이 훅은 이전 런타임 경로를 가리킵니다."] : [])]),
+      "전역 훅만 쓰려면 프로젝트 훅 연결을 해제하세요:",
+      ...projects.map(({ command }) => command),
+    ].join("\n"),
     migrationRollback: (operationId) => `이 작업에 기록된 파일과 설정을 복구하려면 실행하세요:\ntonedial doctor --fix --rollback ${operationId}`,
     migrationQuestion: "저장된 설정을 유지하고 복구 가능한 작업 하나로 이전 상태를 옮길까요?",
     migrationNotNeeded: "관리하는 컨텍스트가 현재 형식입니다. 이전 상태를 옮길 필요가 없습니다.",

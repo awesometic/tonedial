@@ -262,7 +262,16 @@ const messages: Messages = {
       ? "このプロジェクトだけに接続するには、先にグローバル接続を解除してから、このフォルダーを接続してください："
       : "そのプロジェクトだけに接続するには、先にグローバル接続を解除してから、そのフォルダー内で実行してください：",
     alsoDisconnects: (tool) => `以前のバージョンがグローバルフックに記録した次のプロジェクトの ${tool} 接続も解除します：`,
-    hookDuplicate: (tool, destination, stale) => `${tool}: このプロジェクトにも口調配信の設定があり、両方のフックが存在します${stale ? "。プロジェクト側は古いランタイムを参照しています" : ""}：\n${destination}\nグローバルフックのみを使うには、このディレクトリで実行してください：\ntonedial unwire ${tool} --here`,
+    hookDuplicate: (label, projects, globalHook) => [
+      projects.length === 1
+        ? `${label}: グローバルフックとプロジェクトフックの両方が存在します：`
+        : `${label}: グローバルフックと ${projects.length} 個のプロジェクトフックがすべて存在します：`,
+      ...(globalHook === null ? [] : ["グローバルフック", globalHook]),
+      "プロジェクトフック",
+      ...projects.flatMap(({ hook, stale }) => [hook, ...(stale ? ["このフックは古いランタイムを参照しています。"] : [])]),
+      "グローバルフックのみを使うには、プロジェクトフックの接続を解除してください：",
+      ...projects.map(({ command }) => command),
+    ].join("\n"),
     migrationRollback: (operationId) => `この移行で記録したファイルと設定を復元：\ntonedial doctor --fix --rollback ${operationId}`,
     migrationQuestion: "保存済み設定を使い、復元可能な1回の操作として旧形式を移行しますか？",
     migrationNotNeeded: "所有するコンテキスト構成は最新です。旧形式の移行は不要です。",

@@ -315,6 +315,19 @@ test("an older project Codex hook is still reported as a duplicate of new global
   const global = await invoke(["init", "--global", "--tools", "codex", "--auto"]);
   assert.equal(global.code, 0, JSON.stringify(global.value));
   assert.deepEqual(global.value.native.tools[0].duplicates.map((entry: { state: string }) => entry.state), ["stale-duplicate"]);
+
+  // The human report says so on the line after the hook it describes.
+  let shown = "";
+  const write = process.stdout.write;
+  process.stdout.write = ((text: string) => { shown += text; return true; }) as typeof write;
+  try {
+    assert.equal(await run(["doctor", "--global"], env, project, false, false), 0);
+  } finally {
+    process.stdout.write = write;
+  }
+  const lines = shown.split("\n").map((line) => line.trim());
+  const staleHook = lines.indexOf(join(project, ".codex", "hooks.json"));
+  assert.ok(staleHook >= 0 && /older runtime/.test(lines[staleHook + 1]!), shown);
 });
 
 test("Codex setup and removal preserve existing or edited file descriptions", async () => {

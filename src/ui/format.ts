@@ -47,10 +47,10 @@ export function recoveryRollbackLines(t: Messages, appId: unknown, nativeId: unk
   ];
   return ids.length === 1 ? t.recovery.rollback(ids[0]!).split("\n").map(line => `  ${line}`) : [];
 }
-import type { AgentTool } from "../core/paths.ts";
+import { connectionScopeFlag, type AgentTool } from "../core/paths.ts";
 import { isAbsolute } from "node:path";
 import { wrap } from "./width.ts";
-import { TARGETS } from "../wiring/targets.ts";
+import { TARGETS, type DeliveryDuplicate } from "../wiring/targets.ts";
 
 /** Display values cannot add terminal commands or rows; storage and JSON retain the original. */
 export function humanText(value: string): string {
@@ -77,6 +77,27 @@ export function receiptLines(text: string, width: number): string[] {
 }
 
 /**
+ * One notice per agent for the project hooks that repeat its global hook. The command for each
+ * project names that folder the way the user can run it from where they are: `--here` in the
+ * folder, `--project` elsewhere. `globalHook` is given only where the screen does not already
+ * show the file.
+ */
+export function hookDuplicateNotice(
+  t: Messages,
+  tool: AgentTool,
+  duplicates: readonly DeliveryDuplicate[],
+  cwd: string,
+  globalHook: string | null = null,
+): string | null {
+  if (duplicates.length === 0) return null;
+  return t.wiring.hookDuplicate(TARGETS[tool].label, duplicates.map(({ destination, path, state }) => ({
+    hook: humanText(path),
+    stale: state === "stale-duplicate",
+    command: humanText(`tonedial unwire ${tool} ${connectionScopeFlag({ live: false, root: destination }, cwd)}`),
+  })), globalHook === null ? null : humanText(globalHook));
+}
+
+/**
  * Configuration receipts never claim that a host has activated the installed hook.
  *
  * One group per host: its status and file, any duplicate it doubles, then that host's own
@@ -88,9 +109,10 @@ export function nativeSetup(
   routes: readonly {
     tool: AgentTool;
     path: string;
-    duplicates?: readonly { destination: string; state: "duplicate" | "stale-duplicate" }[];
+    duplicates?: readonly DeliveryDuplicate[];
   }[],
   global: boolean,
+  cwd: string,
   guidance = true,
 ): string[] {
   const groups = routes.map(({ tool, path, duplicates }) => {
@@ -98,9 +120,8 @@ export function nativeSetup(
     const lines = [t.wiring.hookConfigured(label, humanText(path))];
     // A project wired earlier keeps delivering after this one. Reported next to the route it
     // doubles, with the scope that owns it, because clearing it is that scope's decision.
-    for (const { destination, state } of duplicates ?? []) {
-      lines.push(t.wiring.hookDuplicate(tool, humanText(destination), state === "stale-duplicate"));
-    }
+    const doubled = hookDuplicateNotice(t, tool, duplicates ?? [], cwd);
+    if (doubled !== null) lines.push(doubled);
     if (guidance) {
       if (tool === "codex") lines.push(t.wiring.codexTrust(global));
       else if (tool === "claude") lines.push(t.wiring.claudeTrust(global));

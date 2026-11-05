@@ -220,7 +220,7 @@ export async function runInit(entry: Ctx, _args: string[]): Promise<CommandResul
   if (applied) {
     const routes = perTool.map(({ tool, change, duplicates }) => ({ tool, path: change.path, duplicates }));
     // Host groups are separated by an empty message; keep that row truly blank.
-    for (const message of nativeSetup(copy.cli, routes, ctx.agent.live)) {
+    for (const message of nativeSetup(copy.cli, routes, ctx.agent.live, ctx.cwd)) {
       if (message === "") lines.push("");
       else addReceipt(message);
     }

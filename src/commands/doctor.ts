@@ -29,7 +29,7 @@ import {
   type SeedState,
 } from "../core/seeds.ts";
 import { toCompileInput } from "../core/resolve.ts";
-import { artifactSize, claudeContextCap, humanText, isCopyableLine, nextStep, offNotice, receiptLines, recoveryRollbackLines, section } from "../ui/format.ts";
+import { artifactSize, claudeContextCap, hookDuplicateNotice, humanText, isCopyableLine, nextStep, offNotice, receiptLines, recoveryRollbackLines, section } from "../ui/format.ts";
 import type { Paint } from "../ui/style.ts";
 import { wrap } from "../ui/width.ts";
 import { ApprovalRequired, applyRollback, assertFresh, planChange, previewRollback, type Change } from "../wiring/apply.ts";
@@ -371,17 +371,24 @@ function nativeRoute(ctx: Ctx, config: Config, tool: AgentTool): NativeRoute | n
   };
 }
 
+/** This tool's global native registration and the settings file its hook lives in, when it has one. */
+function globalHook(config: Config, tool: AgentTool): { id: string; path: string } | undefined {
+  const global = connections(config).find((connection) => connection.target === tool && connection.scope === "global");
+  const id = global && registrationKey(tool, "global", global.destination!);
+  const resource = id === undefined ? undefined : nativeResource(config, id);
+  return id === undefined || resource === undefined ? undefined : { id, path: resource.accessPaths?.[id]?.path ?? resource.path };
+}
+
 /**
  * Project hooks that repeat the global hook for this tool. Global inspection reports every one;
  * project inspection reports its own folder. A project that inherits the global file is not one.
  */
 function duplicateHooks(ctx: Ctx, config: Config, tool: AgentTool): DeliveryDuplicate[] {
   if (!isConfigV2(config)) return [];
-  const global = connections(config).find((connection) => connection.target === tool && connection.scope === "global");
-  const globalId = global && registrationKey(tool, "global", global.destination!);
-  if (globalId === undefined || nativeResource(config, globalId) === undefined) return [];
+  const global = globalHook(config, tool);
+  if (global === undefined) return [];
   const here = canonicalDestination(ctx.agent.root);
-  return projectDuplicates(config.wiring, tool, globalId, orderedHook(tool, ctx.paths.root, process.execPath), ctx.paths.root, true)
+  return projectDuplicates(config.wiring, tool, global.id, orderedHook(tool, ctx.paths.root, process.execPath), ctx.paths.root, true)
     .filter((duplicate) => ctx.agent.live || duplicate.destination === here);
 }
 
@@ -886,9 +893,8 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true): Promise<Comm
     const integration = integrations.find(integration => integration.tool === setting.tool);
     const detail = check.humanDetail ?? [check.detail];
     // The summary counts every duplicate, so each one is shown whatever the agent's state.
-    const duplicates = (integration?.duplicates ?? []).map(({ destination, state }) =>
-      ctx.t.wiring.hookDuplicate(setting.tool, humanText(destination), state === "stale-duplicate"));
-    check.notices = duplicates;
+    const notice = hookDuplicateNotice(ctx.t, setting.tool, integration?.duplicates ?? [], ctx.cwd, globalHook(config, setting.tool)?.path ?? null);
+    check.notices = notice === null ? [] : [notice];
     if (integration === undefined || (check.state === "problem" && setting.state !== "disabled")) {
       check.humanDetail = detail;
       continue;

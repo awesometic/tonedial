@@ -511,7 +511,9 @@ When delivery is paused it suggests `tonedial on`; when no agent is connected it
 Other registered connections are listed under "Also connected elsewhere", one row per scope, agents and file status, with the directory they share printed once after its rows.
 Inspecting global from a folder with its own connections says so and gives `tonedial doctor --here`; that folder's listed commands also use `--here`.
 An agent that is connected only in another scope is listed as not connected in this scope.
-A project hook that repeats the global hook for the same agent is reported in both scopes, with the `unwire --here` command that keeps only the global one; JSON lists it in `integrations[].duplicates` with its `scope`, `destination`, `path` and `state`.
+A project hook that repeats the global hook for the same agent is reported in both scopes.
+One notice per agent names the global hook once, each project hook, and the `unwire` command for each project that keeps only the global one: `--here` in that folder, `--project` from anywhere else.
+JSON lists it in `integrations[].duplicates` with its `scope`, `destination`, `path` and `state`.
 ToneDial entries in the inspected scope's hook file that no connection records are a problem.
 When they are exactly what ToneDial writes now, the finding ends with `doctor --fix --tools <tool>` for that scope, which records them without rewriting the file;
 edited ones get guidance only: remove them by hand, then connect again.
