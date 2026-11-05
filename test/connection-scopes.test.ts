@@ -8,6 +8,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { run } from "../src/cli.ts";
 import { isConfigV2, parseConfig } from "../src/core/config.ts";
+import { catalogue } from "../src/core/i18n.ts";
 import { resolvePaths } from "../src/core/paths.ts";
 import { addLegacyRider, recordThroughAlias } from "./support/legacy-fixture.ts";
 
@@ -189,11 +190,17 @@ test("show lists every connection with its scope and directory, keeping two proj
   assert.equal(text.code, 0, text.errors);
   const rows = text.output.split("\n").map((line) => line.trim());
   const at = (row: string) => rows.indexOf(row);
-  // One label per scope, each directory on its own copyable row, its agents beneath it.
-  assert.equal(rows.filter((row) => row === "Project").length, 1);
-  assert.ok(at("Global") < at(home) && at(home) < at("Project"), text.output);
-  assert.ok(at("Project") < at(realpathSync(other)) && at(realpathSync(other)) < at(realpathSync(project)), text.output);
-  assert.equal(rows[at(realpathSync(project)) + 1], "codex");
+  // One row per scope and folder, `project · codex`, with the folder on the row beneath it.
+  const folders = [home, realpathSync(other), realpathSync(project)];
+  assert.deepEqual(folders.map((folder) => rows[at(folder) - 1]), ["global · codex", "project · codex", "project · codex"], text.output);
+  assert.ok(at(home) < at(realpathSync(other)) && at(realpathSync(other)) < at(realpathSync(project)), text.output);
+  for (const folder of folders) assert.equal(text.output.split(folder).length - 1, 1, `${folder} is printed once`);
+
+  // Agents in one folder share its row, and the scope word is the interface language's, as doctor's.
+  assert.equal((await invoke(["wire", "claude", "--project", other, "--auto"])).code, 0);
+  assert.equal((await invoke(["set", "language=ko"])).code, 0);
+  const korean = (await human(["show"])).output.split("\n").map((line) => line.trim());
+  assert.equal(korean[korean.indexOf(realpathSync(other)) - 1], `${catalogue("ko").cli.artifact.connectionScope.project} · claude, codex`);
 });
 
 test("unwire without a scope refuses in a folder with its own connections and names both commands", async () => {

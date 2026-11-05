@@ -16,7 +16,7 @@ import { AGENT_TOOLS } from "../core/paths.ts";
 import { catalogue, isLanguage, type Messages } from "../core/i18n.ts";
 import { explainBlock, gaugeBlock, gaugeHeader } from "../ui/gauge.ts";
 import { planConfig } from "./compile.ts";
-import { artifactSize, combination, humanText, isCopyableLine, nextStep, riskWarnings } from "../ui/format.ts";
+import { artifactSize, combination, humanText, isCopyableLine, nextStep, riskWarnings, scopeToken } from "../ui/format.ts";
 import { maxCells, truncate, wrap } from "../ui/width.ts";
 import { connections, riders, type Connection } from "../wiring/scopes.ts";
 import { inspectContextConsumers } from "../wiring/targets.ts";
@@ -232,8 +232,9 @@ function titleRow(name: string, sizeLabel: string, ctx: Ctx): string {
 }
 
 /**
- * Scope, then each directory on its own copyable row, then the agents connected there.
- * Legacy records carry no scope or directory, so they keep the single summary row.
+ * One row per scope and directory: the scope and its agents the way `doctor` names another scope's
+ * connections (`project · codex`), then the directory on its own copyable row. Legacy records
+ * carry no scope or directory, so they keep the single summary row.
  */
 function connectionRows(records: (Connection & { sharesGlobalHook?: true })[], width: number, t: Messages): string[] {
   if (records.length === 0 || records.some((record) => record.scope === null)) {
@@ -243,18 +244,17 @@ function connectionRows(records: (Connection & { sharesGlobalHook?: true })[], w
   let scope: Connection["scope"] = null;
   let destination: string | null = null;
   for (const record of records) {
-    if (record.scope !== scope) rows.push(...wrap(t.artifact.connectionScope[record.scope!], width - 2).map((line) => `  ${line}`));
-    if (record.scope !== scope || record.destination !== destination) {
-      rows.push(`    ${humanText(record.destination!)}`);
-      const here = records.filter((other) => other.scope === record.scope && other.destination === record.destination);
-      const targets = here.filter((other) => !other.sharesGlobalHook).map((other) => humanText(other.target)).join(", ");
-      for (const text of [...(targets ? [targets] : []), ...here.filter((other) => other.sharesGlobalHook)
-        .map((other) => t.artifact.sharesGlobalHook(humanText(other.target)))]) {
-        rows.push(...wrap(text, width - 6).map((line) => `      ${line}`));
-      }
-    }
+    if (record.scope === scope && record.destination === destination) continue;
     scope = record.scope;
     destination = record.destination;
+    const here = records.filter((other) => other.scope === scope && other.destination === destination);
+    const targets = here.filter((other) => !other.sharesGlobalHook).map((other) => humanText(other.target));
+    // A folder whose only agents ride the global hook still names its scope.
+    rows.push(...wrap([scopeToken(t, scope!), ...(targets.length ? [targets.join(", ")] : [])].join(" · "), width));
+    rows.push(humanText(destination!));
+    for (const rider of here.filter((other) => other.sharesGlobalHook)) {
+      rows.push(...wrap(t.artifact.sharesGlobalHook(humanText(rider.target)), width));
+    }
   }
   return rows;
 }

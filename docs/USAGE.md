@@ -615,7 +615,7 @@ tonedial show
 tonedial show --json
 ```
 
-`show` groups connections by scope and directory; JSON lists them in `connections`.
+`show` lists each scope and directory once, as `project · codex, claude` above the directory, the same words `doctor` uses for other scopes; JSON lists every connection in `connections`.
 A project connection an earlier version recorded on the global hook is labeled, and JSON marks it `sharesGlobalHook: true`;
 `unwire <tool> --global` removes it with the global hook, and its preview lists those project folders under their own heading.
 `tonedial doctor --here` checks one folder's files and lists the other connections.

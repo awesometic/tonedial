@@ -29,7 +29,7 @@ import {
   type SeedState,
 } from "../core/seeds.ts";
 import { toCompileInput } from "../core/resolve.ts";
-import { artifactSize, claudeContextCap, hookDuplicateNotice, humanText, isCopyableLine, nextStep, offNotice, receiptLines, recoveryRollbackLines, section } from "../ui/format.ts";
+import { artifactSize, claudeContextCap, hookDuplicateNotice, humanText, isCopyableLine, nextStep, offNotice, receiptLines, recoveryRollbackLines, scopeToken, section } from "../ui/format.ts";
 import type { Paint } from "../ui/style.ts";
 import { wrap } from "../ui/width.ts";
 import { ApprovalRequired, applyRollback, assertFresh, planChange, previewRollback, type Change } from "../wiring/apply.ts";
@@ -1371,7 +1371,7 @@ function elsewhereReport(rows: Elsewhere[], ctx: Ctx): string[] {
       if (targets.length === 0) continue;
       const detail = state === "ok" ? ctx.t.doctor.destinationPresent
         : state === "gone" ? ctx.t.doctor.destinationGone : ctx.t.doctor.destinationUnwired;
-      lines.push(...wrap([ctx.t.artifact.connectionScope[scope].toLowerCase(), targets.join(", "), detail].join(" · "), ctx.ui.width - 2)
+      lines.push(...wrap([scopeToken(ctx.t, scope), targets.join(", "), detail].join(" · "), ctx.ui.width - 2)
         .map(line => `  ${state === "ok" ? line : ctx.ui.warn(line)}`));
     }
     lines.push(`  ${humanText(destination)}`);

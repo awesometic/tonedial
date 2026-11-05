@@ -82,6 +82,11 @@ export function humanText(value: string): string {
       ? character : `\\u{${character.codePointAt(0)!.toString(16)}}`);
 }
 
+/** The short name of a connection scope in a row such as `project · codex`, in the interface language. */
+export function scopeToken(t: Messages, scope: "global" | "project"): string {
+  return t.artifact.connectionScope[scope].toLowerCase();
+}
+
 /** Prose reflows; an explicitly separate path or command remains byte-for-byte copyable. */
 const COPYABLE_COMMAND = /^(?:tonedial\s+(?!(?:is\s+not|no\s+est[aá]|が|不在)\s)\S|curl\s+\S|npm\s+(?:(?:i|install|uninstall|update)(?:\s+-[a-z-]+|\s+tonedial)\b|(?:prefix|root)\s+-)|https?:\/\/\S+$)/;
 
