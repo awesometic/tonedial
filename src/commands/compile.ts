@@ -5,6 +5,7 @@ import { lstatSync } from "node:fs";
 import { compile, measure, type SizeReport } from "../core/compile.ts";
 import { ConfigError, SettingsUnreadable, defaultConfig, isConfigV2, parseConfig, type Config } from "../core/config.ts";
 import { toCompileInput } from "../core/resolve.ts";
+import { matchesPreset, resolvePreset, type PresetLibrary } from "../core/presets.ts";
 import { contextArtifactTargets, GUIDE_MD } from "../core/seeds.ts";
 import { claudeContextCap, humanText, nextStep, num } from "../ui/format.ts";
 import { wrap } from "../ui/width.ts";
@@ -17,6 +18,20 @@ function artifactChange(ctx: Ctx, target: ReturnType<typeof contextArtifactTarge
   return target.capture === null
     ? planChange(target.path, () => artifact, ctx.t, undefined, ctx.paths.root)
     : { ...rawReadChange(target.capture, ctx.t), after: artifact };
+}
+
+/**
+ * Whether the tone has edits that no saved preset holds, and the command that would save them.
+ * `before` is the config text as read: a root with no config has nothing to save. `show` labels
+ * the state with this, and the commands that would replace it read the same answer.
+ */
+export function unsavedEdits(ctx: Ctx, config: Config, library: PresetLibrary, before: string | null): { needsSave: boolean; saveCommand: string } {
+  const conflict = library.conflicts.some((entry) => !entry.resolved && entry.slug === config.preset);
+  const saved = config.preset && !conflict ? resolvePreset(ctx.paths.presets, config.preset, ctx.t, library)?.preset : null;
+  return {
+    needsSave: before !== null && (config.unsaved || saved == null || !matchesPreset(config, saved)),
+    saveCommand: saved && !saved.bundled ? "tonedial save" : 'tonedial save "My Tone"',
+  };
 }
 
 /** Capture the config before any command reads or transforms it. */

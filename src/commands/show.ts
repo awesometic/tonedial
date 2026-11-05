@@ -9,13 +9,13 @@ import { AXIS_DEFAULT, AXIS_GROUP, AXIS_KIND, AXIS_ORDER, AXIS_RISK_FROM, riskyA
 import { check as checkCombos, PERSONA_DESCRIPTION_MAX } from "../core/combos.ts";
 import { PresetNotFound, settingValues } from "../core/config.ts";
 import { compile, measure } from "../core/compile.ts";
-import { withPreset, matchesPreset, inspectPresetLibrary, resolvePreset } from "../core/presets.ts";
+import { withPreset, inspectPresetLibrary, resolvePreset } from "../core/presets.ts";
 import { toCompileInput } from "../core/resolve.ts";
 import { inspectContextLayout } from "../core/seeds.ts";
 import { AGENT_TOOLS } from "../core/paths.ts";
 import { catalogue, isLanguage, type Messages } from "../core/i18n.ts";
 import { explainBlock, gaugeBlock, gaugeHeader } from "../ui/gauge.ts";
-import { planConfig } from "./compile.ts";
+import { planConfig, unsavedEdits } from "./compile.ts";
 import { artifactSize, combination, humanText, isCopyableLine, nextStep, riskWarnings, scopeToken } from "../ui/format.ts";
 import { maxCells, truncate, wrap } from "../ui/width.ts";
 import { connections, riders, type Connection } from "../wiring/scopes.ts";
@@ -62,13 +62,9 @@ export function runShow(ctx: Ctx, args: string[]): CommandResult {
     : fresh ? `(${ctx.t.artifact.notSetUpTitle})` : config.preset
       ? activeConflict ? config.preset : resolvePreset(ctx.paths.presets, config.preset, ctx.t, library)?.preset.displayName ?? config.preset
       : `(${ctx.t.preset.unsaved})`;
-  const activePreset = config.preset && !activeConflict ? resolvePreset(ctx.paths.presets, config.preset, ctx.t, library)?.preset : null;
-  const needsSave = preview === null && configChange.before !== null &&
-    (config.unsaved || activePreset == null || !matchesPreset(config, activePreset));
+  const { needsSave: unsavedTone, saveCommand } = unsavedEdits(ctx, config, library, configChange.before);
+  const needsSave = preview === null && unsavedTone;
   const status = preview ? ` (${ctx.t.preset.preview})` : config.preset && needsSave ? ` (${ctx.t.preset.unsaved})` : "";
-  const saveCommand = activePreset && !activePreset.bundled
-    ? "tonedial save"
-    : 'tonedial save "My Tone"';
 
   const lines: string[] = [];
   const sizeLabel = artifactSize(size, ctx.t);
