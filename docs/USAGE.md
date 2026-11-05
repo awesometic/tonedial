@@ -942,7 +942,7 @@ It replaces nothing when the installation is current or newer, so it never downg
 npm installations ask `npm view tonedial version time --json`, so your npm registry settings apply;
 curl installations read the package metadata from `TONEDIAL_REGISTRY`.
 If npm cannot answer, `update` says the latest version could not be checked and still offers the npm update.
-`update --dry-run` previews the update without replacing the package; `--auto` approves an unattended update (JSON output never prompts).
+`update --dry-run` previews the update without replacing the package, leads with the status and the two versions, and ends with the command that applies it (`npm update -g tonedial`, or `tonedial update` for a curl installation); `--auto` approves an unattended update (JSON output never prompts).
 JSON adds `latestVersion`, `installedPublishedAt` and `latestPublishedAt`, each `null` when unknown;
 `checkedRemote` is `true` when the registry or npm answered.
 `installedVersion` is the version left installed: the running one, unless the update replaced it.

@@ -149,6 +149,24 @@ test("npm update asks npm for the latest release and shows both versions with th
   assert.doesNotMatch(undated.out, /PRIVATE_/);
 });
 
+test("a dry run leads with the status and ends with the command that applies the update", (t) => {
+  const f = fixture(t);
+  const dry = f.invoke(["update", "--dry-run"], { TEST_NPM_VIEW: npmView("9.8.7") });
+  assert.equal(dry.code, 0, dry.out + dry.err);
+  const rows = dry.out.split("\n").map((line) => line.trim()).filter(Boolean);
+  const at = (pattern: RegExp) => rows.findIndex((row) => pattern.test(row));
+  // Status, then the two versions, then what a dry run promises, then the command, last.
+  assert.deepEqual([at(/^update available/), at(/^installed /), at(/^latest /), at(/^--dry-run/), at(/^npm update -g tonedial$/)], [1, 2, 3, 4, 5], dry.out);
+  assert.equal(rows.length, 6, "the version is named in the rows, not again in a header");
+  assert.doesNotMatch(dry.out, new RegExp(`^  tonedial ${escaped(VERSION)}$`, "m"));
+  assert.doesNotMatch(dry.out, /Package update/);
+  // Nothing to update keeps the same order and offers no command.
+  const current = f.invoke(["update", "--dry-run"], { TEST_NPM_VIEW: npmView(VERSION) });
+  const currentRows = current.out.split("\n").map((line) => line.trim()).filter(Boolean);
+  assert.deepEqual(currentRows.slice(1, 4).map((row) => row.split(" ")[0]), ["up", "installed", "latest"]);
+  assert.equal(currentRows.at(-1), "--dry-run · nothing written");
+});
+
 test("npm update skips an install that is current or newer than the registry and never offers a downgrade", (t) => {
   const f = fixture(t);
   for (const [latest, pattern] of [[VERSION, /up to date/], ["0.0.1", /newer than the latest release/]] as const) {
@@ -184,6 +202,8 @@ test("an unavailable npm version check is reported and the package update still 
   const human = f.invoke(["update"]);
   assert.match(human.out, /latest version could not be checked/);
   assert.match(human.out, /npm update -g tonedial/);
+  // With no latest version to sit beside, the running version is the one place it is named.
+  assert.match(human.out, new RegExp(`^  tonedial ${escaped(VERSION)}$`, "m"));
   const approved = f.invoke(["update", "--auto", "--json"]);
   assert.equal(approved.value.outcome, "updated");
   assert.equal(approved.value.installedVersion, "9.8.7");
@@ -406,6 +426,8 @@ test("curl update reads the registry packument and reports versions, dates and d
   assert.match(dry, new RegExp(`update available · ${escaped(VERSION)} → 9\\.9\\.9`));
   assert.match(dry, /would replace/);
   assert.match(dry, /--dry-run · nothing written/);
+  const dryRows = dry.split("\n").map((line) => line.trim()).filter(Boolean);
+  assert.equal(dryRows[dryRows.indexOf("--dry-run · nothing written") + 1], "tonedial update", "a curl dry run offers the command that applies it");
   const json = JSON.parse(await invoke("--json"));
   assert.equal(json.outcome, "approval-required");
   assert.equal(json.latestVersion, "9.9.9");

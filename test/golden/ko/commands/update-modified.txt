@@ -1,16 +1,14 @@
 status: 0
---- stdout --- [bytes=390; endsWithNewline=true]
+--- stdout --- [bytes=341; endsWithNewline=true]
 ToneDial · update
 
-  tonedial <VERSION>
-
+  업데이트 가능 · <VERSION> → 9.9.9
   설치됨  <VERSION> · 2026-11-01 배포
   최신    9.9.9 · 2026-11-03 배포
-  업데이트 가능 · <VERSION> → 9.9.9
 
-  패키지 업데이트:
-    npm update -g tonedial
   --dry-run · 기록하지 않음
+
+  npm update -g tonedial
 
   ToneDial 공통 상태 디렉터리:
   <ROOT>/state

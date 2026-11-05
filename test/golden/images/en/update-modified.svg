@@ -1,16 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="736" height="624" viewBox="0 0 736 624" role="img" aria-labelledby="title description">
+<svg xmlns="http://www.w3.org/2000/svg" width="736" height="568" viewBox="0 0 736 568" role="img" aria-labelledby="title description">
 <title id="title">ToneDial screen (en · update-modified)</title>
 <desc id="description">ToneDial · update
 
-  tonedial &lt;VERSION&gt;
-
+  update available · &lt;VERSION&gt; → 9.9.9
   installed  &lt;VERSION&gt; · released 2026-11-01
   latest     9.9.9 · released 2026-11-03
-  update available · &lt;VERSION&gt; → 9.9.9
 
-  Package update:
-    npm update -g tonedial
   --dry-run · nothing written
+
+  npm update -g tonedial
 
   Shared ToneDial state:
   &lt;ROOT&gt;/state
@@ -23,20 +21,18 @@
 </desc>
 <rect width="100%" height="100%" rx="16" fill="#171b20"/>
 <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, system-ui" font-size="22"><text x="32" y="48" fill="#edf3f6" font-weight="400" opacity="1">ToneDial · update</text>
-<text x="60" y="104" fill="#edf3f6" font-weight="400" opacity="1">tonedial &lt;VERSION&gt;</text>
-<text x="60" y="160" fill="#edf3f6" font-weight="400" opacity="1">installed</text>
-<text x="214" y="160" fill="#edf3f6" font-weight="400" opacity="1">&lt;VERSION&gt; · released 2026-11-01</text>
-<text x="60" y="188" fill="#edf3f6" font-weight="400" opacity="1">latest</text>
-<text x="214" y="188" fill="#edf3f6" font-weight="400" opacity="1">9.9.9 · released 2026-11-03</text>
-<text x="60" y="216" fill="#edf3f6" font-weight="400" opacity="1">update available · &lt;VERSION&gt; → 9.9.9</text>
-<text x="60" y="272" fill="#edf3f6" font-weight="400" opacity="1">Package update:</text>
-<text x="88" y="300" fill="#edf3f6" font-weight="400" opacity="1">npm update -g tonedial</text>
-<text x="60" y="328" fill="#edf3f6" font-weight="400" opacity="1">--dry-run · nothing written</text>
-<text x="60" y="384" fill="#edf3f6" font-weight="400" opacity="1">Shared ToneDial state:</text>
-<text x="60" y="412" fill="#edf3f6" font-weight="400" opacity="1">&lt;ROOT&gt;/state</text>
-<text x="60" y="468" fill="#edf3f6" font-weight="400" opacity="1">Review the flagged bundled files:</text>
-<text x="88" y="496" fill="#edf3f6" font-weight="400" opacity="1">tonedial doctor --global</text>
-<text x="60" y="524" fill="#edf3f6" font-weight="400" opacity="1">⚠ Locally modified · review before replacement</text>
-<text x="88" y="552" fill="#edf3f6" font-weight="400" opacity="1">skill/tonedial/SKILL.md</text>
-<text x="88" y="580" fill="#edf3f6" font-weight="400" opacity="1">skill/tonedial/references/traits.md</text></g>
+<text x="60" y="104" fill="#edf3f6" font-weight="400" opacity="1">update available · &lt;VERSION&gt; → 9.9.9</text>
+<text x="60" y="132" fill="#edf3f6" font-weight="400" opacity="1">installed</text>
+<text x="214" y="132" fill="#edf3f6" font-weight="400" opacity="1">&lt;VERSION&gt; · released 2026-11-01</text>
+<text x="60" y="160" fill="#edf3f6" font-weight="400" opacity="1">latest</text>
+<text x="214" y="160" fill="#edf3f6" font-weight="400" opacity="1">9.9.9 · released 2026-11-03</text>
+<text x="60" y="216" fill="#edf3f6" font-weight="400" opacity="1">--dry-run · nothing written</text>
+<text x="60" y="272" fill="#edf3f6" font-weight="400" opacity="1">npm update -g tonedial</text>
+<text x="60" y="328" fill="#edf3f6" font-weight="400" opacity="1">Shared ToneDial state:</text>
+<text x="60" y="356" fill="#edf3f6" font-weight="400" opacity="1">&lt;ROOT&gt;/state</text>
+<text x="60" y="412" fill="#edf3f6" font-weight="400" opacity="1">Review the flagged bundled files:</text>
+<text x="88" y="440" fill="#edf3f6" font-weight="400" opacity="1">tonedial doctor --global</text>
+<text x="60" y="468" fill="#edf3f6" font-weight="400" opacity="1">⚠ Locally modified · review before replacement</text>
+<text x="88" y="496" fill="#edf3f6" font-weight="400" opacity="1">skill/tonedial/SKILL.md</text>
+<text x="88" y="524" fill="#edf3f6" font-weight="400" opacity="1">skill/tonedial/references/traits.md</text></g>
 </svg>

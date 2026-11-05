@@ -1,26 +1,22 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="582" height="372" viewBox="0 0 582 372" role="img" aria-labelledby="title description">
+<svg xmlns="http://www.w3.org/2000/svg" width="582" height="316" viewBox="0 0 582 316" role="img" aria-labelledby="title description">
 <title id="title">ToneDial screen (ko · update-current)</title>
 <desc id="description">ToneDial · update
 
-  tonedial &lt;VERSION&gt;
-
+  업데이트 가능 · &lt;VERSION&gt; → 9.9.9
   설치됨  &lt;VERSION&gt; · 2026-11-01 배포
   최신    9.9.9 · 2026-11-03 배포
-  업데이트 가능 · &lt;VERSION&gt; → 9.9.9
 
-  패키지 업데이트:
-    npm update -g tonedial
   --dry-run · 기록하지 않음
+
+  npm update -g tonedial
 </desc>
 <rect width="100%" height="100%" rx="16" fill="#171b20"/>
 <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, system-ui" font-size="22"><text x="32" y="48" fill="#edf3f6" font-weight="400" opacity="1">ToneDial · update</text>
-<text x="60" y="104" fill="#edf3f6" font-weight="400" opacity="1">tonedial &lt;VERSION&gt;</text>
-<text x="60" y="160" fill="#edf3f6" font-weight="400" opacity="1">설치됨</text>
-<text x="172" y="160" fill="#edf3f6" font-weight="400" opacity="1">&lt;VERSION&gt; · 2026-11-01 배포</text>
-<text x="60" y="188" fill="#edf3f6" font-weight="400" opacity="1">최신</text>
-<text x="172" y="188" fill="#edf3f6" font-weight="400" opacity="1">9.9.9 · 2026-11-03 배포</text>
-<text x="60" y="216" fill="#edf3f6" font-weight="400" opacity="1">업데이트 가능 · &lt;VERSION&gt; → 9.9.9</text>
-<text x="60" y="272" fill="#edf3f6" font-weight="400" opacity="1">패키지 업데이트:</text>
-<text x="88" y="300" fill="#edf3f6" font-weight="400" opacity="1">npm update -g tonedial</text>
-<text x="60" y="328" fill="#edf3f6" font-weight="400" opacity="1">--dry-run · 기록하지 않음</text></g>
+<text x="60" y="104" fill="#edf3f6" font-weight="400" opacity="1">업데이트 가능 · &lt;VERSION&gt; → 9.9.9</text>
+<text x="60" y="132" fill="#edf3f6" font-weight="400" opacity="1">설치됨</text>
+<text x="172" y="132" fill="#edf3f6" font-weight="400" opacity="1">&lt;VERSION&gt; · 2026-11-01 배포</text>
+<text x="60" y="160" fill="#edf3f6" font-weight="400" opacity="1">최신</text>
+<text x="172" y="160" fill="#edf3f6" font-weight="400" opacity="1">9.9.9 · 2026-11-03 배포</text>
+<text x="60" y="216" fill="#edf3f6" font-weight="400" opacity="1">--dry-run · 기록하지 않음</text>
+<text x="60" y="272" fill="#edf3f6" font-weight="400" opacity="1">npm update -g tonedial</text></g>
 </svg>
