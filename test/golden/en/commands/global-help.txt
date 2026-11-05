@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=3559; endsWithNewline=true]
+--- stdout --- [bytes=3557; endsWithNewline=true]
 tonedial — give your coding agent a character and keep it in every project
 
 tonedial <command> [options]
@@ -69,7 +69,7 @@ Connection commands use the global scope unless you pass --here (current
 project) or --project DIR. Unattended writes need the scope stated explicitly.
 Command help: tonedial <command> --help
 
-Found a problem or have an idea? Open an issue :)
+Found a problem or have an idea? Open an issue:
 https://github.com/awesometic/tonedial/issues/new/choose
 --- stderr --- [bytes=0; endsWithNewline=false]
 

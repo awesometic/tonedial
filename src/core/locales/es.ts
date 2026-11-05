@@ -38,7 +38,7 @@ const messages: Messages = {
     off: "ToneDial desactivado · entrega del tono en pausa · se conservan los ajustes y TONE.md",
     alreadyOn: "La entrega del tono ya está activada · sin cambios",
     alreadyOff: "La entrega del tono ya está desactivada · sin cambios",
-    openConversation: "Las conversaciones abiertas pueden conservar el tono anterior. Usa una conversación nueva para comparar el estado sin ToneDial.",
+    openConversation: "Las conversaciones abiertas pueden conservar el tono anterior. Usa una conversación nueva para comparar sin ToneDial.",
     offNotice: "ToneDial está desactivado: las conversaciones nuevas no reciben el tono hasta que vuelvas a activarlo.",
     status: (enabled) => `Entrega del tono ${enabled ? "activada" : "desactivada"}`,
   },
@@ -523,7 +523,7 @@ const messages: Messages = {
   help: {
     commandHelp: "Ayuda del comando: tonedial <command> --help",
     fullReference: "Referencia completa: tonedial --help",
-    feedback: "¿Encontraste un problema o tienes una idea? Abre un issue :)\nhttps://github.com/awesometic/tonedial/issues/new/choose",
+    feedback: "¿Encontraste un problema o tienes una idea? Abre un issue:\nhttps://github.com/awesometic/tonedial/issues/new/choose",
     tagline: "dale un personaje a tu agente y mantenlo en cada proyecto",
     footer: "Los comandos de conexión usan el ámbito global salvo que indiques --here (proyecto actual) o --project DIR. Las escrituras sin interacción requieren indicar el ámbito explícitamente.",
     recoveryOptions: "Opciones de recuperación de doctor --fix: tonedial doctor --help",

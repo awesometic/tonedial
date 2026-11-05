@@ -38,7 +38,7 @@ const messages: Messages = {
     off: "ToneDial 已关闭 · 已暂停语气投递 · 保留设置和 TONE.md",
     alreadyOn: "语气投递已处于开启状态 · 无变更",
     alreadyOff: "语气投递已处于关闭状态 · 无变更",
-    openConversation: "已打开的对话可能保留之前的语气。请用新对话准确比较未使用 ToneDial 的状态。",
+    openConversation: "已打开的对话可能保留之前的语气。要在不使用 ToneDial 的情况下对比，请开启新对话。",
     offNotice: "ToneDial 已关闭，重新开启前新对话不会收到语气设置。",
     status: (enabled) => `语气投递${enabled ? "已开启" : "已关闭"}`,
   },
@@ -523,7 +523,7 @@ const messages: Messages = {
   help: {
     commandHelp: "命令帮助：tonedial <command> --help",
     fullReference: "完整参考：tonedial --help",
-    feedback: "发现问题或有想法？欢迎提交 issue :)\nhttps://github.com/awesometic/tonedial/issues/new/choose",
+    feedback: "发现问题或有想法？欢迎提交 issue：\nhttps://github.com/awesometic/tonedial/issues/new/choose",
     tagline: "为编程代理赋予角色，并在每个项目中保持",
     footer: "连接命令默认使用全局范围；当前项目用 --here，其他目录用 --project DIR。无人值守写入必须明确指定范围。",
     recoveryOptions: "doctor --fix 的恢复选项：tonedial doctor --help",

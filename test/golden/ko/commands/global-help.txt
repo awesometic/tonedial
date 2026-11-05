@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=4064; endsWithNewline=true]
+--- stdout --- [bytes=4062; endsWithNewline=true]
 tonedial — 코딩 에이전트에 캐릭터를 더하고 모든 프로젝트에서 유지합니다
 
 tonedial <command> [options]
@@ -70,7 +70,7 @@ tonedial <command> [options]
 지정해 주세요.
 명령별 도움말: tonedial <command> --help
 
-문제를 찾았거나 아이디어가 있으면 이슈로 알려 주세요 :)
+문제를 찾았거나 아이디어가 있으면 이슈로 알려 주세요:
 https://github.com/awesometic/tonedial/issues/new/choose
 --- stderr --- [bytes=0; endsWithNewline=false]
 

@@ -38,7 +38,7 @@ const messages: Messages = {
     off: "ToneDialをオフにしました · 口調の配信を一時停止 · 設定とTONE.mdは保持",
     alreadyOn: "口調の配信はすでにオンです · 変更なし",
     alreadyOff: "口調の配信はすでにオフです · 変更なし",
-    openConversation: "開いている会話には以前の口調が残る場合があります。ToneDialなしの状態と正確に比較するには新しい会話を使ってください。",
+    openConversation: "開いている会話には以前の口調が残る場合があります。ToneDialなしで比較するには、新しい会話を使ってください。",
     offNotice: "ToneDialはオフのため、再びオンにするまで新しい会話には口調が届きません。",
     status: (enabled) => `口調の配信：${enabled ? "オン" : "オフ"}`,
   },
@@ -523,7 +523,7 @@ const messages: Messages = {
   help: {
     commandHelp: "コマンド別ヘルプ：tonedial <command> --help",
     fullReference: "全体のリファレンス：tonedial --help",
-    feedback: "問題やアイデアがあれば、Issue でお知らせください :)\nhttps://github.com/awesometic/tonedial/issues/new/choose",
+    feedback: "問題やアイデアがあれば、Issue でお知らせください：\nhttps://github.com/awesometic/tonedial/issues/new/choose",
     tagline: "コーディングエージェントにキャラクターを与え、全プロジェクトで保つ",
     footer: "接続コマンドは、--here（現在のプロジェクト）か --project DIR を指定しない限りグローバル範囲を使います。無人書き込みでは範囲を明示してください。",
     recoveryOptions: "doctor --fix の復旧オプション：tonedial doctor --help",
