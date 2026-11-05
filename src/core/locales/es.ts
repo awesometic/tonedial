@@ -104,6 +104,7 @@ const messages: Messages = {
     preview: "vista previa",
     unsaved: "cambios sin guardar",
     changesNotSaved: "No se ha guardado como preajuste.",
+    axisOnlyPreview: "Preajuste solo de ejes · al aplicarlo se conservan tus ajustes actuales",
   },
   create: {
     introduction: "Elige nombre, identificador, formas de trato y rol; después ajusta los doce ejes. Enter conserva el valor; \"\" borra un campo opcional. La aprobación final guarda y aplica todo el preajuste.",

@@ -97,7 +97,11 @@ export function runShow(ctx: Ctx, args: string[]): CommandResult {
   const gaugeWidth = Math.max(...gauges.map((line) => maxCells(stripVTControlCharacters(line))));
   const detailWidth = ui.terminal && ui.width >= 119 ? ui.width - gaugeWidth - 4 : ui.width - 2;
   const details: string[] = [ui.bold(ctx.t.artifact.settingsHeading)];
-  if (personaSet) {
+  // A schema-1 preset stores axes only, so the persona, safeword and register on the screen would be
+  // the current tone's, not the preset's. Say what applying it does instead of showing them as its own.
+  const axisOnly = preview !== null && preview.settings === undefined;
+  if (axisOnly) details.push(...wrap(ctx.t.preset.axisOnlyPreview, detailWidth).map((folded) => ui.dim(folded)));
+  if (personaSet && !axisOnly) {
     const bits = [
       age ? ctx.t.persona.ageLabel(humanText(age)) : null,
       gender ? ctx.t.persona.genderLabel(humanText(gender)) : null,
@@ -121,14 +125,17 @@ export function runShow(ctx: Ctx, args: string[]): CommandResult {
 
   // Folded rather than laid out: the safeword is user text of unbounded length, so this row
   // can always exceed the budget and no amount of shortening the fixed words prevents it.
-  for (const text of [stateRow(values, ctx.t), ctx.t.artifact.displaySettings(values.language)]) {
+  // The interface language and the connections belong to the install, not to a preset, and the
+  // language of a root that is not set up is a default no one chose.
+  const rows = axisOnly ? [] : [stateRow(values, ctx.t), ...(fresh || preview !== null ? [] : [ctx.t.artifact.displaySettings(values.language)])];
+  for (const text of rows) {
     for (const folded of wrap(text, detailWidth)) details.push(folded);
   }
   // Project connections an earlier version recorded on the global hook leave with that hook.
   const shared = new Set(AGENT_TOOLS.flatMap((tool) => riders(config, tool, ctx.env, ctx.cwd)).map((rider) => JSON.stringify(rider)));
   const recorded = connections(config).map((connection) =>
     shared.has(JSON.stringify(connection)) ? { ...connection, sharesGlobalHook: true as const } : connection);
-  details.push(...connectionRows(recorded, detailWidth, ctx.t));
+  if (preview === null) details.push(...connectionRows(recorded, detailWidth, ctx.t));
   if (layout !== null) {
     const advice = layout.kind === "fresh"
       ? ctx.t.artifact.notSetUp

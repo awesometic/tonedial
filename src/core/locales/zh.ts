@@ -104,6 +104,7 @@ const messages: Messages = {
     preview: "预览",
     unsaved: "未保存的变更",
     changesNotSaved: "尚未保存为预设。",
+    axisOnlyPreview: "仅含轴的预设 · 应用后当前设置保持不变",
   },
   create: {
     introduction: "选择预设名称、标识名、称呼和角色，再调整全部十二个语气轴。Enter 保留显示值；\"\" 清空可选项。最终确认后保存并应用完整预设。",

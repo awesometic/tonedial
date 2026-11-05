@@ -184,6 +184,8 @@ export type Messages = {
     preview: string;
     unsaved: string;
     changesNotSaved: string;
+    /** `show <slug>` of a preset that stores axes only: its settings are not on the screen. */
+    axisOnlyPreview: string;
   };
   create: {
     introduction: string;
@@ -796,6 +798,7 @@ const enMessages: Messages = {
     preview: "preview",
     unsaved: "unsaved changes",
     changesNotSaved: "Not saved to a preset.",
+    axisOnlyPreview: "Axis-only preset · applying it keeps your current settings",
   },
   create: {
     introduction: "Choose the preset name, slug, address and role, then adjust all twelve axes. Enter keeps the shown value; \"\" clears an optional field. Final approval saves and applies the whole preset.",
@@ -1601,6 +1604,7 @@ const koMessages: Messages = {
     preview: "미리보기",
     unsaved: "저장하지 않은 변경",
     changesNotSaved: "프리셋에 저장 안 됨",
+    axisOnlyPreview: "축만 담은 프리셋 · 적용해도 현재 설정은 바뀌지 않습니다",
   },
   create: {
     introduction: "프리셋 이름·슬러그·호칭·역할을 입력한 뒤 열두 축을 조절합니다. Enter를 누르면 표시된 값을 유지하며, '\"\"'를 입력하면 선택 항목을 지웁니다. 마지막 확인에서 전체 프리셋을 저장하고 적용합니다.",

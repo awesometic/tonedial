@@ -43,6 +43,7 @@ tonedial use ego-sword               # replace current tone settings with this p
 `show` without a slug flags tone settings that have not been saved to a preset and offers a copyable `save` command.
 Your settings and `TONE.md` are already persisted; the notice concerns the preset library.
 Selecting the same preset again discards those unsaved preset changes.
+`show <slug>` previews only what the preset stores, so it leaves out the interface language and connections; for a legacy axis-only preset it prints the axes and says that your current settings stay.
 
 Built-in address and role defaults use the interface language at selection or preview time.
 Changing the interface alone does not rewrite current role text; custom presets always retain literal text.

@@ -619,6 +619,46 @@ test("show prints a legend only while its marker is on the screen", async () => 
   assert.ok(screen.text.split("\n").includes(`  ${EN.preset.changesNotSaved}`), screen.text);
 });
 
+test("show leaves out the language of a root that is not set up and the install rows of a preview", async () => {
+  const env = { HOME: home, TONEDIAL_HOME: join(home, "state"), PATH: "", COLUMNS: "80" };
+  const show = async (...args: string[]) => {
+    out = [];
+    assert.equal(await run(["show", ...args], env, join(home, "project"), false), 0);
+    return out.join("");
+  };
+  // Before init the language is a default nobody chose, so the row is not printed in any language.
+  for (const language of LANGUAGES) {
+    const copy = catalogue(language).cli;
+    out = [];
+    assert.equal(await run(["show"], { ...env, LANG: { en: "en_US.UTF-8", ko: "ko_KR.UTF-8", ja: "ja_JP.UTF-8", zh: "zh_CN.UTF-8", es: "es_ES.UTF-8" }[language] }, join(home, "project"), false), 0);
+    assert.ok(!out.join("").includes(copy.artifact.displaySettings("")), `${language}: a root that is not set up has no language row`);
+  }
+  await initializeState();
+  assert.ok((await show()).includes(EN.artifact.displaySettings("en")), "a set-up root shows its language");
+
+  // A preview shows what the preset stores. The language and the connections are the install's.
+  await cli("set", "persona.note=Keep answers short.", "safeword=stop the act");
+  const complete = await show("royal-advisor");
+  assert.ok(complete.includes(EN.persona.callsYou("Your Majesty")), "a complete preset shows its own persona");
+  assert.ok(!complete.includes("stop the act") && !complete.includes("Keep answers short."), "and not the current tone's");
+  for (const row of [EN.artifact.displaySettings("en"), EN.artifact.connectionRecords([])]) assert.ok(!complete.includes(row), row);
+
+  // A schema-1 preset stores axes only: its screen cannot show a persona, a safeword or a register
+  // as the preset's, because they are the current tone's.
+  const axesOnly = await show("tough-love");
+  assert.ok(axesOnly.includes(EN.preset.axisOnlyPreview));
+  for (const current of ["stop the act", "Keep answers short.", "note ", "register", EN.artifact.displaySettings("en"), EN.artifact.connectionRecords([])]) {
+    assert.ok(!axesOnly.includes(current), `an axis-only preview does not show ${current}`);
+  }
+  // Machine output keeps reporting the current install beside the preview.
+  out = [];
+  assert.equal(await run(["show", "tough-love", "--json"], env, join(home, "project"), false), 0);
+  const json = JSON.parse(out.join(""));
+  assert.equal(json.preview, true);
+  assert.equal(json.language, "en");
+  assert.deepEqual(json.connections, []);
+});
+
 test("show and explain stack cleanly at 60 columns without changing saved state", async () => {
   await initializeState();
   await cli("set", "persona.user_ref=선생님👩‍💻", "safeword=진심으로 부탁할게");

@@ -104,6 +104,7 @@ const messages: Messages = {
     preview: "プレビュー",
     unsaved: "未保存の変更",
     changesNotSaved: "プリセットに未保存です。",
+    axisOnlyPreview: "軸のみのプリセット · 適用しても現在の設定は変わりません",
   },
   create: {
     introduction: "プリセット名、スラッグ、呼称、役割を選び、12個の軸を調整します。Enterで表示値を保持し、\"\"で任意項目を消去します。最後の承認で全設定を保存・適用します。",
