@@ -515,6 +515,7 @@ ToneDial entries in the inspected scope's hook file that no connection records a
 When they are exactly what ToneDial writes now, the finding ends with `doctor --fix --tools <tool>` for that scope, which records them without rewriting the file;
 edited ones get guidance only: remove them by hand, then connect again.
 A global hook kept only by project connections an earlier version recorded is a problem that ends with `unwire <tool> --global`.
+While ToneDial's own files need setting up first, these findings stop at the hook file; the finding for the context files gives the command that comes before them.
 Missing files mean some or all recorded files were absent, not that no connection was registered.
 These are presence checks; `--fix` leaves other scopes alone.
 Use the displayed read-only `doctor` command to inspect them, or `eject` if no longer needed.

@@ -492,6 +492,56 @@ test("doctor names a global hook only an earlier version's project record keeps,
   assert.equal((await json(["doctor", "--global"])).value.checks.find((row: { name: string }) => row.name === "Codex CLI").state, "note");
 });
 
+test("a blocked layout reports a hook nothing records without a step it cannot take", async () => {
+  assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
+  const hook = join(home, ".codex", "hooks.json");
+  const edited = readFileSync(hook, "utf8").replace('"additionalContextLimit": 0', '"additionalContextLimit": 5');
+  const exact = readFileSync(hook, "utf8");
+  // Without its settings and artifact ToneDial is not set up, and every repair here is refused.
+  for (const file of ["config.json", "TONE.md", "AGENTS.md"]) rmSync(join(home, ".tonedial", file));
+  const finding = async () => {
+    const codex = block((await human(["doctor", "--global"])).out, "Codex CLI");
+    const check = (await json(["doctor", "--global"])).value.checks.find((row: { name: string }) => row.name === "Codex CLI");
+    return { codex, check };
+  };
+
+  // The finding ends on the file: no colon introducing a command that is not there.
+  const entries = await finding();
+  assert.equal(entries.codex.at(-1), hook, entries.codex.join("\n"));
+  assert.equal(entries.check.repair, null);
+  assert.doesNotMatch(entries.check.detail, /:\s*$/);
+
+  // An edited entry used to advise a wire the setup gate refuses; the context finding above has the command.
+  writeFileSync(hook, edited);
+  const outside = await finding();
+  assert.equal(outside.codex.at(-1), hook, outside.codex.join("\n"));
+  assert.doesNotMatch(outside.check.detail, /tonedial wire/);
+  assert.match((await human(["doctor", "--global"])).out, /^ {6}tonedial init --tools none --global$/m);
+
+  // Set up again and the same entries get their step back (the unblocked path is covered above).
+  writeFileSync(hook, exact);
+  assert.equal((await human(["doctor", "--fix", "--global", "--from-preset", "caring-brother", "--auto"])).code, 0);
+  assert.equal((await finding()).codex.at(-1), "tonedial doctor --fix --tools codex --global");
+});
+
+test("a global hook only an earlier version's project record keeps, in a blocked layout, ends on its projects", async () => {
+  assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
+  await addLegacyRider(env, "codex", project, true);
+  // A recorded guide that is gone is only a repair, but one that is neither recorded nor there
+  // leaves the layout unclassified. It is blocked while the connection records stay readable.
+  const config = join(home, ".tonedial", "config.json");
+  const saved = JSON.parse(readFileSync(config, "utf8"));
+  delete saved.managedSeeds.guide;
+  writeFileSync(config, JSON.stringify(saved));
+  rmSync(join(home, ".tonedial", "AGENTS.md"));
+
+  const codex = block((await human(["doctor", "--global"])).out, "Codex CLI");
+  assert.match(codex.join(" "), /still sends the tone in every folder/);
+  assert.equal(codex.at(-1), project, codex.join("\n"));
+  const check = (await json(["doctor", "--global"])).value.checks.find((row: { name: string }) => row.name === "Codex CLI");
+  assert.equal(check.repair, null);
+});
+
 test("a repair here leaves healthy connections elsewhere alone and names each scope that needs its own", async () => {
   assert.equal((await human(["init", "--tools", "codex", "--global", "--auto"])).code, 0);
   assert.equal((await human(["wire", "claude", "--here", "--auto"], project)).code, 0);

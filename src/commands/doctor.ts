@@ -866,7 +866,7 @@ async function doctorReport(ctx: Ctx, showRollbackCommands = true): Promise<Comm
       continue;
     }
 
-    const unowned = unownedCheck(ctx, config, tool);
+    const unowned = unownedCheck(ctx, config, tool, diagnosis.layout.kind !== "current");
     if (unowned !== null) {
       checks.push(unowned);
       hookSettings.push({ tool, state: "unknown", basis: "unverified", path: null });
@@ -1214,13 +1214,16 @@ function pathCheck(ctx: Ctx, shape: InstallShape): Check {
  * entries no record owns, or a global hook only earlier-version project records keep. Exact
  * entries are adopted by `doctor --fix --tools`; edited ones get guidance only (decision D5).
  */
-function unownedCheck(ctx: Ctx, config: Config, tool: AgentTool): Check | null {
+function unownedCheck(ctx: Ctx, config: Config, tool: AgentTool, blocked: boolean): Check | null {
   const name = TARGETS[tool].label;
   const path = ctx.agent.hookFile(tool);
+  // A blocked layout refuses every repair, so it gets the finding without the step that follows;
+  // the context finding above it carries the command that unblocks it.
+  const finding = (fact: string, step: string) => blocked ? fact : `${fact}\n${step}`;
   const riding = ctx.agent.live ? riders(config, tool, ctx.env, ctx.cwd) : [];
   if (riding.length) {
     return { name, state: "problem", repair: `tonedial unwire ${tool} --global`,
-      detail: ctx.t.doctor.orphanedHook(path, riding.map(({ destination }) => humanText(destination!))) };
+      detail: finding(ctx.t.doctor.orphanedHook(path, riding.map(({ destination }) => humanText(destination!))), ctx.t.doctor.orphanedRemove) };
   }
   const inspected = boundedChange(ctx, path, (before) => before).change;
   if (inspected === null || inspected.before === null) return null;
@@ -1235,8 +1238,10 @@ function unownedCheck(ctx: Ctx, config: Config, tool: AgentTool): Check | null {
     }
     if (!runsReader(remaining, readerPath(ctx.paths.root), path, ctx.t)) return null;
     return exactDelivery(remaining, orderedHook(tool, ctx.paths.root, process.execPath), ctx.paths.root, path, ctx.t)
-      ? { name, state: "problem", detail: ctx.t.doctor.unrecordedEntries(path), repair: repairCommand(ctx, `doctor --fix --tools ${tool}`) }
-      : { name, state: "problem", detail: ctx.t.doctor.unrecordedEdited(path, repairCommand(ctx, `wire ${tool}`)) };
+      ? { name, state: "problem", detail: finding(ctx.t.doctor.unrecordedEntries(path), ctx.t.doctor.unrecordedAdopt),
+          repair: repairCommand(ctx, `doctor --fix --tools ${tool}`) }
+      : { name, state: "problem",
+          detail: finding(ctx.t.doctor.unrecordedEdited(path), ctx.t.doctor.unrecordedEditedNext(repairCommand(ctx, `wire ${tool}`))) };
   } catch {
     // A file that does not parse is not evidence of ours; the checks that read it report it.
     return null;
