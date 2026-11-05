@@ -14,15 +14,19 @@ const AXIS_WIDTH = Math.max(...AXIS_ORDER.map((a) => cells(a)));
 /** The gutter fits the widest group name of the interface language, which is not the English one. */
 const groupWidth = (t: Messages) => Math.max(...Object.values(t.artifact.axisGroups).map((label) => cells(label)));
 
-/** Labels for the two numeric columns, shared by static and interactive views. */
-export function gaugeHeader(palette: Palette, t: Messages): string {
+/**
+ * Labels for the two numeric columns. The dial passes no `shown` and keeps one static header, because
+ * a legend that appears and disappears while a person edits is worse than one that is always there.
+ * `show` passes what its rows use: the short title, and the risk legend only beside a risky level.
+ */
+export function gaugeHeader(palette: Palette, t: Messages, shown?: { risk: boolean }): string {
   const gutter = palette.width >= 46 ? groupWidth(t) + 1 : 0;
-  const legend = ` · ${t.artifact.riskMarker}`;
+  const legend = shown && !shown.risk ? "" : ` · ${t.artifact.riskMarker}`;
   const prefix = palette.width >= 34
     ? `${" ".repeat(2 + gutter + AXIS_WIDTH + 2)}${padEnd(t.artifact.currentLevel, 10)}`
     : `${t.artifact.currentLevel} / `;
   const full = prefix + t.artifact.defaultLevel + legend;
-  const header = maxCells(full) <= palette.width ? prefix + t.artifact.defaultLevel : prefix + t.artifact.defaultLevelShort;
+  const header = maxCells(full) <= palette.width && shown === undefined ? prefix + t.artifact.defaultLevel : prefix + t.artifact.defaultLevelShort;
   return palette.dim(truncate(header + legend, palette.width));
 }
 

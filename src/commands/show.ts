@@ -5,7 +5,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { stripVTControlCharacters } from "node:util";
 
 import type { CommandResult, Ctx } from "../cli.ts";
-import { AXIS_DEFAULT, AXIS_GROUP, AXIS_KIND, AXIS_RISK_FROM, riskyAxes } from "../core/anchors.ts";
+import { AXIS_DEFAULT, AXIS_GROUP, AXIS_KIND, AXIS_ORDER, AXIS_RISK_FROM, riskyAxes } from "../core/anchors.ts";
 import { check as checkCombos, PERSONA_DESCRIPTION_MAX } from "../core/combos.ts";
 import { PresetNotFound, settingValues } from "../core/config.ts";
 import { compile, measure } from "../core/compile.ts";
@@ -92,7 +92,8 @@ export function runShow(ctx: Ctx, args: string[]): CommandResult {
   const personaSet = Boolean(age || gender || note || selfRef || userRef || user || agent);
   // A preview's values column holds the profile's levels, not the current tone's.
   const headerCopy = preview ? { ...ctx.t, artifact: { ...ctx.t.artifact, currentLevel: ctx.t.artifact.previewLevel } } : ctx.t;
-  const gauges = [gaugeHeader(ui, headerCopy), ...gaugeBlock(axes, ui, ctx.t)];
+  const moved = AXIS_ORDER.some((axis) => axes[axis] !== AXIS_DEFAULT[axis]);
+  const gauges = [gaugeHeader(ui, headerCopy, { risk: riskyAxes(axes).length > 0 }), ...gaugeBlock(axes, ui, ctx.t)];
   const gaugeWidth = Math.max(...gauges.map((line) => maxCells(stripVTControlCharacters(line))));
   const detailWidth = ui.terminal && ui.width >= 119 ? ui.width - gaugeWidth - 4 : ui.width - 2;
   const details: string[] = [ui.bold(ctx.t.artifact.settingsHeading)];
@@ -162,10 +163,12 @@ export function runShow(ctx: Ctx, args: string[]): CommandResult {
         ...nextStep(saveCommand, ui).slice(1));
     }
   } else {
-    // Keep the short legend and save action together after the settings.
-    const legend = ctx.t.artifact.movedFromDefault + (needsSave ? ` · ${ctx.t.preset.changesNotSaved}` : "");
-    const [first, ...rest] = wrap(legend, ui.width - 4);
-    lines.push(`  ${ui.accent("*")} ${ui.dim(first!)}`, ...rest.map((line) => `    ${ui.dim(line)}`),
+    // Keep the legend and save action together after the settings. A marker's key prints only
+    // while the marker does: `*` beside a changed axis, nothing for a tone at its defaults.
+    const legend = [moved ? ctx.t.artifact.movedFromDefault : null, needsSave ? ctx.t.preset.changesNotSaved : null].filter(Boolean).join(" · ");
+    const [first, ...rest] = wrap(legend, ui.width - (moved ? 4 : 2));
+    if (legend) lines.push(`  ${moved ? "* " : ""}${ui.dim(first!)}`, ...rest.map((line) => `  ${moved ? "  " : ""}${ui.dim(line)}`));
+    lines.push(
       ...nextStep(preview ? `tonedial use ${preview.slug}` : fresh ? "tonedial init --tools none --global"
         : needsSave ? saveCommand : paused ? "tonedial on" : "tonedial show --explain", ui).slice(1));
   }

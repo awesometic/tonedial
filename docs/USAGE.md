@@ -303,7 +303,8 @@ When one asks for brevity and the other for depth, the reply opens with the shor
 A request in the current conversation overrides both.
 Whether a model follows this is model behavior; generated checks do not measure it.
 
-`show` marks deviations; `show --explain` describes settings and advisory risks.
+`show` marks deviations and prints the key to a marker (`*`, `!`) only while that marker is on the screen; the dial always shows both keys.
+`show --explain` describes settings and advisory risks.
 Red levels and a color-independent `!` start at `profanity=4`, `critique=4`, `flattery=3`, `conviction=5`, `compliance=5`, `refusal=2` and `bravado=2`.
 They never clamp values or block a setting; the intense-tone approval below is based on the requested components, not the warning display.
 

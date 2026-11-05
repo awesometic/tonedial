@@ -567,8 +567,9 @@ test("default show keeps all axes before complete role settings within 80 column
   assert.ok(screen.replace(/\s+/g, " ").includes(role.user!));
   assert.ok(screen.indexOf("bravado") < screen.indexOf(EN.artifact.settingsHeading), "settings buried the last axis");
   const header = lines.find((line) => line.includes(EN.artifact.currentLevel));
-  assert.ok(header?.includes(EN.artifact.defaultLevel), "the complete header identifies ToneDial defaults");
-  assert.ok(header?.includes(EN.artifact.riskMarker), "the complete header explains advisory risk");
+  assert.ok(header?.includes(EN.artifact.defaultLevelShort), "the header names the column of default levels");
+  assert.ok(!header?.includes(EN.artifact.defaultLevel), "show titles it briefly; the dial keeps the long title");
+  assert.ok(header?.includes(EN.artifact.riskMarker), "a risky level brings the legend for !");
   assert.match(screen, /verbosity\s+[▮▯]{5}\s+3\s+3/);
   assert.match(screen, /refusal\s+[▮▯]{5}\s+3!\s+\*1/);
   assert.ok(screen.includes(EN.artifact.displaySettings("en")));
@@ -581,6 +582,41 @@ test("default show keeps all axes before complete role settings within 80 column
   for (const line of withPersona.trimEnd().split("\n")) assert.ok(maxCells(line) <= 79 || isUnbreakable(line), line);
   assert.ok(withPersona.includes("guide") && withPersona.includes("friend"), "the viewport hid the persona");
   assert.ok(withPersona.includes("bravado") && withPersona.includes('tonedial save "My Tone"'), "the viewport hid an axis or save action");
+});
+
+test("show prints a legend only while its marker is on the screen", async () => {
+  const env = { HOME: home, TONEDIAL_HOME: join(home, "state"), PATH: "", COLUMNS: "80" };
+  const show = async () => {
+    out = [];
+    assert.equal(await run(["show"], env, join(home, "project"), false), 0);
+    const text = out.join("");
+    return { text, header: text.split("\n").find((line) => line.includes(EN.artifact.currentLevel))! };
+  };
+  // Not set up: every axis at its default, nothing risky and nothing to save, so no key is printed.
+  let screen = await show();
+  assert.ok(screen.header.includes(EN.artifact.defaultLevelShort));
+  assert.ok(!screen.header.includes(EN.artifact.riskMarker), "no risky level, no legend for !");
+  assert.ok(!screen.text.includes(EN.artifact.movedFromDefault), "no changed axis, no legend for *");
+  assert.ok(!screen.text.includes(EN.preset.changesNotSaved));
+
+  // A preset changes axes without any being risky, and its saved state still matches.
+  await initializeState();
+  assert.equal(await cli("use", "caring-brother"), 0);
+  screen = await show();
+  assert.ok(screen.text.includes(`* ${EN.artifact.movedFromDefault}`), "the changed axes bring the legend for *");
+  assert.ok(!screen.header.includes(EN.artifact.riskMarker));
+
+  // An edit that is risky and unsaved needs both keys and the save notice.
+  assert.equal(await cli("set", "refusal=3"), 0);
+  screen = await show();
+  assert.ok(screen.header.includes(EN.artifact.riskMarker), "a risky level brings the legend for !");
+  assert.ok(screen.text.includes(`* ${EN.artifact.movedFromDefault} · ${EN.preset.changesNotSaved}`));
+
+  // With every axis back at its default only the save notice remains, with no * to explain.
+  assert.equal(await cli("reset"), 0);
+  screen = await show();
+  assert.ok(!screen.text.includes(EN.artifact.movedFromDefault));
+  assert.ok(screen.text.split("\n").includes(`  ${EN.preset.changesNotSaved}`), screen.text);
 });
 
 test("show and explain stack cleanly at 60 columns without changing saved state", async () => {

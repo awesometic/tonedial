@@ -19,7 +19,7 @@
   "inputs": {
     "scripts/dial-frame.ts": "71ba709632f41d76e5d36bdcf7bdcdb864459b56b9e351622d6e54117dc1205a",
     "src/ui/dial.ts": "cbe95dc50b173c82c136dfd53d929b3132adf5f096301d17f29c6dcafc32e92c",
-    "src/ui/gauge.ts": "0e9071973487c256dce7c7ca94201578ae34b6d36fb3987a368f17ae8a9c09cf",
+    "src/ui/gauge.ts": "707397dd97dd4239b420e454356509cac4c95e797999c6d46b56a164c8243b85",
     "src/ui/prompt.ts": "caa537c24bce28b8d7041e33e87149c2554c38861232eed54bd96f17f2d83ccd",
     "src/ui/style.ts": "2dc560ebc69677d391ec8ab39817c3a89545d6b8b603c080a7f6d09a75450a8e",
     "src/ui/width.ts": "eb1013f8511ccfc8b9eca78e3d74433cfcf30096b7faf71ba118a5cd42163acd",

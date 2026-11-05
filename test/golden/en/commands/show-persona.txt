@@ -1,8 +1,8 @@
 status: 0
---- stdout --- [bytes=1174; endsWithNewline=true]
+--- stdout --- [bytes=1149; endsWithNewline=true]
 ToneDial · show · Caring Brother (unsaved changes)        TONE.md 4,806 chars
 
-                        Current   ToneDial default · ! risky tone
+                        Current   Default
   form     formality    ▮▯▯▯▯  1   *3
            verbosity    ▮▮▮▮▯  4   *3
            profanity    ▮▮▯▯▯  2   *1
