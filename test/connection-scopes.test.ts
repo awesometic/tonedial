@@ -448,6 +448,38 @@ test("init --here in the home directory refuses like wire --here and names the g
   assert.equal(existsSync(resolvePaths(env).config), false);
 });
 
+test("native repair refuses a home project while diagnosis and application recovery remain available", async () => {
+  project = env.HOME!;
+  const paths = resolvePaths(env);
+  mkdirSync(paths.root);
+  const before = readdirSync(scratch, { recursive: true }).sort();
+  const refused = await invoke(["doctor", "--fix", "--tools", "codex", "--here", "--from-preset", "caring-brother", "--dry-run"]);
+  assert.equal(refused.code, 1, JSON.stringify(refused.value));
+  assert.equal(refused.value.ok, false);
+  assert.equal(refused.value.reason, "home-directory");
+  assert.deepEqual(refused.value.commands, ["tonedial doctor --fix --tools codex --global"]);
+  assert.deepEqual(readdirSync(scratch, { recursive: true }).sort(), before);
+
+  assert.equal((await invoke(["init", "--global", "--tools", "none", "--auto"])).code, 0);
+  const config = readFileSync(paths.config);
+  const tone = readFileSync(paths.tone);
+  assert.equal((await invoke(["doctor", "--here"])).code, 0);
+  writeFileSync(paths.tone, "Damaged generated tone\n");
+  const repaired = await invoke(["doctor", "--fix", "--here", "--tools", "none", "--auto"]);
+  assert.equal(repaired.code, 0, JSON.stringify(repaired.value));
+  assert.equal(repaired.value.appRebuilt, true);
+  assert.deepEqual(readFileSync(paths.tone), tone);
+  assert.equal(typeof repaired.value.operationId, "string");
+  const recovered = await invoke(["doctor", "--fix", "--here", "--tools", "none", "--from-operation", repaired.value.operationId, "--dry-run"]);
+  assert.equal(recovered.code, 0, JSON.stringify(recovered.value));
+  const rollback = await invoke(["doctor", "--fix", "--here", "--rollback", repaired.value.operationId, "--auto"]);
+  assert.equal(rollback.code, 0, JSON.stringify(rollback.value));
+  assert.equal(rollback.value.rollback.status, "rolled-back");
+  assert.deepEqual(readFileSync(paths.config), config);
+  assert.equal(readFileSync(paths.tone, "utf8"), "Damaged generated tone\n");
+  assert.deepEqual(readdirSync(project), []);
+});
+
 test("unwire --here removes the skill directories it created once they are empty, and keeps a folder's own", async () => {
   assert.equal((await invoke(["init", "--here", "--tools", "codex,claude", "--auto"])).code, 0);
   assert.equal(existsSync(join(project, ".agents", "skills", "tonedial")), true);

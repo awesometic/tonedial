@@ -122,6 +122,7 @@ export async function runRebuildNative(ctx: Ctx, legacy: LegacyOwnershipEvidence
       lines: attentionLines,
       json: { nativeRepair: attention.length ? "attention" : "not-selected", applied: false, reason: "not-selected", tools: [], attention: attention.length > 0, issues: attention, activation: "unverified" },
     };
+    refuseHomeProject(ctx.agent, ctx.env, `tonedial doctor --fix${ctx.flags.tools ? ` --tools ${ctx.flags.tools}` : ""} --global`, ctx.t);
     const scopeExplicit = ctx.scopeExplicit ?? (ctx.flags.global || ctx.flags.here === true || ctx.flags.project !== null);
     if (ctx.flags.auto && !ctx.flags.dryRun && !scopeExplicit) throw new ScopeRequired(ctx.t);
     const result = await wireSelected({ ...ctx, contextChecks: [configRead] }, tools, { explicitTools, preview, shell, config, configCapture, configRead });
@@ -132,6 +133,7 @@ export async function runRebuildNative(ctx: Ctx, legacy: LegacyOwnershipEvidence
       json: { ...result.json, nativeRepair: attention.length ? "attention" : configured ? "complete" : "not-applied", attention: attention.length > 0, issues: attention, activation: "unverified" },
     };
   } catch (cause) {
+    if (cause instanceof ConfigError && cause.reason === "home-directory") throw cause;
     // Parser errors and provider bodies stay out of every recovery result, including verbose
     // and JSON. The ordinary wire path keeps its existing diagnostics and preview contract.
     const reason = cause instanceof NativeOperationPending ? "native-operation-pending"
