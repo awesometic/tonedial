@@ -654,12 +654,12 @@ export async function run(
       });
       if (layout.cause === "overlap") throw new ConfigError(t.errors.stateInstructionOverlap(paths.root));
       // The steps name the scope a plain `doctor` from here inspects: the command's own, or global.
-      if (layout.cause === "operation") throw recoveryPendingError(paths, t,
-        connectionScopeFlag(connection ? agent : resolveAgentPaths({ global: true, project: null }, env, cwd), cwd));
+      const doctorScope = connectionScopeFlag(connection ? agent : resolveAgentPaths({ global: true, project: null }, env, cwd), cwd);
+      if (layout.cause === "operation") throw recoveryPendingError(paths, t, doctorScope);
       if (layout.kind === "legacy" || layout.kind === "conflict" ||
           layout.kind === "fresh") {
-        throw new ConfigError(t.errors.contextLayout(layout.kind, paths.root, `tonedial doctor ${connectionScopeFlag(agent, cwd)} --json`,
-        `tonedial doctor --fix ${connectionScopeFlag(agent, cwd)}`));
+        throw new ConfigError(t.errors.contextLayout(layout.kind, paths.root, `tonedial doctor ${doctorScope} --json`,
+        `tonedial doctor --fix ${doctorScope}`));
       }
       ctx.contextChecks = layout.checks;
     }

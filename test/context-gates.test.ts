@@ -144,6 +144,20 @@ test("state-only setup preserves unselected legacy imports without treating them
   }
 });
 
+test("a layout refusal names the scope a plain doctor inspects, which a non-connection command does not choose", async () => {
+  const paths = resolvePaths(env);
+  mkdirSync(paths.root);
+  writeFileSync(paths.config, serializeConfig(defaultConfig()));
+  writeFileSync(join(paths.root, "tone.md"), compile(toCompileInput(defaultConfig())));
+  const refused = await invoke(["set", "warmth=2"]);
+  assert.equal(refused.code, 1);
+  const lines = refused.value.error.split("\n");
+  assert.ok(lines.includes("tonedial doctor --fix --global"), refused.value.error);
+  assert.doesNotMatch(refused.value.error, /--here/, "the working folder may be the home, where a project repair refuses");
+  const wire = await invoke(["wire", "codex", "--here", "--auto"]);
+  assert.ok(wire.value.error.split("\n").includes("tonedial doctor --fix --here"), wire.value.error);
+});
+
 test("a generated guide without any recoverable settings requires a source choice before replacement", async () => {
   const paths = resolvePaths(env);
   mkdirSync(paths.root);
