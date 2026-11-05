@@ -9,7 +9,7 @@ import { ConfigError, PresetNotFound, serializeConfig } from "../core/config.ts"
 import { exportAliasesState, projectTonePath } from "../core/paths.ts";
 import { check as checkCombos } from "../core/combos.ts";
 import { withPreset, assertPresetSelection, inspectPresetLibrary, resolvePreset } from "../core/presets.ts";
-import { applyPlanned, contextCapWarnings, planArtifact, planConfig } from "./compile.ts";
+import { applyPlanned, contextCapWarnings, planArtifact, planConfig, unsavedEdits } from "./compile.ts";
 import { activationStep } from "./test.ts";
 import { planChange, rawReadCheck } from "../wiring/apply.ts";
 import { artifactSize, combination, humanText, nextStep, offNotice, riskNotice } from "../ui/format.ts";
@@ -33,6 +33,8 @@ export async function runUse(ctx: Ctx, args: string[]): Promise<CommandResult> {
   const presetReads = selected.selectionReads.map((capture) => rawReadCheck(capture, ctx.t));
 
   const { change: configChange, config } = planConfig(ctx);
+  // Read before the preset replaces the tone: edits that nothing saved are gone after this.
+  const replaced = unsavedEdits(ctx, config, library, configChange.before);
   Object.assign(config, withPreset(config, preset));
 
   const { change: toneChange, size } = planArtifact(ctx, config);
@@ -86,6 +88,10 @@ export async function runUse(ctx: Ctx, args: string[]): Promise<CommandResult> {
       .map((line) => `  ${ui.success(ui.bold(line))}`),
     `  ${ctx.t.artifact.generated}`,
     ...(ctx.flags.verbose ? [`  ${ui.dim(artifactSize(size, ctx.t))}`] : []),
+    ...(replaced.needsSave ? ["",
+      ...wrap(ctx.t.preset.replacedUnsaved(replaced.name === null ? null : humanText(replaced.name)), ui.width - 2).map((line) => `  ${ui.warn(line)}`),
+      ...wrap(ctx.t.preset.saveFirst, ui.width - 2).map((line) => `  ${line}`),
+      ...nextStep(replaced.saveCommand, ui).slice(1)] : []),
     // Folded here rather than at the printer: `lines` are laid out by the command that built
     // them, and a printer that reflowed them would break every column in the gauge block.
     "",

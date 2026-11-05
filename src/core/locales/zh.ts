@@ -105,6 +105,8 @@ const messages: Messages = {
     unsaved: "未保存的变更",
     changesNotSaved: "尚未保存为预设。",
     axisOnlyPreview: "仅含轴的预设 · 应用后当前设置保持不变",
+    replacedUnsaved: (name) => name ? `已替换 ${name} 的未保存更改。` : "已替换未保存的更改。",
+    saveFirst: "下次要保留这类更改，请先保存：",
   },
   create: {
     introduction: "选择预设名称、标识名、称呼和角色，再调整全部十二个语气轴。Enter 保留显示值；\"\" 清空可选项。最终确认后保存并应用完整预设。",

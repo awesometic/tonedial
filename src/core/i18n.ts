@@ -186,6 +186,9 @@ export type Messages = {
     changesNotSaved: string;
     /** `show <slug>` of a preset that stores axes only: its settings are not on the screen. */
     axisOnlyPreview: string;
+    /** `use` replaced a tone with edits no saved preset held; `name` is the preset they were made on, if any. */
+    replacedUnsaved: (name: string | null) => string;
+    saveFirst: string;
   };
   create: {
     introduction: string;
@@ -803,6 +806,8 @@ const enMessages: Messages = {
     unsaved: "unsaved changes",
     changesNotSaved: "Not saved to a preset.",
     axisOnlyPreview: "Axis-only preset · applying it keeps your current settings",
+    replacedUnsaved: (name) => name ? `Replaced unsaved changes to ${name}.` : "Replaced unsaved changes.",
+    saveFirst: "To keep changes like these next time, save first:",
   },
   create: {
     introduction: "Choose the preset name, slug, address and role, then adjust all twelve axes. Enter keeps the shown value; \"\" clears an optional field. Final approval saves and applies the whole preset.",
@@ -1611,6 +1616,8 @@ const koMessages: Messages = {
     unsaved: "저장하지 않은 변경",
     changesNotSaved: "프리셋에 저장 안 됨",
     axisOnlyPreview: "축만 담은 프리셋 · 적용해도 현재 설정은 바뀌지 않습니다",
+    replacedUnsaved: (name) => name ? `${name}에서 저장하지 않은 변경을 덮어썼습니다.` : "저장하지 않은 변경을 덮어썼습니다.",
+    saveFirst: "다음에는 먼저 저장하면 이런 변경을 남길 수 있습니다:",
   },
   create: {
     introduction: "프리셋 이름·슬러그·호칭·역할을 입력한 뒤 열두 축을 조절합니다. Enter를 누르면 표시된 값을 유지하며, '\"\"'를 입력하면 선택 항목을 지웁니다. 마지막 확인에서 전체 프리셋을 저장하고 적용합니다.",

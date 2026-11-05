@@ -627,6 +627,43 @@ test("an interactive init that is previewed or declined has no result heading", 
   }
 });
 
+test("use says what it replaced when the tone had unsaved edits, and how to keep them next time", async () => {
+  // A preset matching its saved definition has nothing to lose: no note.
+  assert.equal(await cli("init", "--here", "--tools", "none", "--auto"), 0, stderr());
+  out = [];
+  assert.equal(await cli("use", "ego-sword"), 0, stderr());
+  assert.doesNotMatch(stdout(), /Replaced unsaved|save first/);
+
+  // Edits on a bundled preset are saved as a new preset; the receipt names the one they were on.
+  assert.equal(await cli("set", "warmth=4"), 0, stderr());
+  out = [];
+  assert.equal(await cli("use", "royal-advisor"), 0, stderr());
+  const rows = stdout().split("\n").map((row) => row.trim());
+  assert.ok(rows.includes(EN.preset.replacedUnsaved("Ego Sword")), stdout());
+  assert.equal(rows[rows.indexOf(EN.preset.saveFirst) + 1], 'tonedial save "My Tone"');
+  assert.equal(config().preset, "royal-advisor");
+
+  // A user preset is updated in place, so the command is plain `save`, and saved edits are no loss.
+  assert.equal(await cli("save", "Mine"), 0, stderr());
+  out = [];
+  assert.equal(await cli("use", "ego-sword"), 0, stderr());
+  assert.doesNotMatch(stdout(), /Replaced unsaved/);
+  assert.equal(await cli("use", "mine"), 0, stderr());
+  assert.equal(await cli("set", "care=1"), 0, stderr());
+  out = [];
+  assert.equal(await cli("use", "mine"), 0, stderr());
+  const again = stdout().split("\n").map((row) => row.trim());
+  assert.ok(again.includes(EN.preset.replacedUnsaved("Mine")), "choosing the same preset again discards the edits too");
+  assert.equal(again[again.indexOf(EN.preset.saveFirst) + 1], "tonedial save");
+
+  // Machine output has no new field for it.
+  assert.equal(await cli("set", "care=2"), 0, stderr());
+  out = [];
+  assert.equal(await cli("use", "ego-sword", "--json"), 0, stderr());
+  assert.deepEqual(Object.keys(JSON.parse(stdout())).sort(),
+    ["axes", "chars", "displayName", "notice", "ok", "preset", "project", "riskAxes", "safeword", "schema", "warnings"]);
+});
+
 test("the interface language is settable after init, not only during it", async () => {
   await initializeState();
   // It used to be reachable through `init --lang` alone, so changing your mind about it meant

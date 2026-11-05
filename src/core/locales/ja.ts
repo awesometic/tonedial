@@ -105,6 +105,8 @@ const messages: Messages = {
     unsaved: "未保存の変更",
     changesNotSaved: "プリセットに未保存です。",
     axisOnlyPreview: "軸のみのプリセット · 適用しても現在の設定は変わりません",
+    replacedUnsaved: (name) => name ? `${name} の未保存の変更を置き換えました。` : "未保存の変更を置き換えました。",
+    saveFirst: "次回こうした変更を残すには、先に保存してください：",
   },
   create: {
     introduction: "プリセット名、スラッグ、呼称、役割を選び、12個の軸を調整します。Enterで表示値を保持し、\"\"で任意項目を消去します。最後の承認で全設定を保存・適用します。",

@@ -25,12 +25,13 @@ function artifactChange(ctx: Ctx, target: ReturnType<typeof contextArtifactTarge
  * `before` is the config text as read: a root with no config has nothing to save. `show` labels
  * the state with this, and the commands that would replace it read the same answer.
  */
-export function unsavedEdits(ctx: Ctx, config: Config, library: PresetLibrary, before: string | null): { needsSave: boolean; saveCommand: string } {
+export function unsavedEdits(ctx: Ctx, config: Config, library: PresetLibrary, before: string | null): { needsSave: boolean; saveCommand: string; name: string | null } {
   const conflict = library.conflicts.some((entry) => !entry.resolved && entry.slug === config.preset);
   const saved = config.preset && !conflict ? resolvePreset(ctx.paths.presets, config.preset, ctx.t, library)?.preset : null;
   return {
     needsSave: before !== null && (config.unsaved || saved == null || !matchesPreset(config, saved)),
     saveCommand: saved && !saved.bundled ? "tonedial save" : 'tonedial save "My Tone"',
+    name: config.preset === null ? null : saved?.displayName ?? config.preset,
   };
 }
 

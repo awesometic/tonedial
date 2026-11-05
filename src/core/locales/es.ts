@@ -105,6 +105,8 @@ const messages: Messages = {
     unsaved: "cambios sin guardar",
     changesNotSaved: "No se ha guardado como preajuste.",
     axisOnlyPreview: "Preajuste solo de ejes · al aplicarlo se conservan tus ajustes actuales",
+    replacedUnsaved: (name) => name ? `Se sustituyeron los cambios sin guardar de ${name}.` : "Se sustituyeron los cambios sin guardar.",
+    saveFirst: "Para conservar cambios así la próxima vez, guarda antes:",
   },
   create: {
     introduction: "Elige nombre, identificador, formas de trato y rol; después ajusta los doce ejes. Enter conserva el valor; \"\" borra un campo opcional. La aprobación final guarda y aplica todo el preajuste.",
