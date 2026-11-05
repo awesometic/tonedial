@@ -738,8 +738,8 @@ export const ja: Catalogue = {
     resultHeading: "準備完了",
     refreshHeading: "更新",
     preset: "開始プリセット（Enter: 1）",
-    userRef: 'あなたの呼称（Enter: 既定値 · 空文字列: 消去）',
-    selfRef: 'エージェントの呼称（Enter: 既定値 · 空文字列: 消去）',
+    userRef: 'あなたの呼称（空文字列: 消去）',
+    selfRef: 'エージェントの呼称（空文字列: 消去）',
     safeword:
       "合言葉：ペルソナ・称賛・冗談なしの平易な回答を一度だけ求めます。権限は付与しません。",
     safewordSkip: "Enter: なし · スキルからも平易な回答を要求できます。",

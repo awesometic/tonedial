@@ -203,7 +203,8 @@ export async function runInit(entry: Ctx, _args: string[]): Promise<CommandResul
   const status = applied
     ? copy.init.done
     : wiring.reason === "dry-run" ? ctx.t.wiring.dryRun : ctx.t.wiring.declined;
-  lines.push(...section(copy.init.resultHeading, ctx.ui),
+  // "Ready" heads a run that finished. A declined or previewed one has only its status.
+  lines.push(...(applied ? section(copy.init.resultHeading, ctx.ui) : [""]),
     `  ${ctx.ui.bold(applied ? ctx.ui.success(status) : status)}`);
   if (applied) {
     addReceipt(ctx.t.artifact.generated, ctx.ui.success);
@@ -304,8 +305,10 @@ async function rebuildExisting(entry: Ctx): Promise<CommandResult> {
   const resultHeading = ctx.canPrompt && !ctx.flags.auto && !ctx.flags.dryRun
     ? section(copy.init.resultHeading, ctx.ui) : [];
   const app = await runAppRebuild(ctx, copy.init.refreshHeading);
+  // The heading belongs to a run that finished; a declined one is a blank line and its status.
+  const heading = resultHeading.length > 0 && !(app.json.applied === true || app.json.reason === "nothing") ? [""] : resultHeading;
   if (app.quarantineOnly) {
-    return { ...app, lines: [...(ctx.canPrompt ? [] : introduction), ...resultHeading, ...app.lines] };
+    return { ...app, lines: [...(ctx.canPrompt ? [] : introduction), ...heading, ...app.lines] };
   }
   if (ctx.flags.dryRun) {
     const answers = await ask(ctx, copy, false, selection);
@@ -324,7 +327,7 @@ async function rebuildExisting(entry: Ctx): Promise<CommandResult> {
       warnings: [...(app.warnings ?? []), ...(native.warnings ?? [])],
     };
   }
-  if (app.rebuiltConfig === null) return { ...app, lines: [...(ctx.canPrompt ? [] : introduction), ...resultHeading, ...app.lines] };
+  if (app.rebuiltConfig === null) return { ...app, lines: [...(ctx.canPrompt ? [] : introduction), ...heading, ...app.lines] };
   const answers = await ask(ctx, copy, false, selection);
   const tools = selection ?? answers.tools!;
   if (ctx.flags.commands && !tools.includes("claude")) throw new ConfigError(ctx.t.errors.commandsNeedClaude);
@@ -332,7 +335,7 @@ async function rebuildExisting(entry: Ctx): Promise<CommandResult> {
   const native = await runRebuildNative(scoped, app.legacy);
   const after = hostHandoff(scoped, native.json.applied === true || native.json.reason === "nothing", tools);
   return {
-    lines: [...(ctx.canPrompt ? [] : introduction), ...resultHeading, ...app.lines, ...native.lines,
+    lines: [...(ctx.canPrompt ? [] : introduction), ...heading, ...app.lines, ...native.lines,
       // A protected connection file is diagnosed, with its manual routes, by the scoped doctor.
       ...(native.json.reason === "protected-native-resource"
         ? nextStep(`tonedial doctor ${connectionScopeFlag(ctx.agent, ctx.cwd)}`, ctx.ui) : []),

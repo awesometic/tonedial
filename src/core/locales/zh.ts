@@ -738,8 +738,8 @@ export const zh: Catalogue = {
     resultHeading: "就绪",
     refreshHeading: "刷新",
     preset: "初始预设（Enter：1）",
-    userRef: '你的称呼（Enter：预设默认值 · 空字符串：清空）',
-    selfRef: '代理自称（Enter：预设默认值 · 空字符串：清空）',
+    userRef: '你的称呼（空字符串：清空）',
+    selfRef: '代理自称（空字符串：清空）',
     safeword:
       "安全词：请求一次不带人设、赞美或玩笑的平实回答，不授予任何权限。",
     safewordSkip: "Enter：不设置 · 仍可通过技能请求平实回答。",

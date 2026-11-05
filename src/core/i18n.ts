@@ -1442,8 +1442,8 @@ const en: Catalogue = {
     resultHeading: "Ready",
     refreshHeading: "Refresh",
     preset: "Starting preset (Enter: 1)",
-    userRef: 'Your name (Enter: preset default · "": clear)',
-    selfRef: 'Agent\'s name (Enter: preset default · "": clear)',
+    userRef: 'Your name ("": clear)',
+    selfRef: 'Agent\'s name ("": clear)',
     safeword:
       "Safeword: request one plain answer without persona, praise or jokes. It grants no permissions.",
     safewordSkip: "Enter: none · the skill can still request a plain answer.",
@@ -2251,8 +2251,8 @@ const ko: Catalogue = {
     resultHeading: "준비 완료",
     refreshHeading: "새로 고침",
     preset: "시작 프리셋 (Enter: 1)",
-    userRef: '내 호칭 (Enter: 프리셋 기본값 · "": 지우기)',
-    selfRef: '에이전트 호칭 (Enter: 프리셋 기본값 · "": 지우기)',
+    userRef: '내 호칭 ("": 지우기)',
+    selfRef: '에이전트 호칭 ("": 지우기)',
     safeword:
       "세이프워드: 한 답변만 페르소나·칭찬·농담 없이 담백하게 요청합니다. 권한은 바꾸지 않습니다.",
     safewordSkip: "Enter: 없음 · 스킬로도 담백한 답을 요청할 수 있습니다.",

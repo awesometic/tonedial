@@ -593,6 +593,40 @@ test("bare set commits an interactive dial change through the command path", asy
   assert.equal(tone(), compile(toCompileInput(saved)), "the generated artifact does not match saved settings");
 });
 
+test("an interactive init that is previewed or declined has no result heading", async () => {
+  const entry = join(dirname(fileURLToPath(import.meta.url)), "..", "src", "cli.ts");
+  // A terminal-shaped stdin drives the real command path. "Ready" heads a run that finished; a
+  // preview or a declined approval is only its status, and the shape of the heading must not make
+  // an unfinished run read as complete.
+  const interactive = (args: string[], input: string) => spawnSync(process.execPath, ["--input-type=module", "-e", `
+    Object.defineProperty(process.stdin, "isTTY", { value: true });
+    Object.defineProperty(process.stdout, "isTTY", { value: true });
+    process.stdin.setRawMode = () => process.stdin;
+    const { run } = await import(${JSON.stringify(pathToFileURL(entry).href)});
+    process.exitCode = await run(${JSON.stringify(args)});
+  `], { cwd: join(home, "project"), env: { ...commandEnv(), NO_COLOR: "1", TERM: "xterm" }, input, encoding: "utf8", timeout: 10_000 });
+  for (const language of ["en", "ko"] as const) {
+    const copy = catalogue(language);
+    const preview = interactive(["init", "--here", "--tools", "none", "--lang", language, "--dry-run"], "");
+    assert.equal(preview.status, 0, preview.stderr);
+    assert.ok(preview.stdout.includes(copy.cli.wiring.dryRun), preview.stdout);
+    assert.ok(!preview.stdout.includes(copy.init.resultHeading), `${language}: a preview is not ready`);
+
+    // An existing root whose bundled files are stale asks before it refreshes them.
+    await initializeState();
+    const saved = config();
+    const raw = JSON.parse(readFileSync(paths().config, "utf8"));
+    raw.managedSeeds["preset/bratty-kid"].version = 0;
+    writeFileSync(paths().config, JSON.stringify(raw));
+    const declined = interactive(["init", "--here", "--lang", language], "n\n");
+    assert.equal(declined.status, 0, declined.stderr);
+    assert.ok(declined.stdout.includes(copy.cli.wiring.declined), declined.stdout);
+    assert.ok(!declined.stdout.includes(copy.init.resultHeading), `${language}: a declined refresh is not ready`);
+    assert.equal(config().language, saved.language);
+    rmSync(join(home, "state"), { recursive: true, force: true });
+  }
+});
+
 test("the interface language is settable after init, not only during it", async () => {
   await initializeState();
   // It used to be reachable through `init --lang` alone, so changing your mind about it meant

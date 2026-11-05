@@ -523,6 +523,8 @@ def init_case(root: Path, language: str, node: str, binary: Path, approve: bool)
             prompt_start = session.mark()
             session.send(b"1\n")
             session.wait_for([b"Your name", "내 호칭".encode()], since=prompt_start)
+            if b"preset default" in session.output[prompt_start:] or "프리셋 기본값".encode() in session.output[prompt_start:]:
+                raise ScenarioError("init name prompt gives Enter a second meaning")
             prompt_start = session.mark()
             session.send(b"\n")
             session.wait_for([b"Agent's name", "에이전트 호칭".encode()], since=prompt_start)
@@ -540,6 +542,10 @@ def init_case(root: Path, language: str, node: str, binary: Path, approve: bool)
             marker = init_done(language) if approve else init_declined(language)
             if marker not in session.output:
                 raise ScenarioError(f"init {'approval' if approve else 'cancel'}: missing result marker")
+            # The heading belongs to a run that finished, not to a declined one.
+            heading = "  준비 완료".encode() if language == "ko" else b"  Ready"
+            if (heading in session.output) != approve:
+                raise ScenarioError(f"init {'approval' if approve else 'cancel'}: result heading {'missing' if approve else 'printed'}")
         state = scratch / "state"
         files = snapshot(state)
         if approve:

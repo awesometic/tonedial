@@ -738,8 +738,8 @@ export const es: Catalogue = {
     resultHeading: "Listo",
     refreshHeading: "Actualización",
     preset: "Preajuste inicial (Enter: 1)",
-    userRef: 'Tu nombre (Enter: valor del preajuste · cadena vacía: borrar)',
-    selfRef: 'Nombre del agente (Enter: valor del preajuste · cadena vacía: borrar)',
+    userRef: 'Tu nombre (cadena vacía: borrar)',
+    selfRef: 'Nombre del agente (cadena vacía: borrar)',
     safeword:
       "Palabra clave: pide una respuesta sencilla sin personalidad, elogios ni bromas. No concede permisos.",
     safewordSkip: "Enter: ninguna · la habilidad también permite pedir una respuesta sencilla.",
