@@ -285,6 +285,37 @@ test("bare unwire in a terminal asks with the wire picker and marks installed an
   assert.equal(existsSync(join(project, ".codex", "hooks.json")), true);
 });
 
+test("an empty answer to the wire and unwire picker cancels without writing; a typed none still refuses", async () => {
+  assert.equal((await invoke(["init", "--global", "--tools", "none", "--auto"])).code, 0);
+  assert.equal((await invoke(["wire", "codex", "--here", "--auto"])).code, 0);
+  const paths = resolvePaths(env);
+  const entry = join(dirname(fileURLToPath(import.meta.url)), "..", "src", "cli.ts");
+  const ask = (language: "en" | "ko", command: "wire" | "unwire", answer: string) => spawnSync(process.execPath, ["--input-type=module", "-e", `
+    Object.defineProperty(process.stdin, "isTTY", { value: true });
+    Object.defineProperty(process.stdout, "isTTY", { value: true });
+    const { run } = await import(${JSON.stringify(pathToFileURL(entry).href)});
+    process.exitCode = await run([${JSON.stringify(command)}, "--here"]);
+  `], { cwd: project, env: { ...env, PATH: "", NO_COLOR: "1", LANG: language === "ko" ? "ko_KR.UTF-8" : "en_US.UTF-8" }, input: answer, encoding: "utf8", timeout: 10_000 });
+  for (const language of ["en", "ko"] as const) {
+    const copy = catalogue(language).cli;
+    if (language === "ko") assert.equal((await invoke(["set", "language=ko"])).code, 0);
+    const before = [readFileSync(paths.config, "utf8"), readFileSync(join(project, ".codex", "hooks.json"), "utf8")];
+    for (const [command, said, prompt] of [["wire", copy.wiring.nothingConnected, copy.errors.toolsPrompt], ["unwire", copy.wiring.nothingDisconnected, copy.errors.unwireToolsPrompt]] as const) {
+      const cancelled = ask(language, command, "\n");
+      assert.equal(cancelled.status, 0, cancelled.stderr);
+      assert.equal(cancelled.stderr, "");
+      const rows = cancelled.stdout.split("\n");
+      assert.ok(rows.includes(`  ${said}`), cancelled.stdout);
+      // The question is set off from the scope lines above it.
+      assert.equal(rows[rows.indexOf(`  ${prompt.trimEnd()}`) - 1], "", cancelled.stdout);
+      assert.deepEqual([readFileSync(paths.config, "utf8"), readFileSync(join(project, ".codex", "hooks.json"), "utf8")], before);
+    }
+  }
+  const refused = ask("ko", "wire", "none\n");
+  assert.equal(refused.status, 1);
+  assert.ok(refused.stderr.includes(catalogue("ko").cli.errors.toolsSelection), refused.stderr);
+});
+
 test("project wiring names the version-control choice once and does not list its files again; global wiring says nothing", async () => {
   assert.equal((await invoke(["init", "--global", "--tools", "none", "--auto"])).code, 0);
   const wired = await human(["wire", "codex", "--here", "--auto"]);

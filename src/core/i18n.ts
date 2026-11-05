@@ -380,6 +380,9 @@ export type Messages = {
     stateKept: (root: string) => string;
     deleteYourself: string;
     nothingWired: string;
+    /** The agent picker of wire / unwire answered with an empty line. */
+    nothingConnected: string;
+    nothingDisconnected: string;
     /** After a project connection is written: its hooks hold paths from this machine. */
     projectHooks: string;
     projectIsHome: (command: string) => string;
@@ -1011,6 +1014,8 @@ const enMessages: Messages = {
     stateKept: (root) => `Presets and settings stay in:\n${root}`,
     deleteYourself: "to remove state too, delete this directory yourself",
     nothingWired: "No connections in this scope · nothing to disconnect",
+    nothingConnected: "Nothing connected.",
+    nothingDisconnected: "Nothing disconnected.",
     projectHooks: "The project hooks run ToneDial with paths from this machine. Keep them out of version control (for example with .git/info/exclude), or commit them only if you mean to.",
     projectIsHome: (command) => `This folder is your home directory, so a project connection here would use the global files. Use the global scope instead:\n  ${command}`,
     damaged: (path, reason) => `${path}: ${reason}. Remove the stray marker, then run eject again.`,
@@ -1357,8 +1362,8 @@ const enMessages: Messages = {
     toolsSelection: "Use a non-empty comma-separated agent list. Only init accepts none, on its own.",
     toolsAmbiguous: "Pass a positional agent or --tools, not both.",
     commandsNeedClaude: "--commands requires claude in the selected agents.",
-    toolsPrompt: "Agents to connect (comma-separated): ",
-    unwireToolsPrompt: "Agents to disconnect (comma-separated): ",
+    toolsPrompt: "Agents to connect (comma-separated · Enter: cancel): ",
+    unwireToolsPrompt: "Agents to disconnect (comma-separated · Enter: cancel): ",
     toolInstalled: "installed",
     toolConnected: "connected",
     unwireToolsRequired: (example, eject, auto) => `Choose an agent to disconnect.${auto ? "\n--auto approves your selection only; choose agents explicitly." : ""}\nFor example:\n  ${example}\nTo disconnect every agent in this scope:\n  ${eject}`,
@@ -1819,6 +1824,8 @@ const koMessages: Messages = {
     stateKept: (root) => `프리셋과 설정은 이곳에 그대로 남습니다:\n${root}`,
     deleteYourself: "상태까지 지우려면 이 디렉터리를 직접 삭제해 주세요",
     nothingWired: "이 범위에 연결된 항목 없음 · 해제할 것 없음",
+    nothingConnected: "연결하지 않았습니다.",
+    nothingDisconnected: "연결을 해제하지 않았습니다.",
     projectHooks: "프로젝트 훅에는 이 컴퓨터의 경로가 들어 있습니다. 버전 관리에서 제외하거나(예: .git/info/exclude), 의도한 경우에만 커밋하세요.",
     projectIsHome: (command) => `이 폴더는 홈 디렉터리라서 프로젝트 연결이 전역 연결과 같은 파일을 씁니다. 대신 전역 범위로 실행하세요:\n  ${command}`,
     damaged: (path, reason) => `${path}: ${reason}. 남은 마커를 지운 뒤 eject를 다시 실행해 주세요`,
@@ -2166,8 +2173,8 @@ const koMessages: Messages = {
     toolsSelection: "에이전트 이름을 쉼표로 구분해 입력해 주세요. none은 init에서만 단독으로 쓸 수 있습니다.",
     toolsAmbiguous: "에이전트 인자와 --tools 중 하나만 써 주세요.",
     commandsNeedClaude: "--commands를 쓰려면 에이전트 선택에 claude를 포함해 주세요.",
-    toolsPrompt: "연결할 에이전트(쉼표로 구분): ",
-    unwireToolsPrompt: "연결을 해제할 에이전트(쉼표로 구분): ",
+    toolsPrompt: "연결할 에이전트(쉼표로 구분 · Enter: 취소): ",
+    unwireToolsPrompt: "연결을 해제할 에이전트(쉼표로 구분 · Enter: 취소): ",
     toolInstalled: "설치됨",
     toolConnected: "연결됨",
     unwireToolsRequired: (example, eject, auto) => `연결을 해제할 에이전트를 지정해 주세요.${auto ? "\n--auto는 선택한 변경만 승인합니다. 에이전트는 직접 골라 주세요." : ""}\n예:\n  ${example}\n이 범위의 모든 에이전트 연결을 해제하려면:\n  ${eject}`,

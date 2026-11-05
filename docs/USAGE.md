@@ -479,7 +479,7 @@ When `claude` is connected to a project interactively and installed on `PATH`, `
 When both are connected, the first installed of Codex and Claude Code is offered.
 `wire` accepts a positional tool name or `--tools <list>`.
 With neither, it shows `init`'s numbered agent picker in a terminal,
-marking agents installed on `PATH` and those already connected in the scope;
+marking agents installed on `PATH` and those already connected in the scope; an empty answer cancels with exit 0 and writes nothing;
 without a terminal it stops and shows an example command.
 
 ### Review host enablement

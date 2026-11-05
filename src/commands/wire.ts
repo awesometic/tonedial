@@ -54,7 +54,9 @@ export async function runWire(ctx: Ctx, args: string[]): Promise<CommandResult> 
       const example = `tonedial wire codex ${connectionScopeFlag(ctx.agent, ctx.cwd)}`;
       throw new ConfigError(ctx.t.errors.wireToolsRequired(example, ctx.flags.auto), { reason: "tools-required", commands: [example] });
     }
-    return wireSelected(ctx, await askTools(ctx, ctx.t.errors.toolsPrompt));
+    const picked = await askTools(ctx, ctx.t.errors.toolsPrompt);
+    // An empty answer cancels: nothing was chosen, so nothing is previewed or written.
+    return picked.length ? wireSelected(ctx, picked) : { lines: [`  ${ctx.t.wiring.nothingConnected}`], json: { applied: false, reason: "cancelled", tools: [] } };
   }
   const tools = args[0] !== undefined ? selectTool(ctx, args[0]) : parseToolSelection(selection, false, ctx.t);
   return wireSelected(ctx, tools);
@@ -69,7 +71,7 @@ async function askTools(ctx: Ctx, question: string): Promise<AgentTool[]> {
   ]]));
   const rl = createInterface({ input: process.stdin, output: process.stdout });
   try {
-    process.stdout.write(`  ${question.trimEnd()}\n`);
+    process.stdout.write(`\n  ${question.trimEnd()}\n`);
     return await pickTools(rl, false, ctx.t, marks);
   } finally {
     rl.close();
@@ -399,7 +401,8 @@ export async function runUnwire(ctx: Ctx, args: string[]): Promise<CommandResult
   if (!explicit) {
     refuseUnscopedDisconnect(planConfig(ctx).config, ctx.cwd, `tonedial unwire${named ? ` ${named[0]}` : ""}`, ctx.t, named ?? undefined);
   }
-  return disconnect(ctx, named ?? await askTools(ctx, ctx.t.errors.unwireToolsPrompt));
+  const picked = named ?? await askTools(ctx, ctx.t.errors.unwireToolsPrompt);
+  return picked.length ? disconnect(ctx, picked) : { lines: [`  ${ctx.t.wiring.nothingDisconnected}`], json: { applied: false, reason: "cancelled", tools: [] } };
 }
 
 /** `all` is eject's every-agent removal, which reports an empty scope as such. */

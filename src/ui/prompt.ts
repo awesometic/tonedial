@@ -139,8 +139,9 @@ export async function confirm(question: string): Promise<Answer> {
 
 /**
  * The numbered agent picker `init`, `wire` and `unwire` share. Rows name each host as people
- * know it, with any marks the caller gives, and the answer takes numbers or ids; an empty
- * answer is `none`, which only init accepts.
+ * know it, with any marks the caller gives, and the answer takes numbers or ids. An empty answer
+ * picks nothing: init reads it as `none`, wire and unwire as a cancel. A typed `none` is still
+ * init's alone.
  */
 export async function pickTools(rl: Interface, allowNone: boolean, t: Messages, marks: Partial<Record<AgentTool, string[]>> = {}): Promise<AgentTool[]> {
   for (const [i, tool] of AGENT_TOOLS.entries()) {
@@ -148,6 +149,7 @@ export async function pickTools(rl: Interface, allowNone: boolean, t: Messages, 
     process.stdout.write(`    ${i + 1}. ${TARGETS[tool].label} (${tool})${marked}\n`);
   }
   const chosen = (await rl.question("  > ")).trim();
+  if (chosen === "") return [];
   const names = chosen.split(",").map((name) => AGENT_TOOLS[Number(name.trim()) - 1] ?? name.trim()).join(",");
-  return parseToolSelection(chosen === "" ? "none" : names, allowNone, t);
+  return parseToolSelection(names, allowNone, t);
 }
