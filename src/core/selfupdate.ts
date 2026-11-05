@@ -27,10 +27,12 @@ export const RELEASE_TIMEOUT_MS = 30_000;
 
 const TARBALL_BOUNDS = { maxBytes: RELEASE_MAX_BYTES, timeoutMs: RELEASE_TIMEOUT_MS };
 /**
- * Metadata is a small JSON document. The tarball's cap here would hand `JSON.parse` 16 MB.
+ * Metadata is a small JSON document. The tarball's cap here would hand `JSON.parse` 16 MB, and a
+ * check that only decides whether to offer an update should not keep a person waiting as long as a
+ * download may. The npm and curl routes share this bound.
  * shortcut: the whole packument must fit (about 43 KB at 0.1.11); raise the cap if a long release history outgrows it.
  */
-const METADATA_BOUNDS = { maxBytes: 1024 * 1024, timeoutMs: RELEASE_TIMEOUT_MS };
+const METADATA_BOUNDS = { maxBytes: 1024 * 1024, timeoutMs: 10_000 };
 
 /** The registry's latest release and the publication times it reports, `null` where it vouches for none. */
 export type LatestVersion = { version: string; publishedAt: string | null; installedPublishedAt: string | null };
@@ -85,7 +87,7 @@ export function npmLatest(env: NodeJS.ProcessEnv, installed: string): LatestVers
   const executable = onPath("npm", env);
   if (executable === null) return null;
   const result = spawnSync(resolve(executable), ["view", "tonedial", "version", "time", "--json"],
-    { env, encoding: "utf8", timeout: RELEASE_TIMEOUT_MS, maxBuffer: METADATA_BOUNDS.maxBytes, stdio: ["ignore", "pipe", "ignore"] });
+    { env, encoding: "utf8", timeout: METADATA_BOUNDS.timeoutMs, maxBuffer: METADATA_BOUNDS.maxBytes, stdio: ["ignore", "pipe", "ignore"] });
   if (result.status !== 0) return null;
   try {
     const raw = JSON.parse(result.stdout) as { version?: unknown; time?: unknown } | null;

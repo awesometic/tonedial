@@ -38,8 +38,11 @@ const prefix = process.env.TEST_NPM_PREFIX;
 if (args[0] === "prefix") process.stdout.write(prefix + "\\n");
 else if (args[0] === "root") process.stdout.write(path.join(prefix, "lib", "node_modules") + "\\n");
 else if (args[0] === "view") {
-  if (!process.env.TEST_NPM_VIEW) process.exit(1);
-  process.stdout.write(process.env.TEST_NPM_VIEW);
+  // A registry that never answers. It gives up after a minute so a command that stops waiting
+  // for it cannot leave this process behind.
+  if (process.env.TEST_NPM_HANG) setTimeout(() => process.exit(1), 60000);
+  else if (!process.env.TEST_NPM_VIEW) process.exit(1);
+  else process.stdout.write(process.env.TEST_NPM_VIEW);
 } else if (args[0] === "update") {
   if (args[args.indexOf("--prefix") + 1] !== prefix) process.exit(99);
   if (process.env.TEST_NPM_PERMISSION) {
@@ -184,6 +187,24 @@ test("an unavailable npm version check is reported and the package update still 
   const approved = f.invoke(["update", "--auto", "--json"]);
   assert.equal(approved.value.outcome, "updated");
   assert.equal(approved.value.installedVersion, "9.8.7");
+});
+
+test("an npm version check that never answers is given up on well before the package wait", (t) => {
+  const f = fixture(t);
+  const started = Date.now();
+  // Not `f.invoke`: that stops the command after 10 seconds, which is the wait under test.
+  const result = spawnSync(process.execPath, [join(f.installed, "dist", "bin.js"), "update", "--dry-run", "--json"], {
+    cwd: join(f.scratch, "project"), env: { ...f.env, TEST_NPM_HANG: "1" }, encoding: "utf8", timeout: 25_000,
+  });
+  const waited = Date.now() - started;
+  assert.equal(result.error, undefined, `the command was still waiting after ${waited} ms`);
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  const value = JSON.parse(result.stdout);
+  assert.equal(value.outcome, "dry-run");
+  assert.equal(value.latestVersion, null);
+  assert.equal(value.checkedRemote, false);
+  assert.ok(waited < 20_000, `the check waited ${waited} ms`);
+  assert.deepEqual(f.calls(), [["view", "tonedial", "version", "time", "--json"]], "npm was asked once and no update ran");
 });
 
 test("update help omits the scope flag it still accepts from earlier releases", (t) => {
