@@ -655,6 +655,16 @@ test("unwire --global removes a project connection an earlier version recorded t
   assert.deepEqual(readdirSync(physical), [], "the rider's skill link goes with it");
 });
 
+test("a state root under a regular file refuses a disconnect in one line, not a stack trace", async () => {
+  writeFileSync(join(scratch, "not-a-folder"), "");
+  env.TONEDIAL_HOME = join(scratch, "not-a-folder", "state");
+  for (const command of ["unwire", "eject"]) {
+    const refused = await invoke([command, "codex", "--global", "--auto"].filter((arg) => command === "unwire" || arg !== "codex"));
+    assert.equal(refused.code, 1, command);
+    assert.doesNotMatch(refused.value.error, /\n\s+at /, command);
+  }
+});
+
 test("a global connection is removed when the home is spelled differently than when it was made", async () => {
   // Only the agent files move with the home, so the state root stays put between the two spellings.
   const real = join(scratch, "real-parent", "home");

@@ -9,7 +9,7 @@ import { toCompileInput } from "./core/resolve.ts";
 import { inspectContextLayout } from "./core/seeds.ts";
 import { OperationError, inspectOperations } from "./core/operations.ts";
 import { RegionError } from "./wiring/region.ts";
-import { connectionScopeFlag, installShape, resolveAgentPaths, resolvePaths, shellQuote, type AgentPaths } from "./core/paths.ts";
+import { connectionScopeFlag, installShape, resolveAgentPaths, resolvePaths, shellQuote, type AgentPaths, type Paths } from "./core/paths.ts";
 import { catalogue, configLanguage, detectLanguage, messages, type Catalogue, type Messages } from "./core/i18n.ts";
 import { isColourMode, palette, type Palette } from "./ui/style.ts";
 import { cells, maxCells, resolveBudget, wrap } from "./ui/width.ts";
@@ -665,7 +665,7 @@ export async function run(
     }
     // Disconnecting reads no settings, so it skips the gate above, but a held operation lock still
     // refuses its write. Say so now, with the commands for it, rather than after a preview.
-    if ((name === "unwire" || name === "eject") && inspectOperations(paths).lock.state !== "none") {
+    if ((name === "unwire" || name === "eject") && operationHeld(paths)) {
       throw recoveryPendingError(paths, t, connectionScopeFlag(agent, cwd));
     }
     // The title and scope precede the command's first output, so a refusal on stderr has neither.
@@ -784,6 +784,15 @@ function notice(message: string, ui: Palette): string {
  * The command a person reruns to repeat this invocation: its arguments and options, the
  * effective `scope` spelled out (an unattended rerun needs it), and no approval or dry-run mode.
  */
+/** Unreadable state is not a held lock: the write that needs it reports the failure in its own words. */
+function operationHeld(paths: Paths): boolean {
+  try {
+    return inspectOperations(paths).lock.state !== "none";
+  } catch {
+    return false;
+  }
+}
+
 function rerunCommand(name: string, args: string[], flags: Flags, scope: string | null): string {
   const quote = (value: string) => /^[\w@%+=:,./-]+$/.test(value) ? value : `"${shellQuote(value)}"`;
   const options = FLAG_NAMES.flatMap((flag) => {
