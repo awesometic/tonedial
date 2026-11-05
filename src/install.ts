@@ -1229,7 +1229,7 @@ async function runInstaller(args: InstallArguments): Promise<void> {
     }
   }
   installCandidate(root, args.candidate, repair, planned);
-  if (!args.json) process.stdout.write(`Package repaired: tonedial ${candidate.version}. Application recovery follows.\n`);
+  if (!args.json) process.stdout.write(`Package repaired: tonedial ${candidate.version}. ToneDial file recovery follows.\n`);
   // After resolving a pending operation, inspect the now-installed release with current data.
   // Replaying the historical source or rollback selector would request another restoration.
   const afterArgs = beforeRecovery ? { ...args, recovery: args.recovery.filter((flag, index, flags) =>
