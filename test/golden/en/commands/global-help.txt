@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=3564; endsWithNewline=true]
+--- stdout --- [bytes=3559; endsWithNewline=true]
 tonedial — give your coding agent a character and keep it in every project
 
 tonedial <command> [options]
@@ -12,7 +12,7 @@ To get started, set up, preview and adjust your tone, then connect an agent:
 
 Tone
   set <key>=<value>...  change axes, role or settings · no args opens the dial
-  show [slug]           show settings · a slug previews a saved profile
+  show [slug]           show settings · a slug previews a saved preset
   get [key]             show current values · a key adds meaning and choices
   reset [axis]          reset one axis · no args resets all twelve
   address [self user]   set the agent's and your names · no args prompts ·
@@ -26,9 +26,9 @@ Preset library
   list                  list bundled and saved presets
   use <slug>            apply a preset
   create [name] ...     create and apply a preset · no args guides setup
-  save [display name]   save the current tone as a profile
-  export <slug>         back up a profile, including address and role, as JSON
-  import <file>         import a profile from JSON · use applies it
+  save [display name]   save the current tone as a preset
+  export <slug>         back up a preset, including address and role, as JSON
+  import <file>         import a preset from JSON · use applies it
   edit [preset <slug>]  open settings or a preset in $EDITOR
 
 Connections
@@ -53,7 +53,7 @@ Options
   --commands            init: also install /tone
   --tools=LIST          agents to connect · init: none = state only
   --fix                 doctor: repair fixable findings
-  --preset=SLUG         test: preview a saved profile · current state kept
+  --preset=SLUG         test: preview a saved preset · current state kept
   --slug=SLUG           create/save: preset slug (lowercase, digits, dashes)
   --accept-usage        test: accept account usage and charges for this launch
   --explain             show: explain axes, settings, risky levels

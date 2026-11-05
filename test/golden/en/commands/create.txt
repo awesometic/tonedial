@@ -1,8 +1,8 @@
 status: 0
---- stdout --- [bytes=799; endsWithNewline=true]
+--- stdout --- [bytes=798; endsWithNewline=true]
 ToneDial · create
 
-  Profile to save · Example (example)
+  Preset to save · Example (example)
   agent calls itself your big brother · calls you little sibling
   user context: A younger sibling sharing problems with an older brother.
   (57/200 characters)

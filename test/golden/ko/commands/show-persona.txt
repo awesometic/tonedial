@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=1216; endsWithNewline=true]
+--- stdout --- [bytes=1201; endsWithNewline=true]
 ToneDial · show · Caring Brother (저장하지 않은 변경)         TONE.md 4,779자
 
                          현재      ToneDial 기본값 · ! 위험 말투
@@ -25,7 +25,7 @@ ToneDial · show · Caring Brother (저장하지 않은 변경)         TONE.md 
   화면 언어 ko
   연결: 없음
 
-  * ToneDial 기본값과 다름 · 프로필에 저장되지 않았습니다.
+  * ToneDial 기본값과 다름 · 프리셋에 저장 안 됨
   tonedial save "My Tone"
 --- stderr --- [bytes=0; endsWithNewline=false]
 

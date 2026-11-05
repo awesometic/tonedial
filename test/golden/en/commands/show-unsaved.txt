@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=1288; endsWithNewline=true]
+--- stdout --- [bytes=1287; endsWithNewline=true]
 ToneDial · show · Example (unsaved changes)               TONE.md 4,765 chars
 
                          Current   ToneDial default · ! risky tone
@@ -27,7 +27,7 @@ ToneDial · show · Example (unsaved changes)               TONE.md 4,765 chars
   Interface language en
   Connections: none
 
-  * differs from ToneDial's default · Not saved to a profile.
+  * differs from ToneDial's default · Not saved to a preset.
   tonedial save
 --- stderr --- [bytes=0; endsWithNewline=false]
 

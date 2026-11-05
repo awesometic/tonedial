@@ -75,8 +75,8 @@ const messages: Messages = {
       `请先应用，然后另存为新名称：\n  tonedial use ${slug}`,
     editSaved: (slug) => `${slug} 已保存`,
     editAxesKept: (unsaved) => unsaved
-      ? "已保留当前语气设置；与保存的配置不同。"
-      : "已保留当前语气设置；与保存的配置一致。",
+      ? "已保留当前语气设置；与已保存的预设不同。"
+      : "已保留当前语气设置；与已保存的预设一致。",
     slugNotEditable: (was, tried) =>
       `不能编辑标识名；当前预设和连接记录指向 ${was}。` +
       `请先应用，然后另存为 ${tried}：\n  tonedial use ${was}`,
@@ -103,10 +103,10 @@ const messages: Messages = {
     nonDefault: (count) => `${count} 个非默认语气轴`,
     preview: "预览",
     unsaved: "未保存的变更",
-    changesNotSaved: "尚未保存到配置。",
+    changesNotSaved: "尚未保存为预设。",
   },
   create: {
-    introduction: "选择配置名称、标识名、称呼和角色，再调整全部十二个语气轴。Enter 保留显示值；\"\" 清空可选项。最终确认后保存并应用完整配置。",
+    introduction: "选择预设名称、标识名、称呼和角色，再调整全部十二个语气轴。Enter 保留显示值；\"\" 清空可选项。最终确认后保存并应用完整预设。",
     name: "显示名称",
     slug: "标识名（小写字母、数字、连字符）",
     user: "你的角色或背景（最多 200 字符）",
@@ -118,7 +118,7 @@ const messages: Messages = {
     exists: (slug) => `${slug}：预设已存在。请选择其他标识名，或用 save 更新。`,
     notCreated: "未创建预设，当前设置未变更。",
     descriptionCount: (count, cap) => `${count}/${cap} 字符`,
-    reviewHeading: "待保存的配置",
+    reviewHeading: "待保存的预设",
   },
   recovery: {
     heading: "应用恢复",
@@ -539,16 +539,16 @@ const messages: Messages = {
       address: "设置代理自称和用户称呼 · 无参数则交互输入 · 频率: set address_frequency=rarely",
       persona: "设置代理和用户角色 · 无参数则交互输入",
       reset: "重置一个语气轴 · 无参数重置全部十二个",
-      show: "显示当前设置 · 指定标识名预览已保存的配置档案",
+      show: "显示当前设置 · 指定标识名预览已保存的预设",
       test: "在新对话中预览当前语气或预设",
-      save: "将当前语气保存为配置",
+      save: "将当前语气保存为预设",
       create: "创建并应用预设 · 无参数则引导设置",
       list: "列出内置及已保存的预设",
       edit: "使用 $EDITOR 打开设置或预设",
       use: "应用预设",
       compile: "重建 TONE.md · 更改语气时会自动执行",
-      export: "将含称呼和角色的配置备份为 JSON",
-      import: "从 JSON 导入配置 · use 应用",
+      export: "将含称呼和角色的预设备份为 JSON",
+      import: "从 JSON 导入预设 · use 应用",
       wire: "在所选范围连接代理 · 无参数则交互选择",
       unwire: "断开代理 · 无参数则交互选择",
       doctor: "检查连接 · --fix 修复",
@@ -572,7 +572,7 @@ const messages: Messages = {
       fromOperation: "doctor --fix：从操作中选择保存设置",
       fromPreset: "doctor --fix：为不可用设置选择预设",
       restorePreset: "doctor --fix：恢复一个缺失或损坏的用户预设",
-      preset: "test：预览保存配置 · 保留当前状态",
+      preset: "test：预览已保存的预设 · 保留当前状态",
       slug: "create/save：指定预设标识名（小写字母、数字、连字符）",
       acceptUsage: "test：接受本次启动的账号用量及费用",
       explain: "show：解释语气轴、设置和风险级别",

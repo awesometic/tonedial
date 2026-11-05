@@ -637,7 +637,7 @@ def create_case(root: Path, language: str, node: str, binary: Path, outcome: str
                     session.send(b"1\r")
                     session.wait_for([b"[y/N]"])
                     review = session.output[approval_start:]
-                    heading = "저장할 프로필".encode() if language == "ko" else b"Profile to save"
+                    heading = "저장할 프리셋".encode() if language == "ko" else b"Preset to save"
                     if heading not in review or b"Fictional reviewer" not in review or b"18/200" not in review:
                         raise ScenarioError("create approval omitted the profile role summary")
                     if snapshot(state) != before:

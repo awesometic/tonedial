@@ -31,7 +31,7 @@ TONE.md 4,950자
   화면 언어 ko
   연결: 없음
 
-  * ToneDial 기본값과 다름 · 프로필에 저장되지 않았습니다.
+  * ToneDial 기본값과 다름 · 프리셋에 저장 안 됨
   tonedial save "My Tone"
 </desc>
 <rect width="100%" height="100%" rx="16" fill="#171b20"/>
@@ -102,6 +102,6 @@ TONE.md 4,950자
 <text x="60" y="804" fill="#edf3f6" font-weight="400" opacity="1">auto</text>
 <text x="60" y="832" fill="#edf3f6" font-weight="400" opacity="1">화면 언어 ko</text>
 <text x="60" y="860" fill="#edf3f6" font-weight="400" opacity="1">연결: 없음</text>
-<text x="60" y="916" fill="#edf3f6" font-weight="400" opacity="1">* ToneDial 기본값과 다름 · 프로필에 저장되지 않았습니다.</text>
+<text x="60" y="916" fill="#edf3f6" font-weight="400" opacity="1">* ToneDial 기본값과 다름 · 프리셋에 저장 안 됨</text>
 <text x="60" y="944" fill="#edf3f6" font-weight="400" opacity="1">tonedial save "My Tone"</text></g>
 </svg>

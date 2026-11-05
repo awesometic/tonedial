@@ -75,8 +75,8 @@ const messages: Messages = {
       `Aplícalo y guárdalo con otro nombre:\n  tonedial use ${slug}`,
     editSaved: (slug) => `${slug} guardado`,
     editAxesKept: (unsaved) => unsaved
-      ? "Se conserva el tono actual; difiere del perfil guardado."
-      : "Se conserva el tono actual; coincide con el perfil guardado.",
+      ? "Se conserva el tono actual; difiere del preajuste guardado."
+      : "Se conserva el tono actual; coincide con el preajuste guardado.",
     slugNotEditable: (was, tried) =>
       `No se puede editar el identificador. El preajuste activo y la conexión apuntan a ${was}. ` +
       `Aplícalo y guárdalo como ${tried}:\n  tonedial use ${was}`,
@@ -103,10 +103,10 @@ const messages: Messages = {
     nonDefault: (count) => `${count} ${count === 1 ? "eje distinto" : "ejes distintos"} del valor predeterminado`,
     preview: "vista previa",
     unsaved: "cambios sin guardar",
-    changesNotSaved: "No se ha guardado en un perfil.",
+    changesNotSaved: "No se ha guardado como preajuste.",
   },
   create: {
-    introduction: "Elige nombre, identificador, formas de trato y rol; después ajusta los doce ejes. Enter conserva el valor; \"\" borra un campo opcional. La aprobación final guarda y aplica todo el perfil.",
+    introduction: "Elige nombre, identificador, formas de trato y rol; después ajusta los doce ejes. Enter conserva el valor; \"\" borra un campo opcional. La aprobación final guarda y aplica todo el preajuste.",
     name: "Nombre visible",
     slug: "Identificador (minúsculas, dígitos y guiones)",
     user: "Tu rol o contexto (hasta 200 caracteres)",
@@ -118,7 +118,7 @@ const messages: Messages = {
     exists: (slug) => `${slug}: ya existe un preajuste. Elige otro identificador o actualízalo con save.`,
     notCreated: "No se creó ningún preajuste; los ajustes actuales no cambian.",
     descriptionCount: (count, cap) => `${count}/${cap} caracteres`,
-    reviewHeading: "Perfil que se guardará",
+    reviewHeading: "Preajuste que se guardará",
   },
   recovery: {
     heading: "Recuperación de la aplicación",
@@ -539,16 +539,16 @@ const messages: Messages = {
       address: "definir el nombre del agente y el tuyo · sin argumentos pregunta · frecuencia: set address_frequency=rarely",
       persona: "definir roles del agente y usuario · sin argumentos pregunta",
       reset: "restablecer un eje · sin argumentos, los doce",
-      show: "mostrar ajustes · con identificador, previsualiza un perfil",
+      show: "mostrar ajustes · con identificador, previsualiza un preajuste",
       test: "probar tu tono o un preajuste en otra conversación",
-      save: "guardar el tono actual como perfil",
+      save: "guardar el tono actual como preajuste",
       create: "crear y aplicar un preajuste · sin argumentos guía la configuración",
       list: "listar los preajustes incluidos y guardados",
       edit: "abrir ajustes o un preajuste en $EDITOR",
       use: "aplicar un preajuste",
       compile: "reconstruir TONE.md · los cambios de tono ya lo hacen",
-      export: "respaldar el perfil con nombres y rol en JSON",
-      import: "importar un perfil JSON · use lo aplica",
+      export: "respaldar el preajuste con nombres y rol en JSON",
+      import: "importar un preajuste JSON · use lo aplica",
       wire: "conectar un agente en el ámbito elegido · sin argumentos pregunta",
       unwire: "desconectar un agente · sin argumentos pregunta",
       doctor: "comprobar conexiones · reparar con --fix",
@@ -572,7 +572,7 @@ const messages: Messages = {
       fromOperation: "doctor --fix: elegir ajustes guardados de una operación",
       fromPreset: "doctor --fix: preajuste para ajustes no disponibles",
       restorePreset: "doctor --fix: restaurar un preajuste ausente o dañado",
-      preset: "test: previsualizar un perfil guardado · conservar el estado",
+      preset: "test: previsualizar un preajuste guardado · conservar el estado",
       slug: "create/save: elegir el identificador del preajuste (minúsculas, dígitos, guiones)",
       acceptUsage: "test: aceptar consumo y cargos de este inicio",
       explain: "show: explicar ejes, ajustes y niveles de riesgo",

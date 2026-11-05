@@ -75,8 +75,8 @@ const messages: Messages = {
       `適用してから、別の名前で保存してください：\n  tonedial use ${slug}`,
     editSaved: (slug) => `${slug} を保存しました`,
     editAxesKept: (unsaved) => unsaved
-      ? "現在の口調設定は保持しました。保存済みプロファイルとは異なります。"
-      : "現在の口調設定は保持しました。保存済みプロファイルと一致しています。",
+      ? "現在の口調設定は保持しました。保存済みプリセットとは異なります。"
+      : "現在の口調設定は保持しました。保存済みプリセットと一致しています。",
     slugNotEditable: (was, tried) =>
       `スラッグは編集できません。適用中のプリセットと接続記録は ${was} を参照しています。` +
       `適用してから、${tried} として保存してください：\n  tonedial use ${was}`,
@@ -103,10 +103,10 @@ const messages: Messages = {
     nonDefault: (count) => `既定値と異なる軸 ${count}個`,
     preview: "プレビュー",
     unsaved: "未保存の変更",
-    changesNotSaved: "プロファイルに未保存です。",
+    changesNotSaved: "プリセットに未保存です。",
   },
   create: {
-    introduction: "プロファイル名、スラッグ、呼称、役割を選び、12個の軸を調整します。Enterで表示値を保持し、\"\"で任意項目を消去します。最後の承認で全設定を保存・適用します。",
+    introduction: "プリセット名、スラッグ、呼称、役割を選び、12個の軸を調整します。Enterで表示値を保持し、\"\"で任意項目を消去します。最後の承認で全設定を保存・適用します。",
     name: "表示名",
     slug: "スラッグ（英小文字・数字・ハイフン）",
     user: "あなたの役割や背景（200文字まで）",
@@ -118,7 +118,7 @@ const messages: Messages = {
     exists: (slug) => `${slug}: 既に存在します。別のスラッグを選ぶか、save で更新してください。`,
     notCreated: "プリセットは作成していません。現在の設定は変更していません。",
     descriptionCount: (count, cap) => `${count}/${cap}文字`,
-    reviewHeading: "保存するプロファイル",
+    reviewHeading: "保存するプリセット",
   },
   recovery: {
     heading: "アプリケーションの復旧",
@@ -539,15 +539,15 @@ const messages: Messages = {
       address: "自称と呼称を設定 · 引数なしで質問 · 頻度: set address_frequency=rarely",
       persona: "エージェントとユーザーの役割を設定 · 引数なしで質問",
       reset: "軸を1つ初期化 · 引数なしで全12軸",
-      show: "設定を表示 · スラッグ指定でプロフィールをプレビュー",
+      show: "設定を表示 · スラッグ指定でプリセットをプレビュー",
       test: "新しい会話で現在の口調かプリセットをプレビュー",
-      save: "現在の口調をプロファイルに保存",
+      save: "現在の口調をプリセットに保存",
       create: "プリセットを作成・適用 · 引数なしで案内",
       list: "組み込みと保存済みのプリセットを一覧表示",
       edit: "設定かプリセットを $EDITOR で開く",
       use: "プリセットを適用",
       compile: "TONE.md を再構築 · 口調を変えると自動で実行",
-      export: "呼称と役割を含むプロファイルをJSONでバックアップ",
+      export: "呼称と役割を含むプリセットをJSONでバックアップ",
       import: "JSONから読み込み · use で適用",
       wire: "選択した範囲でエージェントを接続 · 引数なしで案内",
       unwire: "エージェントの接続を解除 · 引数なしで案内",
@@ -572,7 +572,7 @@ const messages: Messages = {
       fromOperation: "doctor --fix: 操作から保存済み設定を選択",
       fromPreset: "doctor --fix: 不足した設定用のプリセット",
       restorePreset: "doctor --fix: 不足・破損したユーザープリセットを復元",
-      preset: "test: 保存プロファイルをプレビュー · 現在の状態は保持",
+      preset: "test: 保存済みプリセットをプレビュー · 現在の状態は保持",
       slug: "create/save: スラッグを指定（英小文字・数字・ハイフン）",
       acceptUsage: "test: この起動のアカウント使用量と料金に同意",
       explain: "show: 軸・設定・注意レベルの説明",

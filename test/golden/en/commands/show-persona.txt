@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=1188; endsWithNewline=true]
+--- stdout --- [bytes=1187; endsWithNewline=true]
 ToneDial · show · Caring Brother (unsaved changes)        TONE.md 4,806 chars
 
                          Current   ToneDial default · ! risky tone
@@ -25,7 +25,7 @@ ToneDial · show · Caring Brother (unsaved changes)        TONE.md 4,806 chars
   Interface language en
   Connections: none
 
-  * differs from ToneDial's default · Not saved to a profile.
+  * differs from ToneDial's default · Not saved to a preset.
   tonedial save "My Tone"
 --- stderr --- [bytes=0; endsWithNewline=false]
 
