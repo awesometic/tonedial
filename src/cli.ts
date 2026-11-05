@@ -742,11 +742,12 @@ export async function run(
     }
     if (cause instanceof PresetNotFound && ctx !== null) {
       // The failed invocation with the nearest slug in place of the one typed: `show typo` is
-      // answered with `show`, and a dry run stays one. `test` carries the slug in --preset.
+      // answered with `show`, and a dry run stays one. `test` carries the slug in --preset; usage
+      // consent is per launch, so it does not ride along to a preset the person did not name.
       const near = cause.near;
       const swapped = rest.map((arg, i) => near !== null && i === rest.lastIndexOf(cause.slug) ? near : arg);
       const command = near === null ? null : `${rerunCommand(name, name === "test" ? rest : swapped,
-        name === "test" ? { ...flags, preset: near } : flags, null)}${flags.dryRun ? " --dry-run" : ""}`;
+        name === "test" ? { ...flags, preset: near, acceptUsage: false } : flags, null)}${flags.dryRun ? " --dry-run" : ""}`;
       return fail(asJson, cause.t.preset.unknown(cause.slug, cause.known, near === null ? null : { slug: near, command: command! }), 1, uiErr);
     }
     if (cause instanceof ApprovalRequired && ctx?.rerun !== undefined) {

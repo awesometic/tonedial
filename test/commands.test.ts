@@ -1157,6 +1157,7 @@ test("a misspelled preset is answered with the nearest slug as the same command"
     [["export", "ego-swrod"], "tonedial export ego-sword"],
     [["edit", "preset", "my-ton", "--dry-run"], "tonedial edit preset my-tone --dry-run"],
     [["test", "codex", "--dry-run", "--preset", "ego-swrod"], "tonedial test codex --preset ego-sword --dry-run"],
+    [["test", "codex", "--accept-usage", "--dry-run", "--preset", "ego-swrod"], "tonedial test codex --preset ego-sword --dry-run"],
   ] as const) {
     err = [];
     assert.equal(await cli(...argv), 1, argv.join(" "));
