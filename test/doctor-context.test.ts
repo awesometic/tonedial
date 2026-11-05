@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { afterEach, beforeEach, test } from "node:test";
 import childProcess from "node:child_process";
 import fs from "node:fs";
-import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { syncBuiltinESMExports } from "node:module";
 import { PassThrough } from "node:stream";
 import { join } from "node:path";
@@ -47,7 +47,7 @@ let scratch = "";
 let env: NodeJS.ProcessEnv;
 
 beforeEach(() => {
-  scratch = mkdtempSync(join(tmpdir(), "tonedial-doctor-context-"));
+  scratch = realpathSync(mkdtempSync(join(tmpdir(), "tonedial-doctor-context-")));
   env = {
     HOME: scratch,
     TONEDIAL_HOME: join(scratch, "state"),

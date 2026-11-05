@@ -13,7 +13,7 @@ import { run } from "../src/cli.ts";
 import { HOST_COMPOSITION } from "../src/core/anchors.ts";
 import { acquireOperation, beginJournal } from "../src/core/operations.ts";
 import { resolvePaths } from "../src/core/paths.ts";
-import { addLegacyRider } from "./support/legacy-fixture.ts";
+import { addLegacyRider, recordThroughAlias } from "./support/legacy-fixture.ts";
 
 let scratch: string;
 let home: string;
@@ -582,6 +582,8 @@ test("a project's own hook is its own under every spelling of the folder", async
   const { physical, aliased } = await aliasedProject();
   for (const [wired, other] of [[aliased, physical], [physical, aliased]] as const) {
     assert.equal((await human(["wire", "codex", "--project", wired, "--auto"])).code, 0);
+    // An earlier version recorded the folder as it was typed.
+    if (wired === aliased) recordThroughAlias(env, physical, aliased);
     for (const [args, cwd] of [[["doctor", "--here"], physical], [["doctor", "--project", physical], home],
       [["doctor", "--project", aliased], home]] as const) {
       const label = `wired through ${wired}: ${args.join(" ")}`;
@@ -595,15 +597,23 @@ test("a project's own hook is its own under every spelling of the folder", async
   }
 });
 
-test("doctor --fix leaves a project's hook as written, and a second run has nothing to do", async () => {
+test("doctor --fix has nothing to do for a project wired through a symlink", async () => {
   const { physical, aliased } = await aliasedProject();
   assert.equal((await human(["wire", "codex", "--project", aliased, "--auto"])).code, 0);
+  const fix = await json(["doctor", "--fix", "--project", physical, "--auto"]);
+  assert.equal(fix.code, 0);
+  assert.equal(fix.value.native.reason, "nothing");
+});
+
+test("doctor --fix respells an earlier version's record once and leaves the project's hook as written", async () => {
+  const { physical, aliased } = await aliasedProject();
+  assert.equal((await human(["wire", "codex", "--project", aliased, "--auto"])).code, 0);
+  recordThroughAlias(env, physical, aliased);
   const hook = join(physical, ".codex", "hooks.json");
   const bytes = readFileSync(hook, "utf8");
   for (const reason of ["written", "nothing"]) {
     const fix = await json(["doctor", "--fix", "--project", physical, "--auto"]);
     assert.equal(fix.code, 0);
-    // The first run only refreshes how the record spells the folder's skill link.
     assert.equal(fix.value.native.reason, reason);
     assert.equal(readFileSync(hook, "utf8"), bytes);
   }
@@ -612,6 +622,7 @@ test("doctor --fix leaves a project's hook as written, and a second run has noth
 test("doctor reports an unreadable project hook under another spelling of the folder, with no stack trace", async () => {
   const { physical, aliased } = await aliasedProject();
   assert.equal((await human(["wire", "codex", "--project", aliased, "--auto"])).code, 0);
+  recordThroughAlias(env, physical, aliased);
   rmSync(join(physical, ".codex"), { recursive: true });
   writeFileSync(join(physical, ".codex"), "a file where the hook folder was\n");
   const shown = await human(["doctor", "--project", physical]);

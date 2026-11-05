@@ -9,7 +9,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { run } from "../src/cli.ts";
 import { isConfigV2, parseConfig } from "../src/core/config.ts";
 import { resolvePaths } from "../src/core/paths.ts";
-import { addLegacyRider } from "./support/legacy-fixture.ts";
+import { addLegacyRider, recordThroughAlias } from "./support/legacy-fixture.ts";
 
 let scratch: string;
 let project: string;
@@ -595,21 +595,20 @@ test("approval without a terminal names the exact rerun commands for each comman
   await refusedWith(["doctor", "--fix", "--here"], "tonedial doctor --fix --here");
 });
 
-/** A project folder reached both physically and through a symlinked parent. */
+/** A project folder reached physically, through a symlinked parent and as a symlink itself. */
 function aliasedProject() {
   const real = join(scratch, "real");
   const physical = join(real, "app");
   mkdirSync(physical, { recursive: true });
   symlinkSync(real, join(scratch, "alias"));
-  return { physical, aliased: join(scratch, "alias", "app") };
+  symlinkSync(physical, join(scratch, "app-link"));
+  return { physical, aliased: join(scratch, "alias", "app"), link: join(scratch, "app-link") };
 }
 
-test("a project reached through a symlinked parent is the same project to unwire, in either spelling", async () => {
-  // `--project` keeps the spelling it is given while `--here` is always physical, so one folder is
-  // wired and unwired through different paths in ordinary use.
-  const { physical, aliased } = aliasedProject();
+test("a project named through a symlink is the same project to wire and unwire, in any spelling", async () => {
+  const { physical, aliased, link } = aliasedProject();
   assert.equal((await invoke(["init", "--global", "--tools", "none", "--auto"])).code, 0);
-  for (const [wired, unwired] of [[aliased, physical], [physical, aliased]] as const) {
+  for (const [wired, unwired] of [[aliased, physical], [physical, aliased], [link, physical], [physical, link]] as const) {
     const wire = await invoke(["wire", "codex", "--project", wired, "--auto"]);
     assert.equal(wire.code, 0, JSON.stringify(wire.value));
     assert.deepEqual(readdirSync(physical).sort(), [".agents", ".codex"]);
@@ -624,8 +623,27 @@ test("unwire --global removes a project connection an earlier version recorded t
   const { physical, aliased } = aliasedProject();
   assert.equal((await invoke(["init", "--global", "--tools", "codex", "--auto"])).code, 0);
   await addLegacyRider(env, "codex", aliased);
+  recordThroughAlias(env, physical, aliased);
   assert.equal(existsSync(join(physical, ".agents", "skills", "tonedial")), true);
   const removed = await invoke(["unwire", "codex", "--global", "--auto"]);
   assert.equal(removed.code, 0, JSON.stringify(removed.value));
   assert.deepEqual(readdirSync(physical), [], "the rider's skill link goes with it");
+});
+
+test("a global connection is removed when the home is spelled differently than when it was made", async () => {
+  // Only the agent files move with the home, so the state root stays put between the two spellings.
+  const real = join(scratch, "real-parent", "home");
+  mkdirSync(real, { recursive: true });
+  symlinkSync(join(scratch, "real-parent"), join(scratch, "parent-link"));
+  const spellings = [join(scratch, "parent-link", "home"), real];
+  for (const [wired, unwired] of [spellings, [...spellings].reverse()]) {
+    env.HOME = wired;
+    const wire = await invoke(["init", "--global", "--tools", "codex", "--auto"]);
+    assert.equal(wire.code, 0, JSON.stringify(wire.value));
+    assert.equal(existsSync(join(real, ".agents", "skills", "tonedial")), true);
+    env.HOME = unwired;
+    const unwire = await invoke(["unwire", "codex", "--global", "--auto"]);
+    assert.equal(unwire.code, 0, `${wired} then ${unwired}: ${JSON.stringify(unwire.value)}`);
+    assert.equal(existsSync(join(real, ".agents", "skills", "tonedial")), false);
+  }
 });

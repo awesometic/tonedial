@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync, rmSync } from "node:fs";
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 
 import { compile } from "../../src/core/compile.ts";
@@ -149,6 +149,17 @@ export async function createLegacyFixture(options: LegacyFixtureOptions): Promis
  * the global hook's resource as a second consumer and owns only its skill link. `orphaned` then
  * removes the global record the way those versions' `unwire --global` did, leaving the hook.
  */
+/** Rewrites a project's skill link and hook access path the way an earlier version kept them: as typed. */
+export function recordThroughAlias(env: NodeJS.ProcessEnv, physical: string, aliased: string): void {
+  const paths = resolvePaths(env);
+  const config = JSON.parse(readFileSync(paths.config, "utf8"));
+  for (const resource of Object.values<{ kind: string; path: string; accessPaths?: Record<string, { path: string }> }>(config.wiring.resources)) {
+    if (resource.kind === "skill") resource.path = resource.path.replace(physical, aliased);
+    for (const access of Object.values(resource.accessPaths ?? {})) access.path = access.path.replace(physical, aliased);
+  }
+  writeFileSync(paths.config, `${JSON.stringify(config, null, 2)}\n`);
+}
+
 export async function addLegacyRider(env: NodeJS.ProcessEnv, tool: AgentTool, dir: string, orphaned = false): Promise<void> {
   const t = catalogue("en").cli;
   const paths = resolvePaths(env);

@@ -19,7 +19,7 @@ import { createLegacyFixture } from "./support/legacy-fixture.ts";
 let scratch: string;
 let env: NodeJS.ProcessEnv;
 beforeEach(() => {
-  scratch = mkdtempSync(join(tmpdir(), "tonedial-setup-"));
+  scratch = realpathSync(mkdtempSync(join(tmpdir(), "tonedial-setup-")));
   env = { HOME: scratch, TONEDIAL_HOME: join(scratch, "state"), PATH: "", LANG: "en_US.UTF-8" };
 });
 afterEach(() => rmSync(scratch, { recursive: true, force: true }));

@@ -183,8 +183,9 @@ export function resolveAgentPaths(
   // Prefer the supplied environment so isolated callers never fall back to a real home.
   const userHome = env.HOME?.trim() || homedir();
   // Resolved against the working directory, so `--project ../sibling` means what it reads as and
-  // no downstream caller has to remember which paths are still relative.
-  const root = override ?? (live ? userHome : where.project !== null ? resolve(cwd, where.project) : cwd);
+  // no downstream caller has to remember which paths are still relative. A symlink resolves to its
+  // real folder, the same path `--here` gives from inside it, so one project has one spelling.
+  const root = override ?? (live ? userHome : where.project !== null ? canonicalDestination(resolve(cwd, where.project)) : cwd);
 
   const home = (tool: AgentTool) => tool === "antigravity" && where.global
     ? join(root, ".gemini", "config") : join(root, AGENT_LAYOUT[tool].dir);

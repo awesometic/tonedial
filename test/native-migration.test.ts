@@ -78,7 +78,8 @@ async function rollbackRebuild(value: Record<string, any>, scope: string[] = [])
 async function legacyState(tools: Exclude<AgentTool, "antigravity">[] = ["codex", "claude"], elsewhere?: string, destination = project) {
   const paths = resolvePaths(env);
   mkdirSync(paths.root);
-  const agent = resolveAgentPaths({ global: false, project: destination }, env, project);
+  // An earlier version kept a `--project` folder as it was typed; the override still does.
+  const agent = resolveAgentPaths({ global: false, project: null }, { ...env, TONEDIAL_AGENT_HOME: destination }, project);
   const config = requireConfigV2(defaultConfig(), t);
   const artifact = compile(toCompileInput(config));
   const lower = join(paths.root, "tone.md");

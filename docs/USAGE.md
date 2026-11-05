@@ -418,6 +418,7 @@ Local setup does not configure remote/cloud runtimes.
 | Another project | `--project <dir>`; `--project .` equals `--here` |
 
 Scope flags are mutually exclusive.
+A `--project` symlink resolves to its real folder, so previews, records and later commands name that folder.
 Use the same scope for `init`, `wire`, `doctor`, `unwire` and `eject`.
 After a project `wire`, the receipt names the project files it wrote.
 Their hooks run ToneDial with paths from this machine, so keep them out of version control

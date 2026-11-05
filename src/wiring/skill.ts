@@ -437,9 +437,9 @@ function throwConflict(path: string, t: Messages): never {
 
 function withinBoundary(destination: string, boundary: string | undefined, t: Messages): void {
   if (!boundary) return;
-  // Physical paths on both sides, and only those: the same project is reached by more than one
-  // spelling (`/tmp` is a symlink to `/private/tmp` on macOS; `--project` keeps the path it is
-  // given while `--here` is always physical), and a lexical comparison refuses one of them.
+  // Physical paths on both sides, and only those: a home can be reached by more than one spelling,
+  // and an earlier version recorded a `--project` folder as it was typed (`/tmp` is a symlink to
+  // `/private/tmp` on macOS), so a lexical comparison refuses a path that really is inside.
   // This is also the check that stops a removal from following a swapped parent out of the project.
   const canonical = relative(safeBoundary(boundary), safeCanonical(destination));
   if (isAbsolute(canonical) || canonical === ".." || canonical.startsWith(`..${sep}`)) throwConflict(destination, t);
