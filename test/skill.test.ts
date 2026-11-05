@@ -23,7 +23,7 @@ import { tmpdir } from "node:os";
 import { catalogue } from "../src/core/i18n.ts";
 import { entryIdentity, canonicalResourcePath, resolveAgentPaths } from "../src/core/paths.ts";
 import { applyRollback, gate, type PlannedOperationAction } from "../src/wiring/apply.ts";
-import { inspectOperations, type OperationAction, type OperationPaths } from "../src/core/operations.ts";
+import { inspectOperations, type JsonValue, type OperationAction, type OperationPaths } from "../src/core/operations.ts";
 import {
   emptyWiring,
   putRegistration,
@@ -36,6 +36,7 @@ import {
   planSkillInstall,
   planSkillRemoval,
   rollbackSkillAction,
+  validateSkillAction,
 } from "../src/wiring/skill.ts";
 import type { WiringRegistration } from "../src/core/config.ts";
 import { palette } from "../src/ui/style.ts";
@@ -429,4 +430,92 @@ test("last-consumer removal deletes only managed copy files and keeps extras", (
   // The planner does not infer provenance for an intermediate `references/` container; keeping
   // an empty pre-existing container is safer than removing a user's directory by emptiness.
   assert.deepEqual(readdirSync(destination).sort(), ["keep.txt", "references"]);
+});
+
+/** Install and record a project's skill link as `destination`, with `boundary` as the project root. */
+function installLink(destination: string, boundary: string) {
+  const source = join(scratch, "state", "skill", "tonedial");
+  mkdirSync(source, { recursive: true });
+  writeFileSync(join(source, "SKILL.md"), "skill\n");
+  const route = registration("codex", boundary);
+  const routeId = registrationKey(route.target, route.scope, route.destination);
+  const install = planSkillInstall(destination, source, putRegistration(emptyWiring(), { ...route, resourceIds: [] }), {
+    mode: "link",
+    files: {},
+    boundary,
+  }, EN);
+  if (install.action === null) throw new Error("expected a skill install action");
+  install.action.apply();
+  const wiring = recordResource(putRegistration(emptyWiring(), { ...route, resourceIds: [] }), routeId, install.resourceId, install.resource);
+  return { source, routeId, wiring };
+}
+
+test("link removal refuses a parent swapped for a symlink out of the project, and leaves that tree alone", () => {
+  const project = join(scratch, "project");
+  const destination = join(project, ".agents", "skills", "tonedial");
+  mkdirSync(project);
+  const { source, routeId, wiring } = installLink(destination, project);
+  // `.agents` now points outside, at a tree that carries the very link ToneDial made. Ownership
+  // evidence alone would accept it: the link and its target match what was recorded.
+  const outside = join(scratch, "outside");
+  mkdirSync(join(outside, "skills"), { recursive: true });
+  symlinkSync(source, join(outside, "skills", "tonedial"), "dir");
+  renameSync(join(project, ".agents"), join(scratch, "moved-agents"));
+  symlinkSync(outside, join(project, ".agents"));
+
+  assert.throws(() => planSkillRemoval(destination, source, routeId, wiring, { boundary: project }, EN), /The file was preserved/);
+  assert.ok(lstatSync(join(outside, "skills", "tonedial")).isSymbolicLink(), "the link outside the project is untouched");
+});
+
+test("a link removal planned through another spelling of its project is journaled and rolls back", async () => {
+  // The recorded link is spelled through a symlinked parent while the project root is the
+  // physical path, as when `wire --project` and `unwire --here` name one folder.
+  const real = join(scratch, "real");
+  const app = join(real, "app");
+  mkdirSync(app, { recursive: true });
+  symlinkSync(real, join(scratch, "alias"));
+  const aliasedApp = join(scratch, "alias", "app");
+  const destination = join(aliasedApp, ".agents", "skills", "tonedial");
+  const { source, routeId, wiring } = installLink(destination, aliasedApp);
+
+  const removal = planSkillRemoval(destination, source, routeId, wiring, { boundary: app }, EN);
+  assert.ok(removal.action, "the same project under another spelling is not an escape");
+  const paths = operationPaths();
+  await assert.rejects(
+    () => gate([], { ...gateOptions(paths), operationActions: [removal.action!, laterFailure(join(scratch, "later-action"))] }),
+    /injected later skill failure/,
+  );
+  assert.equal(lstatSync(destination, { throwIfNoEntry: false }), undefined);
+
+  const pending = inspectOperations(paths).journals.find((entry) => entry.state === "pending")?.journal;
+  assert.ok(pending);
+  const ownerPath = join(paths.operationsLock, "owner.json");
+  const owner = JSON.parse(readFileSync(ownerPath, "utf8")) as Record<string, unknown>;
+  owner.pid = 2_147_483_000;
+  writeFileSync(ownerPath, `${JSON.stringify(owner)}\n`);
+
+  const restored = applyRollback(paths, pending.operationId, EN);
+  assert.deepEqual([restored.state, restored.unresolved], ["rolled-back", []]);
+  assert.equal(readlinkSync(destination), source, "rollback restored the link it removed");
+});
+
+test("a journaled skill destination must lie inside its boundary, by whichever spelling", () => {
+  const project = join(scratch, "project");
+  const destination = join(project, ".agents", "skills", "tonedial");
+  const source = join(scratch, "state", "skill", "tonedial");
+  mkdirSync(project);
+  mkdirSync(source, { recursive: true });
+  const plan = planSkillInstall(destination, source, emptyWiring(), { mode: "link", files: {}, boundary: project }, EN);
+  assert.ok(plan.action);
+  const withBoundary = (boundary: string): OperationAction => ({
+    ...plan.action!.action,
+    metadata: { ...(plan.action!.action.metadata as Record<string, JsonValue>), boundary },
+  });
+  validateSkillAction(plan.action.action);
+  const alias = join(scratch, "alias");
+  symlinkSync(project, alias);
+  validateSkillAction(withBoundary(alias));
+  const elsewhere = join(scratch, "elsewhere");
+  mkdirSync(elsewhere);
+  assert.throws(() => validateSkillAction(withBoundary(elsewhere)), /escapes its boundary/);
 });

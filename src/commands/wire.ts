@@ -426,8 +426,6 @@ export async function disconnect(ctx: Ctx, tools: AgentTool[], all = false): Pro
     const riding = ctx.agent.live ? riders(config, tool, ctx.env, ctx.cwd) : [];
     alsoDisconnected.push(...riding);
     const owners = [{ registrationId: registrationKey(tool, scope, destination), boundary: ctx.agent.root },
-      // shortcut: a rider's boundary is its canonical directory; one recorded through a symlinked
-      // path refuses its skill link here. Upgrade if that is ever reported.
       ...riding.map(({ destination }) => ({ registrationId: registrationKey(tool, "project", destination!), boundary: destination! }))];
     let registered = false;
     for (const { registrationId, boundary } of owners) {

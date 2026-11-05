@@ -437,12 +437,12 @@ function throwConflict(path: string, t: Messages): never {
 
 function withinBoundary(destination: string, boundary: string | undefined, t: Messages): void {
   if (!boundary) return;
-  const lexical = relative(resolve(boundary), resolve(destination));
-  // Compare like with like. `/tmp` is commonly a symlink to `/private/tmp` on macOS, so using a
-  // lexical boundary against a canonical destination rejects every fresh temporary project.
+  // Physical paths on both sides, and only those: the same project is reached by more than one
+  // spelling (`/tmp` is a symlink to `/private/tmp` on macOS; `--project` keeps the path it is
+  // given while `--here` is always physical), and a lexical comparison refuses one of them.
+  // This is also the check that stops a removal from following a swapped parent out of the project.
   const canonical = relative(safeBoundary(boundary), safeCanonical(destination));
-  const outside = (value: string): boolean => isAbsolute(value) || value === ".." || value.startsWith(`..${sep}`);
-  if (outside(lexical) || outside(canonical)) throwConflict(destination, t);
+  if (isAbsolute(canonical) || canonical === ".." || canonical.startsWith(`..${sep}`)) throwConflict(destination, t);
 }
 
 function fileHashes(files: Readonly<Record<string, string>>): Record<string, string> {
@@ -732,7 +732,10 @@ export function validateSkillAction(action: OperationAction, applied = false): v
   }
   if (metadata.boundary !== null) {
     const remainder = relative(resolve(metadata.boundary), resolve(metadata.destination));
-    if (isAbsolute(remainder) || remainder === ".." || remainder.startsWith(`..${sep}`)) {
+    // A removal planned under another spelling of its project journals a boundary and a destination
+    // that are not lexically related. Identity settles those without touching the destination.
+    if ((isAbsolute(remainder) || remainder === ".." || remainder.startsWith(`..${sep}`)) &&
+        !inside(metadata.destination, metadata.boundary)) {
       throw invalidSkillAction(action.path, "skill destination escapes its boundary");
     }
   }

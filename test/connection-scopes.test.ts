@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { afterEach, beforeEach, test } from "node:test";
 import { spawnSync } from "node:child_process";
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -593,4 +593,39 @@ test("approval without a terminal names the exact rerun commands for each comman
   await refusedWith(["eject", "--project", project], "tonedial eject --here");
   rmSync(resolvePaths(env).agents);
   await refusedWith(["doctor", "--fix", "--here"], "tonedial doctor --fix --here");
+});
+
+/** A project folder reached both physically and through a symlinked parent. */
+function aliasedProject() {
+  const real = join(scratch, "real");
+  const physical = join(real, "app");
+  mkdirSync(physical, { recursive: true });
+  symlinkSync(real, join(scratch, "alias"));
+  return { physical, aliased: join(scratch, "alias", "app") };
+}
+
+test("a project reached through a symlinked parent is the same project to unwire, in either spelling", async () => {
+  // `--project` keeps the spelling it is given while `--here` is always physical, so one folder is
+  // wired and unwired through different paths in ordinary use.
+  const { physical, aliased } = aliasedProject();
+  assert.equal((await invoke(["init", "--global", "--tools", "none", "--auto"])).code, 0);
+  for (const [wired, unwired] of [[aliased, physical], [physical, aliased]] as const) {
+    const wire = await invoke(["wire", "codex", "--project", wired, "--auto"]);
+    assert.equal(wire.code, 0, JSON.stringify(wire.value));
+    assert.deepEqual(readdirSync(physical).sort(), [".agents", ".codex"]);
+    const unwire = await invoke(["unwire", "codex", "--project", unwired, "--auto"]);
+    assert.equal(unwire.code, 0, `${wired} then ${unwired}: ${JSON.stringify(unwire.value)}`);
+    assert.deepEqual(readdirSync(physical), [], "everything ToneDial wrote is gone");
+    assert.deepEqual((await invoke(["show"])).value.connections, []);
+  }
+});
+
+test("unwire --global removes a project connection an earlier version recorded through a symlink", async () => {
+  const { physical, aliased } = aliasedProject();
+  assert.equal((await invoke(["init", "--global", "--tools", "codex", "--auto"])).code, 0);
+  await addLegacyRider(env, "codex", aliased);
+  assert.equal(existsSync(join(physical, ".agents", "skills", "tonedial")), true);
+  const removed = await invoke(["unwire", "codex", "--global", "--auto"]);
+  assert.equal(removed.code, 0, JSON.stringify(removed.value));
+  assert.deepEqual(readdirSync(physical), [], "the rider's skill link goes with it");
 });
