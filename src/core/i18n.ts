@@ -876,8 +876,8 @@ const enMessages: Messages = {
     addressNone: "currently unset · Enter keeps it unset",
     age: (given, bands) => `persona.age=${given} · available: ${bands.join(", ")}`,
     gender: (options) => `persona.gender · available: ${options.join(", ")}`,
-    callsYou: (term) => `calls you ${term}`,
-    callsItself: (term) => `agent calls itself ${term}`,
+    callsYou: (term) => `calls you "${term}"`,
+    callsItself: (term) => `agent calls itself "${term}"`,
     ageLabel: (band) => `age ${band}`,
     genderLabel: (gender) => `gender ${gender}`,
     noteChars: (count) => `note ${count} chars`,
@@ -1685,8 +1685,8 @@ const koMessages: Messages = {
     // Labels rather than clauses, for the same reason as `autoChose` above: an address is
     // free-form user text in any language, and `전하이라고` is what attaching `이라고` to it
     // produced — 전하 ends in a vowel and takes `라고`.
-    callsYou: (term) => `사용자 호칭 ${term}`,
-    callsItself: (term) => `자기 호칭 ${term}`,
+    callsYou: (term) => `사용자 호칭 '${term}'`,
+    callsItself: (term) => `자기 호칭 '${term}'`,
     ageLabel: (band) => `나이대 ${band}`,
     genderLabel: (gender) => `성별 ${gender}`,
     noteChars: (count) => `노트 ${count}자`,

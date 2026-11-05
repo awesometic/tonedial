@@ -1,9 +1,9 @@
 status: 0
---- stdout --- [bytes=798; endsWithNewline=true]
+--- stdout --- [bytes=802; endsWithNewline=true]
 ToneDial · create
 
   Preset to save · Example (example)
-  agent calls itself your big brother · calls you little sibling
+  agent calls itself "your big brother" · calls you "little sibling"
   user context: A younger sibling sharing problems with an older brother.
   (57/200 characters)
   fictional agent role: A caring older brother who helps his sibling through
