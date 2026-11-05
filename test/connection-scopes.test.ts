@@ -15,7 +15,9 @@ let scratch: string;
 let project: string;
 let env: NodeJS.ProcessEnv;
 beforeEach(() => {
-  scratch = mkdtempSync(join(tmpdir(), "tonedial-connection-scopes-"));
+  // The working directory is always a physical path, so a fixture reached through the platform's
+  // temp-dir symlink (macOS `/var`) would be a spelling no real run can produce.
+  scratch = realpathSync(mkdtempSync(join(tmpdir(), "tonedial-connection-scopes-")));
   project = join(scratch, "project");
   mkdirSync(project);
   mkdirSync(join(scratch, "home"));

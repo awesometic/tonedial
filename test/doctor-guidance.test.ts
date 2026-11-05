@@ -3,7 +3,7 @@
 
 import assert from "node:assert/strict";
 import { afterEach, beforeEach, test } from "node:test";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { spawnSync } from "node:child_process";
 import { dirname, join } from "node:path";
@@ -21,7 +21,8 @@ let project: string;
 let env: NodeJS.ProcessEnv;
 
 beforeEach(() => {
-  scratch = mkdtempSync(join(tmpdir(), "tonedial-doctor-guidance-"));
+  // Physical, like a real working directory; see test/connection-scopes.test.ts.
+  scratch = realpathSync(mkdtempSync(join(tmpdir(), "tonedial-doctor-guidance-")));
   home = join(scratch, "home");
   project = join(home, "project");
   mkdirSync(project, { recursive: true });

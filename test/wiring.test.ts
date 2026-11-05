@@ -42,7 +42,8 @@ let scratch = "";
 let gatePaths: Paths;
 
 beforeEach(() => {
-  scratch = mkdtempSync(join(tmpdir(), "tonedial-wiring-"));
+  // Physical, so a preview needs no redirect row beside every path; a symlinked parent has its own test.
+  scratch = realpathSync(mkdtempSync(join(tmpdir(), "tonedial-wiring-")));
   gatePaths = resolvePaths({ TONEDIAL_HOME: join(scratch, "gate-state") });
 });
 
