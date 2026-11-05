@@ -13,7 +13,7 @@ import { runUse } from "../src/commands/use.ts";
 import { compile } from "../src/core/compile.ts";
 import { ConfigError, defaultConfig, parseConfig, serializeConfig, type ConfigV2 } from "../src/core/config.ts";
 import { catalogue } from "../src/core/i18n.ts";
-import { resolveAgentPaths, resolvePaths } from "../src/core/paths.ts";
+import { connectionScopeFlag, resolveAgentPaths, resolvePaths } from "../src/core/paths.ts";
 import { applyPreset, inspectPresetLibrary, RETIRED_PRESETS, resolvePreset, serializePreset, type Preset } from "../src/core/presets.ts";
 import { inspectOperations, readJournal } from "../src/core/operations.ts";
 import { toCompileInput } from "../src/core/resolve.ts";
@@ -280,7 +280,8 @@ test("damaged config needs an explicit source, preserves surviving settings and 
   try {
     const bytes = Buffer.from([0xff, 0x00, 0xc3, 0x28]);
     fs.writeFileSync(f.ctx.paths.config, bytes, { mode: 0o640 });
-    await assert.rejects(() => runAppRebuild(f.ctx), error => error instanceof Error && error.message === EN.recovery.sourceRequired);
+    await assert.rejects(() => runAppRebuild(f.ctx), error => error instanceof Error
+      && error.message === EN.recovery.sourceRequired(`tonedial doctor --fix ${connectionScopeFlag(f.ctx.agent, f.ctx.cwd)}`));
     assert.deepEqual(fs.readdirSync(f.root), ["config.json"]);
     f.ctx.flags.fromPreset = "tough-love";
     f.ctx.flags.dryRun = true;

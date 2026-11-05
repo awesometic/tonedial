@@ -658,7 +658,7 @@ function contextCheck(ctx: Ctx, diagnosis: ContextDiagnosis): Check {
   return {
     name: "context",
     state: "problem",
-    detail: ctx.t.errors.contextLayout(kind === "current" ? "conflict" : kind, ctx.paths.root, repairCommand(ctx, "doctor --json")),
+    detail: ctx.t.errors.contextLayout(kind === "current" ? "conflict" : kind, ctx.paths.root, repairCommand(ctx, "doctor --json"), repairCommand(ctx, "doctor --fix")),
   };
 }
 

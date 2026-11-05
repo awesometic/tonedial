@@ -1309,7 +1309,7 @@ test("damaged-config recovery requires an explicit source without exposing or ch
 
   const result = await invokeHuman(["doctor", "--here", "--fix", "--auto"]);
   assert.equal(result.code, 1, result.output);
-  assert.ok(containsWrapped(result.error, catalogue("en").cli.recovery.sourceRequired));
+  assert.ok(containsWrapped(result.error, catalogue("en").cli.recovery.sourceRequired("tonedial doctor --fix --here")));
   const layoutRefusal = catalogue("en").cli.errors.contextLayout("conflict", paths.root);
   assert.ok(!result.error.includes(layoutRefusal), "and does not diagnose a layout it never read");
   assert.doesNotMatch(result.error + result.output, new RegExp(secret), "and never echoes its bytes");

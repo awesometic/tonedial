@@ -193,7 +193,7 @@ async function resolveActiveConflict(ctx: Ctx, config: ConfigV2, library: Preset
     config.preset = selected;
     return;
   }
-  if (ctx.flags.auto || !ctx.canPrompt) throw new ConfigError(ctx.t.recovery.sourceRequired);
+  if (ctx.flags.auto || !ctx.canPrompt) throw new ConfigError(ctx.t.recovery.sourceRequired(`tonedial doctor --fix ${connectionScopeFlag(ctx.agent, ctx.cwd)}`));
   const input = createInterface({ input: process.stdin, output: process.stdout });
   try {
     process.stdout.write(`  ${ctx.t.recovery.activeChoice(conflict.slug)}\n`);
@@ -417,7 +417,7 @@ export async function runAppRebuild(ctx: Ctx, heading = ctx.t.recovery.heading):
   }
   if (ctx.flags.fromPreset && chosenPreset === null) throw new ConfigError(t.recovery.sourceInvalid);
   if (sourceNeeded && chosenPreset === null && (savedSource === null || missingAxes.length > 0)) {
-    if (ctx.flags.auto || !ctx.canPrompt) throw new ConfigError(t.recovery.sourceRequired);
+    if (ctx.flags.auto || !ctx.canPrompt) throw new ConfigError(t.recovery.sourceRequired(`tonedial doctor --fix ${connectionScopeFlag(ctx.agent, ctx.cwd)}`));
     chosenPreset = await choosePreset(ctx, library);
   }
   if (chosenPreset !== null) assertPresetSelection(chosenPreset, t);

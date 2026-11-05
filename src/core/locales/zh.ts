@@ -124,7 +124,7 @@ const messages: Messages = {
     heading: "应用恢复",
     source: { settings: "已保存的设置", snapshot: "所选操作快照", artifact: "已识别的旧版语气", preset: "所选预设" },
     choosePreset: "请为缺少有效保存来源的值选择预设：",
-    sourceRequired: "保存值不完整。请交互运行 tonedial doctor --fix，或在无人值守恢复前选择 --from-preset SLUG 或 --from-operation ID。",
+    sourceRequired: (command) => `保存值不完整。要选择来源，请在终端中运行：\n  ${command}\n无人值守恢复时，请选择 --from-preset SLUG 或 --from-operation ID。`,
     sourceInvalid: "所选来源无法提供有效设置，已保留原文件。",
     invalidOptions: "恢复来源、隔离和工具选项需要 doctor --fix。--restore-preset 需要 --from-operation；--rollback 不能与隔离、来源、预设或工具选项同时使用。",
     keptSettings: "已保留保存的设置和自定义预设。",
@@ -595,10 +595,11 @@ const messages: Messages = {
   },
   errors: {
     notACommand: (name, nearest) =>
-      `${name} 不是命令。${nearest ? `是否想输入 tonedial ${nearest}？` : ""}\n命令列表：tonedial --help`,
+      `${name} 不是命令。${nearest ? `是否想输入：\n  tonedial ${nearest}` : ""}\n命令列表：tonedial --help`,
     isAFlag: (name, command) => `${name} 是选项，不是命令：\n  tonedial ${command ? `${command} ` : ""}--${name}`,
     stoppingHelp:
-      "要暂停语气投递并保留设置（tonedial on 可恢复）：\n  tonedial off\n" +
+      "要暂停语气投递并保留设置：\n  tonedial off\n" +
+      "要恢复投递：\n  tonedial on\n" +
       "要恢复语气轴默认值：\n  tonedial reset\n" +
       "要断开代理连接（每个范围运行一次，也可用 --here、--project PATH）：\n  tonedial eject --global\n" +
       "断开所有范围的连接后，要删除命令：\n  npm uninstall -g tonedial",
@@ -629,7 +630,7 @@ const messages: Messages = {
         overlap: "状态根目录与代理指令重叠。设置前请选择独立的状态目录。",
         operation: "有操作需要恢复。请检查记录 ID，恢复该操作后再迁移。",
       };
-      return `旧版迁移已阻止：\n${path}\n${explanations[reason] ?? "无法验证所有权或迁移资格。请保留文件并查看诊断。"}\n未写入任何内容。检查同一范围：\n${doctorCommand}\n请保留原文件；tonedial show --json 可读取保存设置。`;
+      return `旧版迁移已阻止：\n${path}\n${explanations[reason] ?? "无法验证所有权或迁移资格。请保留文件并查看诊断。"}\n未写入任何内容。检查同一范围：\n${doctorCommand}\n请保留原文件。若要读取保存设置：\ntonedial show --json`;
     },
     npxUnsupported:
       "不支持 npx 安装，因为不会留下持久的 tonedial 副本，技能和后备指令无法运行。" +
@@ -670,9 +671,9 @@ const messages: Messages = {
     stateOverlap: (path) => `项目导出与共享 ToneDial 状态重叠：\n${path}\n未写入任何内容。请选择独立状态目录或项目。`,
     stateInstructionOverlap: (path) => `ToneDial 状态与代理指令根目录重叠：\n${path}\n未写入任何内容。运行 init 前请选择专用状态目录。`,
     legacyConsumers: (destinations) => `其他或未记录连接仍读取 tone.md：\n${destinations.join("\n")}\n未写入任何内容。请在每个范围断开后重试 init，迁移后再重新连接。`,
-    contextLayout: (kind, path, doctorCommand = "tonedial doctor --json") => kind === "fresh"
+    contextLayout: (kind, path, doctorCommand = "tonedial doctor --json", fixCommand = "tonedial doctor --fix") => kind === "fresh"
       ? `ToneDial 尚未初始化：\n${path}\n请先完成初始化，然后重新运行此命令：\n  tonedial init --tools none --global`
-      : `此 ${kind} 布局需要应用恢复：\n${path}\n未写入任何内容。检查同一范围：\n${doctorCommand}\n请保留此根目录，运行 tonedial doctor --fix 保留设置并重建生成文件。`,
+      : `此 ${kind} 布局需要应用恢复：\n${path}\n未写入任何内容。检查同一范围：\n${doctorCommand}\n请保留此根目录。若要保留设置并重建生成文件：\n${fixCommand}`,
     unreadableConfigFile: (path, command) => `无法读取有效设置：\n${path}\n请保留原文件。` +
       `${command === null ? "" : `\n若要选择已保存来源或明确列出的默认值：\n  ${command}`}`,
     editConflict: (path) => `编辑器打开期间原文件发生变化。编辑副本保留于：\n${path}\n请比较文件后重试。`,

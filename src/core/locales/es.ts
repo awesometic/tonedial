@@ -124,7 +124,7 @@ const messages: Messages = {
     heading: "Recuperación de la aplicación",
     source: { settings: "ajustes guardados", snapshot: "instantánea de la operación elegida", artifact: "tono antiguo reconocido", preset: "preajuste elegido" },
     choosePreset: "Elige un preajuste para los valores sin un origen guardado válido:",
-    sourceRequired: "Los valores guardados están incompletos. Ejecuta tonedial doctor --fix de forma interactiva o selecciona --from-preset SLUG o --from-operation ID antes de recuperar sin interacción.",
+    sourceRequired: (command) => `Los valores guardados están incompletos. Para elegir un origen, ejecuta esto en un terminal:\n  ${command}\nPara recuperar sin interacción, selecciona --from-preset SLUG o --from-operation ID.`,
     sourceInvalid: "El origen elegido no proporciona ajustes válidos. Se conservó el original.",
     invalidOptions: "El origen, la cuarentena y las herramientas requieren doctor --fix. --restore-preset requiere --from-operation; --rollback no se combina con cuarentena, origen, preajuste ni herramientas.",
     keptSettings: "Se conservaron los ajustes y preajustes personalizados.",
@@ -595,10 +595,11 @@ const messages: Messages = {
   },
   errors: {
     notACommand: (name, nearest) =>
-      `${name} no es un comando.${nearest ? ` ¿Querías decir tonedial ${nearest}?` : ""}\nComandos: tonedial --help`,
+      `${name} no es un comando.${nearest ? ` ¿Querías decir esto?\n  tonedial ${nearest}` : ""}\nComandos: tonedial --help`,
     isAFlag: (name, command) => `${name} es una opción, no un comando:\n  tonedial ${command ? `${command} ` : ""}--${name}`,
     stoppingHelp:
-      "Para pausar la entrega del tono y conservar los ajustes (tonedial on la reanuda):\n  tonedial off\n" +
+      "Para pausar la entrega del tono y conservar los ajustes:\n  tonedial off\n" +
+      "Para reanudarla:\n  tonedial on\n" +
       "Para restablecer los ejes:\n  tonedial reset\n" +
       "Para desconectar agentes, una vez por ámbito (o --here, --project PATH):\n  tonedial eject --global\n" +
       "Para eliminar el comando cuando ya no quede ningún ámbito conectado:\n  npm uninstall -g tonedial",
@@ -629,7 +630,7 @@ const messages: Messages = {
         overlap: "El estado se solapa con las instrucciones del agente. Elige un directorio de estado separado antes de configurar.",
         operation: "Hay una operación que necesita recuperación. Revisa su ID y recupérala antes de migrar.",
       };
-      return `Migración antigua bloqueada:\n${path}\n${explanations[reason] ?? "No se pudo verificar la propiedad o la posibilidad de migrar. Conserva los archivos y revisa el diagnóstico."}\nNo se escribió nada. Inspecciona el mismo ámbito con:\n${doctorCommand}\nConserva los originales; tonedial show --json lee los ajustes guardados.`;
+      return `Migración antigua bloqueada:\n${path}\n${explanations[reason] ?? "No se pudo verificar la propiedad o la posibilidad de migrar. Conserva los archivos y revisa el diagnóstico."}\nNo se escribió nada. Inspecciona el mismo ámbito con:\n${doctorCommand}\nConserva los originales. Para leer los ajustes guardados:\ntonedial show --json`;
     },
     npxUnsupported:
       "No se admite instalar con npx: no deja una copia persistente de tonedial, por lo que la habilidad " +
@@ -670,9 +671,9 @@ const messages: Messages = {
     stateOverlap: (path) => `La exportación se solapa con el estado compartido:\n${path}\nNo se escribió nada. Elige otro directorio de estado o proyecto.`,
     stateInstructionOverlap: (path) => `El estado se solapa con la raíz de instrucciones del agente:\n${path}\nNo se escribió nada. Elige un directorio exclusivo antes de init.`,
     legacyConsumers: (destinations) => `Otras conexiones, o conexiones sin registrar, siguen leyendo tone.md:\n${destinations.join("\n")}\nNo se escribió nada. Desconecta cada ámbito antes de repetir init y reconecta tras la transición.`,
-    contextLayout: (kind, path, doctorCommand = "tonedial doctor --json") => kind === "fresh"
+    contextLayout: (kind, path, doctorCommand = "tonedial doctor --json", fixCommand = "tonedial doctor --fix") => kind === "fresh"
       ? `ToneDial aún no está configurado:\n${path}\nConfigúralo y vuelve a ejecutar este comando:\n  tonedial init --tools none --global`
-      : `Esta estructura ${kind} necesita recuperar la aplicación:\n${path}\nNo se escribió nada. Inspecciona el mismo ámbito con:\n${doctorCommand}\nConserva esta raíz y ejecuta tonedial doctor --fix para mantener los ajustes y reconstruir los archivos generados.`,
+      : `Esta estructura ${kind} necesita recuperar la aplicación:\n${path}\nNo se escribió nada. Inspecciona el mismo ámbito con:\n${doctorCommand}\nConserva esta raíz. Para mantener los ajustes y reconstruir los archivos generados:\n${fixCommand}`,
     unreadableConfigFile: (path, command) => `No se pueden leer ajustes válidos de:\n${path}\nConserva el original.` +
       `${command === null ? "" : `\nPara elegir un origen guardado o valores predeterminados declarados:\n  ${command}`}`,
     editConflict: (path) => `El original cambió mientras el editor estaba abierto. Tu copia se conserva en:\n${path}\nCompara los archivos antes de reintentar.`,

@@ -205,7 +205,7 @@ export type Messages = {
     heading: string;
     source: Record<"settings" | "snapshot" | "artifact" | "preset", string>;
     choosePreset: string;
-    sourceRequired: string;
+    sourceRequired: (command: string) => string;
     sourceInvalid: string;
     invalidOptions: string;
     keptSettings: string;
@@ -644,7 +644,7 @@ export type Messages = {
     ownershipConflict: (path: string) => string;
     stateOverlap: (path: string) => string;
     stateInstructionOverlap: (path: string) => string;
-    contextLayout: (kind: "fresh" | "current" | "legacy" | "conflict", path: string, doctorCommand?: string) => string;
+    contextLayout: (kind: "fresh" | "current" | "legacy" | "conflict", path: string, doctorCommand?: string, fixCommand?: string) => string;
     /** The config is there and could not be read back. Never carries the file's own bytes. */
     unreadableConfigFile: (path: string, command: string | null) => string;
     /** The same refusal on `doctor --fix`, which repairs nothing and writes nothing. */
@@ -818,7 +818,7 @@ const enMessages: Messages = {
     heading: "Application recovery",
     source: { settings: "saved settings", snapshot: "selected operation snapshot", artifact: "recognized older tone", preset: "selected preset" },
     choosePreset: "Choose a preset for values with no valid saved source:",
-    sourceRequired: "Saved values are incomplete. Run tonedial doctor --fix interactively, or select --from-preset SLUG or --from-operation ID before unattended recovery.",
+    sourceRequired: (command) => `Saved values are incomplete. To choose a source, run this in a terminal:\n  ${command}\nFor unattended recovery, select --from-preset SLUG or --from-operation ID.`,
     sourceInvalid: "The selected source cannot supply valid settings. The original was kept.",
     invalidOptions: "Recovery source, quarantine and tool options require doctor --fix. --restore-preset requires --from-operation; --rollback cannot be combined with quarantine, source, preset, or tool choices.",
     keptSettings: "Saved settings and custom presets kept.",
@@ -1293,10 +1293,11 @@ const enMessages: Messages = {
   },
   errors: {
     notACommand: (name, nearest) =>
-      `${name} is not a command.${nearest ? ` Did you mean tonedial ${nearest}?` : ""}\nCommands: tonedial --help`,
+      `${name} is not a command.${nearest ? ` Did you mean:\n  tonedial ${nearest}` : ""}\nCommands: tonedial --help`,
     isAFlag: (name, command) => `${name} is an option, not a command:\n  tonedial ${command ? `${command} ` : ""}--${name}`,
     stoppingHelp:
-      "To pause tone delivery and keep settings (tonedial on resumes it):\n  tonedial off\n" +
+      "To pause tone delivery and keep settings:\n  tonedial off\n" +
+      "To resume it:\n  tonedial on\n" +
       "To restore axis defaults:\n  tonedial reset\n" +
       "To disconnect agents, once per scope (or --here, --project PATH):\n  tonedial eject --global\n" +
       "To remove the command after every scope is disconnected:\n  npm uninstall -g tonedial",
@@ -1332,7 +1333,7 @@ const enMessages: Messages = {
         overlap: "The state root overlaps agent instructions. Choose a separate state directory before setup.",
         operation: "An operation needs recovery. Inspect its recorded ID and recover that operation before migrating.",
       };
-      return `Legacy migration is blocked:\n${path}\n${explanations[reason] ?? "Ownership or migration eligibility could not be verified. Preserve the files and review the diagnosis."}\nNothing was written. Inspect the same scope with:\n${doctorCommand}\nPreserve the original files; tonedial show --json reads saved settings.`;
+      return `Legacy migration is blocked:\n${path}\n${explanations[reason] ?? "Ownership or migration eligibility could not be verified. Preserve the files and review the diagnosis."}\nNothing was written. Inspect the same scope with:\n${doctorCommand}\nPreserve the original files. To read saved settings:\ntonedial show --json`;
     },
     npxUnsupported:
       "npx installs are not supported. They leave no persistent copy for `tonedial`, so the skill " +
@@ -1373,9 +1374,9 @@ const enMessages: Messages = {
     stateOverlap: (path) => `Project export overlaps shared ToneDial state:\n${path}\nNothing was written. Choose a separate state directory or project.`,
     stateInstructionOverlap: (path) => `ToneDial state overlaps an agent instruction root:\n${path}\nNothing was written. Choose a dedicated state directory before running init.`,
     legacyConsumers: (destinations) => `Other or unrecorded connections still read tone.md:\n${destinations.join("\n")}\nNothing was written. Unwire each scope before retrying init, then reconnect after the transition.`,
-    contextLayout: (kind, path, doctorCommand = "tonedial doctor --json") => kind === "fresh"
+    contextLayout: (kind, path, doctorCommand = "tonedial doctor --json", fixCommand = "tonedial doctor --fix") => kind === "fresh"
       ? `ToneDial is not set up yet:\n${path}\nSet it up, then rerun this command:\n  tonedial init --tools none --global`
-      : `ToneDial needs application recovery for this ${kind} layout:\n${path}\nNothing was written. Inspect the same scope with:\n${doctorCommand}\nKeep this root and run tonedial doctor --fix to preserve saved settings and rebuild generated files.`,
+      : `ToneDial needs application recovery for this ${kind} layout:\n${path}\nNothing was written. Inspect the same scope with:\n${doctorCommand}\nKeep this root. To preserve saved settings and rebuild generated files:\n${fixCommand}`,
     unreadableConfigFile: (path, command) => `Cannot read valid settings from:\n${path}\nKeep the original.` +
       `${command === null ? "" : `\nTo choose a saved source or disclosed defaults:\n  ${command}`}`,
     editConflict: (path) => `The original file changed while the editor was open. Your edited copy is preserved here:\n${path}\nCompare the files before trying again.`,
@@ -1624,7 +1625,7 @@ const koMessages: Messages = {
     heading: "앱 복구",
     source: { settings: "저장된 설정", snapshot: "선택한 작업의 설정", artifact: "인식한 이전 말투 파일", preset: "선택한 프리셋" },
     choosePreset: "저장된 값이 없는 항목에 사용할 프리셋을 선택하세요:",
-    sourceRequired: "저장된 값이 부족합니다. 터미널에서 tonedial doctor --fix를 실행하거나 자동 복구 전에 --from-preset SLUG 또는 --from-operation ID를 선택하세요.",
+    sourceRequired: (command) => `저장된 값이 부족합니다. 원본을 고르려면 터미널에서 실행하세요:\n  ${command}\n자동 복구에서는 --from-preset SLUG 또는 --from-operation ID를 선택하세요.`,
     sourceInvalid: "선택한 원본에서 올바른 설정을 읽지 못했습니다. 기존 파일은 유지했습니다.",
     invalidOptions: "복구 원본·격리·도구 옵션은 doctor --fix에서 쓰세요. --restore-preset에는 --from-operation이 필요하며, --rollback은 격리·원본·프리셋·도구 선택과 함께 쓸 수 없습니다.",
     keptSettings: "저장된 설정·사용자 프리셋 유지",
@@ -2101,10 +2102,11 @@ const koMessages: Messages = {
   },
   errors: {
     notACommand: (name, nearest) =>
-      `${name}: 없는 명령입니다.${nearest ? ` 비슷한 명령: tonedial ${nearest}` : ""}\n명령 목록: tonedial --help`,
+      `${name}: 없는 명령입니다.${nearest ? ` 비슷한 명령:\n  tonedial ${nearest}` : ""}\n명령 목록: tonedial --help`,
     isAFlag: (name, command) => `${name}: 명령이 아니라 옵션입니다. 이렇게 실행하세요:\n  tonedial ${command ? `${command} ` : ""}--${name}`,
     stoppingHelp:
-      "설정은 두고 말투 전달만 멈추려면(다시 켜기: tonedial on):\n  tonedial off\n" +
+      "설정은 두고 말투 전달만 멈추려면:\n  tonedial off\n" +
+      "다시 켜려면:\n  tonedial on\n" +
       "축을 기본값으로 되돌리려면:\n  tonedial reset\n" +
       "에이전트 연결을 해제하려면(범위마다 실행, --here나 --project PATH도 가능):\n  tonedial eject --global\n" +
       "모든 범위의 연결을 해제한 뒤 명령을 삭제하려면:\n  npm uninstall -g tonedial",
@@ -2140,7 +2142,7 @@ const koMessages: Messages = {
         overlap: "상태 디렉터리가 에이전트 지침 경로와 겹칩니다. 별도 상태 디렉터리를 선택한 뒤 설정해 주세요.",
         operation: "복구가 필요한 작업이 있습니다. 기록된 ID로 그 작업부터 복구한 뒤 이전 상태를 옮겨 주세요.",
       };
-      return `이전 상태를 옮길 수 없습니다:\n${path}\n${explanations[reason] ?? "관리 기록이나 이전 상태를 옮길 조건을 확인하지 못했습니다. 파일을 보존하고 진단 내용을 확인해 주세요."}\n아무것도 쓰지 않았습니다. 같은 범위를 확인하려면 실행하세요:\n${doctorCommand}\n원본 파일을 보존하세요. 저장된 설정은 tonedial show --json으로 읽을 수 있습니다.`;
+      return `이전 상태를 옮길 수 없습니다:\n${path}\n${explanations[reason] ?? "관리 기록이나 이전 상태를 옮길 조건을 확인하지 못했습니다. 파일을 보존하고 진단 내용을 확인해 주세요."}\n아무것도 쓰지 않았습니다. 같은 범위를 확인하려면 실행하세요:\n${doctorCommand}\n원본 파일을 보존하세요. 저장된 설정을 읽으려면:\ntonedial show --json`;
     },
     npxUnsupported:
       "npx 설치는 지원하지 않습니다. 설치 사본이 남지 않아 `tonedial` 명령과 이를 호출하는 " +
@@ -2182,9 +2184,9 @@ const koMessages: Messages = {
     stateOverlap: (path) => `프로젝트 내보내기 경로가 ToneDial 상태 디렉터리와 겹칩니다:\n${path}\n아무것도 쓰지 않았습니다. 별도 상태 디렉터리나 다른 프로젝트를 선택해 주세요.`,
     stateInstructionOverlap: (path) => `ToneDial 상태 디렉터리가 에이전트 지침 경로와 겹칩니다:\n${path}\n아무것도 쓰지 않았습니다. 전용 상태 디렉터리를 선택한 뒤 init을 실행해 주세요.`,
     legacyConsumers: (destinations) => `다른 연결이나 기록되지 않은 연결이 아직 tone.md를 읽습니다:\n${destinations.join("\n")}\n아무것도 쓰지 않았습니다. 각 범위에서 먼저 unwire한 뒤 init을 다시 실행하세요. 전환이 끝나면 다시 연결해 주세요.`,
-    contextLayout: (kind, path, doctorCommand = "tonedial doctor --json") => kind === "fresh"
+    contextLayout: (kind, path, doctorCommand = "tonedial doctor --json", fixCommand = "tonedial doctor --fix") => kind === "fresh"
       ? `ToneDial 초기 설정이 아직 없습니다:\n${path}\n초기 설정 후 이 명령을 다시 실행해 주세요:\n  tonedial init --tools none --global`
-      : `이 구성은 앱 복구가 필요합니다 (${kind}):\n${path}\n아무것도 쓰지 않았습니다. 같은 범위를 확인하려면 실행하세요:\n${doctorCommand}\n이 경로를 유지하고 tonedial doctor --fix를 실행하세요. 저장된 설정을 보존하고 앱 생성 파일을 다시 준비합니다.`,
+      : `이 구성은 앱 복구가 필요합니다 (${kind}):\n${path}\n아무것도 쓰지 않았습니다. 같은 범위를 확인하려면 실행하세요:\n${doctorCommand}\n이 경로는 그대로 두세요. 저장된 설정을 보존하고 앱 생성 파일을 다시 준비하려면:\n${fixCommand}`,
     unreadableConfigFile: (path, command) => `이 파일에서 올바른 설정을 읽지 못했습니다:\n${path}\n원본은 그대로 두세요.` +
       `${command === null ? "" : `\n저장된 원본이나 안내한 기본값을 고르려면:\n  ${command}`}`,
     editConflict: (path) => `편집기가 열린 동안 원본 파일이 바뀌었습니다. 편집한 사본은 여기에 보존했습니다:\n${path}\n두 파일을 비교한 뒤 다시 시도해 주세요.`,

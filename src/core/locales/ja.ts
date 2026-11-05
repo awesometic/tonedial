@@ -124,7 +124,7 @@ const messages: Messages = {
     heading: "アプリケーションの復旧",
     source: { settings: "保存済み設定", snapshot: "選択した操作のスナップショット", artifact: "認識できる旧形式の口調", preset: "選択したプリセット" },
     choosePreset: "有効な保存元がない値の復元用プリセットを選んでください：",
-    sourceRequired: "保存値が不完全です。tonedial doctor --fix を対話的に実行するか、無人復旧の前に --from-preset SLUG または --from-operation ID を選んでください。",
+    sourceRequired: (command) => `保存値が不完全です。保存元を選ぶには、ターミナルで実行してください：\n  ${command}\n無人復旧では --from-preset SLUG または --from-operation ID を選んでください。`,
     sourceInvalid: "選択元から有効な設定を取得できません。元のファイルは保持しました。",
     invalidOptions: "復旧元、隔離、ツールの指定には doctor --fix が必要です。--restore-preset には --from-operation が必要です。--rollback は隔離、復旧元、プリセット、ツール指定と併用できません。",
     keptSettings: "保存済み設定とカスタムプリセットを保持しました。",
@@ -595,10 +595,11 @@ const messages: Messages = {
   },
   errors: {
     notACommand: (name, nearest) =>
-      `${name} はコマンドではありません。${nearest ? `tonedial ${nearest} のことですか？` : ""}\nコマンド一覧：tonedial --help`,
+      `${name} はコマンドではありません。${nearest ? `もしかして：\n  tonedial ${nearest}` : ""}\nコマンド一覧：tonedial --help`,
     isAFlag: (name, command) => `${name} はコマンドではなくオプションです：\n  tonedial ${command ? `${command} ` : ""}--${name}`,
     stoppingHelp:
-      "設定を残して口調の配信を止めるには（再開は tonedial on）：\n  tonedial off\n" +
+      "設定を残して口調の配信を止めるには：\n  tonedial off\n" +
+      "再開するには：\n  tonedial on\n" +
       "軸を既定値に戻すには：\n  tonedial reset\n" +
       "エージェントの接続を解除するには（範囲ごとに実行。--here、--project PATH も可）：\n  tonedial eject --global\n" +
       "すべての範囲の接続を解除した後、コマンドを削除するには：\n  npm uninstall -g tonedial",
@@ -629,7 +630,7 @@ const messages: Messages = {
         overlap: "状態ルートがエージェントの指示と重なっています。設定前に別のディレクトリを選んでください。",
         operation: "復旧が必要な操作があります。記録IDを確認し、その操作を復旧してから移行してください。",
       };
-      return `旧形式の移行を中止しました：\n${path}\n${explanations[reason] ?? "所有権か移行条件を検証できません。ファイルを保持し、診断を確認してください。"}\n書き込みはしていません。同じ範囲を確認：\n${doctorCommand}\n元のファイルを保持してください。tonedial show --json は保存済み設定を読みます。`;
+      return `旧形式の移行を中止しました：\n${path}\n${explanations[reason] ?? "所有権か移行条件を検証できません。ファイルを保持し、診断を確認してください。"}\n書き込みはしていません。同じ範囲を確認：\n${doctorCommand}\n元のファイルを保持してください。保存済み設定を読むには：\ntonedial show --json`;
     },
     npxUnsupported:
       "npx 経由では永続的な tonedial が残らず、スキルと代替行が実行できないため未対応です。" +
@@ -670,9 +671,9 @@ const messages: Messages = {
     stateOverlap: (path) => `書き出し先が共有ToneDial状態と重なっています：\n${path}\n書き込みはしていません。別の状態ディレクトリかプロジェクトを選んでください。`,
     stateInstructionOverlap: (path) => `ToneDial状態がエージェントの指示ルートと重なっています：\n${path}\n書き込みはしていません。init の前に専用ディレクトリを選んでください。`,
     legacyConsumers: (destinations) => `他の接続か未記録の接続がまだ tone.md を読みます：\n${destinations.join("\n")}\n書き込みはしていません。各範囲で解除して init を再試行し、移行後に再接続してください。`,
-    contextLayout: (kind, path, doctorCommand = "tonedial doctor --json") => kind === "fresh"
+    contextLayout: (kind, path, doctorCommand = "tonedial doctor --json", fixCommand = "tonedial doctor --fix") => kind === "fresh"
       ? `ToneDialはまだ初期設定されていません：\n${path}\n初期設定してから、このコマンドを再実行してください：\n  tonedial init --tools none --global`
-      : `${kind} 構成のアプリ復旧が必要です：\n${path}\n書き込みはしていません。同じ範囲を確認：\n${doctorCommand}\nこのルートを保持し、tonedial doctor --fix で保存設定を保護して生成ファイルを再構築してください。`,
+      : `${kind} 構成のアプリ復旧が必要です：\n${path}\n書き込みはしていません。同じ範囲を確認：\n${doctorCommand}\nこのルートは保持してください。保存設定を保護して生成ファイルを再構築するには：\n${fixCommand}`,
     unreadableConfigFile: (path, command) => `有効な設定を読み取れません：\n${path}\n原本は保持してください。` +
       `${command === null ? "" : `\n保存元か明示された既定値を選ぶには：\n  ${command}`}`,
     editConflict: (path) => `エディターを開いている間に原本が変更されました。編集コピーはここに保持しました：\n${path}\n比較してから再試行してください。`,

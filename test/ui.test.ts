@@ -808,6 +808,37 @@ test("no command emits an escape sequence when its output is not a terminal", as
   assert.doesNotMatch(out.join("") + err.join(""), /\x1b\[/);
 });
 
+test("no catalogue string shares a line between a command and a sentence, in any locale", () => {
+  // A command stands alone or follows a bare label ("Options: tonedial x --help"). Beside prose it
+  // wraps mid-command and cannot be copied as a line. Functions are called with sample arguments
+  // that name real commands, so a command built from an argument is seen too.
+  const COMMAND = /\b(?:tonedial (?:on|off|set|get|test|address|persona|reset|show|create|save|list|edit|update|use|compile|export|import|wire|unwire|init|doctor|eject|--)|npm (?:prefix|root|install|uninstall)\b|curl -)/;
+  const samples: unknown[][] = [["show"], ["show", "show"], ["show", ["show"]], ["show", null], [["show"]], [2], [true],
+    ["show", "show", "show"], ["show", "show", "show", "show"]];
+  const offenders: string[] = [];
+  let scanned = 0;
+  const scan = (where: string, text: string) => {
+    for (const line of text.split("\n")) {
+      const at = line.search(COMMAND);
+      if (at < 0) continue;
+      scanned++;
+      const before = line.slice(0, at).trim();
+      if (before !== "" && !/^[^.!?。！？]*[:：]$/.test(before)) offenders.push(`${where}: ${line.trim()}`);
+    }
+  };
+  const walk = (where: string, value: unknown): void => {
+    if (typeof value === "string") scan(where, value);
+    else if (typeof value === "function") {
+      for (const args of samples) {
+        try { const text = value(...args); if (typeof text === "string") scan(where, text); } catch { /* wrong arity for this sample */ }
+      }
+    } else if (value !== null && typeof value === "object") for (const [key, item] of Object.entries(value)) walk(`${where}.${key}`, item);
+  };
+  for (const language of LANGUAGES) walk(language, catalogue(language));
+  assert.deepEqual([...new Set(offenders)], []);
+  assert.ok(scanned > 500, `only ${scanned} command lines were scanned, so the sweep is not reaching the catalogues`);
+});
+
 test("a refusal at 60 columns leaves each command whole on a line of its own, in both locales", async () => {
   await initializeState();
   const env = { HOME: home, TONEDIAL_HOME: join(home, "state"), PATH: "", COLUMNS: "60" };

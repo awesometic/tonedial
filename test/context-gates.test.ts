@@ -150,7 +150,7 @@ test("a generated guide without any recoverable settings requires a source choic
   writeFileSync(paths.agents, "foreign guide\n");
   const result = await invoke(["init", "--here", "--tools", "none", "--auto"]);
   assert.equal(result.code, 1);
-  assert.equal(result.value.error, catalogue("en").cli.recovery.sourceRequired);
+  assert.equal(result.value.error, catalogue("en").cli.recovery.sourceRequired("tonedial doctor --fix --here"));
   assert.deepEqual(readdirSync(paths.root), ["AGENTS.md"]);
   assert.equal(readFileSync(paths.agents, "utf8"), "foreign guide\n");
 });

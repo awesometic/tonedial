@@ -658,7 +658,8 @@ export async function run(
         connectionScopeFlag(connection ? agent : resolveAgentPaths({ global: true, project: null }, env, cwd), cwd));
       if (layout.kind === "legacy" || layout.kind === "conflict" ||
           layout.kind === "fresh") {
-        throw new ConfigError(t.errors.contextLayout(layout.kind, paths.root, `tonedial doctor ${connectionScopeFlag(agent, cwd)} --json`));
+        throw new ConfigError(t.errors.contextLayout(layout.kind, paths.root, `tonedial doctor ${connectionScopeFlag(agent, cwd)} --json`,
+        `tonedial doctor --fix ${connectionScopeFlag(agent, cwd)}`));
       }
       ctx.contextChecks = layout.checks;
     }
