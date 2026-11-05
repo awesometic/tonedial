@@ -543,11 +543,13 @@ export async function disconnect(ctx: Ctx, tools: AgentTool[], all = false): Pro
     ...(ctx.scopeShown ? { agentRootShown: true } : {}),
     ...(disconnected.length ? { describe: { [ctx.paths.config]: ctx.t.wiring.configRemoves(
       disconnected.map((tool) => TARGETS[tool].label).join(", "), disconnected.length + alsoDisconnected.length) } } : {}),
-    roots: tools.flatMap((tool) => {
-      const directories = alsoDisconnected.filter(({ target }) => target === tool).map(({ destination }) => destination!);
-      return directories.length === 0 ? [] : [{ paths: directories,
-        heading: receiptLines(ctx.t.wiring.alsoDisconnects(TARGETS[tool].label), ctx.ui.width - 2).map((line) => `  ${line}`) }];
-    }),
+    roots: [...new Set(alsoDisconnected.map(({ destination }) => destination!))].map((directory) => ({
+      paths: [directory],
+      heading: receiptLines(ctx.t.wiring.alsoDisconnects(tools
+        .filter((tool) => alsoDisconnected.some(({ target, destination }) => target === tool && destination === directory))
+        .map((tool) => TARGETS[tool].label).join(", ")),
+      ctx.ui.width - 2).map((line) => `  ${line}`),
+    })),
   });
 
   const reason = result.reason === "written" && !disconnected.length ? "nothing" : result.reason;

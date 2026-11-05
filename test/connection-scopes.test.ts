@@ -631,11 +631,37 @@ test("unwire --global clears a global hook that only an earlier version's projec
 test("eject --global removes earlier-version project records with the global hooks", async () => {
   assert.equal((await invoke(["init", "--global", "--tools", "codex,claude", "--auto"])).code, 0);
   await addLegacyRider(env, "claude", project);
+  await addLegacyRider(env, "codex", project);
+  const other = join(scratch, "other");
+  mkdirSync(other);
+  await addLegacyRider(env, "codex", other);
+
+  const preview = await human(["eject", "--global", "--dry-run"]);
+  assert.equal(preview.code, 0, preview.errors);
+  const rows = preview.output.split("\n").map((line) => line.trim());
+  for (const directory of [project, other]) {
+    assert.equal(rows.filter((row) => row === directory).length, 1, preview.output);
+    const start = rows.indexOf(directory);
+    const end = rows.indexOf("", start);
+    const group = rows.slice(start, end);
+    assert.equal(group.filter((row) => row === `${join(".agents", "skills", "tonedial")}  (skill link removed)`).length, 1, preview.output);
+    if (directory === project) {
+      assert.match(rows[start - 1]!, /Also disconnects Claude Code, Codex CLI in these projects/);
+      assert.ok(group.includes(`${join(".claude", "skills", "tonedial")}  (skill link removed)`), preview.output);
+    } else {
+      assert.match(rows[start - 1]!, /Also disconnects Codex CLI in these projects/);
+    }
+  }
   const ejected = await invoke(["eject", "--global", "--auto"]);
   assert.equal(ejected.code, 0, JSON.stringify(ejected.value));
-  assert.deepEqual(ejected.value.alsoDisconnected.map((row: { target: string }) => row.target), ["claude"]);
+  assert.deepEqual(ejected.value.alsoDisconnected, [
+    { target: "claude", scope: "project", destination: project },
+    { target: "codex", scope: "project", destination: other },
+    { target: "codex", scope: "project", destination: project },
+  ]);
   assert.equal(existsSync(join(env.HOME!, ".claude", "settings.json")), false);
   assert.deepEqual(readdirSync(project), []);
+  assert.deepEqual(readdirSync(other), []);
   assert.deepEqual((await invoke(["show"])).value.connections, []);
 });
 
