@@ -1,8 +1,8 @@
 status: 0
---- stdout --- [bytes=349; endsWithNewline=true]
+--- stdout --- [bytes=337; endsWithNewline=true]
 ToneDial · unwire
 
-  Connection scope: project
+  Project scope
   <ROOT>/project
 
   Review changes

@@ -1,8 +1,8 @@
 status: 0
---- stdout --- [bytes=861; endsWithNewline=true]
+--- stdout --- [bytes=849; endsWithNewline=true]
 ToneDial · wire
 
-  Connection scope: project
+  Project scope
   <ROOT>/project
 
   Connect agents

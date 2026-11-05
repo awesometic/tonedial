@@ -1,9 +1,8 @@
 status: 0
---- stdout --- [bytes=753; endsWithNewline=true]
+--- stdout --- [bytes=733; endsWithNewline=true]
 ToneDial · init
 
-  Scope
-  Connection scope: project
+  Project scope
   <ROOT>/project
   Shared ToneDial state:
   <ROOT>/state

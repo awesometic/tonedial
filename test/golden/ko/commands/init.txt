@@ -1,9 +1,8 @@
 status: 0
---- stdout --- [bytes=894; endsWithNewline=true]
+--- stdout --- [bytes=877; endsWithNewline=true]
 ToneDial · init
 
-  범위
-  연결 범위: 프로젝트
+  프로젝트 범위
   <ROOT>/project
   ToneDial 공통 상태 디렉터리:
   <ROOT>/state

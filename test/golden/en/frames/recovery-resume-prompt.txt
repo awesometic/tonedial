@@ -1,6 +1,6 @@
 ToneDial · doctor
 
-  Inspection scope: project
+  Project scope
   <ROOT>/agents
   Stopped operation:
   ffffffffffffffffffffffffffffffff

@@ -1,8 +1,8 @@
 status: 0
---- stdout --- [bytes=395; endsWithNewline=true]
+--- stdout --- [bytes=383; endsWithNewline=true]
 ToneDial · eject
 
-  Connection scope: project
+  Project scope
   <ROOT>/project
 
   Review changes

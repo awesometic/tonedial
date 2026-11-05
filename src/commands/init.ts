@@ -91,7 +91,7 @@ export async function runInit(entry: Ctx, _args: string[]): Promise<CommandResul
   }
   if (layout.kind === "fresh" && ctx.flags.migrateLegacy) throw new ConfigError(ctx.t.errors.migrationFresh);
   ctx.contextChecks = layout.checks;
-  const introduction = scopeIntroduction(ctx, copy.init.scopeHeading);
+  const introduction = scopeIntroduction(ctx);
   if (ctx.canPrompt) process.stdout.write(`${introduction.join("\n")}\n`);
   else lines.push(...introduction);
 
@@ -282,9 +282,8 @@ function hasPresetState(path: string): boolean {
       ? readdirSync(join(path, child.name)).length > 0 : true);
 }
 
-function scopeIntroduction(ctx: Ctx, heading: string): string[] {
+function scopeIntroduction(ctx: Ctx): string[] {
   return [
-    ...section(heading, ctx.ui).slice(1),
     `  ${ctx.agent.live ? ctx.t.wiring.scopeGlobal : ctx.t.wiring.scopeHere}`,
     `  ${humanText(ctx.agent.root)}`,
     `  ${ctx.t.wiring.stateRoot}`,
@@ -300,7 +299,7 @@ async function rebuildExisting(entry: Ctx): Promise<CommandResult> {
   const copy = catalogue(language);
   const ctx: Ctx = { ...entry, t: copy.cli };
   if (ctx.flags.commands && selection !== null && !selection.includes("claude")) throw new ConfigError(ctx.t.errors.commandsNeedClaude);
-  const introduction = scopeIntroduction(ctx, copy.init.scopeHeading);
+  const introduction = scopeIntroduction(ctx);
   if (ctx.canPrompt) process.stdout.write(`${introduction.join("\n")}\n`);
   const resultHeading = ctx.canPrompt && !ctx.flags.auto && !ctx.flags.dryRun
     ? section(copy.init.resultHeading, ctx.ui) : [];

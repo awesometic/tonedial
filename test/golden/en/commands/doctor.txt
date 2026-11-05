@@ -1,8 +1,8 @@
 status: 0
---- stdout --- [bytes=413; endsWithNewline=true]
+--- stdout --- [bytes=401; endsWithNewline=true]
 ToneDial · doctor
 
-  Inspection scope: project
+  Project scope
   <ROOT>/project
 
   1 problem

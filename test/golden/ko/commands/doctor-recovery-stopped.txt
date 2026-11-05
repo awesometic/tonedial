@@ -1,8 +1,8 @@
 status: 0
---- stdout --- [bytes=575; endsWithNewline=true]
+--- stdout --- [bytes=595; endsWithNewline=true]
 ToneDial · doctor
 
-  검사 범위: 전역
+  전역 범위(모든 프로젝트 공유)
   <ROOT>
 
   진행 중이거나 복구가 필요한 작업이 있습니다. 이번 실행에서는 파일을 바꾸지

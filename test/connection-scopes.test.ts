@@ -221,7 +221,7 @@ test("unwire without a scope refuses in a folder with its own connections and na
   // Elsewhere the default stays global, and an explicit scope is never refused.
   const elsewhere = await human(["unwire", "codex", "--dry-run"], {}, other);
   assert.equal(elsewhere.code, 0, elsewhere.errors);
-  assert.match(elsewhere.output, /Connection scope: global/);
+  assert.match(elsewhere.output, /Global scope \(all projects\)/);
   const global = await invoke(["unwire", "codex", "--global", "--dry-run"]);
   assert.equal(global.code, 0, JSON.stringify(global.value));
   assert.deepEqual(global.value.diff.map((change: { path: string }) => change.path).filter((path: string) => path.endsWith("tonedial")),

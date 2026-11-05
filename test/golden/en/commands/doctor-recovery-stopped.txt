@@ -1,8 +1,8 @@
 status: 0
---- stdout --- [bytes=525; endsWithNewline=true]
+--- stdout --- [bytes=528; endsWithNewline=true]
 ToneDial · doctor
 
-  Inspection scope: global
+  Global scope (all projects)
   <ROOT>
 
   An operation is active or needs recovery. No files were changed by this

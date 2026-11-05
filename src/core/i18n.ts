@@ -29,7 +29,6 @@ export type Catalogue = {
   /** Shown once at `init`, in the language the user picked. */
   init: {
     welcome: string;
-    scopeHeading: string;
     toneHeading: string;
     connectionsHeading: string;
     resultHeading: string;
@@ -403,7 +402,6 @@ export type Messages = {
     applicationHealth: (healthy: boolean) => string;
     connectionHealth: (attention: boolean) => string;
     healthy: string;
-    scopeGlobal: string;
     /** Registrations outside the scope being inspected. Reported, never repaired. */
     wiredElsewhere: string;
     /** Global inspection from a folder with its own connections; `command` inspects them. */
@@ -413,8 +411,6 @@ export type Messages = {
     destinationPresent: string;
     inspectScope: string;
     disconnectScope: string;
-    /** Which destination this report is about, and whether it reaches other projects. */
-    scope: string;
     /** Top line: problems to fix, notices worth reading. */
     summary: (problems: number, notices: number) => string;
     needsAPerson: string;
@@ -994,7 +990,7 @@ const enMessages: Messages = {
       : "Trust this project in Claude Code; interactive sessions run hooks only in trusted folders. /hooks → SessionStart shows the ToneDial command.",
     claudeOpen: "Open Claude Code in this project now?",
     claudeOpenSteps: "Claude Code opens in this terminal. If it asks whether you trust this folder, answer there, then exit to return.",
-    scopeHere: "Connection scope: project",
+    scopeHere: "Project scope",
     alreadyMatch: (tools) => `${tools}: already up to date · no changes`,
     alreadyDisconnected: (tools) => `${tools}: already disconnected · no changes`,
     dryRun: "--dry-run · nothing written",
@@ -1015,7 +1011,7 @@ const enMessages: Messages = {
     projectExclude: "to keep it out of version control without touching .gitignore:",
     newFile: "(new file)",
     newFileLines: (count) => `${count} line${count === 1 ? "" : "s"}`,
-    scopeGlobal: "Connection scope: global (shared across projects)",
+    scopeGlobal: "Global scope (all projects)",
     seeded: (labels) => `bundled files: ${labels.join(", ")}`,
     skillState: (pairs) => `skill ${pairs}`,
     commandInstalled: (path) => `/tone installed\n${path}`,
@@ -1028,7 +1024,6 @@ const enMessages: Messages = {
     applicationHealth: (healthy) => `Application: ${healthy ? "healthy" : "needs attention"}`,
     connectionHealth: (attention) => `Connection files: ${attention ? "attention needed" : "no issues in selected scope"}`,
     healthy: "No problems found",
-    scopeGlobal: "Inspection scope: global",
     wiredElsewhere: "Also connected elsewhere",
     folderConnections: (targets, command) => `This folder has its own connections (${targets.join(", ")}). To check them instead of the global ones:\n${command}`,
     destinationGone: "folder not found or inaccessible",
@@ -1036,7 +1031,6 @@ const enMessages: Messages = {
     destinationPresent: "files present",
     inspectScope: "To keep using these connections, inspect this scope:",
     disconnectScope: "If no longer needed, disconnect all agents in this scope:",
-    scope: "Inspection scope: project",
     summary: (problems, notices) => `${problems === 0 ? "No problems" : `${problems} problem${problems === 1 ? "" : "s"}`}${notices ? ` · ${notices} notice${notices === 1 ? "" : "s"}` : ""}`,
     needsAPerson: "manual review required · see details above",
     toneMatches: "matches config.json",
@@ -1436,7 +1430,6 @@ const en: Catalogue = {
   init: {
     safewordSuggestion: (suggestion) => `Preset suggestion · ${suggestion}`,
     welcome: "ToneDial gives your coding agent a character and keeps its tone across projects.",
-    scopeHeading: "Scope",
     toneHeading: "Tone",
     connectionsHeading: "Agents",
     resultHeading: "Ready",
@@ -1803,7 +1796,7 @@ const koMessages: Messages = {
       : "Claude Code에서 이 프로젝트를 신뢰해 주세요. 대화형 세션은 신뢰한 폴더에서만 훅을 실행합니다. /hooks → SessionStart에서 ToneDial 명령을 확인할 수 있습니다.",
     claudeOpen: "지금 이 프로젝트에서 Claude Code를 열까요?",
     claudeOpenSteps: "Claude Code는 이 터미널에서 열립니다. 이 폴더를 신뢰하는지 물으면 거기서 답하세요. 종료하면 여기로 돌아옵니다.",
-    scopeHere: "연결 범위: 프로젝트",
+    scopeHere: "프로젝트 범위",
     alreadyMatch: (tools) => `${tools}: 이미 최신 상태 · 변경 없음`,
     alreadyDisconnected: (tools) => `${tools}: 이미 연결 해제됨 · 변경 없음`,
     dryRun: "--dry-run · 기록하지 않음",
@@ -1824,7 +1817,7 @@ const koMessages: Messages = {
     projectExclude: ".gitignore를 건드리지 않고 버전 관리에서 빼려면:",
     newFile: "(새 파일)",
     newFileLines: (count) => `${count}줄`,
-    scopeGlobal: "연결 범위: 전역(모든 프로젝트에서 공유)",
+    scopeGlobal: "전역 범위(모든 프로젝트 공유)",
     seeded: (labels) => `기본 파일: ${labels.join(", ")}`,
     skillState: (pairs) => `스킬 ${pairs}`,
     commandInstalled: (path) => `/tone 설치됨\n${path}`,
@@ -1837,7 +1830,6 @@ const koMessages: Messages = {
     applicationHealth: (healthy) => `앱 상태: ${healthy ? "정상" : "점검 필요"}`,
     connectionHealth: (attention) => `연결 파일: ${attention ? "점검 필요" : "선택한 범위에서 문제 없음"}`,
     healthy: "문제 없음",
-    scopeGlobal: "검사 범위: 전역",
     wiredElsewhere: "다른 범위의 연결",
     folderConnections: (targets, command) => `이 폴더에는 따로 등록된 연결(${targets.join(", ")})이 있습니다. 전역 연결 대신 이 폴더의 연결을 점검하려면:\n${command}`,
     destinationGone: "폴더를 찾을 수 없거나 접근할 수 없음",
@@ -1845,7 +1837,6 @@ const koMessages: Messages = {
     destinationPresent: "파일 있음",
     inspectScope: "계속 사용하려면 이 범위를 검사하세요:",
     disconnectScope: "더 이상 필요 없으면 이 범위의 모든 에이전트 연결을 해제하세요:",
-    scope: "검사 범위: 프로젝트",
     summary: (problems, notices) => `${problems === 0 ? "문제 없음" : `문제 ${problems}건`}${notices ? ` · 알림 ${notices}건` : ""}`,
     needsAPerson: "직접 확인 필요 · 위 세부 내용을 확인해 주세요",
     toneMatches: "config.json과 일치",
@@ -2246,7 +2237,6 @@ const ko: Catalogue = {
   init: {
     safewordSuggestion: (suggestion) => `프리셋 제안 · ${suggestion}`,
     welcome: "ToneDial은 코딩 에이전트에 캐릭터를 더하고, 그 말투를 여러 프로젝트에서 유지합니다.",
-    scopeHeading: "범위",
     toneHeading: "말투",
     connectionsHeading: "에이전트",
     resultHeading: "준비 완료",

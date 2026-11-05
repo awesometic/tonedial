@@ -1,8 +1,8 @@
 status: 0
---- stdout --- [bytes=431; endsWithNewline=true]
+--- stdout --- [bytes=434; endsWithNewline=true]
 ToneDial · doctor
 
-  Inspection scope: global
+  Global scope (all projects)
   <ROOT>
 
   Unreadable operation history is blocking recovery. No files were changed by

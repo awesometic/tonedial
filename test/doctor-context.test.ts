@@ -1110,6 +1110,7 @@ for (const language of ["en", "ko"] as const) {
     env.LANG = language === "ko" ? "ko_KR.UTF-8" : "en_US.UTF-8";
     env.COLUMNS = "60";
     const copy = catalogue(language).cli.doctor;
+    const scope = catalogue(language).cli.wiring;
     const project = join(scratch, "project");
     const other = join(scratch, "other");
     mkdirSync(project);
@@ -1119,7 +1120,7 @@ for (const language of ["en", "ko"] as const) {
       assert.equal(output.split(label).length - 1, 1, output);
     };
     const fresh = await invokeHuman(["doctor", "--here"]);
-    assertScope(fresh.output, copy.scope, project);
+    assertScope(fresh.output, scope.scopeHere, project);
     assert.equal((await invoke(["init", "--project", project, "--tools", "claude,codex,antigravity", "--lang", language, "--auto"])).code, 0);
     assert.equal((await invoke(["wire", "codex", "--project", other, "--auto"])).code, 0);
     const intact = await invokeHuman(["doctor", "--global"]);
@@ -1133,7 +1134,7 @@ for (const language of ["en", "ko"] as const) {
     const scopeWord = catalogue(language).cli.artifact.connectionScope.project.toLowerCase();
     const row = (targets: string, detail: string) => `${scopeWord} · ${targets} · ${detail}`;
     const mixed = await invokeHuman(["doctor"]);
-    assertScope(mixed.output, copy.scopeGlobal, scratch);
+    assertScope(mixed.output, scope.scopeGlobal, scratch);
     const section = mixed.output.slice(mixed.output.indexOf(copy.wiredElsewhere));
     assert.ok(containsWrapped(section, row("antigravity, claude", copy.destinationUnwired)), section);
     assert.ok(containsWrapped(section, row("codex", copy.destinationPresent)), section);
@@ -1160,12 +1161,12 @@ for (const language of ["en", "ko"] as const) {
 
     rmSync(join(project, ".codex", "hooks.json"));
     const missing = await invokeHuman(["doctor", "--global", "--verbose"]);
-    assertScope(missing.output, copy.scopeGlobal, scratch);
+    assertScope(missing.output, scope.scopeGlobal, scratch);
     assert.ok(containsWrapped(missing.output, row("antigravity, claude, codex", copy.destinationUnwired)), missing.output);
     assertHumanWidth(prose(missing.output), language, 60);
     for (const args of [["--here"], ["--project", project, "--verbose"]]) {
       const selected = await invokeHuman(["doctor", ...args]);
-      assertScope(selected.output, copy.scope, project);
+      assertScope(selected.output, scope.scopeHere, project);
       const elsewhere = selected.output.slice(selected.output.indexOf(copy.wiredElsewhere));
       assert.ok(!elsewhere.includes(project), elsewhere);
     }
@@ -1428,7 +1429,7 @@ for (const language of ["en", "ko"] as const) {
     assert.equal(count(copy.hookGroupHeading), 1, result.output);
     assert.ok(containsWrapped(result.output, copy.hookGroupUnknown(tools)), result.output);
     assert.ok(!containsWrapped(result.output, copy.hookSettingScope), "unused integrations need no enablement disclaimer");
-    assert.ok(result.output.includes(copy.scopeGlobal), result.output);
+    assert.ok(result.output.includes(catalogue(language).cli.wiring.scopeGlobal), result.output);
     assert.doesNotMatch(result.output, /Hook enabled|훅이 켜져/);
     assertHumanWidth(result.output, language, 60);
 

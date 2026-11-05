@@ -29,7 +29,7 @@ type Scenario = {
 const init = async (workspace: GoldenWorkspace, language: GoldenLanguage, tools = "none"): Promise<void> => {
   const result = await captureCli(workspace, ["init", "--here", "--tools", tools, "--lang", language, "--auto"]);
   assert.equal(result.status, 0, `setup init failed: ${result.stderr}`);
-  assert.ok(result.stdout.includes(catalogue(language).init.scopeHeading), `${language}: setup did not render its selected locale`);
+  assert.ok(result.stdout.includes(catalogue(language).cli.wiring.scopeHere), `${language}: setup did not render its selected locale`);
 };
 
 const initialized = (args: (workspace: GoldenWorkspace, language: GoldenLanguage) => string[]): Scenario => ({

@@ -1,8 +1,8 @@
 status: 0
---- stdout --- [bytes=372; endsWithNewline=true]
+--- stdout --- [bytes=364; endsWithNewline=true]
 ToneDial · unwire
 
-  연결 범위: 프로젝트
+  프로젝트 범위
   <ROOT>/project
 
   변경 확인

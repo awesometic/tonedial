@@ -638,9 +638,7 @@ export async function run(
     if (connection && name !== "doctor" && name !== "init" && flags.auto && !flags.dryRun && !scopeExplicit) {
       throw new ScopeRequired(t);
     }
-    const scopeLabel = name === "doctor"
-      ? (agent.live ? t.doctor.scopeGlobal : t.doctor.scope)
-      : (agent.live ? t.wiring.scopeGlobal : t.wiring.scopeHere);
+    const scopeLabel = agent.live ? t.wiring.scopeGlobal : t.wiring.scopeHere;
     const introduction = connection && name !== "init" && flags.rollback === null && !asJson
       ? [`  ${scopeLabel}`, `  ${humanText(agent.root)}`] : [];
     const contextExempt = name === "compile" && flags.check;

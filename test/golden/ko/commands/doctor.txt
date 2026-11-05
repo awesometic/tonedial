@@ -1,8 +1,8 @@
 status: 0
---- stdout --- [bytes=471; endsWithNewline=true]
+--- stdout --- [bytes=463; endsWithNewline=true]
 ToneDial · doctor
 
-  검사 범위: 프로젝트
+  프로젝트 범위
   <ROOT>/project
 
   문제 1건
