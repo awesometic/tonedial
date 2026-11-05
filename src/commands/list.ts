@@ -67,7 +67,7 @@ export function runList(ctx: Ctx): CommandResult {
         // The name gives way first: "active" and "unsaved changes" are what a person scans for.
         const suffix = states.map((state) => ` · ${state}`).join("");
         const room = ui.width - 4 - maxCells(head);
-        const title = room - maxCells(suffix) >= 8
+        const title = room - maxCells(suffix) >= 2
           ? truncate(r.displayName, room - maxCells(suffix)) + suffix
           : truncate(r.displayName + suffix, Math.max(1, room));
         const used = 4 + maxCells(head) + maxCells(title);

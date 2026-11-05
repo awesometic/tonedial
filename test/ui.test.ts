@@ -884,6 +884,15 @@ test("list rides the risk mark beside the title, flush right only on a terminal,
   assert.deepEqual(narrow.slice(at + 2, at + 4), ["    ! profanity, critique, flattery, conviction,", "      compliance, refusal, bravado"],
     "seven axes fold under the description with a hanging indent");
   assert.doesNotMatch([...piped, ...screen, ...narrow].join("\n"), /harsh language|biased judgments/, "the explanation belongs to show");
+  // At 60 columns the name gives way before the words a person scans for, in the longer locales too.
+  assert.equal(await cli("use", "caring-brother"), 0, err.join(""));
+  assert.equal(await cli("set", "warmth=1"), 0, err.join(""));
+  for (const language of ["ko", "es"] as const) {
+    assert.equal(await cli("set", `language=${language}`), 0, err.join(""));
+    const row = (await rows(60, true)).find((line) => line.includes("caring-brother"))!;
+    assert.ok(row.endsWith(catalogue(language).cli.preset.unsaved), `${language}: ${row}`);
+    assert.ok(maxCells(row) <= 59, `${language}: ${row}`);
+  }
 });
 
 test("a risk notice is yellow on stdout and stderr and never the red of a failure", async () => {
