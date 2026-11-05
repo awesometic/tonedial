@@ -190,6 +190,8 @@ export async function runInit(entry: Ctx, _args: string[]): Promise<CommandResul
     verbose: ctx.flags.verbose,
     ui: ctx.ui,
     agent: ctx.agent,
+    // The introduction above already named this scope's root.
+    agentRootShown: true,
     describe: { [ctx.paths.config]: ctx.t.wiring.configSaves(tools.length ? tools.map((tool) => TARGETS[tool].label).join(", ") : null, ctx.agent.live) },
     heading: ctx.t.wiring.planHeading,
   });

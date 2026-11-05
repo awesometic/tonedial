@@ -332,6 +332,13 @@ test("project wiring names the version-control choice once and does not list its
   assert.doesNotMatch(global.output, /Project files written|paths from this machine/);
 });
 
+test("an init preview prints the project's root once, in its introduction", async () => {
+  const root = realpathSync(project);
+  const preview = await human(["init", "--here", "--tools", "codex", "--dry-run"]);
+  assert.equal(preview.output.split(root).length - 1, 1, preview.output);
+  assert.match(preview.output, /^ {2}Project files\n {4}\.codex\/hooks\.json {2}\(new file\)$/m);
+});
+
 test("a connection preview prints the scope's root once, in the introduction, and lists its files by heading", async () => {
   assert.equal((await invoke(["init", "--global", "--tools", "none", "--auto"])).code, 0);
   const root = realpathSync(project);
