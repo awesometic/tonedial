@@ -1129,12 +1129,16 @@ for (const language of ["en", "ko"] as const) {
     rmSync(join(project, ".agents", "hooks.json"));
     rmSync(other, { recursive: true });
 
+    // A row names its scope, its agents and what was found; the directory it shares follows the rows.
+    const scopeWord = catalogue(language).cli.artifact.connectionScope.project.toLowerCase();
+    const row = (targets: string, detail: string) => `${scopeWord} · ${targets} · ${detail}`;
     const mixed = await invokeHuman(["doctor"]);
     assertScope(mixed.output, copy.scopeGlobal, scratch);
     const section = mixed.output.slice(mixed.output.indexOf(copy.wiredElsewhere));
-    assert.ok(containsWrapped(section, `antigravity, claude — ${copy.destinationUnwired}`), section);
-    assert.ok(containsWrapped(section, `codex — ${copy.destinationPresent}`), section);
-    assert.ok(containsWrapped(section, `codex — ${copy.destinationGone}`), section);
+    assert.ok(containsWrapped(section, row("antigravity, claude", copy.destinationUnwired)), section);
+    assert.ok(containsWrapped(section, row("codex", copy.destinationPresent)), section);
+    assert.ok(containsWrapped(section, row("codex", copy.destinationGone)), section);
+    assert.ok(section.indexOf(row("codex", copy.destinationPresent)) < section.indexOf(canonicalDestination(project)), section);
     assert.ok(containsWrapped(section, copy.inspectScope), section);
     assert.ok(containsWrapped(section, copy.disconnectScope), section);
     const unfolded = section.replace(/\s+/g, " ");
@@ -1157,7 +1161,7 @@ for (const language of ["en", "ko"] as const) {
     rmSync(join(project, ".codex", "hooks.json"));
     const missing = await invokeHuman(["doctor", "--global", "--verbose"]);
     assertScope(missing.output, copy.scopeGlobal, scratch);
-    assert.ok(containsWrapped(missing.output, `antigravity, claude, codex — ${copy.destinationUnwired}`), missing.output);
+    assert.ok(containsWrapped(missing.output, row("antigravity, claude, codex", copy.destinationUnwired)), missing.output);
     assertHumanWidth(prose(missing.output), language, 60);
     for (const args of [["--here"], ["--project", project, "--verbose"]]) {
       const selected = await invokeHuman(["doctor", ...args]);

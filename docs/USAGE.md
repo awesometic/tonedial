@@ -508,7 +508,7 @@ The Codex project-trust step appears only for project connections.
 When ToneDial's own entries in a hook file were edited outside it, doctor leaves the file alone and gives two manual routes.
 Restore the entries exactly as ToneDial wrote them (`doctor --verbose` lists them), or move the file aside, run `doctor --fix` in that scope and copy your own entries back.
 When delivery is paused it suggests `tonedial on`; when no agent is connected it ends with `tonedial wire` for that scope.
-Other registered connections are grouped by scope/directory and shared file status.
+Other registered connections are listed under "Also connected elsewhere", one row per scope, agents and file status, with the directory they share printed once after its rows.
 Inspecting global from a folder with its own connections says so and gives `tonedial doctor --here`; that folder's listed commands also use `--here`.
 An agent that is connected only in another scope is listed as not connected in this scope.
 A project hook that repeats the global hook for the same agent is reported in both scopes, with the `unwire --here` command that keeps only the global one; JSON lists it in `integrations[].duplicates` with its `scope`, `destination`, `path` and `state`.

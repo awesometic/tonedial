@@ -1357,16 +1357,16 @@ function elsewhereReport(rows: Elsewhere[], ctx: Ctx): string[] {
   const lines = section(ctx.t.doctor.wiredElsewhere, ctx.ui);
   for (const group of groups.values()) {
     const { scope, destination } = group[0]!;
-    lines.push(...wrap(scope === "global" ? ctx.t.wiring.scopeGlobal : ctx.t.wiring.scopeHere, ctx.ui.width - 2)
-      .map(line => `  ${ctx.ui.dim(line)}`), `  ${humanText(destination)}`);
+    // Each row names its scope, so the directory they share is printed once, after them.
     for (const state of ["ok", "unwired", "gone"] as const) {
       const targets = group.filter(row => row.state === state).map(row => row.target);
       if (targets.length === 0) continue;
       const detail = state === "ok" ? ctx.t.doctor.destinationPresent
         : state === "gone" ? ctx.t.doctor.destinationGone : ctx.t.doctor.destinationUnwired;
-      lines.push(...wrap(`${targets.join(", ")} — ${detail}`, ctx.ui.width - 4)
-        .map(line => `    ${state === "ok" ? line : ctx.ui.warn(line)}`));
+      lines.push(...wrap([ctx.t.artifact.connectionScope[scope].toLowerCase(), targets.join(", "), detail].join(" · "), ctx.ui.width - 2)
+        .map(line => `  ${state === "ok" ? line : ctx.ui.warn(line)}`));
     }
+    lines.push(`  ${humanText(destination)}`);
     if (group.some(row => row.state !== "ok")) {
       const scopeFlag = connectionScopeFlag({ live: scope === "global", root: destination }, ctx.cwd);
       lines.push(...wrap(ctx.t.doctor.inspectScope, ctx.ui.width - 4).map(line => `    ${line}`),
