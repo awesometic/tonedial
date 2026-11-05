@@ -445,6 +445,7 @@ tonedial show --json
 
 With delivery on and no agent connected, `init`, `use` and `create` end with `tonedial test` for an installed Claude Code or Codex, otherwise with `tonedial wire`.
 Unattended setup needs explicit tools; ordinary unattended connection writes also need explicit scope, including state-only init and `doctor --fix`.
+Without tools, `init` writes nothing and prints `init --tools codex` and `init --tools none` for the scope and options you gave, one command per line; JSON reports them in `commands` with `reason: "tools-required"`.
 Read-only doctor, dry runs and operation-ID rollback need no explicit scope under `--auto`.
 Otherwise a dry run stops wherever the real run would, such as an unscoped `unwire <tool>` in a folder with its own connection for that agent.
 `--auto` never chooses tools by detection; JSON never prompts.

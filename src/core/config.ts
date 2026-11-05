@@ -207,6 +207,18 @@ export class OwnershipConflict extends ConfigError {
   }
 }
 
+/**
+ * `init` was given no agents. The throwing site knows neither the scope nor the options to
+ * keep, so the CLI words the commands that fix it, as it does for a missing scope.
+ */
+export class ToolsRequired extends ConfigError {
+  readonly t: Messages;
+  constructor(t: Messages) {
+    super("tools required", { reason: "tools-required" });
+    this.t = t;
+  }
+}
+
 /** An object, and not an array — `typeof [] === "object"`, which let a JSON array through. */
 const isRecord = (v: unknown): v is Record<string, unknown> =>
   typeof v === "object" && v !== null && !Array.isArray(v);

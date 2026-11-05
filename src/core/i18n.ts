@@ -629,7 +629,7 @@ export type Messages = {
     couldNotWrite: (path: string, reason: string, done: string[]) => string;
     staleTarget: (path: string) => string;
     seedConflict: (path: string) => string;
-    toolsRequired: string;
+    toolsRequired: (commands: readonly string[], auto: boolean) => string;
     toolsSelection: string;
     toolsAmbiguous: string;
     commandsNeedClaude: string;
@@ -1353,9 +1353,8 @@ const enMessages: Messages = {
     seedConflict: (path) =>
       `Cannot verify this bundled file's ownership or type:\n${path}\n` +
       "Nothing was changed. Preserve the file and choose a dedicated TONEDIAL_HOME for new setup.",
-    toolsRequired: "Choose agents with --tools codex,claude,antigravity.\n" +
-      "For state-only setup, run init --tools none.\n" +
-      "--auto approves your selection only; choose agents explicitly.",
+    toolsRequired: (commands, auto) => `Choose agents with --tools codex,claude,antigravity.` +
+      `${auto ? "\n--auto approves your selection only; choose agents explicitly." : ""}\nFor example:\n  ${commands[0]}\nFor state-only setup:\n  ${commands[1]}`,
     toolsSelection: "Use a non-empty comma-separated agent list. Only init accepts none, on its own.",
     toolsAmbiguous: "Pass a positional agent or --tools, not both.",
     commandsNeedClaude: "--commands requires claude in the selected agents.",
@@ -2164,9 +2163,8 @@ const koMessages: Messages = {
     seedConflict: (path) =>
       `ToneDial이 관리하는 일반 파일인지 확인하지 못했습니다:\n${path}\n` +
       "아무것도 바꾸지 않았습니다. 파일을 보존하고 새 설정에는 별도 TONEDIAL_HOME 디렉터리를 지정해 주세요.",
-    toolsRequired: "--tools codex,claude,antigravity로 에이전트를 선택해 주세요.\n" +
-      "상태만 준비하려면 init --tools none을 쓰세요.\n" +
-      "--auto는 선택한 변경만 승인합니다. 에이전트는 직접 골라 주세요.",
+    toolsRequired: (commands, auto) => `--tools codex,claude,antigravity로 에이전트를 선택해 주세요.` +
+      `${auto ? "\n--auto는 선택한 변경만 승인합니다. 에이전트는 직접 골라 주세요." : ""}\n예:\n  ${commands[0]}\n상태만 준비하려면:\n  ${commands[1]}`,
     toolsSelection: "에이전트 이름을 쉼표로 구분해 입력해 주세요. none은 init에서만 단독으로 쓸 수 있습니다.",
     toolsAmbiguous: "에이전트 인자와 --tools 중 하나만 써 주세요.",
     commandsNeedClaude: "--commands를 쓰려면 에이전트 선택에 claude를 포함해 주세요.",

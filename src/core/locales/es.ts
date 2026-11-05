@@ -648,9 +648,8 @@ const messages: Messages = {
     seedConflict: (path) =>
       `No se puede verificar la propiedad o el tipo del archivo incluido:\n${path}\n` +
       "No se cambió nada. Conserva el archivo y elige un TONEDIAL_HOME exclusivo para la nueva configuración.",
-    toolsRequired: "Elige agentes con --tools codex,claude,antigravity.\n" +
-      "Para crear solo el estado, ejecuta init --tools none.\n" +
-      "--auto solo aprueba tu selección; elige los agentes explícitamente.",
+    toolsRequired: (commands, auto) => `Elige agentes con --tools codex,claude,antigravity.` +
+      `${auto ? "\n--auto solo aprueba tu selección; elige los agentes explícitamente." : ""}\nPor ejemplo:\n  ${commands[0]}\nPara crear solo el estado:\n  ${commands[1]}`,
     toolsSelection: "Usa una lista no vacía de agentes separados por comas. Solo init acepta none, sin otros valores.",
     toolsAmbiguous: "Indica un agente posicional o --tools, no ambos.",
     commandsNeedClaude: "--commands requiere claude entre los agentes elegidos.",

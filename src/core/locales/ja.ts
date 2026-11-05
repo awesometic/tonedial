@@ -648,9 +648,8 @@ const messages: Messages = {
     seedConflict: (path) =>
       `同梱ファイルの所有権か種類を検証できません：\n${path}\n` +
       "変更はしていません。ファイルを保持し、新規設定には専用の TONEDIAL_HOME を選んでください。",
-    toolsRequired: "--tools codex,claude,antigravity でエージェントを選んでください。\n" +
-      "状態のみの初期設定は init --tools none を実行します。\n" +
-      "--auto は選択の承認だけです。エージェントは明示的に選んでください。",
+    toolsRequired: (commands, auto) => `--tools codex,claude,antigravity でエージェントを選んでください。` +
+      `${auto ? "\n--auto は選択の承認だけです。エージェントは明示的に選んでください。" : ""}\n例：\n  ${commands[0]}\n状態のみの初期設定は：\n  ${commands[1]}`,
     toolsSelection: "空でないカンマ区切りのエージェント一覧を指定してください。none 単独指定は init のみ対応です。",
     toolsAmbiguous: "位置引数のエージェントか --tools の片方だけを指定してください。",
     commandsNeedClaude: "--commands には claude の選択が必要です。",

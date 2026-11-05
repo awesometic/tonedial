@@ -9,7 +9,7 @@ import { recoveryPendingError, runAppRebuild } from "./rebuild.ts";
 import { runRebuildNative } from "./wire.ts";
 import { ScopeRequired, refuseHomeProject } from "../wiring/scopes.ts";
 import { activationStep } from "./test.ts";
-import { ConfigError, OwnershipConflict, defaultConfig, requireConfigV2, safewordRejection, serializeConfig } from "../core/config.ts";
+import { ConfigError, OwnershipConflict, ToolsRequired, defaultConfig, requireConfigV2, safewordRejection, serializeConfig } from "../core/config.ts";
 import { compile, measure } from "../core/compile.ts";
 import { toCompileInput } from "../core/resolve.ts";
 import { catalogue, configLanguage, detectLanguage, isLanguage, LANGUAGES, type Language } from "../core/i18n.ts";
@@ -49,7 +49,7 @@ export async function runInit(entry: Ctx, _args: string[]): Promise<CommandResul
   // these refusals happen before `--lang` has been read, let alone validated.
   const selection = entry.flags.tools === null ? null : parseToolSelection(entry.flags.tools, true, entry.t);
   if (selection === null && (entry.flags.auto || !entry.canPrompt)) {
-    throw new ConfigError(entry.t.errors.toolsRequired, { reason: "tools-required" });
+    throw new ToolsRequired(entry.t);
   }
   if (entry.flags.commands && selection !== null && !selection.includes("claude")) {
     throw new ConfigError(entry.t.errors.commandsNeedClaude);
@@ -295,7 +295,7 @@ function scopeIntroduction(ctx: Ctx, heading: string): string[] {
 async function rebuildExisting(entry: Ctx): Promise<CommandResult> {
   const scopeExplicit = entry.scopeExplicit ?? (entry.flags.global || entry.flags.here === true || entry.flags.project !== null);
   const selection = entry.flags.tools === null ? null : parseToolSelection(entry.flags.tools, true, entry.t);
-  if (selection === null && (entry.flags.auto || !entry.canPrompt)) throw new ConfigError(entry.t.errors.toolsRequired, { reason: "tools-required" });
+  if (selection === null && (entry.flags.auto || !entry.canPrompt)) throw new ToolsRequired(entry.t);
   const language = chooseLanguage(entry);
   const copy = catalogue(language);
   const ctx: Ctx = { ...entry, t: copy.cli };

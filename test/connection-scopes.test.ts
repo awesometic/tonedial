@@ -571,6 +571,31 @@ test("JSON refusals name their reason and the commands they print", async () => 
   assert.match(text.errors, /\n {2}tonedial doctor --global\n$/);
 });
 
+test("init without agents prints the commands that choose them, in the scope and with the options it was given", async () => {
+  const other = join(scratch, "other");
+  mkdirSync(other);
+  const refusal = async (args: string[]) => {
+    const text = await human(args);
+    const json = await invoke(args);
+    assert.equal(text.code, 1, args.join(" "));
+    assert.equal(json.value.reason, "tools-required", args.join(" "));
+    // Printed one per line, as offered, so what a person copies is what a program reads.
+    const lines = text.errors.split("\n").map((line) => line.trim());
+    for (const command of json.value.commands) assert.ok(lines.includes(command), `${command} is on a line of its own`);
+    return json.value.commands as string[];
+  };
+  assert.deepEqual(await refusal(["init", "--auto", "--global"]), ["tonedial init --tools codex --global", "tonedial init --tools none --global"]);
+  assert.deepEqual(await refusal(["init", "--here", "--lang", "ko"]),
+    ["tonedial init --lang ko --tools codex --here", "tonedial init --lang ko --tools none --here"]);
+  assert.deepEqual(await refusal(["init", "--project", other, "--commands"]),
+    [`tonedial init --tools codex --project "${other}"`, `tonedial init --tools none --project "${other}"`], "--commands needs claude and is not carried");
+  assert.equal((await human(["init", "--here"])).errors.includes("--auto"), false, "the --auto rule appears only when --auto was passed");
+  assert.ok((await human(["init", "--here", "--auto"])).errors.includes("--auto approves your selection only"));
+  // Existing state takes the other path through init.
+  assert.equal((await invoke(["init", "--here", "--tools", "none", "--auto"])).code, 0);
+  assert.deepEqual(await refusal(["init", "--here"]), ["tonedial init --tools codex --here", "tonedial init --tools none --here"]);
+});
+
 test("approval without a terminal names the exact rerun commands for each command", async () => {
   const offered = (rerun: string) => [rerun, `${rerun} --dry-run`, `${rerun} --auto`];
   const refusedWith = async (args: string[], rerun: string) => {

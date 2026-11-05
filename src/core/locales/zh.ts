@@ -648,9 +648,8 @@ const messages: Messages = {
     seedConflict: (path) =>
       `无法验证此内置文件的所有权或类型：\n${path}\n` +
       "未作任何修改。请保留文件，为新设置选择专用 TONEDIAL_HOME。",
-    toolsRequired: "请用 --tools codex,claude,antigravity 选择代理。\n" +
-      "仅初始化状态请运行 init --tools none。\n" +
-      "--auto 仅批准你的选择；请明确指定代理。",
+    toolsRequired: (commands, auto) => `请用 --tools codex,claude,antigravity 选择代理。` +
+      `${auto ? "\n--auto 仅批准你的选择；请明确指定代理。" : ""}\n例如：\n  ${commands[0]}\n仅初始化状态：\n  ${commands[1]}`,
     toolsSelection: "请提供非空、逗号分隔的代理列表。只有 init 接受单独的 none。",
     toolsAmbiguous: "请使用位置参数代理或 --tools，不要同时指定。",
     commandsNeedClaude: "--commands 要求所选代理包含 claude。",
