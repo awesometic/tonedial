@@ -117,7 +117,7 @@ test("an edited TONE.md is one finding with the doctor --fix command", async () 
 test("a TONE.md an earlier version wrote from the same settings says so, not that it was edited", async () => {
   assert.equal((await human(["init", "--tools", "none", "--global", "--auto"])).code, 0);
   const tone = join(home, ".tonedial", "TONE.md");
-  // 0.1.11 wrote the current artifact without the host reply-style rule (added in 0.1.13).
+  // 0.1.11 wrote the current artifact without the host reply-style rule (added in 0.1.14).
   const current = readFileSync(tone, "utf8");
   const earlier = current.replace(`- ${HOST_COMPOSITION}\n`, "");
   assert.notEqual(earlier, current);

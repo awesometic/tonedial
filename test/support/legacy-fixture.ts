@@ -145,7 +145,7 @@ export async function createLegacyFixture(options: LegacyFixtureOptions): Promis
 }
 
 /**
- * A project connection as 0.1.13 and earlier recorded it beside a global one: the project rides
+ * A project connection as versions before 0.1.14 recorded it beside a global one: the project rides
  * the global hook's resource as a second consumer and owns only its skill link. `orphaned` then
  * removes the global record the way those versions' `unwire --global` did, leaving the hook.
  */
