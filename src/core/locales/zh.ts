@@ -65,6 +65,7 @@ const messages: Messages = {
     conflict: (slug, recoveredSlug) => `${slug}：自定义版本与旧版本定义不同。请运行 tonedial doctor --fix，将旧值保留为 ${recoveredSlug}。`,
     activeConflict: (slug) => `${slug}：当前定义不明确，已保留保存的语气轴。请运行 tonedial doctor --fix 选择定义。`,
     active: (name) => `${name} 已启用`,
+    activeState: "已启用",
     unknown: (slug, known) => `未找到预设 ${slug}。可选：${known.join(", ")}`,
     saved: (slug, count) => `${slug} 已保存 · ${count} 个非默认语气轴`,
     savedTarget: (slug) => `已保存预设：${slug}`,

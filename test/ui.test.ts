@@ -808,6 +808,31 @@ test("no command emits an escape sequence when its output is not a terminal", as
   assert.doesNotMatch(out.join("") + err.join(""), /\x1b\[/);
 });
 
+test("list rides the risk mark beside the title, flush right only on a terminal, else under the description", async () => {
+  await initializeState();
+  assert.equal(await cli("set", "profanity=4", "critique=4", "flattery=3", "conviction=5", "compliance=5", "refusal=2", "bravado=2"), 0, err.join(""));
+  assert.equal(await cli("save", "Every Risk At Once", "--slug", "every-risk"), 0, err.join(""));
+  const rows = async (columns: number, terminal: boolean) => {
+    out = [];
+    const env = { HOME: home, TONEDIAL_HOME: join(home, "state"), PATH: "", COLUMNS: String(columns), NO_COLOR: "1" };
+    assert.equal(await run(["list"], env, join(home, "project"), terminal, false), 0, err.join(""));
+    return out.join("").split("\n");
+  };
+  const piped = await rows(100, false);
+  assert.ok(piped.includes("    bratty-kid       Bratty Kid  ! refusal, bravado"), "a pipe gets two spaces, not a column");
+  assert.ok(piped.includes("    A cheeky kid who talks back and jokes with you."), "and the description is one line under it");
+  assert.ok(piped.some((line) => /^ {2}\* every-risk +Every Risk At Once · active · user preset$/.test(line)), "the active row reads slug, name · states");
+  const screen = await rows(80, true);
+  const bratty = screen.find((line) => line.includes("bratty-kid"))!;
+  assert.equal(maxCells(bratty), 79, "on a terminal the mark ends at the last column, with colour off as well");
+  assert.match(bratty, /Bratty Kid {3,}! refusal, bravado$/);
+  const narrow = await rows(60, true);
+  const at = narrow.findIndex((line) => line.includes("every-risk"));
+  assert.deepEqual(narrow.slice(at + 2, at + 4), ["    ! profanity, critique, flattery, conviction,", "      compliance, refusal, bravado"],
+    "seven axes fold under the description with a hanging indent");
+  assert.doesNotMatch([...piped, ...screen, ...narrow].join("\n"), /harsh language|biased judgments/, "the explanation belongs to show");
+});
+
 test("a risk notice is yellow on stdout and stderr and never the red of a failure", async () => {
   await initializeState();
   mkdirSync(join(home, "project"));
@@ -846,6 +871,7 @@ async function everyLine(columns?: number, language = "en"): Promise<{ line: str
     ["set", "safeword=진심으로 부탁할게", "persona.user_ref=선생님", "persona.age=40s"],
     ["set", `persona.note=${"채".repeat(200)}`],
     ["set", ...AXIS_ORDER.map((a) => `${a}=5`)],
+    ["save", "Every Risk At Once"],
     ["show"],
     ["show", "--explain"],
     ["show", "tough-love"],

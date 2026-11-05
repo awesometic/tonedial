@@ -65,6 +65,7 @@ const messages: Messages = {
     conflict: (slug, recoveredSlug) => `${slug}: las definiciones personalizada y antigua difieren. Ejecuta tonedial doctor --fix para conservar los valores antiguos como ${recoveredSlug}.`,
     activeConflict: (slug) => `${slug}: la definición activa es ambigua; se conservaron los ejes. Elige la definición con tonedial doctor --fix.`,
     active: (name) => `${name} activo`,
+    activeState: "activo",
     unknown: (slug, known) => `No se encontró el preajuste ${slug}. Disponibles: ${known.join(", ")}`,
     saved: (slug, count) => `${slug} guardado · ${count} ejes distintos del valor predeterminado`,
     savedTarget: (slug) => `Preajuste guardado: ${slug}`,

@@ -65,6 +65,7 @@ const messages: Messages = {
     conflict: (slug, recoveredSlug) => `${slug}: カスタム版と旧版の定義が異なります。tonedial doctor --fix で旧版の値を ${recoveredSlug} として保持してください。`,
     activeConflict: (slug) => `${slug}: 適用中の定義が曖昧です。保存済みの軸は保持しました。tonedial doctor --fix で定義を選んでください。`,
     active: (name) => `${name} を適用中`,
+    activeState: "適用中",
     unknown: (slug, known) => `プリセット ${slug} が見つかりません。選択肢：${known.join(", ")}`,
     saved: (slug, count) => `${slug} を保存 · 既定値と異なる軸 ${count}個`,
     savedTarget: (slug) => `保存したプリセット：${slug}`,
