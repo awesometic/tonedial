@@ -2,7 +2,7 @@
 
 **给编程代理一个角色。**
 
-ToneDial 是一个 CLI，为 Claude Code、Codex 和 Antigravity 赋予你选定的语气，并可在不同项目中复用。
+ToneDial 是一个 CLI，为 Claude Code、Codex 和 Antigravity 赋予你选定的人设和语气，并可在不同项目中复用。
 从七个角色中选一个，或调节十二个语气轴；ToneDial 会在你的电脑上将其编译为 `TONE.md` 文件，结果确定，且不调用模型。
 各代理的钩子会把语气送入新对话，ToneDial 技能可在对话中途更改或重新加载语气。
 语气只改变表达方式；权限和批准提示仍按代理自身的设置。
@@ -230,6 +230,33 @@ tonedial test codex --preset my-sword
 - 预览只在开始时发送一次语气。请以前几条回复判断；对话变长后语气可能会偏离。
 - 只改变表达风格，主机权限和批准要求保持不变。
 - 模型反应各异。本工具用于娱乐，不建议用于生产工作。
+
+## 常见问题
+
+### 与 Claude Code 的 output style 有何不同？
+
+output style 是你为 Claude Code 单独编写的一组指令。
+ToneDial 根据预设或 12 个分级维度生成指令，并通过各代理的钩子把同一种语气传递给 Claude Code、Codex 和 Antigravity。
+在对话中可通过 ToneDial 技能更改语气。
+两者都是模型遵循的指令，都不会被强制执行。
+
+### 能让编码代理少些奉承吗？
+
+`flattery` 默认值为 1，要求代理不作任何称赞。可用 `tonedial get flattery` 查看。
+Eager Sycophant 等预设会有意调高这个值。
+不同模型遵循的程度不同，请根据最初几次回复判断。
+
+### 如何更改 Codex CLI 的语气？
+
+运行 `tonedial wire codex`。
+它会在 Codex 的 `hooks.json` 中添加 `SessionStart` 钩子，在新对话中传递 `TONE.md`。请在 Codex 的 `/hooks` 中启用该钩子。
+Codex 自身的 `personality` 设置已不再选择风格（[OpenAI 配置参考](https://learn.chatgpt.com/docs/config-file/config-reference)）。
+[Codex 接入步骤](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#codex-cli-tone)
+
+### ToneDial 会改变代理的权限吗？
+
+不会。它只改变说话方式，权限和审批提示保持代理原有的设置。
+生成 `TONE.md` 时不调用模型。
 
 ## 进一步了解
 

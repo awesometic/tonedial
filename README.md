@@ -2,7 +2,7 @@
 
 **Give your coding agent a character.**
 
-ToneDial is a CLI that gives Claude Code, Codex and Antigravity a voice you choose and reuse across projects.
+ToneDial is a CLI that gives Claude Code, Codex and Antigravity a persona and tone you choose and reuse across projects.
 Pick one of seven characters or tune twelve tone axes; ToneDial compiles them into a `TONE.md` file on your machine, deterministically and without a model call.
 Each agent's hooks deliver it to new conversations, and a ToneDial skill changes or reloads it mid-conversation.
 Tone changes manner only; permissions and approval prompts stay as your agent sets them.
@@ -224,6 +224,33 @@ tonedial test codex --preset my-sword
 - A preview sends the tone once. Judge it by the first few replies; longer chats can drift.
 - Tone changes style. Host permissions and approval requirements stay in place.
 - Model behavior varies. This is for fun, not recommended for production use.
+
+## FAQ
+
+### How is ToneDial different from a Claude Code output style?
+
+An output style is a set of instructions you write for Claude Code alone.
+ToneDial builds the instructions from a preset or twelve graded axes and delivers the same tone to Claude Code, Codex and Antigravity through each agent's hooks.
+Its skill changes the tone mid-conversation.
+Both are instructions the model follows; neither is enforced.
+
+### Can it make my coding agent less sycophantic?
+
+`flattery` starts at 1, which asks the agent to praise nothing; check it with `tonedial get flattery`.
+Presets such as Eager Sycophant raise it on purpose.
+Models follow the request to different degrees, so judge the first few replies.
+
+### How do I change Codex CLI's tone?
+
+Run `tonedial wire codex`.
+It adds a `SessionStart` hook to Codex's `hooks.json` that delivers `TONE.md` to new conversations; enable it in Codex's `/hooks`.
+Codex's own `personality` setting no longer selects a style ([OpenAI configuration reference](https://learn.chatgpt.com/docs/config-file/config-reference)).
+[Codex steps](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#codex-cli-tone)
+
+### Does ToneDial change what my agent is allowed to do?
+
+No. Tone changes manner only; permissions and approval prompts stay as your agent sets them.
+Compiling `TONE.md` makes no model call.
 
 ## Go further
 

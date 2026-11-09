@@ -2,7 +2,7 @@
 
 **コーディングエージェントにキャラクターを。**
 
-ToneDialは、Claude Code、Codex、Antigravityに自分で選んだ口調を与え、複数のプロジェクトで再利用できるCLIです。
+ToneDialは、Claude Code、Codex、Antigravityに自分で選んだペルソナと口調を与え、複数のプロジェクトで再利用できるCLIです。
 7つのキャラクターから1つを選ぶか12の口調軸を調整すると、ToneDialが手元のマシンでモデルを呼び出さずに、決定的に `TONE.md` ファイルへコンパイルします。
 各エージェントのフックが新しい会話にこの口調を届け、ToneDialのスキルが会話の途中で口調を変更・再読み込みします。
 口調が変えるのは話し方だけで、権限や承認の確認はエージェントの設定のままです。
@@ -231,6 +231,33 @@ tonedial test codex --preset my-sword
 - プレビューは口調を最初に一度だけ送ります。最初の数回の返答で判断してください。会話が長くなると口調がずれることがあります。
 - 変わるのは話し方です。ホストの権限と承認要件はそのままです。
 - 反応はモデルによって異なります。娯楽用で、実務利用は推奨しません。
+
+## よくある質問
+
+### Claude Codeのoutput styleと何が違いますか？
+
+output styleは、Claude Code専用の指示を自分で書く仕組みです。
+ToneDialはプリセットまたは12の軸から指示を作り、各エージェントのフックでClaude Code、Codex、Antigravityに同じ口調を届けます。
+会話の途中ではToneDialのスキルで口調を変えます。
+どちらもモデルが従う指示であり、強制はされません。
+
+### コーディングエージェントのお世辞を減らせますか？
+
+`flattery`の既定値は1で、エージェントに褒めないよう求めます。`tonedial get flattery`で確認できます。
+Eager Sycophantなどのプリセットは、意図的にこの値を上げます。
+従い方はモデルによって異なるため、最初の数回の返答で判断してください。
+
+### Codex CLIの口調はどう変えますか？
+
+`tonedial wire codex`を実行してください。
+Codexの`hooks.json`に`SessionStart`フックを追加し、新しい会話に`TONE.md`を届けます。Codexの`/hooks`でこのフックを有効にしてください。
+Codex自体の`personality`設定は、現在はスタイルを選択しません（[OpenAIの設定リファレンス](https://learn.chatgpt.com/docs/config-file/config-reference)）。
+[Codexの接続手順](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#codex-cli-tone)
+
+### ToneDialはエージェントの権限も変えますか？
+
+いいえ。変えるのは話し方だけで、権限と承認の確認はエージェントの設定のままです。
+`TONE.md`の生成でモデルは呼び出しません。
 
 ## さらに詳しく
 

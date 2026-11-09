@@ -486,6 +486,18 @@ With neither, it shows `init`'s numbered agent picker in a terminal,
 marking agents installed on `PATH` and those already connected in the scope; an empty answer cancels with exit 0 and writes nothing;
 without a terminal it stops and shows an example command.
 
+### Codex CLI tone
+
+Codex's own `personality` setting is now a deprecated compatibility setting; `friendly` and `pragmatic` no longer select a style ([configuration reference](https://learn.chatgpt.com/docs/config-file/config-reference)).
+ToneDial gives Codex a tone through its `SessionStart` and `UserPromptSubmit` hooks ([Codex hooks](https://learn.chatgpt.com/docs/hooks)):
+
+```bash
+tonedial wire codex --global
+```
+
+Open `/hooks` in Codex, review the ToneDial command and enable it; new conversations then receive the tone.
+`tonedial test codex` previews the tone in a fresh conversation first.
+
 ### Review host enablement
 
 | Host | Where to review |
