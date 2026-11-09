@@ -116,6 +116,7 @@ const messages: Messages = {
     slug: "标识名（小写字母、数字、连字符）",
     user: "你的角色或背景（最多 200 字符）",
     agent: "代理角色（最多 200 字符）",
+    note: "语气备注，可选（只写说话方式，不要写工作指令）",
     register: "敬语形式（auto, polite, plain, rough）",
     addressFrequency: "称呼频率（none, auto, rarely, frequently）",
     safeword: "安全词",

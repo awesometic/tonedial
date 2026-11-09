@@ -199,6 +199,7 @@ export type Messages = {
     slug: string;
     user: string;
     agent: string;
+    note: string;
     register: string;
     addressFrequency: string;
     safeword: string;
@@ -822,6 +823,7 @@ const enMessages: Messages = {
     slug: "Slug (lowercase letters, digits, dashes)",
     user: "Your role or background (up to 200 characters)",
     agent: "Agent role (up to 200 characters)",
+    note: "Manner note, optional (how the agent talks, not task instructions)",
     register: "Honorific forms (auto, polite, plain, rough)",
     addressFrequency: "Address frequency (none, auto, rarely, frequently)",
     safeword: "Safeword",
@@ -1635,6 +1637,7 @@ const koMessages: Messages = {
     slug: "슬러그(영문 소문자·숫자·하이픈(-))",
     user: "사용자 역할·배경(최대 200자)",
     agent: "에이전트 역할(최대 200자)",
+    note: "말투 메모, 선택(말하는 방식만 적고 작업 지시는 넣지 마세요)",
     register: "말씨(auto, polite, plain, rough)",
     addressFrequency: "호칭 사용 빈도(none, auto, rarely, frequently)",
     safeword: "세이프워드",

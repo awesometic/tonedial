@@ -116,6 +116,7 @@ const messages: Messages = {
     slug: "スラッグ（英小文字・数字・ハイフン）",
     user: "あなたの役割や背景（200文字まで）",
     agent: "エージェントの役割（200文字まで）",
+    note: "話し方メモ、任意（話し方だけを書き、作業の指示は入れないでください）",
     register: "敬語区分（auto, polite, plain, rough）",
     addressFrequency: "呼称の頻度（none, auto, rarely, frequently）",
     safeword: "合言葉",

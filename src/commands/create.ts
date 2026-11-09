@@ -52,6 +52,7 @@ export async function runCreate(ctx: Ctx, args: string[]): Promise<CommandResult
           ["persona.user_ref", ctx.t.persona.askUser, config.persona.address?.user_ref ?? ""],
           ["persona.user", ctx.t.create.user, config.persona.user ?? ""],
           ["persona.agent", ctx.t.create.agent, config.persona.agent ?? ""],
+          ["persona.note", ctx.t.create.note, config.persona.note ?? ""],
           ["speech_level", ctx.t.create.register, config.speech_level],
           ["address_frequency", ctx.t.create.addressFrequency, config.address_frequency],
           ["safeword", ctx.t.create.safeword, config.safeword ?? ""],

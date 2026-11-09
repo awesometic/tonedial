@@ -116,6 +116,7 @@ const messages: Messages = {
     slug: "Identificador (minúsculas, dígitos y guiones)",
     user: "Tu rol o contexto (hasta 200 caracteres)",
     agent: "Rol del agente (hasta 200 caracteres)",
+    note: "Nota de estilo, opcional (cómo habla el agente, no instrucciones de trabajo)",
     register: "Registro (auto, polite, plain, rough)",
     addressFrequency: "Frecuencia del nombre o tratamiento (none, auto, rarely, frequently)",
     safeword: "Palabra clave",

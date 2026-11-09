@@ -623,7 +623,7 @@ def create_case(root: Path, language: str, node: str, binary: Path, outcome: str
                     raise ScenarioError("create interview: Ctrl+C did not interrupt")
             else:
                 answers = [b"PTY Jarvis\n", b"pty-jarvis\n", b"guide\n", b"friend\n",
-                           b"Maintains services\n", b"Fictional reviewer\n", b"polite\n", b"rarely\n", b"plain answer please\n"]
+                           b"Maintains services\n", b"Fictional reviewer\n", b"Short, calm replies\n", b"polite\n", b"rarely\n", b"plain answer please\n"]
                 for index, answer in enumerate(answers):
                     if outcome == "retry" and index == 4:
                         start = session.mark()
@@ -666,6 +666,8 @@ def create_case(root: Path, language: str, node: str, binary: Path, outcome: str
                 raise ScenarioError("create approval lost the profile's personal settings")
             if "Fictional reviewer" not in (state / "TONE.md").read_text():
                 raise ScenarioError("create approval did not compile the shared role")
+            if config["persona"].get("note") != "Short, calm replies" or "Short, calm replies" not in (state / "TONE.md").read_text():
+                raise ScenarioError("create approval did not save and compile the manner note")
         elif snapshot(state) != before:
             raise ScenarioError(f"create {outcome}: state changed")
         return {"written": outcome in {"approve", "retry"}, "termiosRestored": True}
