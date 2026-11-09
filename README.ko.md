@@ -234,6 +234,20 @@ tonedial test codex --preset my-sword
 - 말투만 바뀌며, 호스트의 권한과 승인 절차는 그대로 유지됩니다.
 - 모델마다 반응이 다릅니다. 재미로 쓰는 도구이며 실무 환경에는 권장하지 않습니다.
 
+## 에이전트에게 맡기기
+
+ToneDial 스킬을 연결했다면 평소 말로 요청하면 됩니다. Claude Code에서는 `/tonedial`도 쓸 수 있습니다.
+
+```text
+/tonedial 2026년 기준 한국 인터넷 밈 말투를 찾아서 적극적으로 쓰는 프리셋 만들어서 적용해줘.
+/tonedial 짧고 건조하고 살짝 잘난 척하는 말투로 프리셋 만들어줘.
+/tonedial https://example.com/character-page 의 말투를 따라 해줘.
+```
+
+에이전트가 프리셋을 만들어 적용한 뒤 서브에이전트로 확인해 볼지 묻습니다.
+링크를 주면 페이지에 숨은 지시가 있을 수 있다고 먼저 알리고 한 번만 읽은 뒤 저장하기 전에 확인을 받습니다.
+[에이전트 활용법](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#ask-your-agent)
+
 ## 자주 묻는 질문
 
 ### Claude Code의 output style과 무엇이 다른가요?

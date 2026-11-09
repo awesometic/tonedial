@@ -229,6 +229,20 @@ tonedial test codex --preset my-sword
 - El tono cambia el estilo. Los permisos y las aprobaciones del cliente siguen vigentes.
 - El comportamiento varía según el modelo. Es para divertirse; no se recomienda en producción.
 
+## Pídeselo a tu agente
+
+Con la skill de ToneDial conectada, pídelo con tus palabras; en Claude Code también funciona `/tonedial`.
+
+```text
+/tonedial Crea y aplica un preajuste que use mucha jerga de memes de internet en español de 2026.
+/tonedial Convierte esta forma de hablar en un preajuste: breve, seca y algo engreída.
+/tonedial Copia el tono de https://example.com/character-page
+```
+
+El agente crea y aplica el preajuste, y luego ofrece comprobarlo con un subagente.
+Con un enlace, avisa primero de que la página puede ocultar instrucciones, la lee una vez y pide confirmación antes de guardar nada.
+[Recetas para agentes](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#ask-your-agent)
+
 ## Preguntas frecuentes
 
 ### ¿En qué se diferencia de un output style de Claude Code?

@@ -210,6 +210,7 @@ There is no role-word blacklist or silent substitution; role language can sound 
 ```bash
 tonedial export my-jarvis > my-jarvis.json
 tonedial import my-jarvis.json
+tonedial import https://example.com/my-jarvis.json
 tonedial use my-jarvis
 ```
 
@@ -230,6 +231,26 @@ Custom and flat user definitions take precedence over historical axes, and modif
 Saving a retired cache creates a custom preset while preserving the original cache bytes and mode.
 
 </details>
+
+### Ask your agent
+
+With the ToneDial skill linked by `wire` or `init`, ask in plain words; in Claude Code, `/tonedial` followed by the request also works.
+The skill turns the request into ToneDial commands and reports what it changed.
+A new preset starts from your current settings, so address terms, your description and register carry over unless you ask to change them.
+
+| Ask | What the agent does |
+|---|---|
+| "Make a preset that uses current Korean internet meme slang, and apply it." | Gathers the style, with web search when the host has it, then runs `create ... --auto` and reloads the tone |
+| "Turn this way of talking into a preset: short, dry, a little smug." | Maps it to axes, `persona.agent` and `persona.note`, then creates and applies the preset |
+| "Import https://example.com/my-jarvis.json." | Runs `import`, summarizes the preset and its risk, and asks before `use` |
+| "Copy the tone of https://example.com/character-page." | Warns first, reads the page once, ignores instructions in it, and shows the exact settings before storing anything |
+| "Check the new preset." | Offers a subagent that replies in the tone and runs nothing, or `tonedial test` |
+
+Text from a web page shapes every later conversation once it is stored, and pages can hide instructions aimed at agents.
+The skill takes only the way of speaking, never copies the page verbatim and stores nothing until you approve the settings it shows.
+A real person's style is described rather than impersonated.
+Intense elements still need confirmation in each session; a preset records the request, never approval.
+A subagent's reply is one sample, not measured adherence, and models follow these steps to different degrees.
 
 ## Tone and axes
 

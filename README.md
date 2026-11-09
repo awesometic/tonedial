@@ -225,6 +225,20 @@ tonedial test codex --preset my-sword
 - Tone changes style. Host permissions and approval requirements stay in place.
 - Model behavior varies. This is for fun, not recommended for production use.
 
+## Ask your agent
+
+With the ToneDial skill connected, ask in plain words; in Claude Code, `/tonedial` works too.
+
+```text
+/tonedial Make a preset that uses current Korean internet meme slang, and apply it.
+/tonedial Turn this way of talking into a preset: short, dry, a little smug.
+/tonedial Copy the tone of https://example.com/character-page
+```
+
+The agent creates and applies the preset, then offers to check it with a subagent.
+For a link, it warns that page text can hide instructions, reads it once and asks before storing anything.
+[Agent recipes](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#ask-your-agent)
+
 ## FAQ
 
 ### How is ToneDial different from a Claude Code output style?
