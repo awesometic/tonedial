@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=4062; endsWithNewline=true]
+--- stdout --- [bytes=4112; endsWithNewline=true]
 tonedial — 코딩 에이전트에 캐릭터를 더하고 모든 프로젝트에서 유지합니다
 
 tonedial <command> [options]
@@ -28,7 +28,8 @@ tonedial <command> [options]
   create [name] ...     프리셋 생성·적용 · 인자 없으면 안내
   save [display name]   현재 말투를 프리셋으로 저장
   export <slug>         호칭·역할을 포함한 프리셋을 JSON으로 백업
-  import <file>         JSON에서 프리셋 가져오기 · use로 적용
+  import <file|url>     JSON 파일이나 HTTPS 링크에서 프리셋 가져오기 · use로
+                        적용
   edit [preset <slug>]  설정이나 프리셋을 $EDITOR로 열기
 
 연결

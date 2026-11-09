@@ -556,7 +556,7 @@ const messages: Messages = {
       use: "aplicar un preajuste",
       compile: "reconstruir TONE.md · los cambios de tono ya lo hacen",
       export: "respaldar el preajuste con nombres y rol en JSON",
-      import: "importar un preajuste JSON · use lo aplica",
+      import: "importar un preajuste desde un archivo JSON o un enlace HTTPS · use lo aplica",
       wire: "conectar un agente en el ámbito elegido · sin argumentos pregunta",
       unwire: "desconectar un agente · sin argumentos pregunta",
       doctor: "comprobar conexiones · reparar con --fix",

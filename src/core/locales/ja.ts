@@ -556,7 +556,7 @@ const messages: Messages = {
       use: "プリセットを適用",
       compile: "TONE.md を再構築 · 口調を変えると自動で実行",
       export: "呼称と役割を含むプリセットをJSONでバックアップ",
-      import: "JSONから読み込み · use で適用",
+      import: "JSONファイルやHTTPSリンクから読み込み · use で適用",
       wire: "選択した範囲でエージェントを接続 · 引数なしで案内",
       unwire: "エージェントの接続を解除 · 引数なしで案内",
       doctor: "接続を診断 · --fix で修復",

@@ -556,7 +556,7 @@ const messages: Messages = {
       use: "应用预设",
       compile: "重建 TONE.md · 更改语气时会自动执行",
       export: "将含称呼和角色的预设备份为 JSON",
-      import: "从 JSON 导入预设 · use 应用",
+      import: "从 JSON 文件或 HTTPS 链接导入预设 · use 应用",
       wire: "在所选范围连接代理 · 无参数则交互选择",
       unwire: "断开代理 · 无参数则交互选择",
       doctor: "检查连接 · --fix 修复",
