@@ -2,7 +2,7 @@
 
 **Dale un personaje a tu agente de programación.**
 
-ToneDial es una CLI que da a Claude Code, Codex y Antigravity una voz que eliges y reutilizas entre proyectos.
+ToneDial es una CLI que da a Claude Code, Codex y Antigravity una personalidad y un tono que eliges y reutilizas entre proyectos.
 Elige uno de los siete personajes o ajusta doce ejes de tono; ToneDial los compila en un archivo `TONE.md` en tu equipo, de forma determinista y sin llamar a ningún modelo.
 Los hooks de cada agente lo entregan a las conversaciones nuevas, y una habilidad de ToneDial lo cambia o lo recarga a mitad de conversación.
 El tono solo cambia el estilo; los permisos y las solicitudes de aprobación quedan como los configura tu agente.
@@ -228,6 +228,33 @@ tonedial test codex --preset my-sword
 - La vista previa envía el tono una sola vez, al inicio. Júzgala por sus primeras respuestas; en conversaciones largas, el tono puede desviarse.
 - El tono cambia el estilo. Los permisos y las aprobaciones del cliente siguen vigentes.
 - El comportamiento varía según el modelo. Es para divertirse; no se recomienda en producción.
+
+## Preguntas frecuentes
+
+### ¿En qué se diferencia de un output style de Claude Code?
+
+Un output style es un conjunto de instrucciones que escribes solo para Claude Code.
+ToneDial genera las instrucciones a partir de un preajuste o de doce ejes graduados y entrega el mismo tono a Claude Code, Codex y Antigravity mediante los hooks de cada agente.
+Su skill cambia el tono a mitad de conversación.
+Ambos son instrucciones que el modelo sigue; ninguno se impone.
+
+### ¿Puede hacer que mi agente de código sea menos adulador?
+
+`flattery` empieza en 1, que pide al agente no elogiar nada; compruébalo con `tonedial get flattery`.
+Preajustes como Eager Sycophant lo suben a propósito.
+Cada modelo sigue la petición en distinto grado, así que juzga por las primeras respuestas.
+
+### ¿Cómo cambio el tono de Codex CLI?
+
+Ejecuta `tonedial wire codex`.
+Añade a `hooks.json` de Codex un hook `SessionStart` que entrega `TONE.md` a las conversaciones nuevas; actívalo en `/hooks` de Codex.
+El ajuste `personality` propio de Codex ya no selecciona un estilo ([referencia de configuración de OpenAI](https://learn.chatgpt.com/docs/config-file/config-reference)).
+[Pasos para Codex](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#codex-cli-tone)
+
+### ¿ToneDial cambia lo que mi agente puede hacer?
+
+No. El tono cambia solo la manera de hablar; los permisos y las solicitudes de aprobación siguen como los configura tu agente.
+Compilar `TONE.md` no llama a ningún modelo.
 
 ## Más información
 

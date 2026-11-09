@@ -45,7 +45,11 @@
     "character",
     "tone",
     "personality",
-    "prompt"
+    "prompt",
+    "output-style",
+    "agents-md",
+    "sycophancy",
+    "ai-coding-assistant"
   ],
   "repository": {
     "type": "git",

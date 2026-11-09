@@ -2,7 +2,7 @@
 
 **코딩 에이전트에 캐릭터를 더하세요.**
 
-ToneDial은 Claude Code, Codex, Antigravity에 직접 고른 말투를 입혀 여러 프로젝트에서 다시 쓰게 해 주는 CLI입니다.
+ToneDial은 Claude Code, Codex, Antigravity에 직접 고른 페르소나와 말투를 입혀 여러 프로젝트에서 다시 쓰게 해 주는 CLI입니다.
 캐릭터 7개 중 하나를 고르거나 말투 축 12개를 조절하면, ToneDial이 모델 호출 없이 로컬에서 `TONE.md` 파일로 컴파일합니다.
 같은 설정이면 결과도 항상 같습니다.
 각 에이전트의 훅이 새 대화에 말투를 전달하고, 대화 중에는 ToneDial 스킬로 말투를 바꾸거나 다시 불러올 수 있습니다.
@@ -233,6 +233,33 @@ tonedial test codex --preset my-sword
 - 미리보기는 말투를 처음에 한 번만 보냅니다. 처음 몇 차례 답변을 보고 판단하세요. 대화가 길어지면 말투가 흐려질 수 있습니다.
 - 말투만 바뀌며, 호스트의 권한과 승인 절차는 그대로 유지됩니다.
 - 모델마다 반응이 다릅니다. 재미로 쓰는 도구이며 실무 환경에는 권장하지 않습니다.
+
+## 자주 묻는 질문
+
+### Claude Code의 output style과 무엇이 다른가요?
+
+output style은 Claude Code 전용 지시문을 직접 쓰는 방식입니다.
+ToneDial은 프리셋이나 12개 축으로 지시문을 만들고 각 에이전트의 훅으로 Claude Code, Codex, Antigravity에 같은 말투를 전달합니다.
+대화 중에는 ToneDial 스킬로 말투를 바꿉니다.
+둘 다 모델이 따르는 지시일 뿐 강제되지는 않습니다.
+
+### 코딩 에이전트의 아부를 줄일 수 있나요?
+
+`flattery` 기본값은 1이며 이 단계는 에이전트에게 칭찬하지 말라고 요청합니다. `tonedial get flattery`로 확인하세요.
+Eager Sycophant 같은 프리셋은 일부러 이 값을 올립니다.
+모델마다 따르는 정도가 다르니 처음 몇 번의 답으로 판단하세요.
+
+### Codex CLI의 말투는 어떻게 바꾸나요?
+
+`tonedial wire codex`를 실행하세요.
+Codex의 `hooks.json`에 `SessionStart` 훅을 추가해 새 대화마다 `TONE.md`를 전달합니다. Codex의 `/hooks`에서 이 훅을 켜면 됩니다.
+Codex 자체의 `personality` 설정은 이제 스타일을 고르지 않습니다([OpenAI 설정 문서](https://learn.chatgpt.com/docs/config-file/config-reference)).
+[Codex 연결 절차](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#codex-cli-tone)
+
+### ToneDial이 에이전트의 권한도 바꾸나요?
+
+아니요. 말투만 바꾸며 권한과 승인 요청은 에이전트 설정 그대로입니다.
+`TONE.md`를 만들 때 모델을 호출하지도 않습니다.
 
 ## 더 알아보기
 
