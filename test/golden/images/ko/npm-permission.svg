@@ -2,8 +2,8 @@
 <title id="title">ToneDial screen (npm-permission)</title>
 <desc id="description">ToneDial · update
 
-  업데이트 가능 · 0.1.14 → 9.8.7
-  설치됨  0.1.14 · 2026-11-01 배포
+  업데이트 가능 · 0.1.15 → 9.8.7
+  설치됨  0.1.15 · 2026-11-01 배포
   최신    9.8.7 · 2026-11-03 배포
 
   패키지 업데이트:
@@ -16,9 +16,9 @@ https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#npm-permissions
 </desc>
 <rect width="100%" height="100%" rx="16" fill="#171b20"/>
 <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace, system-ui" font-size="22"><text x="32" y="48" fill="#edf3f6" font-weight="400" opacity="1">ToneDial · update</text>
-<text x="60" y="104" fill="#edf3f6" font-weight="400" opacity="1">업데이트 가능 · 0.1.14 → 9.8.7</text>
+<text x="60" y="104" fill="#edf3f6" font-weight="400" opacity="1">업데이트 가능 · 0.1.15 → 9.8.7</text>
 <text x="60" y="132" fill="#edf3f6" font-weight="400" opacity="1">설치됨</text>
-<text x="172" y="132" fill="#edf3f6" font-weight="400" opacity="1">0.1.14 · 2026-11-01 배포</text>
+<text x="172" y="132" fill="#edf3f6" font-weight="400" opacity="1">0.1.15 · 2026-11-01 배포</text>
 <text x="60" y="160" fill="#edf3f6" font-weight="400" opacity="1">최신</text>
 <text x="172" y="160" fill="#edf3f6" font-weight="400" opacity="1">9.8.7 · 2026-11-03 배포</text>
 <text x="60" y="216" fill="#edf3f6" font-weight="400" opacity="1">패키지 업데이트:</text>

@@ -2,8 +2,8 @@ status: 1
 --- stdout --- [bytes=219; endsWithNewline=true]
 ToneDial · update
 
-  update available · 0.1.14 → 9.8.7
-  installed  0.1.14 · released 2026-11-01
+  update available · 0.1.15 → 9.8.7
+  installed  0.1.15 · released 2026-11-01
   latest     9.8.7 · released 2026-11-03
 
   Package update:
