@@ -1,5 +1,5 @@
 status: 0
---- stdout --- [bytes=3557; endsWithNewline=true]
+--- stdout --- [bytes=3602; endsWithNewline=true]
 tonedial — give your coding agent a character and keep it in every project
 
 tonedial <command> [options]
@@ -28,7 +28,8 @@ Preset library
   create [name] ...     create and apply a preset · no args guides setup
   save [display name]   save the current tone as a preset
   export <slug>         back up a preset, including address and role, as JSON
-  import <file>         import a preset from JSON · use applies it
+  import <file|url>     import a preset from a JSON file or HTTPS link · use
+                        applies it
   edit [preset <slug>]  open settings or a preset in $EDITOR
 
 Connections

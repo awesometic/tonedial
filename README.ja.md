@@ -232,6 +232,20 @@ tonedial test codex --preset my-sword
 - 変わるのは話し方です。ホストの権限と承認要件はそのままです。
 - 反応はモデルによって異なります。娯楽用で、実務利用は推奨しません。
 
+## エージェントに頼む
+
+ToneDialのスキルを接続していれば、普段の言葉で頼めます。Claude Codeでは`/tonedial`も使えます。
+
+```text
+/tonedial 2026年時点の日本のネットスラングを積極的に使うプリセットを作って適用して。
+/tonedial 短く、そっけなく、少し得意げな話し方でプリセットを作って。
+/tonedial https://example.com/character-page の口調をまねして。
+```
+
+エージェントはプリセットを作って適用し、サブエージェントで確認するかを尋ねます。
+リンクの場合は、ページに隠れた指示がありうることを先に伝え、一度だけ読み、保存する前に確認を取ります。
+[エージェントの活用方法](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#ask-your-agent)
+
 ## よくある質問
 
 ### Claude Codeのoutput styleと何が違いますか？

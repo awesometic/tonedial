@@ -199,6 +199,7 @@ export type Messages = {
     slug: string;
     user: string;
     agent: string;
+    note: string;
     register: string;
     addressFrequency: string;
     safeword: string;
@@ -822,6 +823,7 @@ const enMessages: Messages = {
     slug: "Slug (lowercase letters, digits, dashes)",
     user: "Your role or background (up to 200 characters)",
     agent: "Agent role (up to 200 characters)",
+    note: "Manner note, optional (how the agent talks, not task instructions)",
     register: "Honorific forms (auto, polite, plain, rough)",
     addressFrequency: "Address frequency (none, auto, rarely, frequently)",
     safeword: "Safeword",
@@ -1265,7 +1267,7 @@ const enMessages: Messages = {
       use: "apply a preset",
       compile: "rebuild TONE.md · tone changes already do this",
       export: "back up a preset, including address and role, as JSON",
-      import: "import a preset from JSON · use applies it",
+      import: "import a preset from a JSON file or HTTPS link · use applies it",
       wire: "connect an agent in the chosen scope · no args prompts",
       unwire: "disconnect an agent · no args prompts",
       doctor: "check connections · repair with --fix",
@@ -1635,6 +1637,7 @@ const koMessages: Messages = {
     slug: "슬러그(영문 소문자·숫자·하이픈(-))",
     user: "사용자 역할·배경(최대 200자)",
     agent: "에이전트 역할(최대 200자)",
+    note: "말투 메모, 선택(말하는 방식만 적고 작업 지시는 넣지 마세요)",
     register: "말씨(auto, polite, plain, rough)",
     addressFrequency: "호칭 사용 빈도(none, auto, rarely, frequently)",
     safeword: "세이프워드",
@@ -2080,7 +2083,7 @@ const koMessages: Messages = {
       use: "프리셋 적용",
       compile: "TONE.md 재생성 · 말투를 바꾸면 자동 처리",
       export: "호칭·역할을 포함한 프리셋을 JSON으로 백업",
-      import: "JSON에서 프리셋 가져오기 · use로 적용",
+      import: "JSON 파일이나 HTTPS 링크에서 프리셋 가져오기 · use로 적용",
       wire: "선택한 범위에 에이전트 연결 · 인자 없으면 직접 선택",
       unwire: "에이전트 연결 해제 · 인자 없으면 직접 선택",
       doctor: "연결 점검 · 복구는 --fix",

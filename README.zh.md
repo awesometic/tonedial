@@ -231,6 +231,20 @@ tonedial test codex --preset my-sword
 - 只改变表达风格，主机权限和批准要求保持不变。
 - 模型反应各异。本工具用于娱乐，不建议用于生产工作。
 
+## 交给代理
+
+接入 ToneDial 技能后，直接用日常语言提出请求即可。在 Claude Code 中也可以使用 `/tonedial`。
+
+```text
+/tonedial 做一个大量使用 2026 年中文网络流行语的预设并应用。
+/tonedial 用简短、冷淡、略带得意的说话方式做一个预设。
+/tonedial 模仿 https://example.com/character-page 的语气。
+```
+
+代理会创建并应用预设，然后询问是否用子代理检查一下。
+如果提供链接，它会先提醒页面可能藏有指令，只读取一次，并在保存前征得你的确认。
+[代理用法](https://github.com/awesometic/tonedial/blob/main/docs/USAGE.md#ask-your-agent)
+
 ## 常见问题
 
 ### 与 Claude Code 的 output style 有何不同？
